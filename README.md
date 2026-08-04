@@ -13,11 +13,17 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - 以 `KuGouMusicApi@6efe84e1971c15b11a5cf1a210c5e8e0cc9d7ddb` 为协议迁移基准。
 - 使用 Media3 `MediaLibraryService` 管理播放生命周期与系统媒体集成。
 - 第一版以 PC 端功能对齐为目标，但交互和布局遵循 Android 平台习惯。
-- UI 视觉语言将在下一阶段单独讨论和定稿。
+- Application ID 为 `cn.james.music`，最低支持 API 26，compile/target SDK 为 API 36。
+- 第一版 UI 视觉语言与核心页面设计稿已经确认。
+- 本地音乐统一复制导入；外部“打开方式”在导入成功后立即播放。
 
 ## 文档索引
 
 - [产品范围](docs/PRODUCT_SCOPE.md)
+- [总开发计划](docs/DEVELOPMENT_PLAN.md)
+- [分阶段开发文档](docs/plans/00-project-foundation.md)
+- [测试策略](docs/TESTING_STRATEGY.md)
+- [本地音乐规格](docs/LOCAL_MUSIC.md)
 - [软件架构](docs/ARCHITECTURE.md)
 - [KuGouMusicApi 迁移](docs/API_MIGRATION.md)
 - [工程规范](docs/ENGINEERING_STANDARDS.md)
@@ -26,6 +32,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - [参考项目与来源](docs/REFERENCES.md)
 - [ADR-0001：原生直连酷狗接口](docs/decisions/0001-native-direct-api.md)
 - [ADR-0002：轻量模块化架构](docs/decisions/0002-lightweight-modular-architecture.md)
+- [ADR-0003：复制导入本地音乐](docs/decisions/0003-copy-imported-local-music.md)
 
 ## 文档维护原则
 

@@ -112,6 +112,16 @@
 - 借鉴：ExoPlayer、MediaSession、MediaLibraryService、MediaController、通知栏和系统媒体集成。
 - 规则：播放器生命周期和系统行为优先遵循 Media3 官方文档，而非第三方项目的兼容写法。
 
+## Android 本地文件与系统集成
+
+- Storage Access Framework：https://developer.android.com/training/data-storage/shared/documents-files
+- MediaStore 与音频权限：https://developer.android.com/training/data-storage/shared/media
+- Intent 与 Intent Filter：https://developer.android.com/guide/components/intents-filters
+- 接收外部分享：https://developer.android.com/training/sharing/receive
+- Media3 支持格式：https://developer.android.com/media/media3/exoplayer/supported-formats
+
+采用点：使用窄范围内容 URI 授权、按 Android 版本申请音频读取权限、使用 `audio/*` 外部入口并由 Media3 验证可播放格式。不采用 `MANAGE_EXTERNAL_STORAGE`，不把临时外部 URI 当作长期音乐库来源。
+
 ## 许可证注意
 
 - MoeKoeMusic PC 与 Mobile 使用 GPL-2.0。

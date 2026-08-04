@@ -2,6 +2,8 @@
 
 ## 技术基线
 
+- Application ID：`cn.james.music`。
+- minSdk：API 26；compileSdk/targetSdk：API 36。
 - Kotlin。
 - Jetpack Compose + Material 3。
 - Coroutines + Flow。
@@ -25,7 +27,7 @@
 
 ## 包与命名
 
-- 包名在工程创建前单独确认。
+- 代码命名空间以 `cn.james.music` 为根；Debug 变体可使用 `.debug` 后缀。
 - 类型使用业务语义命名，避免 `Manager`、`Helper`、`Utils` 泛化命名。
 - 网络类型以 `Dto` 结尾，数据库类型以 `Entity` 结尾，UI 专用类型以 `UiModel` 结尾。
 - Repository 接口按领域命名，例如 `PlaylistRepository`，不按页面命名。
@@ -46,6 +48,14 @@
 - 登录、歌单编辑等写操作不能无条件自动重放。
 - 缓存键必须包含影响响应的身份、分页和质量参数。
 - 播放 URL 视为短期资源，不长期持久化为可靠地址。
+
+## 本地文件与外部 Intent
+
+- 本地音乐必须复制到 App 专属音乐目录后才能进入本地库。
+- `ACTION_VIEW` 表示“导入 + 播放”，播放命令只能在文件与数据库提交成功后发出。
+- 不持久化依赖外部 URI 的播放记录，不把绝对文件路径暴露到领域层。
+- 文件复制使用临时文件、流式哈希和原子提交；失败与取消必须清理残留。
+- 不申请 `MANAGE_EXTERNAL_STORAGE`，也不为第一版导入申请公共目录写入权限。
 
 ## Compose 性能
 
@@ -72,6 +82,7 @@
 - DTO/Entity/Domain 映射。
 - ViewModel 状态变化。
 - 播放队列和播放模式状态机。
+- 本地音乐复制、去重、回滚和外部 Intent 解析。
 
 ### UI 测试
 
@@ -87,6 +98,8 @@
 - 歌单写操作的成功、失败与重试。
 
 涉及真实酷狗服务的测试不得成为普通单元测试的硬依赖，应明确标记并手动或定时执行。
+
+完整模块矩阵、设备版本和 CI 顺序见 [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md)。
 
 ## Git 约定
 
@@ -123,4 +136,3 @@
 - UI 符合 Design System 与可访问性约束。
 - 文档和 ADR 与实现一致。
 - 已说明验证命令和仍存在的限制。
-

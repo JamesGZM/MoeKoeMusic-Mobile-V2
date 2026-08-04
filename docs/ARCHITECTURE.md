@@ -48,7 +48,7 @@ Repository
 
 - Application、MainActivity 和应用级导航壳。
 - Hilt 组合根与模块装配。
-- Deep Link、启动流程和顶层错误恢复。
+- Deep Link、外部音频 Intent、启动流程和顶层错误恢复。
 - 不放具体页面业务。
 
 ### `:core:model`
@@ -85,6 +85,7 @@ Repository
 - Repository 实现和 DTO/Entity/Domain 映射。
 - 决定远端、本地和缓存的组合策略。
 - 对上提供稳定领域接口。
+- 通过平台数据源完成本地音频复制、哈希、元数据读取和 App 专属存储管理。
 
 ### `:playback`
 
@@ -192,9 +193,32 @@ ExoPlayer + MediaSession
 
 - 在线内容默认 network-first，并对短期可复用页面数据做内存缓存。
 - 用户歌单和收藏以远端为权威，Room 可保存展示快照和待重试操作。
-- 本地音乐以 MediaStore/受控文件访问结果为权威。
+- 本地音乐以 App 专属目录中的已提交副本和 Room 索引为权威；MediaStore、Storage Access Framework 和外部 Intent 只提供导入来源。
 - 设置使用 DataStore；敏感会话使用 Keystore 支持的加密存储。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
+
+## 本地音乐与外部 Intent
+
+```text
+AudioImportActivity
+        │ 解析并验证 ACTION_VIEW / SEND / SEND_MULTIPLE
+        ▼
+Local import coordinator
+        │
+        ▼
+LocalMusicRepository ──► App 专属 Music 目录 + Room
+        │                         │
+        └──── 成功后的领域结果 ────┘
+                                  │
+                                  ▼
+                         PlaybackController
+```
+
+- 外部入口 Activity 只解析和转交，不直接访问 Room 或 ExoPlayer。
+- 所有入口共用复制、校验、去重和提交管线。
+- `ACTION_VIEW` 只有在文件落盘与 Room 提交成功后才发送播放命令。
+- 外部 URI、ContentResolver 和绝对路径不得泄露到稳定领域模型。
+- 本地导入的详细事务语义见 [`LOCAL_MUSIC.md`](LOCAL_MUSIC.md)。
 
 ## 依赖注入
 
@@ -223,5 +247,7 @@ ExoPlayer + MediaSession
 - `:playback`：队列、播放模式、恢复和错误跳过状态机测试。
 - `:features`：ViewModel 单元测试、Compose UI 测试和关键截图测试。
 - `:app`：导航、启动、登录和播放闭环的设备测试。
+- 外部 Intent：解析与导入协调单测，以及 API 26、32、33、36 设备测试。
 - 稳定后增加 Macrobenchmark 与 Baseline Profile。
 
+完整测试矩阵和 CI 门槛见 [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md)。
