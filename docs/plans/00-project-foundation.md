@@ -1,5 +1,7 @@
 # 阶段 1：工程基础
 
+状态：已完成。完成日期：2026-08-04。
+
 ## 目标
 
 建立可安装、可测试、边界清晰的 Android 原生工程，为后续播放和本地音乐闭环提供基础设施。
@@ -26,3 +28,18 @@
 - 所有模块可独立编译且无反向依赖。
 - 颜色和尺寸只由 `:core:designsystem` 提供。
 - CI 检查稳定通过，未包含真实凭据或网络业务。
+
+## 实现结果
+
+- 已创建九个规划模块和三个 `build-logic` Convention Plugin，Android 模块使用 AGP 9 内置 Kotlin。
+- `:app` 已接入 Hilt、edge-to-edge 和 Design System Showcase；Manifest 未暴露媒体、分享、外部打开或后台服务能力。
+- `:core:designsystem` 已提供浅色、深色、AMOLED 主题、排版、形状、间距和扩展语义色。
+- 已生成三套主题截图参考图，并加入 Compose UI smoke test 与 GitHub Actions。
+- 已通过格式检查、单元测试任务、Lint、截图验证、Debug APK 和测试 APK 编译。
+
+## 兼容性说明
+
+- Hilt 计划版本 `2.57.1` 不支持 AGP 9，工程使用首个明确支持 AGP 9 的兼容线 `2.59.2`。
+- Core KTX `1.19.0` 与 Lifecycle `2.11.0` 要求 compileSdk 37；为坚持 API 36，分别使用 `1.18.0` 与 `2.10.0`。
+- Compose Preview Screenshot Testing `0.0.1-alpha15` 的截图任务暂不兼容 Configuration Cache，仅截图更新和验证命令使用 `--no-configuration-cache`。
+- API 26 与 API 36 的安装启动仍由设备矩阵执行；当前提交已完成 APK 与 instrumentation test APK 编译。另在一台 API 29 真机尝试执行 UI 测试，但设备安全锁屏阻止测试 Activity 可见，未将该环境失败计为代码通过。

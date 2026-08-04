@@ -6,7 +6,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 当前阶段
 
-项目处于设计与技术验证阶段，尚未创建 Android 工程骨架。当前已确定：
+项目已完成阶段 0（文档与决策）和阶段 1（工程基础）。当前 `develop` 分支包含可编译的 Android 多模块工程、Hilt 组合根、Design System Showcase、视觉回归基准与 CI；播放器、本地导入和在线业务尚未开始。
 
 - Android 原生 Kotlin + Jetpack Compose。
 - 直接访问酷狗官方接口，不依赖自建服务器。
@@ -16,6 +16,20 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - Application ID 为 `cn.james.music`，最低支持 API 26，compile/target SDK 为 API 36。
 - 第一版 UI 视觉语言与核心页面设计稿已经确认。
 - 本地音乐统一复制导入；外部“打开方式”在导入成功后立即播放。
+
+## 本地构建
+
+使用 Android Studio 2026.1 的 JBR 21 同步工程；命令行构建使用 JDK 17 或更高版本：
+
+```bash
+./gradlew spotlessCheck
+./gradlew testDebugUnitTest
+./gradlew lintDebug
+./gradlew --no-configuration-cache validateDebugScreenshotTest
+./gradlew assembleDebug
+```
+
+截图插件当前为实验版，其任务暂不兼容 Configuration Cache，因此只对截图命令局部关闭缓存。Debug APK 输出到 `app/build/outputs/apk/debug/`。
 
 ## 文档索引
 

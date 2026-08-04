@@ -39,4 +39,3 @@ V2 的目标是 Android 原生 Compose，并希望不依赖自建服务器。
 - KuGouMusicApi submodule 只作为参考与测试基准，不参与 Android 构建。
 - API 模块保持 UI 和播放器无关。
 - 优先完成匿名搜索播放闭环，再扩大接口范围。
-

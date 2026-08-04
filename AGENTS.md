@@ -62,4 +62,3 @@
 - 改变接口迁移策略时更新 `docs/API_MIGRATION.md` 和相关 ADR。
 - 确定 UI 设计决策时更新 `docs/UI_DESIGN_BRIEF.md`。
 - 增加重要外部参考时更新 `docs/REFERENCES.md`，记录借鉴点和不采用点。
-

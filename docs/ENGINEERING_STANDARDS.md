@@ -4,7 +4,8 @@
 
 - Application ID：`cn.james.music`。
 - minSdk：API 26；compileSdk/targetSdk：API 36。
-- Kotlin。
+- AGP 9.3.0、Gradle Wrapper 9.5.0、Java Toolchain/JVM Target 17。
+- Android 模块使用 AGP 内置 Kotlin；纯 JVM 模块使用 Kotlin 2.3.21。
 - Jetpack Compose + Material 3。
 - Coroutines + Flow。
 - Navigation Compose。
@@ -15,7 +16,7 @@
 - Coil。
 - Gradle Kotlin DSL + Version Catalog。
 
-具体版本在创建工程时以稳定版和兼容矩阵为准，不在设计文档中提前写死。
+依赖的唯一版本源是 `gradle/libs.versions.toml`。为保持 compileSdk 36，Core KTX 与 Lifecycle 固定在最后兼容线；升级前必须复核 AAR metadata 的 compileSdk 要求。
 
 ## 构建约定
 
@@ -24,6 +25,7 @@
 - Debug 与 Release 使用不同日志和诊断策略，但业务行为保持一致。
 - Release 禁止输出敏感网络日志。
 - CI 首先执行格式、静态检查和受影响模块测试，再执行完整构建。
+- Configuration Cache 默认开启；仅已确认不兼容的具体任务可以在命令级关闭，并记录原因。
 
 ## 包与命名
 

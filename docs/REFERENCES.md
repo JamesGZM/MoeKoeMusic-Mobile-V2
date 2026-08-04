@@ -92,6 +92,17 @@
 
 ## 官方架构与媒体参考
 
+### 阶段 1 构建与 UI 基础
+
+- AGP 9.3 版本说明与兼容矩阵：https://developer.android.com/build/releases/agp-9-3-0-release-notes
+- Compose Preview Screenshot Testing：https://developer.android.com/studio/preview/compose-screenshot-testing
+- Dagger / Hilt Releases：https://github.com/google/dagger/releases
+- Material 3 Compose：https://developer.android.com/develop/ui/compose/designsystems/material3
+
+采用点：AGP/Gradle/JDK 组合、官方截图测试、Hilt Android 组合根与 Material 3 主题体系。Hilt 2.59 开始明确支持 AGP 9，因此工程使用 2.59.2，而不是计划中无法加载 AGP 9 扩展的 2.57.1。Compose Screenshot Testing 仍为实验插件，仅用于视觉回归。
+
+主要阶段 1 依赖许可证：AndroidX、Compose、Room、DataStore、Media3 与 Hilt 为 Apache-2.0；Kotlin 与 Coroutines 为 Apache-2.0；Spotless 为 Apache-2.0；OkHttp 为 Apache-2.0。它们分别承担平台 UI/存储/媒体能力、依赖注入、语言与并发、格式检查和后续网络传输，未引入遥测或远程托管服务。
+
 ### Now in Android
 
 - 仓库：https://github.com/android/nowinandroid
