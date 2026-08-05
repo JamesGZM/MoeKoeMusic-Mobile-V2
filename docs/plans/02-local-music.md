@@ -1,6 +1,6 @@
 # 阶段 3：本地音乐闭环
 
-状态：进行中。开发前门禁已由 [`../reference-audits/03-local-music.md`](../reference-audits/03-local-music.md) 完成。
+状态：已完成。开发前门禁由 [`../reference-audits/03-local-music.md`](../reference-audits/03-local-music.md) 完成，阶段验收于 2026-08-05 关闭。
 
 ## 目标
 
@@ -38,27 +38,31 @@
 - 正式三项底部导航、本地列表、搜索、排序、设备多选、基础 MiniPlayer 与队列 Bottom Sheet 已建立；播放工程实验台只在 Debug 可达。
 - Room Migration 与唯一约束测试已加入；本地音乐空状态、内容状态和 `1.5×` 字体导入状态已有稳定截图基准。
 - 外部导入完成动作现由播放控制器统一切换到 Media3 应用线程；Service 初始快照恢复增加顺序屏障，避免冷启动恢复覆盖新播放命令。
-- 阶段仍保持进行中，直到全部格式逐项导入和 WorkManager 失败恢复自动化验收完成。
+- Debug 专用 ContentProvider 通过真实 `content://` 输入提供 MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 合成素材，并覆盖损坏输入和可取消慢速流。
+- WorkManager 设备测试覆盖五种格式、重复内容复用、混合批次部分成功、复制中取消、失败不落库和中断遗留 `.partial` 清理；测试不直接调用 Worker 内部实现。
+- 全量格式、失败恢复与完整工程质量门槛已通过，阶段 3 完成。
 
 ### 设备矩阵（2026-08-05）
 
 | 环境 | 当前结果 | 已验证内容 |
 | --- | --- | --- |
-| API 26 ARM64 AVD | 通过 | 无窗口冷启动后，当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 与 Room v1→v2 Migration |
-| Huawei ELE-AL00，API 29 | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 复制后播放，测试后已重装并冷启动 Debug App |
+| API 26 ARM64 AVD | 通过 | Room 5/5、App/Intent/UI 6/6；五格式、损坏、取消与残留恢复专项 4/4；外部 VIEW 与 Room v1→v2 Migration |
+| Huawei ELE-AL00，API 29 | 通过 | Room 5/5；当前完整 App/Intent/UI/Worker 套件 12/12；外部 VIEW 复制后播放 |
 | API 32 ARM64 AVD | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 复制后播放与正式导航 |
 | API 33 ARM64 AVD | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；通知允许自动测试；手动拒绝后仍完成 1/1 并生成 App 副本 |
-| API 36 ARM64 AVD | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW、错误 URI 与权限分支 |
+| API 36 ARM64 AVD | 通过 | Room 5/5、App/Intent/UI 6/6；五格式、重复、部分成功、损坏、取消与残留恢复专项 6/6 |
 
 ### 合成格式 fixture
 
 生成命令：
 
 ```bash
-./scripts/generate-local-music-fixtures.sh
+./scripts/generate-local-music-fixtures.sh app/src/debug/assets/local-music-fixtures
 ```
 
 本机 FFmpeg 7.1.1 生成结果：
+
+这些文件只进入 Debug source set；Release 构建不打包测试音频。
 
 | 文件 | SHA-256 |
 | --- | --- |
@@ -74,3 +78,5 @@
 - 文件管理器选择 MoeKoe 后，只有复制和 Room 提交成功才立即播放。
 - 删除原始文件不影响播放；重复打开不产生副本。
 - 导入失败绝不播放外部临时 URI。
+
+以上标准均已满足。进程被系统杀死后的 WorkManager 调度恢复仍由 AndroidX 保证；本阶段自动化验证的是恢复执行前清理遗留临时文件，不声称自动化模拟了真实系统杀进程。

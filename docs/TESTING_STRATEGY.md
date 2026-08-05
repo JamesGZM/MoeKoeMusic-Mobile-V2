@@ -60,7 +60,9 @@
 
 Intent 解析使用独立纯函数配合 Robolectric/Android 测试验证平台差异；复制状态机通过抽象输入流和文件系统边界在 JVM 测试。
 
-格式 fixture 由 `scripts/generate-local-music-fixtures.sh` 使用 440Hz、1 秒合成音调生成 MP3、M4A/AAC、FLAC、Ogg/Opus 和 WAV。输出位于被 Git 忽略的 `build/local-music-fixtures/`，不得使用第三方歌曲代替。
+格式 fixture 由 `scripts/generate-local-music-fixtures.sh` 使用 440Hz、1 秒合成音调生成 MP3、M4A/AAC、FLAC、Ogg/Opus 和 WAV。默认输出位于被 Git 忽略的 `build/local-music-fixtures/`；设备回归使用同一脚本生成并提交到 `app/src/debug/assets/local-music-fixtures/` 的 Debug-only 副本。不得使用第三方歌曲代替。
+
+阶段 3 的 `LocalImportWorkerTest` 必须从 ContentProvider 经 ContentResolver、WorkManager、文件系统和 Room 走完整公开管线，覆盖五种格式、损坏输入、重复内容、部分成功、复制中取消和遗留 `.partial` 恢复。Debug 探针只读取可观察结果，不绕过导入实现；Release 不包含 Provider、探针或 fixture。
 
 ## Compose UI 与截图测试
 

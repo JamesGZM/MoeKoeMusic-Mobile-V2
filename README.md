@@ -6,7 +6,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 当前阶段
 
-项目已完成阶段 0（文档与决策）、阶段 1（工程基础）和阶段 2（播放内核），阶段 3（本地音乐）正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v2、本地音乐复制导入、外部音频入口、基础 MiniPlayer 与“首页 / 发现 / 我的”导航；API 26、29、32、33、36 的当前代码设备测试与本地音乐截图基准已通过，阶段 3 尚需完成多格式逐项验收和导入失败恢复专项测试后才能关闭。
+项目已完成阶段 0（文档与决策）、阶段 1（工程基础）、阶段 2（播放内核）和阶段 3（本地音乐），阶段 4（酷狗在线闭环）正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v2、本地音乐复制导入、外部音频入口、基础 MiniPlayer 与“首页 / 发现 / 我的”导航；MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 的真实导入管线及失败恢复测试已通过。阶段 4 的固定源码审计和详细规格已经通过，正在从 Node/Kotlin 加密与签名对照开始实现匿名搜索到在线播放的最小闭环。
 
 - Android 原生 Kotlin + Jetpack Compose。
 - 直接访问酷狗官方接口，不依赖自建服务器。
@@ -31,10 +31,10 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 截图插件当前为实验版，其任务暂不兼容 Configuration Cache，因此只对截图命令局部关闭缓存。Debug APK 输出到 `app/build/outputs/apk/debug/`。
 
-本地音乐格式 fixture 使用仓库脚本按需生成，不提交第三方音频：
+本地音乐格式 fixture 使用仓库脚本生成 440Hz 合成音调。五个 Debug 测试资产随仓库提交，Release APK 不包含这些资产，也不使用第三方音乐：
 
 ```bash
-./scripts/generate-local-music-fixtures.sh
+./scripts/generate-local-music-fixtures.sh app/src/debug/assets/local-music-fixtures
 ```
 
 ## 文档索引

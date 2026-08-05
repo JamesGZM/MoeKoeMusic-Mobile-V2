@@ -57,6 +57,7 @@ class LocalImportWorker
                 if (batch.state.substringBefore('|') == LocalImportBatchState.Cancelled.name) {
                     return@withContext Result.success()
                 }
+                cleanupStalePartialFiles()
                 setForeground(createForegroundInfo("正在准备导入", 0, batch.totalCount))
                 dao.updateBatch(batchId, LocalImportBatchState.Running.name, 0, 0, now())
                 var completed = 0
@@ -390,6 +391,13 @@ class LocalImportWorker
             if (dao.findBatch(batchId)?.state?.substringBefore('|') == LocalImportBatchState.Cancelled.name) {
                 throw BatchCancelledException()
             }
+        }
+
+        private fun cleanupStalePartialFiles() {
+            applicationContext
+                .getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+                ?.listFiles { file -> file.isFile && file.name.endsWith(".partial") }
+                ?.forEach(File::delete)
         }
 
         private fun now() = System.currentTimeMillis()
