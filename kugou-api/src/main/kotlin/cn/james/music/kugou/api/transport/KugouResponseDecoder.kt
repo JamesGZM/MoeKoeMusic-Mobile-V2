@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 
-class KugouResponseDecoder(
+internal class KugouResponseDecoder(
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
     fun decode(response: KugouRawResponse): KugouProtocolResult {

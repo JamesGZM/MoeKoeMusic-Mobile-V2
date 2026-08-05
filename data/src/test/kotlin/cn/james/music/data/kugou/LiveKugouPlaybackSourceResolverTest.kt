@@ -1,12 +1,8 @@
 package cn.james.music.data.kugou
 
+import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouAudioResource
-import cn.james.music.kugou.api.endpoint.KugouEndpoints
-import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
-import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecodeResult
-import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
-import cn.james.music.kugou.api.endpoint.KugouSongSearchDecodeResult
-import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
@@ -14,10 +10,9 @@ import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
 import cn.james.music.kugou.api.session.KugouInitializationResult
 import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.session.KugouSessionStore
+import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
-import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRequestFactory
-import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -29,7 +24,7 @@ class LiveKugouPlaybackSourceResolverTest {
         runBlocking {
             assumeTrue("Live Kugou tests are opt-in", System.getenv(LIVE_TEST_ENV) == "true")
             val requestFactory = KugouRequestFactory()
-            val transport = OkHttpKugouTransport()
+            val transport = KtorKugouTransport()
             val sessionProvider =
                 KugouAnonymousSessionInitializer(
                     store = MemorySessionStore(),
@@ -39,29 +34,28 @@ class LiveKugouPlaybackSourceResolverTest {
                     transport = transport,
                 )
             val initialization = sessionProvider.initialize()
-            assertTrue("Current service rejected anonymous registration", initialization is KugouInitializationResult.Ready)
+            assertTrue(
+                "Current service rejected anonymous registration: $initialization",
+                initialization is KugouInitializationResult.Ready,
+            )
             val session = (initialization as KugouInitializationResult.Ready).session
             val executor = KugouCallExecutor(requestFactory, transport)
-            val search = executor.executeJson(KugouEndpoints.searchSongsAnonymous(LIVE_SEARCH_KEYWORD, 1, 5), session.requestContext())
-            assertTrue("Current service rejected playback fixture search", search is KugouProtocolResult.Success)
-            val searchResult = KugouSongSearchDecoder().decode((search as KugouProtocolResult.Success).body)
-            assertTrue("Current service returned no usable playback fixture", searchResult is KugouSongSearchDecodeResult.Success)
-            val song = (searchResult as KugouSongSearchDecodeResult.Success).page.items.first()
+            val onlineClient = KugouOnlineClient(executor)
+            val search = onlineClient.searchSongs(LIVE_SEARCH_KEYWORD, 1, 5, session.requestContext())
+            assertTrue("Current service rejected playback fixture search", search is KugouApiResult.Success)
+            val song = (search as KugouApiResult.Success).value.items.first()
 
             val privilege =
-                executor.executeJson(
-                    KugouEndpoints.privilegeLite(listOf(KugouAudioResource(song.hash))),
+                onlineClient.fetchPrivilegeCandidates(
+                    listOf(KugouAudioResource(song.hash)),
                     session.requestContext(),
                 )
-            assertTrue("Current service rejected privilege request", privilege is KugouProtocolResult.Success)
-            val privilegeResult = KugouPrivilegeDecoder().decode((privilege as KugouProtocolResult.Success).body)
-            assertTrue("Current privilege response shape is unsupported", privilegeResult is KugouPrivilegeDecodeResult.Success)
+            assertTrue("Current privilege response shape is unsupported", privilege is KugouApiResult.Success)
 
             val address =
                 KugouPlaybackSourceResolver(
                     sessionProvider = sessionProvider,
-                    executor = executor,
-                    decoder = KugouPlaybackAddressDecoder(),
+                    onlineClient = onlineClient,
                 ).resolve(song.hash)
 
             assertTrue("Current service returned no secure playable address", address?.startsWith("https://") == true)

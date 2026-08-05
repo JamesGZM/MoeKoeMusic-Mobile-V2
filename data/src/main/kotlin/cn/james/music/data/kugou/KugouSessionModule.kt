@@ -9,6 +9,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
 import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
@@ -18,9 +19,9 @@ import cn.james.music.kugou.api.session.KugouDeviceProfile
 import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
 import cn.james.music.kugou.api.session.KugouSessionProvider
 import cn.james.music.kugou.api.session.KugouSessionStore
+import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouRequestFactory
-import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -89,14 +90,23 @@ object KugouSessionModule {
 
     @Provides
     @Singleton
-    fun provideTransport(): OkHttpKugouTransport = OkHttpKugouTransport()
+    fun provideTransport(): KtorKugouTransport = KtorKugouTransport()
 
     @Provides
     @Singleton
     fun provideCallExecutor(
         requestFactory: KugouRequestFactory,
-        transport: OkHttpKugouTransport,
+        transport: KtorKugouTransport,
     ): KugouCallExecutor = KugouCallExecutor(requestFactory, transport)
+
+    @Provides
+    @Singleton
+    fun provideOnlineClient(
+        executor: KugouCallExecutor,
+        songSearchDecoder: KugouSongSearchDecoder,
+        playbackAddressDecoder: KugouPlaybackAddressDecoder,
+        privilegeDecoder: KugouPrivilegeDecoder,
+    ): KugouOnlineClient = KugouOnlineClient(executor, songSearchDecoder, playbackAddressDecoder, privilegeDecoder)
 
     @Provides
     fun provideSongSearchDecoder(): KugouSongSearchDecoder = KugouSongSearchDecoder()
@@ -113,7 +123,7 @@ object KugouSessionModule {
         store: KugouSessionStore,
         profileProvider: KugouDeviceProfileProvider,
         requestFactory: KugouRequestFactory,
-        transport: OkHttpKugouTransport,
+        transport: KtorKugouTransport,
     ): KugouSessionProvider =
         KugouAnonymousSessionInitializer(
             store = store,

@@ -1,6 +1,6 @@
 package cn.james.music.data.kugou
 
-import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.session.KugouDeviceIdentity
 import cn.james.music.kugou.api.session.KugouInitializationError
 import cn.james.music.kugou.api.session.KugouInitializationResult
@@ -79,13 +79,14 @@ class KugouPlaybackSourceResolverTest {
         transport: KugouTransport,
     ) = KugouPlaybackSourceResolver(
         sessionProvider = provider,
-        executor =
-            KugouCallExecutor(
-                requestFactory = KugouRequestFactory(clock = EpochSecondsProvider { 1_700_000_000L }),
-                transport = transport,
-                retryDelayer = KugouRetryDelayer {},
+        onlineClient =
+            KugouOnlineClient(
+                KugouCallExecutor(
+                    requestFactory = KugouRequestFactory(clock = EpochSecondsProvider { 1_700_000_000L }),
+                    transport = transport,
+                    retryDelayer = KugouRetryDelayer {},
+                ),
             ),
-        decoder = KugouPlaybackAddressDecoder(),
     )
 
     private fun readyProvider() =

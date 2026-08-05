@@ -9,10 +9,11 @@ fun interface KugouRetryDelayer {
 class KugouCallExecutor(
     private val requestFactory: KugouRequestFactory,
     private val transport: KugouTransport,
-    private val responseDecoder: KugouResponseDecoder = KugouResponseDecoder(),
     private val retryDelayer: KugouRetryDelayer = KugouRetryDelayer { delay(it) },
 ) {
-    suspend fun executeJson(
+    private val responseDecoder = KugouResponseDecoder()
+
+    internal suspend fun executeJson(
         spec: KugouRequestSpec,
         context: KugouRequestContext,
     ): KugouProtocolResult {

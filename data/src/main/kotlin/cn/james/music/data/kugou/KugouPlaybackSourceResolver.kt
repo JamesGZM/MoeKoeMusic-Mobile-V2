@@ -1,12 +1,10 @@
 package cn.james.music.data.kugou
 
-import cn.james.music.kugou.api.endpoint.KugouEndpoints
-import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecodeResult
-import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
+import cn.james.music.kugou.api.endpoint.KugouApiResult
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
+import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressResult
 import cn.james.music.kugou.api.session.KugouInitializationResult
 import cn.james.music.kugou.api.session.KugouSessionProvider
-import cn.james.music.kugou.api.transport.KugouCallExecutor
-import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.playback.KugouSourceResolver
 import dagger.Binds
 import dagger.Module
@@ -20,8 +18,7 @@ class KugouPlaybackSourceResolver
     @Inject
     constructor(
         private val sessionProvider: KugouSessionProvider,
-        private val executor: KugouCallExecutor,
-        private val decoder: KugouPlaybackAddressDecoder,
+        private val onlineClient: KugouOnlineClient,
     ) : KugouSourceResolver {
         override suspend fun resolve(songHash: String): String? {
             val normalizedHash = songHash.trim()
@@ -31,11 +28,18 @@ class KugouPlaybackSourceResolver
                     is KugouInitializationResult.Failure -> return null
                     is KugouInitializationResult.Ready -> initialization.session
                 }
-            val response = executor.executeJson(KugouEndpoints.songUrl(normalizedHash), session.requestContext())
-            if (response !is KugouProtocolResult.Success) return null
-            val decoded = decoder.decode(response.body)
-            if (decoded !is KugouPlaybackAddressDecodeResult.Success) return null
-            return decoded.address.urls.firstOrNull()
+            return when (val result = onlineClient.resolvePlaybackAddress(normalizedHash, session.requestContext())) {
+                is KugouApiResult.Failure -> {
+                    null
+                }
+
+                is KugouApiResult.Success -> {
+                    when (val value = result.value) {
+                        is KugouPlaybackAddressResult.Available -> value.address.urls.firstOrNull()
+                        is KugouPlaybackAddressResult.Unavailable -> null
+                    }
+                }
+            }
         }
     }
 

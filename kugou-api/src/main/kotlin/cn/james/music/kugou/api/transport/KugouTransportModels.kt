@@ -128,7 +128,7 @@ sealed interface KugouError {
     }
 }
 
-sealed interface KugouProtocolResult {
+internal sealed interface KugouProtocolResult {
     data class Success(
         val body: JsonElement,
         val responseCookies: KugouCookies,

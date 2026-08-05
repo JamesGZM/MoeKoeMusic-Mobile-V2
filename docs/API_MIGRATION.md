@@ -18,7 +18,9 @@ License:    MIT
 
 统一请求层也已建立：RequestFactory 在固定时间和虚构身份下生成可快照的请求，Transport 是 suspend 端口，Cookie 与响应错误使用稳定类型。请求对象的诊断字符串只暴露字段名和字节数，不暴露参数、Header、Cookie 或 Body 值。
 
-OkHttp Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密、并发单飞初始化和 Android 加密持久化已经建立。
+Ktor Client + OkHttp Engine Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密、并发单飞初始化和 Android 加密持久化已经建立。
+
+`KugouCallExecutor.executeJson` 与原始 `JsonElement` 结果限制在 `:kugou-api` 内部；Repository 只能通过 `KugouOnlineClient` 获取类型化 DTO、不可用原因或类型化错误，不能自行解析动态网络 JSON。
 
 2026-08-05 的真实服务验证发现固定基准 `/v3/search/song` 即使在匿名注册取得 dfid 后仍返回 `error_code=152`，同日运行的独立 Go 迁移也得到相同结果。这不是 Kotlin 快照测试能发现的协议漂移。阶段 4 的匿名搜索因此改用独立验证通过的 HTTPS `songsearch.kugou.com/song_search_v2`，仅发送 `keyword/page/pagesize/platform=WebFilter`，不发送设备身份、Cookie 或签名；固定 Android Endpoint 暂时保留给未来登录会话验证，不作为匿名路径。搜索 DTO 与 Repository 随后完成，并再次通过真实“注册、搜索、解码、领域映射”全链路测试。
 
@@ -56,12 +58,12 @@ kugou-api/src/main/kotlin/.../
 
 | Node 实现 | Kotlin 实现 |
 | --- | --- |
-| Axios | OkHttp |
+| Axios | Ktor Client + OkHttp Engine |
 | Buffer | ByteArray |
 | CryptoJS | Java Cryptography Architecture |
 | node-forge RSA | JCA，必要时 Bouncy Castle |
 | process.env platform | KugouPlatformConfig |
-| Cookie 对象 | KugouSession + OkHttp Cookie 处理 |
+| Cookie 对象 | KugouSession 显式合并 + Ktor/OkHttp 传输 |
 | Express 路由 | 类型化 Endpoint 函数 |
 | localStorage/SecureStore | App 提供的加密 SessionStore |
 

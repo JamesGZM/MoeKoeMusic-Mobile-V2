@@ -8,10 +8,10 @@ import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
 import cn.james.music.kugou.api.session.KugouInitializationResult
 import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.session.KugouSessionStore
+import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRequestFactory
-import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -25,7 +25,7 @@ class LiveKugouIntegrationTest {
         runBlocking {
             assumeTrue("Live Kugou tests are opt-in", System.getenv(LIVE_TEST_ENV) == "true")
             val requestFactory = KugouRequestFactory()
-            val transport = OkHttpKugouTransport()
+            val transport = KtorKugouTransport()
             val initialization =
                 KugouAnonymousSessionInitializer(
                     store = MemorySessionStore(),

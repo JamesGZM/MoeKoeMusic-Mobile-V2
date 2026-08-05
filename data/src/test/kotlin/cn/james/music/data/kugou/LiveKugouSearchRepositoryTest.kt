@@ -1,16 +1,16 @@
 package cn.james.music.data.kugou
 
 import cn.james.music.core.model.online.SearchResult
-import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
 import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
 import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.session.KugouSessionStore
+import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouRequestFactory
-import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -22,7 +22,7 @@ class LiveKugouSearchRepositoryTest {
         runBlocking {
             assumeTrue("Live Kugou tests are opt-in", System.getenv(LIVE_TEST_ENV) == "true")
             val requestFactory = KugouRequestFactory()
-            val transport = OkHttpKugouTransport()
+            val transport = KtorKugouTransport()
             val sessionProvider =
                 KugouAnonymousSessionInitializer(
                     store = MemorySessionStore(),
@@ -34,8 +34,7 @@ class LiveKugouSearchRepositoryTest {
             val repository =
                 KugouSearchRepository(
                     sessionProvider = sessionProvider,
-                    executor = KugouCallExecutor(requestFactory, transport),
-                    decoder = KugouSongSearchDecoder(),
+                    onlineClient = KugouOnlineClient(KugouCallExecutor(requestFactory, transport)),
                 )
 
             val result = repository.searchSongs(LIVE_SEARCH_KEYWORD, page = 1, pageSize = 5)

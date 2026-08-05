@@ -15,6 +15,7 @@ media3 = "1.10.1"
 coroutines = "1.10.2"
 serialization = "1.11.0"
 okhttp = "5.4.0"
+ktor = "3.5.1"
 screenshot = "0.0.1-alpha15"
 spotless = "8.8.0"
 junit = "4.13.2"
@@ -54,6 +55,10 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 screenshot-validation-api = { module = "com.android.tools.screenshot:screenshot-validation-api", version.ref = "screenshot" }
 junit = { module = "junit:junit", version.ref = "junit" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }

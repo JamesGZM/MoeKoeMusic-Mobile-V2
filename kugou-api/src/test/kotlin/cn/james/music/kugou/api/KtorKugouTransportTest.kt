@@ -1,11 +1,11 @@
 package cn.james.music.kugou.api
 
+import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouError
 import cn.james.music.kugou.api.transport.KugouHttpMethod
 import cn.james.music.kugou.api.transport.KugouPreparedRequest
 import cn.james.music.kugou.api.transport.KugouResponseFormat
 import cn.james.music.kugou.api.transport.KugouTransportResult
-import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -20,7 +20,7 @@ import org.junit.Test
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-class OkHttpKugouTransportTest {
+class KtorKugouTransportTest {
     @Test
     fun getRequestIsEncodedAndRawResponseIsPreserved() =
         runBlocking {
@@ -33,30 +33,37 @@ class OkHttpKugouTransportTest {
                             mapOf("Set-Cookie" to "dfid=test"),
                     )
                 }
-            val transport = OkHttpKugouTransport(OkHttpClient.Builder().addInterceptor(interceptor).build())
+            val transport = KtorKugouTransport(OkHttpClient.Builder().addInterceptor(interceptor).build())
 
             val result =
                 transport.execute(
                     request(
+                        path = "/risk/v2/r_register_dev",
                         query = mapOf("keyword" to "MoeKoe 测试", "signature" to "fixture-signature"),
                         headers = mapOf("x-router" to "complexsearch.kugou.com"),
                     ),
                 ) as KugouTransportResult.Success
 
             val captured = interceptor.requests.single()
+            assertEquals("/risk/v2/r_register_dev", captured.url.encodedPath)
             assertEquals("MoeKoe 测试", captured.url.queryParameter("keyword"))
             assertEquals("fixture-signature", captured.url.queryParameter("signature"))
             assertEquals("complexsearch.kugou.com", captured.header("x-router"))
             assertEquals(200, result.response.statusCode)
             assertEquals("fixture", result.response.body.decodeToString())
-            assertEquals(listOf("dfid=test"), result.response.headers["Set-Cookie"])
+            assertEquals(
+                listOf("dfid=test"),
+                result.response.headers.entries
+                    .first { (name) -> name.equals("Set-Cookie", ignoreCase = true) }
+                    .value,
+            )
         }
 
     @Test
     fun postRequestUsesExactBodyBytesAndContentType() =
         runBlocking {
             val interceptor = CapturingInterceptor(::response)
-            val transport = OkHttpKugouTransport(OkHttpClient.Builder().addInterceptor(interceptor).build())
+            val transport = KtorKugouTransport(OkHttpClient.Builder().addInterceptor(interceptor).build())
             val body = byteArrayOf(0, 1, 2, 127, -1)
 
             transport.execute(
@@ -90,8 +97,8 @@ class OkHttpKugouTransportTest {
             )
         }
 
-    private fun transportThrowing(error: java.io.IOException): OkHttpKugouTransport =
-        OkHttpKugouTransport(
+    private fun transportThrowing(error: java.io.IOException): KtorKugouTransport =
+        KtorKugouTransport(
             OkHttpClient
                 .Builder()
                 .addInterceptor { throw error }
@@ -100,6 +107,7 @@ class OkHttpKugouTransportTest {
 
     private fun request(
         method: KugouHttpMethod = KugouHttpMethod.Get,
+        path: String = "/fixture",
         query: Map<String, String> = emptyMap(),
         headers: Map<String, String> = emptyMap(),
         body: ByteArray? = null,
@@ -107,7 +115,7 @@ class OkHttpKugouTransportTest {
         id = "fixture",
         method = method,
         baseUrl = "https://example.test",
-        path = "/fixture",
+        path = path,
         query = query,
         headers = headers,
         body = body,

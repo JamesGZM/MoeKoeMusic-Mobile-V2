@@ -2,7 +2,7 @@ package cn.james.music.data.kugou
 
 import cn.james.music.core.model.online.SearchError
 import cn.james.music.core.model.online.SearchResult
-import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.session.KugouDeviceIdentity
 import cn.james.music.kugou.api.session.KugouInitializationError
 import cn.james.music.kugou.api.session.KugouInitializationResult
@@ -96,13 +96,14 @@ class KugouSearchRepositoryTest {
         transport: KugouTransport,
     ) = KugouSearchRepository(
         sessionProvider = provider,
-        executor =
-            KugouCallExecutor(
-                requestFactory = KugouRequestFactory(clock = EpochSecondsProvider { 1_700_000_000L }),
-                transport = transport,
-                retryDelayer = KugouRetryDelayer {},
+        onlineClient =
+            KugouOnlineClient(
+                KugouCallExecutor(
+                    requestFactory = KugouRequestFactory(clock = EpochSecondsProvider { 1_700_000_000L }),
+                    transport = transport,
+                    retryDelayer = KugouRetryDelayer {},
+                ),
             ),
-        decoder = KugouSongSearchDecoder(),
     )
 
     private fun readyProvider() =
