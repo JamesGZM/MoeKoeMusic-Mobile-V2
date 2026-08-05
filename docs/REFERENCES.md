@@ -140,8 +140,14 @@
 - Intent 与 Intent Filter：https://developer.android.com/guide/components/intents-filters
 - 接收外部分享：https://developer.android.com/training/sharing/receive
 - Media3 支持格式：https://developer.android.com/media/media3/exoplayer/supported-formats
+- WorkManager 版本与发布说明：https://developer.android.com/jetpack/androidx/releases/work
+- 长时间运行 Worker：https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running
+- AndroidX Hilt 版本：https://developer.android.com/jetpack/androidx/releases/hilt
+- Coil：https://github.com/coil-kt/coil
 
 采用点：使用窄范围内容 URI 授权、按 Android 版本申请音频读取权限、使用 `audio/*` 外部入口并由 Media3 验证可播放格式。不采用 `MANAGE_EXTERNAL_STORAGE`，不把临时外部 URI 当作长期音乐库来源。
+
+固定版本、具体源码文件及采用/拒绝结论见 [`reference-audits/02-playback-core.md`](reference-audits/02-playback-core.md) 与 [`reference-audits/03-local-music.md`](reference-audits/03-local-music.md)。新增重大功能必须按 [`templates/FEATURE_SPEC_TEMPLATE.md`](templates/FEATURE_SPEC_TEMPLATE.md) 完成同等审计。
 
 ## 许可证注意
 

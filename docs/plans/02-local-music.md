@@ -1,5 +1,7 @@
 # 阶段 3：本地音乐闭环
 
+状态：Accepted，等待实现。开发前门禁已由 [`../reference-audits/03-local-music.md`](../reference-audits/03-local-music.md) 完成。
+
 ## 目标
 
 完成不依赖在线服务的本地音乐产品闭环，并把外部“打开方式”实现为“导入 + 播放”。
@@ -13,6 +15,9 @@
 - 进度、取消、空间不足、损坏、不支持、重复与批量结果反馈。
 - 本地歌曲播放、排序、搜索和删除；删除时同步播放队列。
 - 补齐本地音乐页面视觉规格，沿用当前 Material 3 token 和反馈组件。
+- 使用 WorkManager 2.11.2 全局串行执行导入，AndroidX Hilt Work 1.3.0 注入 Worker，Coil 3.4.0 加载 App 管理的封面。
+- 建立首页、发现、我的三项正式导航；本阶段只让“我的 → 本地音乐”形成业务闭环。
+- 增加基础 MiniPlayer 和基础播放队列 Bottom Sheet；全屏播放器仍属于阶段 5。
 
 详细语义见 [`../LOCAL_MUSIC.md`](../LOCAL_MUSIC.md)。
 
