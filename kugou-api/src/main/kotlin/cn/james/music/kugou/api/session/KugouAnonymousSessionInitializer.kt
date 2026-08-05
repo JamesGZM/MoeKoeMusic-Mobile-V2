@@ -9,6 +9,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+interface KugouSessionProvider {
+    suspend fun initialize(): KugouInitializationResult
+}
+
 class KugouAnonymousSessionInitializer internal constructor(
     private val store: KugouSessionStore,
     private val identityFactory: KugouDeviceIdentityFactory,
@@ -16,7 +20,7 @@ class KugouAnonymousSessionInitializer internal constructor(
     private val requestFactory: KugouRequestFactory,
     private val transport: KugouTransport,
     private val registrationCodec: KugouRegistrationCodec = KugouRegistrationCodec(),
-) {
+) : KugouSessionProvider {
     constructor(
         store: KugouSessionStore,
         identityFactory: KugouDeviceIdentityFactory,
@@ -36,7 +40,7 @@ class KugouAnonymousSessionInitializer internal constructor(
     private var current: KugouSessionSnapshot? = null
     private var inFlight: CompletableDeferred<KugouInitializationResult>? = null
 
-    suspend fun initialize(): KugouInitializationResult {
+    override suspend fun initialize(): KugouInitializationResult {
         val pending =
             mutex.withLock {
                 current?.let { return KugouInitializationResult.Ready(it) }

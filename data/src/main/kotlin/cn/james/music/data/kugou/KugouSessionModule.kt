@@ -9,11 +9,14 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
 import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
 import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
+import cn.james.music.kugou.api.session.KugouSessionProvider
 import cn.james.music.kugou.api.session.KugouSessionStore
+import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouRequestFactory
 import cn.james.music.kugou.api.transport.OkHttpKugouTransport
 import dagger.Binds
@@ -80,16 +83,36 @@ object KugouSessionModule {
 
     @Provides
     @Singleton
-    fun provideAnonymousSessionInitializer(
+    fun provideRequestFactory(): KugouRequestFactory = KugouRequestFactory()
+
+    @Provides
+    @Singleton
+    fun provideTransport(): OkHttpKugouTransport = OkHttpKugouTransport()
+
+    @Provides
+    @Singleton
+    fun provideCallExecutor(
+        requestFactory: KugouRequestFactory,
+        transport: OkHttpKugouTransport,
+    ): KugouCallExecutor = KugouCallExecutor(requestFactory, transport)
+
+    @Provides
+    fun provideSongSearchDecoder(): KugouSongSearchDecoder = KugouSongSearchDecoder()
+
+    @Provides
+    @Singleton
+    fun provideSessionProvider(
         store: KugouSessionStore,
         profileProvider: KugouDeviceProfileProvider,
-    ): KugouAnonymousSessionInitializer =
+        requestFactory: KugouRequestFactory,
+        transport: OkHttpKugouTransport,
+    ): KugouSessionProvider =
         KugouAnonymousSessionInitializer(
             store = store,
             identityFactory = KugouDeviceIdentityFactory(),
             profileProvider = profileProvider,
-            requestFactory = KugouRequestFactory(),
-            transport = OkHttpKugouTransport(),
+            requestFactory = requestFactory,
+            transport = transport,
         )
 
     private const val SESSION_FILE_NAME = "kugou_session.preferences_pb"
