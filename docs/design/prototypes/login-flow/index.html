@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>MoeKoe Air 登录流程交互原型</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="lab-header">
+      <div>
+        <p class="eyebrow">CONFIRMED DESIGN · INTERACTION PROTOTYPE</p>
+        <h1><span>MoeKoe Air</span> 登录流程</h1>
+        <p>基于 19–22 号确认设计稿；验证状态切换、返回、提交锁定与恢复路径。</p>
+      </div>
+      <div class="legend" aria-label="原型说明">
+        <span><i class="legend-dot confirmed"></i>已确认设计</span>
+        <span><i class="legend-dot prototype"></i>本地原型</span>
+        <span><i class="legend-dot no-network"></i>无网络请求</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="device-column" aria-label="Android 手机原型">
+        <div class="device-frame">
+          <div class="camera" aria-hidden="true"></div>
+          <div class="system-bar" aria-hidden="true"><span>9:41</span><span>● ◒ ▰</span></div>
+
+          <section class="app-screen active" data-screen="login" aria-label="登录主页面">
+            <div class="login-hero">
+              <button class="round-back" type="button" aria-label="返回">‹</button>
+              <div class="hero-copy"><strong>MoeKoe Air</strong><span>欢迎回来，继续听喜欢的音乐</span></div>
+            </div>
+            <div class="login-sheet">
+              <div class="segments" role="tablist" aria-label="登录方式">
+                <button type="button" role="tab" aria-selected="true" data-method="sms"><span>◇</span>验证码</button>
+                <button type="button" role="tab" aria-selected="false" data-method="password"><span>▣</span>密码</button>
+                <button type="button" role="tab" aria-selected="false" data-method="qr"><span>⌗</span>扫码</button>
+              </div>
+
+              <form class="method-panel active" data-panel="sms" id="sms-form">
+                <h2>手机号登录</h2>
+                <p class="description">未注册手机号验证后将创建账号。</p>
+                <label class="field"><span class="field-icon">⌕</span><span class="prefix">+86</span><input id="phone" inputmode="tel" autocomplete="tel" placeholder="请输入手机号" aria-label="手机号" maxlength="11" /></label>
+                <label class="field"><span class="field-icon">◇</span><input id="sms-code" inputmode="numeric" autocomplete="one-time-code" placeholder="请输入 6 位验证码" aria-label="验证码" maxlength="6" /><button class="field-action" type="button" id="send-code">获取验证码</button></label>
+                <button class="primary-action" type="submit" disabled>登录并继续</button>
+                <p class="agreement">登录即代表同意 <a href="#">用户协议</a> 和 <a href="#">隐私政策</a></p>
+              </form>
+
+              <form class="method-panel" data-panel="password" id="password-form" hidden>
+                <h2>账号密码登录</h2>
+                <p class="description">支持手机号或酷狗账号。</p>
+                <label class="field"><span class="field-icon">♙</span><input id="account" autocomplete="username" placeholder="手机号或酷狗账号" aria-label="账号" /></label>
+                <label class="field"><span class="field-icon">●</span><input id="password" type="password" autocomplete="current-password" placeholder="请输入登录密码" aria-label="密码" /><button class="field-action icon-only" type="button" id="toggle-password" aria-label="显示密码">◉</button></label>
+                <p class="inline-message" id="password-message" aria-live="polite"></p>
+                <button class="text-link" type="button">忘记密码？</button>
+                <button class="primary-action" type="submit" disabled>登录并继续</button>
+                <p class="agreement">凭据不会写入日志或长期保存</p>
+              </form>
+
+              <section class="method-panel qr-panel" data-panel="qr" hidden aria-label="扫码登录">
+                <h2>扫码登录</h2>
+                <div class="qr-box" data-qr-state="waiting" aria-live="polite">
+                  <div class="fake-qr" aria-label="二维码示意图"><i></i><i></i><i></i><div class="qr-overlay"><span></span></div></div>
+                  <strong class="qr-title">请使用酷狗音乐扫码</strong>
+                  <p class="qr-description">二维码将在 <b>01:46</b> 后过期</p>
+                </div>
+                <ol class="qr-steps"><li><i>1</i>打开酷狗</li><li><i>2</i>扫一扫</li><li><i>3</i>确认登录</li></ol>
+                <div class="qr-actions" hidden>
+                  <button class="primary-action" type="button" data-qr-retry>刷新二维码</button>
+                  <button class="secondary-action" type="button" data-switch-sms>改用验证码</button>
+                </div>
+                <p class="agreement">登录码只在当前页面短时持有</p>
+              </section>
+            </div>
+          </section>
+
+          <section class="app-screen simple-screen" data-screen="risk-gate" aria-label="安全验证说明">
+            <header class="topbar"><button type="button" data-back aria-label="返回">‹</button><strong>安全登录</strong><span></span></header>
+            <div class="screen-content centered-content">
+              <div class="state-icon warning">!</div>
+              <h2>保护你的账号</h2>
+              <p>服务检测到本次登录需要额外确认。完成验证后只会自动重试一次。</p>
+              <div class="notice warning"><b>安全验证</b><span>验证方式由服务返回，可能是短信验证码或腾讯图形验证。</span></div>
+              <button class="primary-action" type="button" data-open-sms-risk>开始验证</button>
+              <button class="secondary-action" type="button" data-back>取消并返回</button>
+            </div>
+          </section>
+
+          <section class="app-screen simple-screen" data-screen="risk-sms" aria-label="短信二次验证">
+            <header class="topbar"><button type="button" data-back aria-label="返回">‹</button><strong>安全验证</strong><span></span></header>
+            <div class="screen-content">
+              <div class="state-icon shield">◇</div>
+              <h2>确认是你本人</h2>
+              <p>验证码已发送至 138 **** 8000。完成后将继续刚才的密码登录。</p>
+              <label class="field verification-field"><span class="field-icon">◇</span><input id="risk-code" inputmode="numeric" placeholder="请输入 6 位验证码" maxlength="6" aria-label="安全验证码" /><span class="countdown">56s</span></label>
+              <button class="primary-action" type="button" id="verify-risk" disabled>验证并继续</button>
+              <button class="secondary-action" type="button" data-open-captcha>改用图形验证</button>
+              <p class="security-footnote">验证结果不会持久化；再次触发风控时停止登录。</p>
+            </div>
+          </section>
+
+          <section class="app-screen simple-screen" data-screen="captcha" aria-label="腾讯图形验证隔离页面">
+            <header class="topbar"><button type="button" data-back aria-label="关闭">×</button><strong>安全验证</strong><span class="secure-mark">安全连接</span></header>
+            <div class="screen-content captcha-content">
+              <p>完成滑块验证后将自动返回 MoeKoe Air。</p>
+              <div class="captcha-frame">
+                <div class="captcha-brand"><strong>腾讯验证码</strong><span>仅用于身份验证</span></div>
+                <div class="puzzle-scene"><i class="cloud one"></i><i class="cloud two"></i><i class="puzzle-piece"></i></div>
+                <button type="button" class="slider" id="captcha-slider"><span>›</span><b>拖动滑块完成拼图</b></button>
+              </div>
+              <div class="notice"><b>隔离边界</b><span>页面只返回一次性结果，不提供通用 App API。</span></div>
+              <button class="secondary-action" type="button" data-back>取消验证</button>
+            </div>
+          </section>
+
+          <section class="app-screen simple-screen" data-screen="accounts" aria-label="多账号选择">
+            <header class="topbar"><button type="button" data-back aria-label="返回">‹</button><strong>选择账号</strong><span></span></header>
+            <div class="screen-content account-content">
+              <h2>选择要登录的账号</h2>
+              <p>这个手机号绑定了多个酷狗账号，请选择本次要使用的账号。</p>
+              <div class="account-list" role="radiogroup" aria-label="账号列表">
+                <button type="button" class="account-row" role="radio" aria-checked="false" data-account="星海绘梨奈"><span class="avatar avatar-blue">星</span><span><b>星海绘梨奈 <em>VIP</em></b><small>酷狗 ID · 18•••21</small></span><i></i></button>
+                <button type="button" class="account-row" role="radio" aria-checked="false" data-account="夏目栞"><span class="avatar avatar-gold">夏</span><span><b>夏目栞</b><small>酷狗 ID · 36•••09</small></span><i></i></button>
+                <button type="button" class="account-row" role="radio" aria-checked="false" data-account="桃井心音"><span class="avatar avatar-pink">桃</span><span><b>桃井心音 <em>VIP</em></b><small>酷狗 ID · 72•••73</small></span><i></i></button>
+              </div>
+              <p class="inline-message" id="account-message" aria-live="polite"></p>
+              <button class="primary-action" type="button" id="choose-account" disabled>登录所选账号</button>
+              <p class="security-footnote">账号列表仅用于本次选择，手机号与账号 ID 已脱敏。</p>
+            </div>
+          </section>
+
+          <section class="app-screen simple-screen" data-screen="success" aria-label="登录成功">
+            <div class="screen-content centered-content success-content">
+              <div class="state-icon success">✓</div>
+              <h2>登录完成</h2>
+              <p id="success-copy">正在安全地恢复账号状态并返回来源页面。</p>
+              <div class="success-progress"><span></span></div>
+              <button class="secondary-action" type="button" data-reset>返回原型起点</button>
+            </div>
+          </section>
+
+          <div class="toast" role="status" aria-live="polite"></div>
+        </div>
+        <p class="device-caption">390 × 844 dp 逻辑视口 · Android Material 3 · 所有数据均为虚构</p>
+      </section>
+
+      <aside class="control-panel" aria-label="原型状态控制台">
+        <div class="panel-intro"><span>STATE CONSOLE</span><h2>流程检查点</h2><p>通过正常交互操作手机，也可直接跳转到设计状态进行评审。</p></div>
+        <section><h3>登录方式</h3><div class="control-grid"><button type="button" data-jump="sms">验证码默认</button><button type="button" data-jump="password">密码默认</button><button type="button" data-jump="password-error">凭据错误</button><button type="button" data-jump="risk-gate">触发风控</button></div></section>
+        <section><h3>扫码状态</h3><div class="control-grid"><button type="button" data-jump="qr-waiting">待扫码</button><button type="button" data-jump="qr-scanned">已扫码</button><button type="button" data-jump="qr-expired">已过期</button><button type="button" data-jump="qr-failure">获取失败</button></div></section>
+        <section><h3>安全验证</h3><div class="control-grid"><button type="button" data-jump="risk-sms">短信验证</button><button type="button" data-jump="captcha">腾讯验证</button><button type="button" data-jump="accounts">多账号选择</button><button type="button" data-jump="success">登录完成</button></div></section>
+        <section class="rules"><h3>本原型验证</h3><ul><li>提交中禁止重复操作</li><li>退出页面停止二维码轮询</li><li>验证成功后只重试一次</li><li>取消、错误与恢复路径明确</li><li>WebView 与原生页面视觉隔离</li></ul></section>
+        <footer><b>非实现代码</b><span>无网络、无持久化、无协议载荷</span></footer>
+      </aside>
+    </main>
+
+    <script src="prototype.js"></script>
+  </body>
+</html>

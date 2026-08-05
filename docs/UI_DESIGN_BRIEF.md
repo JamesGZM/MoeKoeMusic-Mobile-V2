@@ -8,6 +8,7 @@
 - 第一版承载 PC 端主要功能，但重新设计移动端信息架构。
 - Material 3 作为交互和组件基础，不使用默认模板化外观。
 - 正式页面编码前先锁定对应设计图和可复用组件；设计确认后同步文档，最后修正 Compose 实现。
+- 缺少页面或状态设计时先在既有 MoeKoe Air 语言内生成静态候选图，用户确认后才允许制作必要的交互原型；原型不能先于设计图或替代设计确认。
 - 播放器和歌词成为最强产品识别点。
 - 保持长列表信息密度，避免所有内容卡片化。
 
@@ -127,6 +128,7 @@
 - Dialog：`11-dialog-components.png`。
 - 反馈组件：`12-feedback-components-v2.png`。
 - 登录主状态：`13-login-phone-immersive.png`。
+- 登录密码、扫码、安全验证与多账号补充状态：`19-login-password-states.png` 至 `22-login-multi-account.png`；已于 2026-08-05 确认，并建立对应本地交互原型。
 - Design System：`14-design-foundations.png` 至 `18-mobile-states-overlays.png`。
 
 同页面旧版本只保留设计过程，不作为视觉验收依据。完整映射与阶段安排见 [`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md)。
@@ -140,7 +142,7 @@
 ## 后续仍需设计与验证
 
 - 首次启动、设备注册和会话失效。
-- 密码、扫码、短信风控、腾讯图形验证和多账号选择的登录状态稿。
+- 使用 [`login-flow`](design/prototypes/login-flow/README.md) 原型继续验证轮询、返回与 WebView 生命周期；真实协议时序和 Activity 重建仍需 Android 测试确认。
 - 加载、空数据、错误、离线、无版权和 VIP 限制状态。
 - 深色内容页、纯黑主题和高对比主题。
 - 平板、横屏和折叠屏双栏结构。

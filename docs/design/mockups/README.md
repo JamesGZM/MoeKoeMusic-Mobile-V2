@@ -29,8 +29,22 @@
 16. [`16-actions-inputs.png`](16-actions-inputs.png)：按钮、IconButton、分段控件、Chip、输入框、选择控件和进度组件。
 17. [`17-music-content-components.png`](17-music-content-components.png)：Section Header、歌曲行、封面内容、用户资产、徽标、MiniPlayer 和队列行。
 18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：手机视口中的页面状态、权限与账号门槛、Bottom Sheet、Dialog、反馈和临时表面。
+19. [`19-login-password-states.png`](19-login-password-states.png)：已确认；密码登录的默认、提交、凭据错误与安全验证触发状态。
+20. [`20-login-qr-states.png`](20-login-qr-states.png)：已确认；扫码登录的生成、待扫码、已扫码、过期与获取失败状态。
+21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：已确认；短信二次验证、隔离腾讯图形验证、失败与成功状态。
+22. [`22-login-multi-account.png`](22-login-multi-account.png)：已确认；手机号多账号选择、提交失败与账号切换 Sheet。
 
 未带 `v2` 后缀的前四张图片以及 `04-my-v2.png`、`04-my-v3.png`、`12-feedback-components.png` 保留为早期方案，仅用于设计演进对照，不再作为实现基准。
+
+`19` 至 `22` 已于 2026-08-05 使用 `frontend-design` 约束生成并经用户确认，现已加入 `DEVELOPMENT_PLAN.md` 的实现基线。对应 [`login-flow`](../prototypes/login-flow/README.md) 原型只验证交互关系，不替代 Android 实现和验收。
+
+## 视觉门禁顺序
+
+1. 功能规格先列出全部适用 UI 状态，并审计现有视觉与组件约束。
+2. 缺少状态设计时，先在现有 MoeKoe Air 语言内生成静态候选图。
+3. 用户确认后将候选图标记为“已确认”，并同步唯一页面映射与阶段计划。
+4. 只有复杂交互确有必要时，才基于已确认设计图制作原型；原型不能先于设计图，也不能替代设计图确认。
+5. 原型结论和组件行为同步到文档后，才开始 Design System 与 Compose 业务实现。
 
 ## 使用方式
 
@@ -40,3 +54,4 @@
 - Dialog、Snackbar 与 Toast 的行为和尺寸以 [`UI_COMPONENTS.md`](../../UI_COMPONENTS.md) 为实现规范，图片只作为视觉参考。
 - 播放器背景必须提供静态渐变回退，不要求低性能设备实时模糊。
 - 真正落地前需在 `390 × 844 dp`、大字体和不同屏幕宽度下重新验证。
+- 自动生成图中的示例账号、二维码、日期、响应文案与尺寸标注只用于视觉表达；实现必须使用虚构测试数据、字符串资源、固定协议审计和 Design System Token。

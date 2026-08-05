@@ -19,7 +19,7 @@
 - 验证码、密码和扫码使用统一分段控件与表单 Surface；多账号选择只在接口返回多个账号后出现。
 - 普通返回、手机、密码、二维码和安全图标优先复用 Material Icons，不重复生成 SVG。
 - 颜色、排版、输入框、按钮、Dialog 和页面状态遵循 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 与 [`../UI_COMPONENTS.md`](../UI_COMPONENTS.md)。
-- 密码、扫码、短信风控、腾讯图形验证和多账号状态在布局编码前补齐设计稿。
+- 密码、扫码、短信风控、腾讯图形验证和多账号状态设计稿已确认：[`19-login-password-states.png`](../design/mockups/19-login-password-states.png)、[`20-login-qr-states.png`](../design/mockups/20-login-qr-states.png)、[`21-login-risk-verification.png`](../design/mockups/21-login-risk-verification.png) 与 [`22-login-multi-account.png`](../design/mockups/22-login-multi-account.png)。[`login-flow`](../design/prototypes/login-flow/README.md) 原型验证交互与状态关系；Compose 编码仍需满足协议审计和组件门禁。
 
 ## 测试
 

@@ -17,7 +17,7 @@
 ## 开发原则
 
 - 每个阶段形成可运行、可测试的纵向闭环，不先铺满空页面。
-- 页面实现以已批准设计稿和 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) 为共同验收依据；顺序固定为“设计图确认 → 文档同步 → Token/组件代码 → 业务页面”。
+- 页面实现以已批准设计稿和 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) 为共同验收依据；顺序固定为“状态清单 → 静态设计图生成 → 用户确认 → 必要时原型 → 文档同步 → Token/组件代码 → 业务页面”。原型不能先于设计图或替代设计确认。
 - 新行为与对应测试在同一变更中提交；签名、导入、队列和播放模式是强制单测区域。
 - 阶段未满足退出条件时，不开始依赖它的下一阶段。
 - 协议、模块边界和产品语义变化必须同步更新文档与 ADR。
@@ -68,10 +68,16 @@
 | 操作与输入 | [`16-actions-inputs.png`](design/mockups/16-actions-inputs.png) | Material Icons 优先；统一状态与触控尺寸 |
 | 音乐内容组件 | [`17-music-content-components.png`](design/mockups/17-music-content-components.png) | 保持紧凑列表，不将所有内容卡片化 |
 | 页面状态与覆盖层 | [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png) | 所有覆盖层按真实手机视口与层级验收 |
+| 密码登录与风控 | [`19-login-password-states.png`](design/mockups/19-login-password-states.png) | 凭据错误内联；触发风控后停止原提交 |
+| 扫码登录状态 | [`20-login-qr-states.png`](design/mockups/20-login-qr-states.png) | 生成、等待、已扫码、过期和失败分别建模 |
+| 登录安全验证 | [`21-login-risk-verification.png`](design/mockups/21-login-risk-verification.png) | 原生短信与隔离腾讯验证具有明确安全边界 |
+| 手机号多账号 | [`22-login-multi-account.png`](design/mockups/22-login-multi-account.png) | 只在多账号响应后展示，不自动选择 |
+
+登录流程 `19` 至 `22` 号设计稿已于 2026-08-05 确认，并建立 [`login-flow`](design/prototypes/login-flow/README.md) 本地交互原型验证切换、返回、提交锁定、二维码生命周期、安全验证隔离和多账号选择。原型不替代协议审计、组件实现、Compose 测试或真机验收。
 
 底部导航固定为“首页、发现、我的”。搜索和用户主页是子页面；播放器由歌曲、MiniPlayer 或系统恢复入口进入。
 
-现有 `:core:designsystem` 是阶段 1 工程基础，不是最终视觉真值。Primary、Typography、Spacing、Shapes 和通用组件需按 `DESIGN_SYSTEM.md` 校准后，才开始正式登录和首页布局。无版权、VIP、网络、会话与协议错误接入自定义 Snackbar，以及播放地址失效后最多刷新一次，在本轮 UI 基础完成前保持暂缓。
+`:core:designsystem` 已完成 Primary、Typography、Spacing、Shapes、Dimensions 和 TopBar 第一批校准；按钮、输入、音乐内容、反馈和页面状态组件仍需按 `DESIGN_SYSTEM.md` 与确认设计稿继续实现。无版权、VIP、网络、会话与协议错误接入自定义 Snackbar，以及播放地址失效后最多刷新一次，在本轮 UI 基础完成前保持暂缓。
 
 本地音乐列表、设备扫描、多选导入、外部打开进度、批量结果及异常状态已建立基础 Compose 实现，并沿用现有 Material 3 token。本地音乐空状态、内容状态和 `1.5×` 字体导入状态已建立稳定截图基准；API 26、29、32、33、36 当前代码设备矩阵已通过。五种目标格式、损坏输入、重复内容、部分成功、取消清理和中断遗留 `.partial` 恢复已通过真实 ContentResolver、WorkManager 与 Room 管线测试，阶段 3 退出条件已满足。
 
