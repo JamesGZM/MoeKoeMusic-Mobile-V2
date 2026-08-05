@@ -2,6 +2,8 @@ package cn.james.music.core.designsystem
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 val MoeKoeShapes =
@@ -12,3 +14,8 @@ val MoeKoeShapes =
         large = RoundedCornerShape(24.dp),
         extraLarge = RoundedCornerShape(28.dp),
     )
+
+@Immutable
+data class MoeKoeExtraShapes(
+    val hero: Shape = RoundedCornerShape(36.dp),
+)

@@ -10,20 +10,20 @@ val MoeKoeTypography =
         displaySmall =
             TextStyle(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 36.sp,
-                lineHeight = 44.sp,
+                fontSize = 32.sp,
+                lineHeight = 40.sp,
             ),
         headlineLarge =
             TextStyle(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 32.sp,
-                lineHeight = 40.sp,
+                fontSize = 28.sp,
+                lineHeight = 36.sp,
             ),
         headlineMedium =
             TextStyle(
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 28.sp,
-                lineHeight = 36.sp,
+                fontSize = 24.sp,
+                lineHeight = 32.sp,
             ),
         titleLarge =
             TextStyle(
@@ -32,6 +32,12 @@ val MoeKoeTypography =
                 lineHeight = 28.sp,
             ),
         titleMedium =
+            TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                lineHeight = 26.sp,
+            ),
+        titleSmall =
             TextStyle(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
@@ -47,7 +53,13 @@ val MoeKoeTypography =
             TextStyle(
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
-                lineHeight = 20.sp,
+                lineHeight = 22.sp,
+            ),
+        bodySmall =
+            TextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                lineHeight = 18.sp,
             ),
         labelLarge =
             TextStyle(
