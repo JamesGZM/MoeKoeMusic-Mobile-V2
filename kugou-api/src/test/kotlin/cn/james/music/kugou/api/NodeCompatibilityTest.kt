@@ -1,5 +1,6 @@
 package cn.james.music.kugou.api
 
+import cn.james.music.kugou.api.crypto.KugouAuthCrypto
 import cn.james.music.kugou.api.crypto.KugouDigests
 import cn.james.music.kugou.api.crypto.KugouMid
 import cn.james.music.kugou.api.crypto.KugouPlaylistCrypto
@@ -68,6 +69,22 @@ class NodeCompatibilityTest {
         assertEquals(128, second.size)
         assertFalse(first.contentEquals(second))
         assertNotEquals(first.joinToString(), second.joinToString())
+    }
+
+    @Test
+    fun authAesAndRawRsaMatchFixedNodeOutput() {
+        val plaintext = """{"mobile":"13800000000","code":"246810"}"""
+        val encrypted = KugouAuthCrypto.encryptJson(plaintext, "fixturekey123456")
+
+        assertEquals(
+            "b8be3bbf25d910e805a8fa2cc4f784339f3673b7fe4914d55c885fa72a3dde4685f1d891d14581826d0e576b8c9926b2",
+            encrypted.ciphertextHex,
+        )
+        assertEquals(plaintext, KugouAuthCrypto.decryptJson(encrypted.ciphertextHex, encrypted.temporaryKey))
+        assertEquals(
+            "2371591A7A8D41AA5890429388F973328BFFD3EDDD332F0B32F8DF5EF2FD28DC1E062E5775D66E81B14B0AFDE62CB271F73991F2F7EA4C404FF3C23974C820061220246AA50C8CD47F714F59AED731E4E29D0F34EFF3C46002E0368DD326BD7CBC7B4586ABBF9C8EB61D4E55837E3404243A24D51B705811AA1CA5745394515A",
+            KugouAuthCrypto.encryptKeyEnvelope("""{"clienttime_ms":1700000000123,"key":"fixturekey123456"}"""),
+        )
     }
 
     private companion object {

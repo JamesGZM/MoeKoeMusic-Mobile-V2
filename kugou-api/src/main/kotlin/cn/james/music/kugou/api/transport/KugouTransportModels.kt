@@ -25,6 +25,11 @@ enum class KugouRetryMode {
     IdempotentRead,
 }
 
+enum class KugouCleartextPolicy {
+    Deny,
+    LoginMobileCode,
+}
+
 data class KugouRequestContext(
     val mid: String,
     val dfid: String? = null,
@@ -50,11 +55,13 @@ data class KugouRequestSpec(
     val generateSignKey: Boolean = false,
     val responseFormat: KugouResponseFormat = KugouResponseFormat.Json,
     val retryMode: KugouRetryMode = KugouRetryMode.None,
+    val cleartextPolicy: KugouCleartextPolicy = KugouCleartextPolicy.Deny,
 ) {
     override fun toString(): String =
         "KugouRequestSpec(id=$id, method=$method, path=$path, baseUrl=$baseUrl, " +
             "paramNames=${params.keys.sorted()}, headerNames=${headers.keys.sorted()}, bodyBytes=${body?.size ?: 0}, " +
-            "signatureMode=$signatureMode, responseFormat=$responseFormat, retryMode=$retryMode)"
+            "signatureMode=$signatureMode, responseFormat=$responseFormat, retryMode=$retryMode, " +
+            "cleartextPolicy=$cleartextPolicy)"
 }
 
 data class KugouPreparedRequest(

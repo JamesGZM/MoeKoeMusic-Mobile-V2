@@ -2,6 +2,7 @@ package cn.james.music.kugou.api
 
 import cn.james.music.kugou.api.session.KugouCookies
 import cn.james.music.kugou.api.transport.EpochSecondsProvider
+import cn.james.music.kugou.api.transport.KugouCleartextPolicy
 import cn.james.music.kugou.api.transport.KugouHttpMethod
 import cn.james.music.kugou.api.transport.KugouRequestContext
 import cn.james.music.kugou.api.transport.KugouRequestFactory
@@ -140,6 +141,45 @@ class KugouRequestFactoryTest {
                     ),
                 context = KugouRequestContext(mid = "fixture-mid"),
             )
+        }
+    }
+
+    @Test
+    fun fixedMobileCodeOriginRequiresExplicitPolicy() {
+        val request =
+            factory.prepare(
+                spec =
+                    KugouRequestSpec(
+                        id = "captcha_sent",
+                        method = KugouHttpMethod.Post,
+                        path = "/v7/send_mobile_code",
+                        baseUrl = "http://login.user.kugou.com",
+                        cleartextPolicy = KugouCleartextPolicy.LoginMobileCode,
+                    ),
+                context = KugouRequestContext(mid = "fixture-mid"),
+            )
+
+        assertEquals("http://login.user.kugou.com", request.baseUrl)
+
+        listOf(
+            "http://login.user.kugou.com:80",
+            "http://sub.login.user.kugou.com",
+            "http://example.test",
+            "https://login.user.kugou.com",
+        ).forEach { origin ->
+            assertThrows(IllegalArgumentException::class.java) {
+                factory.prepare(
+                    spec =
+                        KugouRequestSpec(
+                            id = "captcha_sent",
+                            method = KugouHttpMethod.Post,
+                            path = "/v7/send_mobile_code",
+                            baseUrl = origin,
+                            cleartextPolicy = KugouCleartextPolicy.LoginMobileCode,
+                        ),
+                    context = KugouRequestContext(mid = "fixture-mid"),
+                )
+            }
         }
     }
 

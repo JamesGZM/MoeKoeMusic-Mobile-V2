@@ -20,7 +20,7 @@ class KugouRequestFactory(
         require(spec.id.isNotBlank()) { "Request id must not be blank" }
         require(spec.path.startsWith('/') && '?' !in spec.path && '#' !in spec.path) { "Request path must be absolute and query-free" }
         require(context.mid.isNotBlank()) { "MID must not be blank" }
-        val baseUrl = normalizeBaseUrl(spec.baseUrl)
+        val baseUrl = normalizeBaseUrl(spec.baseUrl, spec.cleartextPolicy)
 
         val params = linkedMapOf<String, String>()
         if (spec.includeDefaultParams) {
@@ -100,13 +100,29 @@ class KugouRequestFactory(
             KugouSignatureMode.None -> error("None is handled before signing")
         }
 
-    private fun normalizeBaseUrl(value: String): String {
+    private fun normalizeBaseUrl(
+        value: String,
+        cleartextPolicy: KugouCleartextPolicy,
+    ): String {
         val uri = runCatching { URI(value) }.getOrElse { throw IllegalArgumentException("Invalid base URL", it) }
-        require(uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank()) { "Only HTTPS endpoints are allowed" }
+        require(!uri.host.isNullOrBlank()) { "Base URL must contain a host" }
+        val isHttps = uri.scheme.equals("https", ignoreCase = true)
+        val isAllowedLoginCleartext =
+            cleartextPolicy == KugouCleartextPolicy.LoginMobileCode &&
+                uri.scheme.equals("http", ignoreCase = true) &&
+                uri.host.equals(LOGIN_MOBILE_CODE_HOST, ignoreCase = true) &&
+                uri.port == -1
+        require((isHttps && cleartextPolicy == KugouCleartextPolicy.Deny) || isAllowedLoginCleartext) {
+            "Only HTTPS endpoints or the fixed login mobile-code origin are allowed"
+        }
         require(uri.userInfo == null && uri.query == null && uri.fragment == null && (uri.path.isNullOrEmpty() || uri.path == "/")) {
             "Base URL must contain only an HTTPS origin"
         }
         return value.removeSuffix("/")
+    }
+
+    private companion object {
+        const val LOGIN_MOBILE_CODE_HOST = "login.user.kugou.com"
     }
 }
 
