@@ -11,6 +11,7 @@ import cn.james.music.kugou.api.session.KugouInitializationError
 import cn.james.music.kugou.api.session.KugouInitializationResult
 import cn.james.music.kugou.api.session.KugouRegistrationCodec
 import cn.james.music.kugou.api.session.KugouRegistrationKeyProvider
+import cn.james.music.kugou.api.session.KugouSessionMutationResult
 import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.session.KugouSessionStorageException
 import cn.james.music.kugou.api.session.KugouSessionStore
@@ -59,6 +60,22 @@ class KugouAnonymousSessionInitializerTest {
 
             assertEquals(KugouInitializationResult.Ready(stored), result)
             assertEquals(0, transport.calls)
+        }
+
+    @Test
+    fun replacementUpdatesStorageAndCachedFactSource() =
+        runBlocking {
+            val stored = KugouSessionSnapshot(identity = FIXTURE_IDENTITY, dfid = FIXTURE_DFID)
+            val store = MemoryStore(stored)
+            val initializer = initializer(store, RegistrationTransport())
+            assertEquals(KugouInitializationResult.Ready(stored), initializer.initialize())
+
+            val authenticated = stored.copy(token = "fixture-token", userId = "42")
+            val mutation = initializer.replace(authenticated)
+
+            assertEquals(KugouSessionMutationResult.Updated(authenticated), mutation)
+            assertEquals(authenticated, store.snapshot)
+            assertEquals(KugouInitializationResult.Ready(authenticated), initializer.initialize())
         }
 
     @Test

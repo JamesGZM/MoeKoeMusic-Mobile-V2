@@ -9,6 +9,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import cn.james.music.kugou.api.endpoint.KugouAuthClient
+import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
 import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
@@ -17,6 +19,7 @@ import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
 import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
+import cn.james.music.kugou.api.session.KugouSessionMutator
 import cn.james.music.kugou.api.session.KugouSessionProvider
 import cn.james.music.kugou.api.session.KugouSessionStore
 import cn.james.music.kugou.api.transport.KtorKugouTransport
@@ -109,6 +112,10 @@ object KugouSessionModule {
     ): KugouOnlineClient = KugouOnlineClient(executor, songSearchDecoder, playbackAddressDecoder, privilegeDecoder)
 
     @Provides
+    @Singleton
+    fun provideAuthClient(executor: KugouCallExecutor): KugouAuthenticationClient = KugouAuthClient(executor)
+
+    @Provides
     fun provideSongSearchDecoder(): KugouSongSearchDecoder = KugouSongSearchDecoder()
 
     @Provides
@@ -119,12 +126,12 @@ object KugouSessionModule {
 
     @Provides
     @Singleton
-    fun provideSessionProvider(
+    fun provideSessionInitializer(
         store: KugouSessionStore,
         profileProvider: KugouDeviceProfileProvider,
         requestFactory: KugouRequestFactory,
         transport: KtorKugouTransport,
-    ): KugouSessionProvider =
+    ): KugouAnonymousSessionInitializer =
         KugouAnonymousSessionInitializer(
             store = store,
             identityFactory = KugouDeviceIdentityFactory(),
@@ -132,6 +139,12 @@ object KugouSessionModule {
             requestFactory = requestFactory,
             transport = transport,
         )
+
+    @Provides
+    fun provideSessionProvider(initializer: KugouAnonymousSessionInitializer): KugouSessionProvider = initializer
+
+    @Provides
+    fun provideSessionMutator(initializer: KugouAnonymousSessionInitializer): KugouSessionMutator = initializer
 
     private const val SESSION_FILE_NAME = "kugou_session.preferences_pb"
 }

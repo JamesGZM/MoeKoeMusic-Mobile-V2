@@ -41,6 +41,18 @@ interface KugouSessionStore {
     suspend fun clear()
 }
 
+interface KugouSessionMutator {
+    suspend fun replace(snapshot: KugouSessionSnapshot): KugouSessionMutationResult
+}
+
+sealed interface KugouSessionMutationResult {
+    data class Updated(
+        val session: KugouSessionSnapshot,
+    ) : KugouSessionMutationResult
+
+    data object StorageFailure : KugouSessionMutationResult
+}
+
 class KugouSessionStorageException(
     cause: Throwable,
 ) : Exception("Kugou session storage failed", cause)

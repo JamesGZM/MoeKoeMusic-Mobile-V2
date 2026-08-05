@@ -20,7 +20,8 @@ class KugouAnonymousSessionInitializer internal constructor(
     private val requestFactory: KugouRequestFactory,
     private val transport: KugouTransport,
     private val registrationCodec: KugouRegistrationCodec = KugouRegistrationCodec(),
-) : KugouSessionProvider {
+) : KugouSessionProvider,
+    KugouSessionMutator {
     constructor(
         store: KugouSessionStore,
         identityFactory: KugouDeviceIdentityFactory,
@@ -67,6 +68,23 @@ class KugouAnonymousSessionInitializer internal constructor(
             throw failure
         }
     }
+
+    override suspend fun replace(snapshot: KugouSessionSnapshot): KugouSessionMutationResult =
+        mutex.withLock {
+            val active = current
+            if (active != null) {
+                require(active.identity == snapshot.identity) { "Session replacement cannot change device identity" }
+            }
+            try {
+                store.write(snapshot)
+                current = snapshot
+                KugouSessionMutationResult.Updated(snapshot)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: KugouSessionStorageException) {
+                KugouSessionMutationResult.StorageFailure
+            }
+        }
 
     suspend fun clear() {
         mutex.withLock {

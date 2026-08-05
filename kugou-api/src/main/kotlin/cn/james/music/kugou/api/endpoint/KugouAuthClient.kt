@@ -5,15 +5,29 @@ import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRequestContext
 
+interface KugouAuthenticationClient {
+    suspend fun sendMobileCode(
+        mobile: String,
+        context: KugouRequestContext,
+    ): KugouApiResult<Unit>
+
+    suspend fun loginWithMobileCode(
+        mobile: String,
+        code: String,
+        selectedUserId: String?,
+        context: KugouRequestContext,
+    ): KugouMobileLoginResult
+}
+
 class KugouAuthClient
     internal constructor(
         private val executor: KugouCallExecutor,
         private val requestBuilder: KugouAuthRequestBuilder,
         private val mobileLoginDecoder: KugouMobileLoginDecoder,
-    ) {
+    ) : KugouAuthenticationClient {
         constructor(executor: KugouCallExecutor) : this(executor, KugouAuthRequestBuilder(), KugouMobileLoginDecoder())
 
-        suspend fun sendMobileCode(
+        override suspend fun sendMobileCode(
             mobile: String,
             context: KugouRequestContext,
         ): KugouApiResult<Unit> {
@@ -28,7 +42,7 @@ class KugouAuthClient
             }
         }
 
-        suspend fun loginWithMobileCode(
+        override suspend fun loginWithMobileCode(
             mobile: String,
             code: String,
             selectedUserId: String?,
