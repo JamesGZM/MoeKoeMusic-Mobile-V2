@@ -14,9 +14,10 @@ import cn.james.music.kugou.api.transport.KugouRequestFactory
 import cn.james.music.kugou.api.transport.KugouRetryDelayer
 import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
+import cn.james.music.playback.PlaybackSourceError
+import cn.james.music.playback.RemotePlaybackSourceResult
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class KugouPlaybackSourceResolverTest {
@@ -28,7 +29,7 @@ class KugouPlaybackSourceResolverTest {
 
             val address = resolver.resolve(" ABCDEF ")
 
-            assertEquals("https://cdn.example/audio.mp3", address)
+            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/audio.mp3"), address)
             val request = transport.requests.single()
             assertEquals("song_url", request.id)
             assertEquals("abcdef", request.query["hash"])
@@ -37,7 +38,7 @@ class KugouPlaybackSourceResolverTest {
         }
 
     @Test
-    fun initializationFailureAndUnavailableResponseReturnNull() =
+    fun initializationFailureAndUnavailableResponseRemainTyped() =
         runBlocking {
             val transport = RecordingTransport(success("""{"status":1,"url":[]}"""))
             val failed =
@@ -48,9 +49,15 @@ class KugouPlaybackSourceResolverTest {
                     transport,
                 )
 
-            assertNull(failed.resolve("hash"))
+            assertEquals(
+                RemotePlaybackSourceResult.Unavailable(PlaybackSourceError.SessionInitialization),
+                failed.resolve("hash"),
+            )
             assertEquals(0, transport.requests.size)
-            assertNull(resolver(readyProvider(), transport).resolve("hash"))
+            assertEquals(
+                RemotePlaybackSourceResult.Unavailable(PlaybackSourceError.VipRequired),
+                resolver(readyProvider(), transport).resolve("hash"),
+            )
         }
 
     @Test
@@ -69,7 +76,10 @@ class KugouPlaybackSourceResolverTest {
                     transport,
                 )
 
-            assertNull(resolver.resolve("   "))
+            assertEquals(
+                RemotePlaybackSourceResult.Unavailable(PlaybackSourceError.InvalidSource),
+                resolver.resolve("   "),
+            )
             assertEquals(false, initialized)
             assertEquals(0, transport.requests.size)
         }

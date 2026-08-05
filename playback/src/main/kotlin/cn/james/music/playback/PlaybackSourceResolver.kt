@@ -34,7 +34,7 @@ interface ImportedLocalSourceResolver {
 }
 
 interface KugouSourceResolver {
-    suspend fun resolve(songHash: String): String?
+    suspend fun resolve(songHash: String): RemotePlaybackSourceResult
 }
 
 @Singleton
@@ -53,16 +53,27 @@ internal class DefaultPlaybackSourceResolver
 
                 is PlaybackSource.ImportedLocal -> {
                     importedLocalSourceResolver.resolve(source.localMusicId)?.let(PlaybackSourceResult::Resolved)
-                        ?: PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                        ?: PlaybackSourceResult.Unavailable(
+                            PlaybackError.SourceUnavailable(item.id, PlaybackSourceError.InvalidSource),
+                        )
                 }
 
                 is PlaybackSource.Kugou -> {
-                    kugouSourceResolver
-                        .resolve(source.songHash)
-                        ?.let(Uri::parse)
-                        ?.takeIf { uri -> uri.scheme == "https" && !uri.host.isNullOrBlank() }
-                        ?.let(PlaybackSourceResult::Resolved)
-                        ?: PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                    when (val result = kugouSourceResolver.resolve(source.songHash)) {
+                        is RemotePlaybackSourceResult.Resolved -> {
+                            Uri
+                                .parse(result.url)
+                                .takeIf { uri -> uri.scheme == "https" && !uri.host.isNullOrBlank() }
+                                ?.let(PlaybackSourceResult::Resolved)
+                                ?: PlaybackSourceResult.Unavailable(
+                                    PlaybackError.SourceUnavailable(item.id, PlaybackSourceError.Protocol),
+                                )
+                        }
+
+                        is RemotePlaybackSourceResult.Unavailable -> {
+                            PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id, result.error))
+                        }
+                    }
                 }
             }
     }

@@ -21,6 +21,7 @@ sealed interface PlaybackError {
 
     data class SourceUnavailable(
         val itemId: String,
+        val reason: PlaybackSourceError,
         override val recoverable: Boolean = true,
     ) : PlaybackError
 
@@ -37,6 +38,40 @@ sealed interface PlaybackError {
     data object InvalidCommand : PlaybackError {
         override val recoverable = false
     }
+}
+
+sealed interface PlaybackSourceError {
+    data object NoCopyright : PlaybackSourceError
+
+    data object VipRequired : PlaybackSourceError
+
+    data object Offline : PlaybackSourceError
+
+    data object Timeout : PlaybackSourceError
+
+    data object Connection : PlaybackSourceError
+
+    data object VerificationRequired : PlaybackSourceError
+
+    data object AuthenticationRequired : PlaybackSourceError
+
+    data object ServiceUnavailable : PlaybackSourceError
+
+    data object Protocol : PlaybackSourceError
+
+    data object SessionInitialization : PlaybackSourceError
+
+    data object InvalidSource : PlaybackSourceError
+}
+
+sealed interface RemotePlaybackSourceResult {
+    data class Resolved(
+        val url: String,
+    ) : RemotePlaybackSourceResult
+
+    data class Unavailable(
+        val error: PlaybackSourceError,
+    ) : RemotePlaybackSourceResult
 }
 
 sealed interface PlaybackCommandResult {

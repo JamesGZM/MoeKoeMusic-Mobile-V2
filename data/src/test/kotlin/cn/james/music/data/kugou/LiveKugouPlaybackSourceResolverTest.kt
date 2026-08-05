@@ -13,6 +13,7 @@ import cn.james.music.kugou.api.session.KugouSessionStore
 import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouRequestFactory
+import cn.james.music.playback.RemotePlaybackSourceResult
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -58,7 +59,10 @@ class LiveKugouPlaybackSourceResolverTest {
                     onlineClient = onlineClient,
                 ).resolve(song.hash)
 
-            assertTrue("Current service returned no secure playable address", address?.startsWith("https://") == true)
+            assertTrue(
+                "Current service returned no secure playable address",
+                address is RemotePlaybackSourceResult.Resolved && address.url.startsWith("https://"),
+            )
         }
 
     private class MemorySessionStore : KugouSessionStore {
