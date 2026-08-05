@@ -47,6 +47,7 @@ Repository
 :feature:search
 :feature:localmusic
 :feature:foundation
+:feature:login（阶段 5A 按纵向切片加入）
 ```
 
 ### `:app`
@@ -104,6 +105,7 @@ Repository
 
 - 每个业务能力独立拥有导航键、导航注册、Route、Screen、ViewModel 和测试。
 - 当前模块为 `home`、`discover`、`my`、`search`、`localmusic` 与仅 Debug 可达的 `foundation`。
+- 登录按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 建立独立 `:feature:login`；`:app` 只组合导航和隔离验证码 Activity，不持有表单、轮询或认证状态。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
 - 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。
@@ -120,6 +122,7 @@ Repository
 :feature:search ──► SearchRepository
 :feature:localmusic ► LocalMusicRepository + :playback
 :feature:foundation ► :playback
+:feature:login ────► AuthRepository + :core:designsystem
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
@@ -196,6 +199,7 @@ ExoPlayer + MediaSession
 - `:core:database` 拥有 Schema 与 Migration；`:data` 负责文件事务、映射和导入编排。
 - 设置使用 DataStore；酷狗敏感会话由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
 - 会话密文损坏、Keystore key 缺失或 GCM 校验失败时清除密文与旧 key，重新进入匿名注册；不把不可解密状态降级为明文存储。
+- 登录成功响应由 `:kugou-api` 类型化解码，`:data` 在认证互斥区内合并并一次写入加密会话；存储完成前 UI 不进入已登录。退出只清除 token、userid 和登录 Cookie，保留匿名设备身份与 dfid。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
 
 ## 本地音乐与外部 Intent

@@ -43,6 +43,7 @@
 5. [`plans/04-content-and-player-ui.md`](plans/04-content-and-player-ui.md)
 6. [`plans/05-account-and-my.md`](plans/05-account-and-my.md)
 7. [`plans/06-release-readiness.md`](plans/06-release-readiness.md)
+8. [`plans/07-login-flow.md`](plans/07-login-flow.md)
 
 ## UI 实现基线
 
@@ -74,6 +75,8 @@
 | 手机号多账号 | [`22-login-multi-account.png`](design/mockups/22-login-multi-account.png) | 只在多账号响应后展示，不自动选择 |
 
 登录流程 `19` 至 `22` 号设计稿已于 2026-08-05 确认，并建立 [`login-flow`](design/prototypes/login-flow/README.md) 本地交互原型验证切换、返回、提交锁定、二维码生命周期、安全验证隔离和多账号选择。原型不替代协议审计、组件实现、Compose 测试或真机验收。
+
+登录纵向闭环的协议、会话、安全和成熟库选型审计已经通过，见 [`reference-audits/09-login-session-and-risk.md`](reference-audits/09-login-session-and-risk.md)。实施按协议基础、短信/多账号、密码/安全验证、扫码和整体验收拆为原子提交；当前验收只使用已连接的 API 29 真机，不创建或启动模拟器。
 
 底部导航固定为“首页、发现、我的”。搜索和用户主页是子页面；播放器由歌曲、MiniPlayer 或系统恢复入口进入。
 
