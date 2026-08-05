@@ -12,6 +12,10 @@ License:    MIT
 
 目标是将 App 实际需要的酷狗协议迁移为 Kotlin，不在 Android 中运行 Node、Express、本地 HTTP 服务或 JavaScript Runtime。
 
+阶段 4 的固定源码文件、PC/Mobile 提交、采用/拒绝点、Android 安全边界和数据流见 [`reference-audits/04-kugou-online-slice.md`](reference-audits/04-kugou-online-slice.md)。迁移不得机械复制 `util/config.json`；只提取目标酷狗 Endpoint 实际使用且经固定测试证明必要的协议常量，拒绝无关平台凭据。
+
+当前已完成第一批纯 JVM 对照：MD5、SHA-1、MID、Android/Register/Web 签名、带字节 Body 的签名、`signKey`、playlist AES 与 RSA PKCS#1 行为。固定输入全部为虚构数据；下一批迁移统一请求工厂和首批 Endpoint。
+
 ## 参考优先级
 
 1. 固定提交的 KuGouMusicApi：协议参数、签名和加密的最终依据。

@@ -149,6 +149,8 @@
 
 固定版本、具体源码文件及采用/拒绝结论见 [`reference-audits/02-playback-core.md`](reference-audits/02-playback-core.md) 与 [`reference-audits/03-local-music.md`](reference-audits/03-local-music.md)。新增重大功能必须按 [`templates/FEATURE_SPEC_TEMPLATE.md`](templates/FEATURE_SPEC_TEMPLATE.md) 完成同等审计。
 
+阶段 4 的协议、移动初始化与 PC 产品语义审计见 [`reference-audits/04-kugou-online-slice.md`](reference-audits/04-kugou-online-slice.md)。该审计固定了 PC `52c9833`、Mobile `ab71195` 和 KuGouMusicApi `6efe84e` 的具体文件；仅迁移目标 Endpoint 所需的 MIT 协议实现，不复制整个配置或无关第三方凭据。
+
 ## 许可证注意
 
 - MoeKoeMusic PC 与 Mobile 使用 GPL-2.0。
