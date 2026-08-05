@@ -92,7 +92,7 @@ Repository
 - ExoPlayer、MediaSession、MediaLibraryService。
 - 播放队列运行时、系统媒体命令和通知栏。
 - `PlaybackController` 与可观察的 `PlaybackState`。
-- 歌曲地址解析通过接口注入，不直接依赖具体酷狗实现。
+- 歌曲地址解析通过 `KugouSourceResolver` 端口注入，不直接依赖具体酷狗实现；`:data` 返回短期 HTTPS 字符串，`:playback` 在 Service 边界转换为 Android `Uri`，地址不进入 Room 快照。
 
 ### `:features`
 

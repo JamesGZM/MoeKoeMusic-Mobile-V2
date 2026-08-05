@@ -175,6 +175,8 @@ Node 与 Kotlin 使用相同的固定输入：
 
 固定向量、Fake Transport 和脱敏响应 fixture 用于确定性回归，但不能单独证明上游接口当前可用。每个新 Endpoint 首次接入、协议兼容修复和发布候选都必须显式运行真实服务集成测试；测试只断言状态、类型化错误和必要字段，不保存响应正文、歌曲数据或匿名身份。普通 PR CI 保持离线，避免把第三方限流、网络故障或服务维护误判为代码回归。
 
+当 PC、Mobile 和固定 API 的本地源码已经覆盖目标 Endpoint 时，先读取请求模块与实际消费代码，再据此建立 DTO、容错规则和 fixture。真实服务测试不得承担字段发现或替代源码审计，只验证当前服务是否仍接受实现。2026-08-05 的在线播放实现直接依据 `privilege_lite.js`、`song_url.js`、Mobile `song-url.ts` 和 PC `OnlineMusicQueue.js`，真实服务仅在完成后验证响应仍兼容及 Media3 真机可播放。
+
 ## 上游升级
 
 默认不自动跟随 KuGouMusicApi 最新提交。升级时：

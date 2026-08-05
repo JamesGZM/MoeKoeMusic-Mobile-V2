@@ -42,6 +42,7 @@
 - 通过 Fake 传输、文件源、存储空间检查器和时钟保持确定性。
 - 加密会话覆盖往返、明文不落盘、损坏密文、key 丢失、清除和协程取消；AES-GCM 与 Android Keystore 的真实组合使用设备测试，不能只用 JVM Fake Cipher 代替。
 - `LiveKugouSearchRepositoryTest` 使用同一显式环境变量，覆盖真实注册、搜索、DTO 解码和领域映射；失败信息只包含类型化错误，不输出会话值、响应正文或歌曲内容。
+- `LiveKugouPlaybackSourceResolverTest` 在源码与 fixture 测试完成后验证当前 `privilege_lite` 结构和 `song_url` 安全地址；字段格式以固定 PC/Mobile 源码为依据，真实测试不用于探索已知结构。最终播放由真机 Media3 的 Playing 状态、递增位置、缓冲和媒体元数据验收。
 
 ### `:playback`
 

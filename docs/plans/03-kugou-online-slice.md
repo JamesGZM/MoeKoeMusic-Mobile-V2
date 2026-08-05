@@ -106,7 +106,10 @@ interface SearchRepository {
 - 2026-08-05 显式运行 `LiveKugouSearchRepositoryTest`，真实完成“设备注册 → 匿名搜索 → DTO 解码 → Domain 映射”，服务返回非空领域歌曲列表；记录未保存关键词结果、响应正文、dfid 或 Cookie。
 - 独立 Search Route 已从首页进入且不占底部 Tab，覆盖未搜索、加载、空结果、错误、内容和分页状态；新搜索取消旧任务并以 generation 防止旧响应覆盖新结果。
 - 搜索页面已建立标准与 `1.5×` 字体截图基准，ViewModel 覆盖空关键词、成功状态和旧请求隔离。2026-08-05 在 Huawei API 29 真机实际搜索并显示标题、歌手、时长与封面语义。
-- 已保留上游 MIT NOTICE 与完整许可证。下一小步是 `privilege_lite`、`song_url` 与 Media3 在线来源解析；搜索结果在解析链完成前不伪装为可播放项。
+- `privilege_lite` 的基础资源与 `relate_goods`、`song_url` 的主/备 URL、时长、格式及无版权/VIP 分支已按 PC API、PC 播放队列和 Mobile `song-url.ts` 实现，未通过真实响应猜测业务格式。
+- 匿名播放沿用 Mobile 已验证路径，使用 `song_url(free_part=1)`；`privilege_lite` 作为登录后音质候选能力保留，不让匿名播放多依赖一次账号相关请求。返回的 HTTP CDN 候选只升级为 HTTPS，不开放明文流量，短期地址不写入 Room。
+- 2026-08-05 真实服务验收通过 `privilege_lite` 结构解码和安全播放地址解析；Huawei API 29 真机点击搜索结果后 Media3 进入 Playing，播放位置持续增长、缓冲与系统媒体元数据正常。
+- 已保留上游 MIT NOTICE 与完整许可证。下一小步是把无版权、VIP、网络、会话和协议失败从来源解析器传递到自定义 Snackbar，并实现播放地址失效后仅刷新一次。
 
 测试矩阵补充：
 
