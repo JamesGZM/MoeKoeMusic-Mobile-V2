@@ -33,7 +33,10 @@ class KugouPlaybackSourceResolver
                     is KugouInitializationResult.Failure -> {
                         return RemotePlaybackSourceResult.Unavailable(initialization.error.toPlaybackSourceError())
                     }
-                    is KugouInitializationResult.Ready -> initialization.session
+
+                    is KugouInitializationResult.Ready -> {
+                        initialization.session
+                    }
                 }
             return when (val result = onlineClient.resolvePlaybackAddress(normalizedHash, session.requestContext())) {
                 is KugouApiResult.Failure -> {
@@ -43,9 +46,12 @@ class KugouPlaybackSourceResolver
                 is KugouApiResult.Success -> {
                     when (val value = result.value) {
                         is KugouPlaybackAddressResult.Available -> {
-                            value.address.urls.firstOrNull()?.let(RemotePlaybackSourceResult::Resolved)
+                            value.address.urls
+                                .firstOrNull()
+                                ?.let(RemotePlaybackSourceResult::Resolved)
                                 ?: RemotePlaybackSourceResult.Unavailable(PlaybackSourceError.Protocol)
                         }
+
                         is KugouPlaybackAddressResult.Unavailable -> {
                             RemotePlaybackSourceResult.Unavailable(
                                 when (value.reason) {
@@ -62,7 +68,9 @@ class KugouPlaybackSourceResolver
         private fun KugouInitializationError.toPlaybackSourceError(): PlaybackSourceError =
             when (this) {
                 is KugouInitializationError.Network -> error.toPlaybackSourceError()
+
                 is KugouInitializationError.Http -> PlaybackSourceError.ServiceUnavailable
+
                 is KugouInitializationError.Protocol,
                 KugouInitializationError.StorageRead,
                 KugouInitializationError.StorageWrite,
@@ -71,20 +79,29 @@ class KugouPlaybackSourceResolver
 
         private fun KugouError.toPlaybackSourceError(): PlaybackSourceError =
             when (this) {
-                is KugouError.Network ->
+                is KugouError.Network -> {
                     when (kind) {
                         KugouError.Network.Kind.Offline -> PlaybackSourceError.Offline
                         KugouError.Network.Kind.Timeout -> PlaybackSourceError.Timeout
                         KugouError.Network.Kind.Connection -> PlaybackSourceError.Connection
                     }
-                is KugouError.Risk -> PlaybackSourceError.VerificationRequired
-                is KugouError.Http -> PlaybackSourceError.ServiceUnavailable
-                is KugouError.Protocol ->
+                }
+
+                is KugouError.Risk -> {
+                    PlaybackSourceError.VerificationRequired
+                }
+
+                is KugouError.Http -> {
+                    PlaybackSourceError.ServiceUnavailable
+                }
+
+                is KugouError.Protocol -> {
                     if (serviceCode == AUTHENTICATION_REQUIRED_CODE) {
                         PlaybackSourceError.AuthenticationRequired
                     } else {
                         PlaybackSourceError.Protocol
                     }
+                }
             }
 
         private companion object {

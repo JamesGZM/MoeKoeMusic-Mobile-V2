@@ -210,7 +210,9 @@ class MoeKoePlaybackService : MediaLibraryService() {
                 player.play()
             }
 
-            is PlaybackSourceResult.Unavailable -> handleUnrecoverablePlayerError()
+            is PlaybackSourceResult.Unavailable -> {
+                handleUnrecoverablePlayerError()
+            }
         }
     }
 

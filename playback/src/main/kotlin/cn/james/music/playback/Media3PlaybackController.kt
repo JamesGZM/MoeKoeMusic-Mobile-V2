@@ -101,7 +101,9 @@ internal class Media3PlaybackController
                         PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
                     }
 
-                    is PlaybackSourceResult.Unavailable -> return PlaybackCommandResult.Rejected(result.error)
+                    is PlaybackSourceResult.Unavailable -> {
+                        return PlaybackCommandResult.Rejected(result.error)
+                    }
                 }
             return withController { controller ->
                 if (controller.mediaItemCount == 0) {
