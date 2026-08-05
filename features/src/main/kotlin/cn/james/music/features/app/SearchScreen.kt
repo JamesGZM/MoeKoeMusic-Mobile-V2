@@ -1,6 +1,7 @@
 package cn.james.music.features.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,6 +140,7 @@ class SearchViewModel
 @Composable
 fun SearchRoute(
     onBack: () -> Unit,
+    onPlay: (Song) -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -148,6 +150,7 @@ fun SearchRoute(
         onQueryChange = viewModel::updateQuery,
         onSearch = viewModel::submit,
         onLoadMore = viewModel::loadMore,
+        onPlay = onPlay,
     )
 }
 
@@ -159,6 +162,7 @@ internal fun SearchScreen(
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     onLoadMore: () -> Unit,
+    onPlay: (Song) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -196,7 +200,7 @@ internal fun SearchScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     items(state.songs, key = Song::id) { song ->
-                        SearchSongRow(song)
+                        SearchSongRow(song, onClick = { onPlay(song) })
                         HorizontalDivider()
                     }
                     if (state.hasMore || state.loadingMore || state.error != null) {
@@ -216,9 +220,12 @@ internal fun SearchScreen(
 }
 
 @Composable
-private fun SearchSongRow(song: Song) {
+private fun SearchSongRow(
+    song: Song,
+    onClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(76.dp).padding(vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().height(76.dp).clickable(onClick = onClick).padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(

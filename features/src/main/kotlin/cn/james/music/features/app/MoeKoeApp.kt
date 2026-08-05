@@ -57,6 +57,7 @@ import cn.james.music.core.model.local.LocalMusicRepository
 import cn.james.music.core.model.local.LocalMusicSort
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
+import cn.james.music.core.model.online.Song
 import cn.james.music.playback.PlaybackController
 import cn.james.music.playback.PlaybackState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -96,6 +97,19 @@ class MoeKoeAppViewModel @Inject constructor(
         viewModelScope.launch {
             val queue = visible.map(LocalMusic::toPlaybackItem)
             playbackController.replaceQueue(queue, queue.indexOfFirst { it.id == music.id }, true)
+        }
+    }
+    fun play(song: Song) {
+        viewModelScope.launch {
+            playbackController.playNow(
+                PlaybackItem(
+                    id = "kugou:${song.hash}",
+                    title = song.title,
+                    artist = song.artistName.ifBlank { "未知艺术家" },
+                    albumTitle = song.albumTitle,
+                    source = PlaybackSource.Kugou(song.hash),
+                ),
+            )
         }
     }
     fun togglePlayback() { viewModelScope.launch { if (state.value.playback.isPlaying) playbackController.pause() else playbackController.play() } }
@@ -150,7 +164,7 @@ fun MoeKoeAppRoute(
                     MainTab.Discover -> PlaceholderPage("发现", "排行榜、歌单和电台仍在规划阶段")
                     MainTab.My -> MyScreen(onLocalMusic = { page = AppPage.LocalMusic }, onFoundationLab = { page = AppPage.FoundationLab }, showLab = openFoundationLab != null)
                 }
-                AppPage.Search -> SearchRoute(onBack = { page = AppPage.Tabs })
+                AppPage.Search -> SearchRoute(onBack = { page = AppPage.Tabs }, onPlay = viewModel::play)
                 AppPage.LocalMusic -> LocalMusicScreen(state, onBack = { page = AppPage.Tabs }, onChooseFiles, onScan = { page = AppPage.DeviceScan; onRequestDeviceScan(viewModel::scanDevice) }, onPlay = viewModel::play, onDelete = viewModel::delete, onCancelImport = viewModel::cancelImport)
                 AppPage.DeviceScan -> DeviceScanScreen(state.candidates, onBack = { page = AppPage.LocalMusic }, onRefresh = { onRequestDeviceScan(viewModel::scanDevice) }, onImport = { onImportCandidates(it); page = AppPage.LocalMusic })
                 AppPage.FoundationLab -> Unit

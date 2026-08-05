@@ -33,12 +33,17 @@ interface ImportedLocalSourceResolver {
     suspend fun resolve(localMusicId: String): Uri?
 }
 
+interface KugouSourceResolver {
+    suspend fun resolve(songHash: String): String?
+}
+
 @Singleton
 internal class DefaultPlaybackSourceResolver
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
         private val importedLocalSourceResolver: ImportedLocalSourceResolver,
+        private val kugouSourceResolver: KugouSourceResolver,
     ) : PlaybackSourceResolver {
         override suspend fun resolve(item: PlaybackItem): PlaybackSourceResult =
             when (val source = item.source) {
@@ -52,7 +57,12 @@ internal class DefaultPlaybackSourceResolver
                 }
 
                 is PlaybackSource.Kugou -> {
-                    PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                    kugouSourceResolver
+                        .resolve(source.songHash)
+                        ?.let(Uri::parse)
+                        ?.takeIf { uri -> uri.scheme == "https" && !uri.host.isNullOrBlank() }
+                        ?.let(PlaybackSourceResult::Resolved)
+                        ?: PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
                 }
             }
     }

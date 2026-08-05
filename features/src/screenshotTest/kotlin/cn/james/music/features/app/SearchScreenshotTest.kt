@@ -54,6 +54,7 @@ private fun SearchScreenshotContent(state: SearchUiState) {
                 onQueryChange = {},
                 onSearch = {},
                 onLoadMore = {},
+                onPlay = {},
             )
         }
     }
