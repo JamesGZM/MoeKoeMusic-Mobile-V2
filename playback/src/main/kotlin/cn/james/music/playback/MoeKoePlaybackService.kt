@@ -193,6 +193,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
             }
         }
 
+    @OptIn(UnstableApi::class)
     private inner class SessionCallback : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
