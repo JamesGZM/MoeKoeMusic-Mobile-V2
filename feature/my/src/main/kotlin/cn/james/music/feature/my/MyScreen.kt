@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun MyScreen(
+    onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
     onFoundationLab: () -> Unit,
     showFoundationLab: Boolean,
@@ -35,6 +36,9 @@ internal fun MyScreen(
         item {
             Text("我的", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Text("登录后同步收藏与音乐资产", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        item {
+            LibraryCard("登录 MoeKoe Air", "使用手机号验证码安全登录", onLogin)
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

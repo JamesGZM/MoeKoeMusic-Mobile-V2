@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_back">返回</string>
+    <string name="login_brand">MoeKoe Air</string>
+    <string name="login_welcome">欢迎回来，继续听喜欢的音乐</string>
+    <string name="login_mode_code">验证码</string>
+    <string name="login_mode_password">密码</string>
+    <string name="login_mode_qr">扫码</string>
+    <string name="login_phone_title">手机号登录</string>
+    <string name="login_phone_hint">请输入手机号</string>
+    <string name="login_code_hint">请输入 6 位验证码</string>
+    <string name="login_send_code">获取验证码</string>
+    <string name="login_resend_seconds">%1$d 秒</string>
+    <string name="login_submit">登录并继续</string>
+    <string name="login_submitting">正在登录…</string>
+    <string name="login_terms_prefix">登录即代表同意 </string>
+    <string name="login_terms_user_agreement">用户协议</string>
+    <string name="login_terms_and"> 和 </string>
+    <string name="login_terms_privacy_policy">隐私政策</string>
+    <string name="login_security">我们将全力保护你的账号与数据安全</string>
+    <string name="login_invalid_phone">请输入正确的 11 位手机号</string>
+    <string name="login_invalid_code">请输入收到的短信验证码</string>
+    <string name="login_code_sent">验证码已发送，请注意查收</string>
+    <string name="login_error_offline">当前没有网络连接</string>
+    <string name="login_error_timeout">请求超时，请稍后重试</string>
+    <string name="login_error_connection">无法连接登录服务</string>
+    <string name="login_error_service">登录服务暂时不可用</string>
+    <string name="login_error_rejected">验证码无效或已过期，请重新获取</string>
+    <string name="login_error_protocol">服务响应发生变化，请更新应用</string>
+    <string name="login_error_storage">账号会话保存失败，请重试</string>
+    <string name="login_error_session">设备会话初始化失败</string>
+    <string name="login_accounts_title">选择要登录的账号</string>
+    <string name="login_accounts_description">检测到该手机号关联以下账号，请选择要登录的账号</string>
+    <string name="login_account_id">ID：%1$s</string>
+    <string name="login_account_avatar">%1$s 的头像</string>
+    <string name="login_account_unnamed">未命名账号</string>
+    <string name="login_account_submit">登录所选账号</string>
+    <string name="login_account_other">选择其他账号</string>
+    <string name="login_account_required">请先选择一个账号</string>
+    <string name="login_unavailable_mode">该登录方式正在接入</string>
+</resources>

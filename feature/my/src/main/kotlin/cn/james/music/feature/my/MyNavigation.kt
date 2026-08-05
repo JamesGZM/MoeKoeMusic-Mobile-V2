@@ -12,6 +12,7 @@ data object MyGraph
 data object MyDestination
 
 fun NavGraphBuilder.myGraph(
+    onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
     onFoundationLab: () -> Unit,
     showFoundationLab: Boolean,
@@ -19,6 +20,7 @@ fun NavGraphBuilder.myGraph(
     navigation<MyGraph>(startDestination = MyDestination) {
         composable<MyDestination> {
             MyScreen(
+                onLogin = onLogin,
                 onLocalMusic = onLocalMusic,
                 onFoundationLab = onFoundationLab,
                 showFoundationLab = showFoundationLab,

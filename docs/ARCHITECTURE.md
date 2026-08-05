@@ -47,7 +47,7 @@ Repository
 :feature:search
 :feature:localmusic
 :feature:foundation
-:feature:login（阶段 5A 按纵向切片加入）
+:feature:login
 ```
 
 ### `:app`
@@ -104,8 +104,8 @@ Repository
 ### `:feature:*`
 
 - 每个业务能力独立拥有导航键、导航注册、Route、Screen、ViewModel 和测试。
-- 当前模块为 `home`、`discover`、`my`、`search`、`localmusic` 与仅 Debug 可达的 `foundation`。
-- 登录按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 建立独立 `:feature:login`；`:app` 只组合导航和隔离验证码 Activity，不持有表单、轮询或认证状态。
+- 当前模块为 `home`、`discover`、`my`、`search`、`localmusic`、`login` 与仅 Debug 可达的 `foundation`。
+- `:feature:login` 按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 拥有表单、倒计时、多账号选择、导航入口和测试；`:app` 只组合导航和平台安全配置，不持有认证 UI 状态。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
 - 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。

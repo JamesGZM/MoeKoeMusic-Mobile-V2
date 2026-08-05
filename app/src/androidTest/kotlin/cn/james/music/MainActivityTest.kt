@@ -43,4 +43,18 @@ class MainActivityTest {
 
         composeRule.onNodeWithText("轻松发现下一首喜欢的音乐").assertIsDisplayed()
     }
+
+    @Test
+    fun loginIsAnIndependentPageReachedFromMy() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
+        composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
+
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
+    }
 }

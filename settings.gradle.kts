@@ -34,4 +34,5 @@ include(
     ":feature:search",
     ":feature:localmusic",
     ":feature:foundation",
+    ":feature:login",
 )
