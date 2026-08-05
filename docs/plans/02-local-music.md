@@ -38,13 +38,13 @@
 - 正式三项底部导航、本地列表、搜索、排序、设备多选、基础 MiniPlayer 与队列 Bottom Sheet 已建立；播放工程实验台只在 Debug 可达。
 - Room Migration 与唯一约束测试已加入；本地音乐空状态、内容状态和 `1.5×` 字体导入状态已有稳定截图基准。
 - 外部导入完成动作现由播放控制器统一切换到 Media3 应用线程；Service 初始快照恢复增加顺序屏障，避免冷启动恢复覆盖新播放命令。
-- 阶段仍保持进行中，直到 API 26 当前代码复测、全部格式逐项导入和 WorkManager 失败恢复自动化验收完成。
+- 阶段仍保持进行中，直到全部格式逐项导入和 WorkManager 失败恢复自动化验收完成。
 
 ### 设备矩阵（2026-08-05）
 
 | 环境 | 当前结果 | 已验证内容 |
 | --- | --- | --- |
-| API 26 ARM64 AVD | 待复测 | 较早实现已通过；本轮最终代码复测时模拟器未注册到 ADB，不沿用旧结果冒充最终结果 |
+| API 26 ARM64 AVD | 通过 | 无窗口冷启动后，当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 与 Room v1→v2 Migration |
 | Huawei ELE-AL00，API 29 | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 复制后播放，测试后已重装并冷启动 Debug App |
 | API 32 ARM64 AVD | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；外部 VIEW 复制后播放与正式导航 |
 | API 33 ARM64 AVD | 通过 | 当前代码 Room 5/5、App/Intent/UI 6/6；通知允许自动测试；手动拒绝后仍完成 1/1 并生成 App 副本 |
