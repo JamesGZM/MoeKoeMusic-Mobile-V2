@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -90,6 +91,42 @@ internal class Media3PlaybackController
                     }
                 }
                 PlaybackCommandResult.Accepted
+            }
+
+        override suspend fun playNow(item: PlaybackItem): PlaybackCommandResult =
+            withController { controller ->
+                if (controller.mediaItemCount == 0) {
+                    controller.setMediaItem(PlaybackMediaItemMapper.toRequest(item))
+                    controller.prepare()
+                    controller.play()
+                    return@withController PlaybackCommandResult.Accepted
+                }
+                val insertionIndex = (controller.currentMediaItemIndex + 1).coerceAtMost(controller.mediaItemCount)
+                val existingIndex = controller.currentTimelineItems().indexOfFirst { it.id == item.id }
+                val targetIndex =
+                    if (existingIndex >= 0) {
+                        controller.moveMediaItem(existingIndex, insertionIndex.coerceAtMost(controller.mediaItemCount - 1))
+                        if (existingIndex < insertionIndex) insertionIndex - 1 else insertionIndex
+                    } else {
+                        controller.addMediaItem(insertionIndex, PlaybackMediaItemMapper.toRequest(item))
+                        insertionIndex
+                    }
+                controller.seekToDefaultPosition(targetIndex)
+                controller.prepare()
+                controller.play()
+                PlaybackCommandResult.Accepted
+            }
+
+        override suspend fun playAt(index: Int): PlaybackCommandResult =
+            withController { controller ->
+                if (index !in 0 until controller.mediaItemCount) {
+                    PlaybackCommandResult.Rejected(PlaybackError.InvalidCommand)
+                } else {
+                    controller.seekToDefaultPosition(index)
+                    controller.prepare()
+                    controller.play()
+                    PlaybackCommandResult.Accepted
+                }
             }
 
         override suspend fun remove(index: Int): PlaybackCommandResult =
@@ -218,8 +255,10 @@ internal class Media3PlaybackController
 
         private suspend fun withController(block: (MediaController) -> PlaybackCommandResult): PlaybackCommandResult {
             val controller = awaitController() ?: return PlaybackCommandResult.Rejected(PlaybackError.ControllerUnavailable)
-            return runCatching { block(controller) }
-                .getOrElse { PlaybackCommandResult.Rejected(PlaybackError.ControllerUnavailable) }
+            return withContext(Dispatchers.Main.immediate) {
+                runCatching { block(controller) }
+                    .getOrElse { PlaybackCommandResult.Rejected(PlaybackError.ControllerUnavailable) }
+            }
         }
 
         private val controllerListener =

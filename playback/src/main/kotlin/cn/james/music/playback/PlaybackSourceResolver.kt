@@ -29,19 +29,31 @@ internal interface PlaybackSourceResolver {
     suspend fun resolve(item: PlaybackItem): PlaybackSourceResult
 }
 
+interface ImportedLocalSourceResolver {
+    suspend fun resolve(localMusicId: String): Uri?
+}
+
 @Singleton
 internal class DefaultPlaybackSourceResolver
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
+        private val importedLocalSourceResolver: ImportedLocalSourceResolver,
     ) : PlaybackSourceResolver {
         override suspend fun resolve(item: PlaybackItem): PlaybackSourceResult =
-            when (item.source) {
-                PlaybackSource.FoundationDemo -> PlaybackSourceResult.Resolved(DemoAudioFile.ensure(context))
+            when (val source = item.source) {
+                PlaybackSource.FoundationDemo -> {
+                    PlaybackSourceResult.Resolved(DemoAudioFile.ensure(context))
+                }
 
-                is PlaybackSource.ImportedLocal,
-                is PlaybackSource.Kugou,
-                -> PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                is PlaybackSource.ImportedLocal -> {
+                    importedLocalSourceResolver.resolve(source.localMusicId)?.let(PlaybackSourceResult::Resolved)
+                        ?: PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                }
+
+                is PlaybackSource.Kugou -> {
+                    PlaybackSourceResult.Unavailable(PlaybackError.SourceUnavailable(item.id))
+                }
             }
     }
 

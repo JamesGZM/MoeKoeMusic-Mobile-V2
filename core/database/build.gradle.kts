@@ -7,6 +7,15 @@ android {
     namespace = "cn.james.music.core.database"
 }
 
+androidComponents {
+    onVariants { variant ->
+        variant.androidTest
+            ?.sources
+            ?.assets
+            ?.addStaticSourceDirectory("schemas")
+    }
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }

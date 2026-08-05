@@ -15,6 +15,7 @@ import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,6 +39,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
     private var snapshotJob: Job? = null
     private var progressCheckpointJob: Job? = null
     private var errorAdvanceJob: Job? = null
+    private val initialRestoreComplete = CompletableDeferred<Unit>()
     private val errorPolicy = ConsecutivePlaybackErrorPolicy()
 
     @OptIn(UnstableApi::class)
@@ -94,17 +96,21 @@ class MoeKoePlaybackService : MediaLibraryService() {
 
     private fun restoreSnapshot() {
         serviceScope.launch {
-            val snapshot = snapshotStore.load() ?: return@launch
-            val resolved = resolve(snapshot.queue)
-            if (resolved.isEmpty()) {
-                snapshotStore.clear()
-                return@launch
+            try {
+                val snapshot = snapshotStore.load() ?: return@launch
+                val resolved = resolve(snapshot.queue)
+                if (resolved.isEmpty()) {
+                    snapshotStore.clear()
+                    return@launch
+                }
+                val startIndex = snapshot.currentIndex.coerceIn(resolved.indices)
+                PlaybackModeMapper.apply(player, snapshot.mode)
+                player.setMediaItems(resolved, startIndex, snapshot.positionMs)
+                player.playWhenReady = false
+                player.prepare()
+            } finally {
+                initialRestoreComplete.complete(Unit)
             }
-            val startIndex = snapshot.currentIndex.coerceIn(resolved.indices)
-            PlaybackModeMapper.apply(player, snapshot.mode)
-            player.setMediaItems(resolved, startIndex, snapshot.positionMs)
-            player.playWhenReady = false
-            player.prepare()
         }
     }
 
@@ -215,6 +221,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
         ): ListenableFuture<List<MediaItem>> {
             val future = SettableFuture.create<List<MediaItem>>()
             serviceScope.launch {
+                initialRestoreComplete.await()
                 val models = mediaItems.mapNotNull(PlaybackMediaItemMapper::toModel)
                 future.set(resolve(models))
             }
@@ -228,6 +235,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
         ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
             val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
             serviceScope.launch {
+                initialRestoreComplete.await()
                 val snapshot = snapshotStore.load()
                 val items = snapshot?.let { resolve(it.queue) }.orEmpty()
                 if (snapshot == null || items.isEmpty()) {

@@ -18,6 +18,10 @@ interface PlaybackController {
 
     suspend fun playNext(item: PlaybackItem): PlaybackCommandResult
 
+    suspend fun playNow(item: PlaybackItem): PlaybackCommandResult
+
+    suspend fun playAt(index: Int): PlaybackCommandResult
+
     suspend fun remove(index: Int): PlaybackCommandResult
 
     suspend fun move(
