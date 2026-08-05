@@ -71,7 +71,7 @@ import java.io.File
 import javax.inject.Inject
 
 enum class MainTab(val label: String) { Home("首页"), Discover("发现"), My("我的") }
-enum class AppPage { Tabs, LocalMusic, DeviceScan, FoundationLab }
+enum class AppPage { Tabs, Search, LocalMusic, DeviceScan, FoundationLab }
 
 data class MoeKoeAppState(
     val music: List<LocalMusic> = emptyList(),
@@ -146,10 +146,11 @@ fun MoeKoeAppRoute(
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (page) {
                 AppPage.Tabs -> when (tab) {
-                    MainTab.Home -> PlaceholderPage("首页", "在线推荐将在酷狗在线闭环完成后出现")
+                    MainTab.Home -> HomeScreen(onSearch = { page = AppPage.Search })
                     MainTab.Discover -> PlaceholderPage("发现", "排行榜、歌单和电台仍在规划阶段")
                     MainTab.My -> MyScreen(onLocalMusic = { page = AppPage.LocalMusic }, onFoundationLab = { page = AppPage.FoundationLab }, showLab = openFoundationLab != null)
                 }
+                AppPage.Search -> SearchRoute(onBack = { page = AppPage.Tabs })
                 AppPage.LocalMusic -> LocalMusicScreen(state, onBack = { page = AppPage.Tabs }, onChooseFiles, onScan = { page = AppPage.DeviceScan; onRequestDeviceScan(viewModel::scanDevice) }, onPlay = viewModel::play, onDelete = viewModel::delete, onCancelImport = viewModel::cancelImport)
                 AppPage.DeviceScan -> DeviceScanScreen(state.candidates, onBack = { page = AppPage.LocalMusic }, onRefresh = { onRequestDeviceScan(viewModel::scanDevice) }, onImport = { onImportCandidates(it); page = AppPage.LocalMusic })
                 AppPage.FoundationLab -> Unit
@@ -157,6 +158,13 @@ fun MoeKoeAppRoute(
         }
     }
     if (queueVisible) QueueSheet(state.playback, onDismiss = { queueVisible = false }, viewModel::playAt, viewModel::removeAt, viewModel::clearQueue)
+}
+
+@Composable private fun HomeScreen(onSearch: () -> Unit) = Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+    Text("MoeKoe Air", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+    Text("轻松发现下一首喜欢的音乐", modifier = Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Spacer(Modifier.height(20.dp))
+    LibraryCard("搜索音乐", "歌曲、歌手或专辑", onSearch)
 }
 
 @Composable private fun PlaceholderPage(title: String, message: String) = Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) { Text(title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold); Spacer(Modifier.height(12.dp)); Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant) }

@@ -122,6 +122,9 @@ object KugouSessionModule {
 @InstallIn(SingletonComponent::class)
 abstract class KugouSessionBindings {
     @Binds
+    abstract fun bindSessionCipher(implementation: AndroidKeystoreSessionCipher): KugouSessionCipher
+
+    @Binds
     abstract fun bindSessionStore(implementation: EncryptedKugouSessionStore): KugouSessionStore
 
     @Binds
