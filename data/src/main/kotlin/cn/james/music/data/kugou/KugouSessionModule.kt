@@ -15,6 +15,8 @@ import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
 import cn.james.music.kugou.api.endpoint.KugouSongSearchDecoder
+import cn.james.music.kugou.api.endpoint.KugouUserClient
+import cn.james.music.kugou.api.endpoint.KugouUserService
 import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
@@ -114,6 +116,10 @@ object KugouSessionModule {
     @Provides
     @Singleton
     fun provideAuthClient(executor: KugouCallExecutor): KugouAuthenticationClient = KugouAuthClient(executor)
+
+    @Provides
+    @Singleton
+    fun provideUserClient(executor: KugouCallExecutor): KugouUserService = KugouUserClient(executor)
 
     @Provides
     fun provideSongSearchDecoder(): KugouSongSearchDecoder = KugouSongSearchDecoder()
