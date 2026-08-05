@@ -38,6 +38,8 @@
 
 `19` 至 `22` 已于 2026-08-05 使用 `frontend-design` 约束生成并经用户确认，现已加入 `DEVELOPMENT_PLAN.md` 的实现基线。对应 [`login-flow`](../prototypes/login-flow/README.md) 原型只验证交互关系，不替代 Android 实现和验收。
 
+登录确认稿的 Android 生产 Hero 已派生为 [`../assets/login-hero.png`](../assets/login-hero.png)。该文件只提供无文字插画背景；返回、标题、表单和所有图标仍由 Compose 按确认设计与 Design System 原生绘制。
+
 ## 视觉门禁顺序
 
 1. 功能规格先列出全部适用 UI 状态，并审计现有视觉与组件约束。
