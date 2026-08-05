@@ -18,8 +18,11 @@ internal class KugouResponseDecoder(
             return KugouProtocolResult.Failure(KugouError.Http(response.statusCode))
         }
 
-        response.headerValues("ssa-code").firstOrNull()?.takeIf(String::isNotBlank)?.let {
-            return KugouProtocolResult.Failure(KugouError.Risk(it))
+        val riskCode = response.headerValues("ssa-code").firstOrNull()?.takeIf(String::isNotBlank)
+        if (serviceErrorPolicy != KugouServiceErrorPolicy.DecodeAuthRiskByEndpoint) {
+            riskCode?.let {
+                return KugouProtocolResult.Failure(KugouError.Risk(it))
+            }
         }
 
         val parsedBody =
@@ -39,7 +42,7 @@ internal class KugouResponseDecoder(
         }
 
         val cookies = KugouCookies.Empty.mergeSetCookie(response.headerValues("set-cookie"))
-        return KugouProtocolResult.Success(body = body, responseCookies = cookies)
+        return KugouProtocolResult.Success(body = body, responseCookies = cookies, riskCode = riskCode)
     }
 
     private fun serviceError(body: JsonObject): KugouError.Protocol? {

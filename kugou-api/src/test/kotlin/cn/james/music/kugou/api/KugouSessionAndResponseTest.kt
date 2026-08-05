@@ -97,9 +97,13 @@ class KugouSessionAndResponseTest {
             decoder.decode(
                 response(
                     body = """{"status":0,"error_code":20028,"ssaCode":"fixture-event","data":{"info_list":[]}}""",
-                    headers = mapOf("Set-Cookie" to listOf("fixture=value; Path=/")),
+                    headers =
+                        mapOf(
+                            "Set-Cookie" to listOf("fixture=value; Path=/"),
+                            "SSA-CODE" to listOf("fixture-event"),
+                        ),
                 ),
-                KugouServiceErrorPolicy.DecodeByEndpoint,
+                KugouServiceErrorPolicy.DecodeAuthRiskByEndpoint,
             )
 
         assertTrue(result is KugouProtocolResult.Success)
@@ -110,6 +114,7 @@ class KugouSessionAndResponseTest {
                 .getValue("ssaCode")
                 .jsonPrimitive.content,
         )
+        assertEquals("fixture-event", result.riskCode)
         assertEquals("value", result.responseCookies.value("fixture"))
     }
 

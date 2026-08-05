@@ -42,6 +42,66 @@ sealed interface KugouMobileLoginResult {
     ) : KugouMobileLoginResult
 }
 
+data class KugouRiskChallengeDto(
+    val eventId: String,
+    val sid: String?,
+    val edt: String?,
+) {
+    override fun toString(): String = "KugouRiskChallengeDto(eventId=<redacted>, sid=<redacted>, edt=<redacted>)"
+}
+
+sealed interface KugouRiskProofDto {
+    val type: Int
+
+    class Sms(
+        val code: String,
+    ) : KugouRiskProofDto {
+        override val type: Int = 32
+
+        override fun toString(): String = "KugouRiskProofDto.Sms(code=<redacted>)"
+    }
+
+    class Tencent(
+        val ticket: String,
+        val randomString: String,
+        val appId: String,
+    ) : KugouRiskProofDto {
+        override val type: Int = 23
+
+        override fun toString(): String = "KugouRiskProofDto.Tencent(ticket=<redacted>, randomString=<redacted>, appId=<redacted>)"
+    }
+}
+
+sealed interface KugouPasswordLoginResult {
+    data class Authenticated(
+        val session: KugouAuthenticatedSessionDto,
+    ) : KugouPasswordLoginResult
+
+    data class RiskChallenge(
+        val challenge: KugouRiskChallengeDto,
+    ) : KugouPasswordLoginResult
+
+    data class MultipleAccounts(
+        val accounts: List<KugouAccountOptionDto>,
+    ) : KugouPasswordLoginResult
+
+    data class Failure(
+        val error: KugouError,
+    ) : KugouPasswordLoginResult
+}
+
+sealed interface KugouRiskMethodDto {
+    data object Sms : KugouRiskMethodDto
+
+    data class Tencent(
+        val appId: String,
+    ) : KugouRiskMethodDto
+
+    data class Unsupported(
+        val type: Int,
+    ) : KugouRiskMethodDto
+}
+
 internal class KugouMobileLoginDecoder(
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
@@ -119,4 +179,107 @@ internal class KugouMobileLoginDecoder(
         val primitive = get(name) as? JsonPrimitive ?: return null
         return primitive.contentOrNull ?: primitive.intOrNull?.toString()
     }
+}
+
+internal class KugouPasswordLoginDecoder(
+    private val mobileLoginDecoder: KugouMobileLoginDecoder = KugouMobileLoginDecoder(),
+) {
+    fun decode(
+        body: JsonElement,
+        responseCookies: KugouCookies,
+        temporaryKey: String,
+        responseRiskCode: String? = null,
+    ): KugouPasswordLoginResult {
+        val root = body as? JsonObject ?: return malformed()
+        val data = root["data"] as? JsonObject
+        val eventId = root.valueText("ssaCode") ?: data?.valueText("ssaCode") ?: responseRiskCode
+        val isRisk = root.valueText("error_code") == RISK_ERROR_CODE || !eventId.isNullOrBlank()
+        if (isRisk) {
+            if (eventId.isNullOrBlank()) return missingField()
+            val sid = root.valueText("sid") ?: data?.valueText("sid")
+            val edt = root.valueText("edt") ?: data?.valueText("edt")
+            return KugouPasswordLoginResult.RiskChallenge(KugouRiskChallengeDto(eventId, sid, edt))
+        }
+
+        if (root.valueText("status") == "1") {
+            return when (val result = mobileLoginDecoder.decode(body, responseCookies, temporaryKey)) {
+                is KugouMobileLoginResult.Authenticated -> KugouPasswordLoginResult.Authenticated(result.session)
+                is KugouMobileLoginResult.Failure -> KugouPasswordLoginResult.Failure(result.error)
+                is KugouMobileLoginResult.MultipleAccounts -> KugouPasswordLoginResult.MultipleAccounts(result.accounts)
+            }
+        }
+
+        return when (val result = mobileLoginDecoder.decode(body, responseCookies, temporaryKey)) {
+            is KugouMobileLoginResult.Authenticated -> KugouPasswordLoginResult.Authenticated(result.session)
+            is KugouMobileLoginResult.Failure -> KugouPasswordLoginResult.Failure(result.error)
+            is KugouMobileLoginResult.MultipleAccounts -> KugouPasswordLoginResult.MultipleAccounts(result.accounts)
+        }
+    }
+
+    private fun malformed() = KugouPasswordLoginResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
+
+    private fun missingField() = KugouPasswordLoginResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MissingRequiredField))
+
+    private companion object {
+        const val RISK_ERROR_CODE = "20028"
+    }
+}
+
+internal class KugouRiskMethodDecoder {
+    fun decode(body: JsonElement): KugouApiResult<KugouRiskMethodDto> {
+        val root = body as? JsonObject ?: return malformed()
+        if (root.valueText("status") != "1") return rejected(root)
+        val data = root["data"] as? JsonObject ?: return missingField()
+        val type = data.valueText("v_type")?.toIntOrNull() ?: return missingField()
+        val method =
+            when (type) {
+                32 -> {
+                    KugouRiskMethodDto.Sms
+                }
+
+                23 -> {
+                    val appId = data.valueText("txappid")?.takeIf(String::isNotBlank) ?: return missingField()
+                    KugouRiskMethodDto.Tencent(appId)
+                }
+
+                else -> {
+                    KugouRiskMethodDto.Unsupported(type)
+                }
+            }
+        return KugouApiResult.Success(method)
+    }
+
+    private fun malformed(): KugouApiResult.Failure =
+        KugouApiResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
+
+    private fun missingField(): KugouApiResult.Failure =
+        KugouApiResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MissingRequiredField))
+
+    private fun rejected(root: JsonObject): KugouApiResult.Failure =
+        KugouApiResult.Failure(
+            KugouError.Protocol(
+                reason = KugouError.Protocol.Reason.ServiceRejected,
+                serviceCode = root.valueText("error_code") ?: root.valueText("status"),
+            ),
+        )
+}
+
+internal class KugouRiskVerificationDecoder {
+    fun decode(body: JsonElement): KugouApiResult<Unit> {
+        val root =
+            body as? JsonObject
+                ?: return KugouApiResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
+        if (root.valueText("status") == "1") return KugouApiResult.Success(Unit)
+        return KugouApiResult.Failure(
+            KugouError.Protocol(
+                reason = KugouError.Protocol.Reason.ServiceRejected,
+                serviceCode = root.valueText("error_code") ?: root.valueText("status"),
+            ),
+        )
+    }
+}
+
+private fun JsonObject.valueText(name: String): String? {
+    val primitive = get(name) as? JsonPrimitive ?: return null
+    return primitive.contentOrNull ?: primitive.intOrNull?.toString()
 }

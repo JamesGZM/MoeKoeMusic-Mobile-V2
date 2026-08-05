@@ -17,7 +17,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - 第一版以 PC 端功能对齐为目标，但交互和布局遵循 Android 平台习惯。
 - Application ID 为 `cn.james.music`，最低支持 API 26，compile/target SDK 为 API 36。
 - 第一版 UI 视觉语言与核心页面设计稿已经确认。
-- 登录主状态、密码、扫码、安全验证、多账号、Toolbar、颜色、字体、间距和通用组件图板已经确认，Compose Token 与 TopBar 第一批校准已经完成；登录交互原型已建立，正式布局仍需等待协议与组件门禁完成。
+- 登录主状态、密码、扫码、安全验证、多账号、Toolbar、颜色、字体、间距和通用组件图板已经确认，Compose Token 与 TopBar 第一批校准已经完成；手机号/多账号 UI 和密码/安全验证协议基础已落地，交互原型只作状态参考，密码与验证正式布局仍以确认设计图实现。
 - 本地音乐统一复制导入；外部“打开方式”在导入成功后立即播放。
 
 ## 本地构建

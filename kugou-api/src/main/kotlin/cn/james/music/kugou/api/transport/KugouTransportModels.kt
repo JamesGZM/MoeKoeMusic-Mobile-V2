@@ -33,6 +33,7 @@ enum class KugouCleartextPolicy {
 enum class KugouServiceErrorPolicy {
     Reject,
     DecodeByEndpoint,
+    DecodeAuthRiskByEndpoint,
 }
 
 data class KugouRequestContext(
@@ -145,8 +146,11 @@ internal sealed interface KugouProtocolResult {
     data class Success(
         val body: JsonElement,
         val responseCookies: KugouCookies,
+        val riskCode: String? = null,
     ) : KugouProtocolResult {
-        override fun toString(): String = "KugouProtocolResult.Success(bodyType=${body::class.simpleName}, cookies=$responseCookies)"
+        override fun toString(): String =
+            "KugouProtocolResult.Success(bodyType=${body::class.simpleName}, cookies=$responseCookies, " +
+                "riskCodePresent=${!riskCode.isNullOrBlank()})"
     }
 
     data class Failure(

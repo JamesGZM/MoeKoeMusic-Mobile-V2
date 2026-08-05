@@ -2,13 +2,22 @@ package cn.james.music.data.kugou
 
 import cn.james.music.core.model.auth.AuthActionResult
 import cn.james.music.core.model.auth.AuthError
+import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthRiskMethod
+import cn.james.music.core.model.auth.AuthRiskMethodResult
+import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
+import cn.james.music.core.model.auth.PasswordLoginResult
 import cn.james.music.kugou.api.endpoint.KugouAccountOptionDto
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouAuthenticatedSessionDto
 import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
 import cn.james.music.kugou.api.endpoint.KugouMobileLoginResult
+import cn.james.music.kugou.api.endpoint.KugouPasswordLoginResult
+import cn.james.music.kugou.api.endpoint.KugouRiskChallengeDto
+import cn.james.music.kugou.api.endpoint.KugouRiskMethodDto
+import cn.james.music.kugou.api.endpoint.KugouRiskProofDto
 import cn.james.music.kugou.api.session.KugouCookies
 import cn.james.music.kugou.api.session.KugouDeviceIdentity
 import cn.james.music.kugou.api.session.KugouInitializationResult
@@ -19,6 +28,7 @@ import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.transport.KugouRequestContext
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -68,6 +78,64 @@ class KugouAuthRepositoryTest {
             assertTrue(result is MobileCodeLoginResult.MultipleAccounts)
             assertEquals("42", (result as MobileCodeLoginResult.MultipleAccounts).accounts.single().userId)
             assertNull(mutator.replacement)
+        }
+
+    @Test
+    fun passwordAuthenticationCommitsSessionBeforeReportingSuccess() =
+        runBlocking {
+            val mutator = RecordingMutator()
+            val client = FakeAuthClient(passwordResult = authenticatedPasswordResult())
+
+            val result = repository(client, mutator).loginWithPassword("fixture-account", "fixture-password")
+
+            assertEquals(PasswordLoginResult.Authenticated, result)
+            assertEquals("fixture-token", requireNotNull(mutator.replacement).token)
+        }
+
+    @Test
+    fun passwordRiskChallengeDoesNotMutateSessionAndRemainsRedacted() =
+        runBlocking {
+            val challenge = KugouRiskChallengeDto("fixture-event", "fixture-sid", "fixture-edt")
+            val mutator = RecordingMutator()
+            val result =
+                repository(
+                    FakeAuthClient(passwordResult = KugouPasswordLoginResult.RiskChallenge(challenge)),
+                    mutator,
+                ).loginWithPassword("fixture-account", "fixture-password")
+
+            assertTrue(result is PasswordLoginResult.RiskChallenge)
+            val domainChallenge = (result as PasswordLoginResult.RiskChallenge).challenge
+            assertEquals("fixture-event", domainChallenge.eventId)
+            assertFalse(domainChallenge.toString().contains("fixture-sid"))
+            assertNull(mutator.replacement)
+        }
+
+    @Test
+    fun riskMethodAndProofStayTypedAcrossRepositoryBoundary() =
+        runBlocking {
+            val client =
+                FakeAuthClient(
+                    riskMethodResult = KugouApiResult.Success(KugouRiskMethodDto.Tencent("fixture-app")),
+                    verifyResult = KugouApiResult.Success(Unit),
+                )
+            val repository = repository(client, RecordingMutator())
+            val challenge = AuthRiskChallenge("fixture-event", "fixture-sid", "fixture-edt")
+
+            assertEquals(
+                AuthRiskMethodResult.Available(AuthRiskMethod.Tencent("fixture-app")),
+                repository.getRiskMethod(challenge),
+            )
+            assertEquals(
+                AuthActionResult.Success,
+                repository.verifyRisk(
+                    challenge,
+                    AuthRiskProof.Tencent("fixture-ticket", "fixture-random", "fixture-app"),
+                ),
+            )
+
+            val proof = client.lastRiskProof as KugouRiskProofDto.Tencent
+            assertEquals("fixture-app", proof.appId)
+            assertFalse(proof.toString().contains("fixture-ticket"))
         }
 
     @Test
@@ -126,6 +194,15 @@ class KugouAuthRepositoryTest {
                 ),
         )
 
+    private fun authenticatedPasswordResult() =
+        KugouPasswordLoginResult.Authenticated(
+            KugouAuthenticatedSessionDto(
+                token = "fixture-token",
+                userId = "42",
+                cookies = KugouCookies.from(mapOf("token" to "fixture-token", "userid" to "42")),
+            ),
+        )
+
     private class ReadyProvider(
         private val session: KugouSessionSnapshot,
     ) : KugouSessionProvider {
@@ -151,7 +228,27 @@ class KugouAuthRepositoryTest {
                     cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
                 ),
             ),
+        private val passwordResult: KugouPasswordLoginResult =
+            KugouPasswordLoginResult.Failure(
+                cn.james.music.kugou.api.transport.KugouError.Protocol(
+                    cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
+                ),
+            ),
+        private val riskMethodResult: KugouApiResult<KugouRiskMethodDto> =
+            KugouApiResult.Failure(
+                cn.james.music.kugou.api.transport.KugouError.Protocol(
+                    cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
+                ),
+            ),
+        private val verifyResult: KugouApiResult<Unit> =
+            KugouApiResult.Failure(
+                cn.james.music.kugou.api.transport.KugouError.Protocol(
+                    cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
+                ),
+            ),
     ) : KugouAuthenticationClient {
+        var lastRiskProof: KugouRiskProofDto? = null
+
         override suspend fun sendMobileCode(
             mobile: String,
             context: KugouRequestContext,
@@ -163,6 +260,26 @@ class KugouAuthRepositoryTest {
             selectedUserId: String?,
             context: KugouRequestContext,
         ): KugouMobileLoginResult = loginResult
+
+        override suspend fun loginWithPassword(
+            username: String,
+            password: String,
+            context: KugouRequestContext,
+        ): KugouPasswordLoginResult = passwordResult
+
+        override suspend fun getRiskMethod(
+            eventId: String,
+            context: KugouRequestContext,
+        ): KugouApiResult<KugouRiskMethodDto> = riskMethodResult
+
+        override suspend fun verifyRisk(
+            challenge: KugouRiskChallengeDto,
+            proof: KugouRiskProofDto,
+            context: KugouRequestContext,
+        ): KugouApiResult<Unit> {
+            lastRiskProof = proof
+            return verifyResult
+        }
     }
 
     private companion object {

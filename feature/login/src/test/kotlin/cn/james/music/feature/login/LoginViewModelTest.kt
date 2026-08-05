@@ -3,8 +3,12 @@ package cn.james.music.feature.login
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthActionResult
 import cn.james.music.core.model.auth.AuthRepository
+import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthRiskMethodResult
+import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
+import cn.james.music.core.model.auth.PasswordLoginResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -148,6 +152,19 @@ class LoginViewModelTest {
             loginCalls += LoginCall(mobile, code, selectedUserId)
             return loginResults.removeFirst()
         }
+
+        override suspend fun loginWithPassword(
+            username: String,
+            password: String,
+        ): PasswordLoginResult = PasswordLoginResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
+
+        override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
+            AuthRiskMethodResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
+
+        override suspend fun verifyRisk(
+            challenge: AuthRiskChallenge,
+            proof: AuthRiskProof,
+        ): AuthActionResult = AuthActionResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
 
         override suspend fun logout(): AuthActionResult = AuthActionResult.Success
     }

@@ -17,6 +17,23 @@ interface KugouAuthenticationClient {
         selectedUserId: String?,
         context: KugouRequestContext,
     ): KugouMobileLoginResult
+
+    suspend fun loginWithPassword(
+        username: String,
+        password: String,
+        context: KugouRequestContext,
+    ): KugouPasswordLoginResult
+
+    suspend fun getRiskMethod(
+        eventId: String,
+        context: KugouRequestContext,
+    ): KugouApiResult<KugouRiskMethodDto>
+
+    suspend fun verifyRisk(
+        challenge: KugouRiskChallengeDto,
+        proof: KugouRiskProofDto,
+        context: KugouRequestContext,
+    ): KugouApiResult<Unit>
 }
 
 class KugouAuthClient
@@ -24,6 +41,9 @@ class KugouAuthClient
         private val executor: KugouCallExecutor,
         private val requestBuilder: KugouAuthRequestBuilder,
         private val mobileLoginDecoder: KugouMobileLoginDecoder,
+        private val passwordLoginDecoder: KugouPasswordLoginDecoder = KugouPasswordLoginDecoder(),
+        private val riskMethodDecoder: KugouRiskMethodDecoder = KugouRiskMethodDecoder(),
+        private val riskVerificationDecoder: KugouRiskVerificationDecoder = KugouRiskVerificationDecoder(),
     ) : KugouAuthenticationClient {
         constructor(executor: KugouCallExecutor) : this(executor, KugouAuthRequestBuilder(), KugouMobileLoginDecoder())
 
@@ -63,4 +83,45 @@ class KugouAuthClient
                 }
             }
         }
+
+        override suspend fun loginWithPassword(
+            username: String,
+            password: String,
+            context: KugouRequestContext,
+        ): KugouPasswordLoginResult {
+            val request = requestBuilder.loginWithPassword(username, password)
+            return when (val response = executor.executeJson(request.spec, context)) {
+                is KugouProtocolResult.Failure -> {
+                    KugouPasswordLoginResult.Failure(response.error)
+                }
+
+                is KugouProtocolResult.Success -> {
+                    passwordLoginDecoder.decode(
+                        body = response.body,
+                        responseCookies = response.responseCookies,
+                        temporaryKey = request.temporaryKey,
+                        responseRiskCode = response.riskCode,
+                    )
+                }
+            }
+        }
+
+        override suspend fun getRiskMethod(
+            eventId: String,
+            context: KugouRequestContext,
+        ): KugouApiResult<KugouRiskMethodDto> =
+            when (val response = executor.executeJson(requestBuilder.getRiskMethod(eventId, context.userId), context)) {
+                is KugouProtocolResult.Failure -> KugouApiResult.Failure(response.error)
+                is KugouProtocolResult.Success -> riskMethodDecoder.decode(response.body)
+            }
+
+        override suspend fun verifyRisk(
+            challenge: KugouRiskChallengeDto,
+            proof: KugouRiskProofDto,
+            context: KugouRequestContext,
+        ): KugouApiResult<Unit> =
+            when (val response = executor.executeJson(requestBuilder.verifyRisk(challenge, proof, context.userId), context)) {
+                is KugouProtocolResult.Failure -> KugouApiResult.Failure(response.error)
+                is KugouProtocolResult.Success -> riskVerificationDecoder.decode(response.body)
+            }
     }

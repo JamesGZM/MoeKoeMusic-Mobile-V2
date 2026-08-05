@@ -57,6 +57,68 @@ sealed interface MobileCodeLoginResult {
     ) : MobileCodeLoginResult
 }
 
+data class AuthRiskChallenge(
+    val eventId: String,
+    val sid: String?,
+    val edt: String?,
+) {
+    override fun toString(): String = "AuthRiskChallenge(eventId=<redacted>, sid=<redacted>, edt=<redacted>)"
+}
+
+sealed interface PasswordLoginResult {
+    data object Authenticated : PasswordLoginResult
+
+    data class RiskChallenge(
+        val challenge: AuthRiskChallenge,
+    ) : PasswordLoginResult
+
+    data class MultipleAccounts(
+        val accounts: List<AuthAccountOption>,
+    ) : PasswordLoginResult
+
+    data class Failure(
+        val error: AuthError,
+    ) : PasswordLoginResult
+}
+
+sealed interface AuthRiskMethod {
+    data object Sms : AuthRiskMethod
+
+    data class Tencent(
+        val appId: String,
+    ) : AuthRiskMethod
+
+    data class Unsupported(
+        val type: Int,
+    ) : AuthRiskMethod
+}
+
+sealed interface AuthRiskMethodResult {
+    data class Available(
+        val method: AuthRiskMethod,
+    ) : AuthRiskMethodResult
+
+    data class Failure(
+        val error: AuthError,
+    ) : AuthRiskMethodResult
+}
+
+sealed interface AuthRiskProof {
+    class Sms(
+        val code: String,
+    ) : AuthRiskProof {
+        override fun toString(): String = "AuthRiskProof.Sms(code=<redacted>)"
+    }
+
+    class Tencent(
+        val ticket: String,
+        val randomString: String,
+        val appId: String,
+    ) : AuthRiskProof {
+        override fun toString(): String = "AuthRiskProof.Tencent(ticket=<redacted>, randomString=<redacted>, appId=<redacted>)"
+    }
+}
+
 interface AuthRepository {
     suspend fun currentState(): AuthState
 
@@ -67,6 +129,18 @@ interface AuthRepository {
         code: String,
         selectedUserId: String? = null,
     ): MobileCodeLoginResult
+
+    suspend fun loginWithPassword(
+        username: String,
+        password: String,
+    ): PasswordLoginResult
+
+    suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult
+
+    suspend fun verifyRisk(
+        challenge: AuthRiskChallenge,
+        proof: AuthRiskProof,
+    ): AuthActionResult
 
     suspend fun logout(): AuthActionResult
 }

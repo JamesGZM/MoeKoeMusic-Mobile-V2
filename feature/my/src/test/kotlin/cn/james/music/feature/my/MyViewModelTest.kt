@@ -8,8 +8,12 @@ import cn.james.music.core.model.account.VipSummary
 import cn.james.music.core.model.auth.AuthActionResult
 import cn.james.music.core.model.auth.AuthError
 import cn.james.music.core.model.auth.AuthRepository
+import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthRiskMethodResult
+import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
+import cn.james.music.core.model.auth.PasswordLoginResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -138,6 +142,19 @@ class MyViewModelTest {
             code: String,
             selectedUserId: String?,
         ): MobileCodeLoginResult = MobileCodeLoginResult.Failure(AuthError.Protocol)
+
+        override suspend fun loginWithPassword(
+            username: String,
+            password: String,
+        ): PasswordLoginResult = PasswordLoginResult.Failure(AuthError.Protocol)
+
+        override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
+            AuthRiskMethodResult.Failure(AuthError.Protocol)
+
+        override suspend fun verifyRisk(
+            challenge: AuthRiskChallenge,
+            proof: AuthRiskProof,
+        ): AuthActionResult = AuthActionResult.Failure(AuthError.Protocol)
 
         override suspend fun logout(): AuthActionResult {
             logoutCalls += 1

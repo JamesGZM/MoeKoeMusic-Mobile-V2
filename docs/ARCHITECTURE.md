@@ -84,7 +84,7 @@ Repository
 - 酷狗平台配置、设备身份、会话和 Cookie。
 - MD5、SHA1、AES、RSA 和请求签名。
 - Ktor Client 请求编排、OkHttp Engine 与网络 DTO。
-- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient` 与 `KugouUserClient` 分别将公开内容、已认证资料和 VIP 协议解码为类型化结果后才交给 `:data`。
+- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient`、`KugouAuthenticationClient` 与 `KugouUserClient` 分别将公开内容、认证/风险、已认证资料和 VIP 协议解码为类型化结果后才交给 `:data`。
 - 不依赖 Compose、Media3、Activity 或 Service。
 
 ### `:data`
@@ -202,6 +202,7 @@ ExoPlayer + MediaSession
 - 设置使用 DataStore；酷狗敏感会话由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
 - 会话密文损坏、Keystore key 缺失或 GCM 校验失败时清除密文与旧 key，重新进入匿名注册；不把不可解密状态降级为明文存储。
 - 登录成功响应由 `:kugou-api` 类型化解码，`:data` 在认证互斥区内合并并一次写入加密会话；存储完成前 UI 不进入已登录。退出只清除 token、userid 和登录 Cookie，保留匿名设备身份与 dfid。
+- 密码风险挑战在协议层保留 `ssa-code`，`sid/edt` 仅透传真实响应字段并允许缺失；禁止将固定 Node 层生成的鼠标轨迹或 WebGL 模拟迁入原生客户端。验证写操作与原密码重试由 Feature 显式串行驱动，不进入全局重试器。
 - `KugouUserProfileRepository` 并发读取用户资料和 VIP 摘要；用户资料是页面成立的权威结果，VIP 失败可降级为不可用状态。普通资料刷新失败不清除持久会话，也不以缓存或设计稿假数据伪装成功。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
 

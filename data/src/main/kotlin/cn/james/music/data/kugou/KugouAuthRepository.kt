@@ -4,11 +4,20 @@ import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthActionResult
 import cn.james.music.core.model.auth.AuthError
 import cn.james.music.core.model.auth.AuthRepository
+import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthRiskMethod
+import cn.james.music.core.model.auth.AuthRiskMethodResult
+import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
+import cn.james.music.core.model.auth.PasswordLoginResult
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
 import cn.james.music.kugou.api.endpoint.KugouMobileLoginResult
+import cn.james.music.kugou.api.endpoint.KugouPasswordLoginResult
+import cn.james.music.kugou.api.endpoint.KugouRiskChallengeDto
+import cn.james.music.kugou.api.endpoint.KugouRiskMethodDto
+import cn.james.music.kugou.api.endpoint.KugouRiskProofDto
 import cn.james.music.kugou.api.session.KugouCookies
 import cn.james.music.kugou.api.session.KugouInitializationResult
 import cn.james.music.kugou.api.session.KugouSessionMutationResult
@@ -90,6 +99,76 @@ class KugouAuthRepository
                 }
             }
 
+        override suspend fun loginWithPassword(
+            username: String,
+            password: String,
+        ): PasswordLoginResult =
+            mutationMutex.withLock {
+                val session = readySession() ?: return@withLock PasswordLoginResult.Failure(AuthError.SessionInitialization)
+                when (val result = authClient.loginWithPassword(username, password, session.requestContext())) {
+                    is KugouPasswordLoginResult.Failure -> {
+                        PasswordLoginResult.Failure(result.error.toAuthError())
+                    }
+
+                    is KugouPasswordLoginResult.MultipleAccounts -> {
+                        PasswordLoginResult.MultipleAccounts(result.accounts.map { it.toDomain() })
+                    }
+
+                    is KugouPasswordLoginResult.RiskChallenge -> {
+                        PasswordLoginResult.RiskChallenge(result.challenge.toDomain())
+                    }
+
+                    is KugouPasswordLoginResult.Authenticated -> {
+                        when (commitAuthenticated(session, result.session)) {
+                            AuthActionResult.Success -> PasswordLoginResult.Authenticated
+                            is AuthActionResult.Failure -> PasswordLoginResult.Failure(AuthError.Storage)
+                        }
+                    }
+                }
+            }
+
+        override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
+            mutationMutex.withLock {
+                val session = readySession() ?: return@withLock AuthRiskMethodResult.Failure(AuthError.SessionInitialization)
+                when (val result = authClient.getRiskMethod(challenge.eventId, session.requestContext())) {
+                    is KugouApiResult.Failure -> {
+                        AuthRiskMethodResult.Failure(result.error.toAuthError())
+                    }
+
+                    is KugouApiResult.Success -> {
+                        AuthRiskMethodResult.Available(
+                            when (val method = result.value) {
+                                KugouRiskMethodDto.Sms -> AuthRiskMethod.Sms
+                                is KugouRiskMethodDto.Tencent -> AuthRiskMethod.Tencent(method.appId)
+                                is KugouRiskMethodDto.Unsupported -> AuthRiskMethod.Unsupported(method.type)
+                            },
+                        )
+                    }
+                }
+            }
+
+        override suspend fun verifyRisk(
+            challenge: AuthRiskChallenge,
+            proof: AuthRiskProof,
+        ): AuthActionResult =
+            mutationMutex.withLock {
+                val session = readySession() ?: return@withLock AuthActionResult.Failure(AuthError.SessionInitialization)
+                val protocolProof =
+                    when (proof) {
+                        is AuthRiskProof.Sms -> {
+                            KugouRiskProofDto.Sms(proof.code)
+                        }
+
+                        is AuthRiskProof.Tencent -> {
+                            KugouRiskProofDto.Tencent(proof.ticket, proof.randomString, proof.appId)
+                        }
+                    }
+                when (val result = authClient.verifyRisk(challenge.toDto(), protocolProof, session.requestContext())) {
+                    is KugouApiResult.Failure -> AuthActionResult.Failure(result.error.toAuthError())
+                    is KugouApiResult.Success -> AuthActionResult.Success
+                }
+            }
+
         override suspend fun logout(): AuthActionResult =
             mutationMutex.withLock {
                 val session = readySession() ?: return@withLock AuthActionResult.Failure(AuthError.SessionInitialization)
@@ -110,6 +189,34 @@ class KugouAuthRepository
                 is KugouInitializationResult.Failure -> null
                 is KugouInitializationResult.Ready -> initialization.session
             }
+
+        private suspend fun commitAuthenticated(
+            session: KugouSessionSnapshot,
+            authenticated: cn.james.music.kugou.api.endpoint.KugouAuthenticatedSessionDto,
+        ): AuthActionResult {
+            val updated =
+                session.copy(
+                    token = authenticated.token,
+                    userId = authenticated.userId,
+                    cookies = KugouCookies.from(session.cookies.asMap() + authenticated.cookies.asMap()),
+                )
+            return when (sessionMutator.replace(updated)) {
+                KugouSessionMutationResult.StorageFailure -> AuthActionResult.Failure(AuthError.Storage)
+                is KugouSessionMutationResult.Updated -> AuthActionResult.Success
+            }
+        }
+
+        private fun cn.james.music.kugou.api.endpoint.KugouAccountOptionDto.toDomain(): AuthAccountOption =
+            AuthAccountOption(
+                userId = userId,
+                nickname = nickname,
+                avatarUrl = avatarUrl,
+                grade = grade,
+            )
+
+        private fun KugouRiskChallengeDto.toDomain(): AuthRiskChallenge = AuthRiskChallenge(eventId, sid, edt)
+
+        private fun AuthRiskChallenge.toDto(): KugouRiskChallengeDto = KugouRiskChallengeDto(eventId, sid, edt)
 
         private fun KugouSessionSnapshot.toAuthState(): AuthState =
             userId.orEmpty().let { stableUserId ->

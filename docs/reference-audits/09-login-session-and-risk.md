@@ -8,9 +8,9 @@
 
 ## 当前实现与缺口
 
-- `:kugou-api` 已有 Ktor Client + OkHttp Engine、Android/Web 签名、AES/RSA、Cookie 和类型化错误，但尚无登录 Endpoint 与登录响应 DTO。
-- `:data` 已用 Android Keystore AES-256-GCM 加密保存版本化 `KugouSessionSnapshot`，但尚无认证 Repository 和“保留匿名设备身份、替换登录凭据”的原子会话提交。
-- 应用采用 Feature 自有导航；登录不能放进 `:app` 或 `:feature:my`，应新增 `:feature:login`。
+- `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交；扫码 Endpoint 仍待迁移。
+- `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
+- `:feature:login` 已拥有短信/多账号页面；密码与安全验证 UI、隔离腾讯 Activity 和扫码状态机仍待后续原子提交。
 - 登录设计稿 `13`、`19` 至 `22` 已确认，交互原型仅验证状态关系，不能作为 Compose 图标、尺寸或视觉实现依据。
 - 当前 `KugouRequestFactory` 拒绝 HTTP origin，而固定 `captcha_sent.js` 仍使用 `http://login.user.kugou.com`。不得因此全局允许明文流量。
 
@@ -52,9 +52,15 @@
   - `module/sidedt.js`
   - `util/request.js`
 
-采用：Endpoint origin/path、Android/Web 签名、AES 临时 key + RSA 包装、`support_multi=1`、`secu_params` 解密、Cookie 合并、二维码状态 `0/1/2/4`、验证类型 `23/32` 和 `sid/edt` 透传。
+采用：Endpoint origin/path、Android/Web 签名、AES 临时 key + RSA 包装、`support_multi=1`、`secu_params` 解密、Cookie 合并、二维码状态 `0/1/2/4`、验证类型 `23/32`，以及服务响应中实际存在的 `sid/edt` 透传。
 
-不采用：Node Axios/Promise 包装、动态 `process.env`、浏览器/WebGL 指纹生成和 `sidedt.js` 的 JavaScript 模拟。Android 直接保留登录失败响应已有的 `sid/edt`，不制造浏览器指纹。
+不采用：Node Axios/Promise 包装、动态 `process.env`、浏览器/WebGL 指纹生成和 `sidedt.js` 的 JavaScript 模拟。固定 `util/request.js` 会在收到 `ssa-code` 响应头后调用 `generateSimulate`，人为生成鼠标轨迹、WebGL、`sid/edt` 并改写响应；这不是服务原始字段，Android 不迁移或伪造该行为。
+
+### `sid/edt` 证据边界
+
+- 原生 Ktor 保留 `ssa-code` 响应头，并只在响应体确实存在时携带 `sid/edt`；领域挑战将后两者建模为可缺失，不把 Node 包装层生成值误写成服务事实。
+- 获取验证方式只依赖 `eventid`，可以在 `sid/edt` 缺失时继续；提交验证按固定接口发送服务值或空值，禁止自动生成浏览器行为指纹。
+- 普通密码认证不受此边界影响。短信或腾讯二次验证能否在原生直连且空 `sid/edt` 下通过，必须在实现与安全测试完成后由用户在真机主动触发验证；通过前不得把风控闭环标记完成。
 
 ### MoeKoeMusic PC
 
@@ -108,7 +114,7 @@ ZXing Core 仅负责通用二维码算法；二维码颜色、留白、尺寸和
 
 - `secu_params` 只能在 `:kugou-api` 用本次请求 AES key 解密；缺 token/userid 是协议错误。
 - `info_list` 只映射 `userid/nickname/pic/p_grade`，过滤空或 `0` userid；UI 不读取原始 JSON。
-- `20028` 或失败响应中的 `ssaCode` 统一映射 `RiskChallenge(eventId,sid,edt)`；未知服务文案进入脱敏诊断，不成为 UI 文案。
+- `20028`、响应体 `ssaCode` 或响应头 `ssa-code` 统一映射 `RiskChallenge(eventId,sid?,edt?)`；未知服务文案进入脱敏诊断，不成为 UI 文案。
 - 密码、短信码、腾讯 ticket、扫码 key 只存在于当前内存流程，不写 SavedState、Room、日志或 analytics。
 
 ## 架构与生命周期
@@ -152,4 +158,4 @@ RiskCaptchaActivity（独立平台边界）
 - 真机：仅当前已连接的 Huawei ELE-AL00 / API 29；安装、三种入口导航、返回、键盘、旋转/后台恢复、腾讯验证隔离、二维码可扫、会话恢复和退出。当前不启动模拟器。
 - 真实服务：固定测试先通过后，使用测试账号手动执行发送短信、验证码登录、多账号、密码/风控与扫码兼容验收；不保存响应正文、手机号、token、Cookie、二维码或验证码。涉及验证码和账号操作必须由用户在真机上主动完成。
 
-以上产品语义、技术栈、数据流、失败恢复和测试矩阵无关键待定项，允许按 `docs/plans/07-login-flow.md` 开始可审查切片。
+以上证据允许继续普通密码登录、风险 UI 和隔离验证容器的可审查实现；风险挑战的 `sid/edt` 兼容性保留为真机验收项，在用户主动触发并取得成功证据前不视为闭环。
