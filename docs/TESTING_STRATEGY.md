@@ -25,6 +25,8 @@
 - 动态 JSON 缺字段、字段类型漂移和错误响应映射。
 - 与固定版本 KuGouMusicApi 生成的脱敏 fixture 逐项对照。
 - 真实酷狗服务测试单独标记为手动或定时集成测试。
+- RequestFactory 使用固定时钟、虚构身份和精确 Body 字节生成 Node/Kotlin 快照；Fake Transport 验证 Endpoint 不依赖真实网络。
+- Cookie 覆盖属性剥离、值中等号、删除和 Header 注入；响应覆盖 HTTP、SSA 风控、非 Object JSON、服务端拒绝及脱敏 `toString()`。
 
 ### `:data`
 

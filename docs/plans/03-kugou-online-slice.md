@@ -88,7 +88,12 @@ interface SearchRepository {
 - `:kugou-api` 已建立独立 Kotlin 的 MD5、SHA-1、MID、playlist AES-CBC、RSA PKCS#1 v1.5 和请求签名基础。
 - 使用完全虚构的 GUID、MID、dfid、关键词和歌曲 Hash，从 `KuGouMusicApi@6efe84e` 直接生成固定 Node 输出；Kotlin 已逐项对齐摘要、MID、Android/Register/Web 签名、带 UTF-8 Body 签名、`signKey` 和 AES 密文。
 - RSA 使用相同公开协议公钥验证 1024-bit PKCS#1 加密块和随机填充行为；没有迁移任何账号、Cookie 或无关平台配置。
-- 已在 `:kugou-api` 保留上游 MIT NOTICE 与完整许可证。下一小步是类型化 RequestFactory、Cookie/错误模型和 Fake Transport 快照测试，尚未发起真实网络请求。
+- 已建立 `KugouRequestSpec`、`KugouPreparedRequest`、`KugouTransport`、`KugouRawResponse` 和类型化协议结果；Endpoint 构造与实际网络执行不再耦合。
+- `KugouRequestFactory` 统一注入平台、身份、时间、认证参数、协议 Header、Cookie、`signKey` 和签名；固定搜索请求与 Node 快照一致，并在 Transport 前拒绝明文 Endpoint。
+- Cookie 合并保留值中的 `=`、支持服务端删除且拒绝 CR/LF 注入；请求、上下文、响应和 Cookie 的 `toString()` 均不输出敏感值。
+- JSON 解码要求顶层 Object，并区分 HTTP、风控、畸形响应和服务端拒绝；服务端正文不会进入错误对象。
+- Fake Transport 验证请求可离线捕获，当前 `:kugou-api` 17 项测试通过。已保留上游 MIT NOTICE 与完整许可证。
+- 下一小步是 OkHttp Transport、超时与有限重试策略以及四个目标 Endpoint；截至当前仍未发起真实网络请求。
 
 测试矩阵补充：
 
