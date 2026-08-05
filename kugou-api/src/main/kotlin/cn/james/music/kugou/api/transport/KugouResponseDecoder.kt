@@ -10,7 +10,10 @@ import kotlinx.serialization.json.intOrNull
 internal class KugouResponseDecoder(
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) {
-    fun decode(response: KugouRawResponse): KugouProtocolResult {
+    fun decode(
+        response: KugouRawResponse,
+        serviceErrorPolicy: KugouServiceErrorPolicy = KugouServiceErrorPolicy.Reject,
+    ): KugouProtocolResult {
         if (response.statusCode !in 200..299) {
             return KugouProtocolResult.Failure(KugouError.Http(response.statusCode))
         }
@@ -31,7 +34,9 @@ internal class KugouResponseDecoder(
                 ?: return KugouProtocolResult.Failure(
                     KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse),
                 )
-        serviceError(body)?.let { return KugouProtocolResult.Failure(it) }
+        if (serviceErrorPolicy == KugouServiceErrorPolicy.Reject) {
+            serviceError(body)?.let { return KugouProtocolResult.Failure(it) }
+        }
 
         val cookies = KugouCookies.Empty.mergeSetCookie(response.headerValues("set-cookie"))
         return KugouProtocolResult.Success(body = body, responseCookies = cookies)

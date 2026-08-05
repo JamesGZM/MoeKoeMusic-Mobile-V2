@@ -30,6 +30,11 @@ enum class KugouCleartextPolicy {
     LoginMobileCode,
 }
 
+enum class KugouServiceErrorPolicy {
+    Reject,
+    DecodeByEndpoint,
+}
+
 data class KugouRequestContext(
     val mid: String,
     val dfid: String? = null,
@@ -56,12 +61,13 @@ data class KugouRequestSpec(
     val responseFormat: KugouResponseFormat = KugouResponseFormat.Json,
     val retryMode: KugouRetryMode = KugouRetryMode.None,
     val cleartextPolicy: KugouCleartextPolicy = KugouCleartextPolicy.Deny,
+    val serviceErrorPolicy: KugouServiceErrorPolicy = KugouServiceErrorPolicy.Reject,
 ) {
     override fun toString(): String =
         "KugouRequestSpec(id=$id, method=$method, path=$path, baseUrl=$baseUrl, " +
             "paramNames=${params.keys.sorted()}, headerNames=${headers.keys.sorted()}, bodyBytes=${body?.size ?: 0}, " +
             "signatureMode=$signatureMode, responseFormat=$responseFormat, retryMode=$retryMode, " +
-            "cleartextPolicy=$cleartextPolicy)"
+            "cleartextPolicy=$cleartextPolicy, serviceErrorPolicy=$serviceErrorPolicy)"
 }
 
 data class KugouPreparedRequest(

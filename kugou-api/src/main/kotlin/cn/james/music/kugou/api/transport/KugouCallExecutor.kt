@@ -22,7 +22,7 @@ class KugouCallExecutor(
         while (true) {
             val result =
                 when (val transportResult = transport.execute(requestFactory.prepare(spec, context))) {
-                    is KugouTransportResult.Success -> responseDecoder.decode(transportResult.response)
+                    is KugouTransportResult.Success -> responseDecoder.decode(transportResult.response, spec.serviceErrorPolicy)
                     is KugouTransportResult.Failure -> KugouProtocolResult.Failure(transportResult.error)
                 }
             val error = (result as? KugouProtocolResult.Failure)?.error

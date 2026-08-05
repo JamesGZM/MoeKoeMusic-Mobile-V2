@@ -6,9 +6,12 @@ import cn.james.music.kugou.api.transport.KugouPreparedRequest
 import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRawResponse
 import cn.james.music.kugou.api.transport.KugouResponseDecoder
+import cn.james.music.kugou.api.transport.KugouServiceErrorPolicy
 import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
@@ -86,6 +89,28 @@ class KugouSessionAndResponseTest {
                     as KugouProtocolResult.Failure
             ).error,
         )
+    }
+
+    @Test
+    fun endpointDecoderCanInspectDeclaredServiceFailure() {
+        val result =
+            decoder.decode(
+                response(
+                    body = """{"status":0,"error_code":20028,"ssaCode":"fixture-event","data":{"info_list":[]}}""",
+                    headers = mapOf("Set-Cookie" to listOf("fixture=value; Path=/")),
+                ),
+                KugouServiceErrorPolicy.DecodeByEndpoint,
+            )
+
+        assertTrue(result is KugouProtocolResult.Success)
+        result as KugouProtocolResult.Success
+        assertEquals(
+            "fixture-event",
+            result.body.jsonObject
+                .getValue("ssaCode")
+                .jsonPrimitive.content,
+        )
+        assertEquals("value", result.responseCookies.value("fixture"))
     }
 
     @Test
