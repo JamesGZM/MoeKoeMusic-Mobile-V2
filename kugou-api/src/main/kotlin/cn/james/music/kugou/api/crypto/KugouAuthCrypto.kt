@@ -8,7 +8,9 @@ import javax.crypto.spec.SecretKeySpec
 internal data class KugouAuthEncryptedPayload(
     val ciphertextHex: String,
     val temporaryKey: String,
-)
+) {
+    override fun toString(): String = "KugouAuthEncryptedPayload(ciphertextBytes=${ciphertextHex.length / 2}, temporaryKey=<redacted>)"
+}
 
 /** Protocol-only crypto used by KuGou login endpoints at the fixed upstream revision. */
 internal object KugouAuthCrypto {
