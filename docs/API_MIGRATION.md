@@ -16,7 +16,9 @@ License:    MIT
 
 当前已完成第一批纯 JVM 对照：MD5、SHA-1、MID、Android/Register/Web 签名、带字节 Body 的签名、`signKey`、playlist AES 与 RSA PKCS#1 行为。固定输入全部为虚构数据。
 
-统一请求层也已建立：RequestFactory 在固定时间和虚构身份下生成可快照的请求，Transport 是 suspend 端口，Cookie 与响应错误使用稳定类型。请求对象的诊断字符串只暴露字段名和字节数，不暴露参数、Header、Cookie 或 Body 值。下一批实现 OkHttp Transport 和首批 Endpoint。
+统一请求层也已建立：RequestFactory 在固定时间和虚构身份下生成可快照的请求，Transport 是 suspend 端口，Cookie 与响应错误使用稳定类型。请求对象的诊断字符串只暴露字段名和字节数，不暴露参数、Header、Cookie 或 Body 值。
+
+OkHttp Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。下一批实现设备身份、会话端口和匿名注册编排。
 
 ## 参考优先级
 

@@ -92,8 +92,11 @@ interface SearchRepository {
 - `KugouRequestFactory` 统一注入平台、身份、时间、认证参数、协议 Header、Cookie、`signKey` 和签名；固定搜索请求与 Node 快照一致，并在 Transport 前拒绝明文 Endpoint。
 - Cookie 合并保留值中的 `=`、支持服务端删除且拒绝 CR/LF 注入；请求、上下文、响应和 Cookie 的 `toString()` 均不输出敏感值。
 - JSON 解码要求顶层 Object，并区分 HTTP、风控、畸形响应和服务端拒绝；服务端正文不会进入错误对象。
-- Fake Transport 验证请求可离线捕获，当前 `:kugou-api` 17 项测试通过。已保留上游 MIT NOTICE 与完整许可证。
-- 下一小步是 OkHttp Transport、超时与有限重试策略以及四个目标 Endpoint；截至当前仍未发起真实网络请求。
+- Fake Transport 验证请求可离线捕获；OkHttp Transport 使用 10 秒连接、15 秒读取和 20 秒整体超时，关闭 OkHttp 隐式连接重试，并在协程取消时取消 Call。
+- 网络异常已映射为离线、超时和连接错误。只有标记为幂等读取的超时或 5xx 最多额外尝试两次，退避为 250ms、500ms；4xx、离线、连接、风控和协议错误不自动重放。
+- `register_dev`、歌曲 `search`、`privilege_lite`、`song_url` 四个 Endpoint 已按固定源码构造；歌曲地址的 `signKey` 与完整签名继续通过固定 Node 输出验证。
+- OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 27 项测试通过。
+- 已保留上游 MIT NOTICE 与完整许可证。下一小步是会话端口、匿名设备注册编排和 Android Keystore 存储；截至当前仍未发起真实网络请求。
 
 测试矩阵补充：
 

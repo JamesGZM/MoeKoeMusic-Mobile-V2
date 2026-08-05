@@ -27,6 +27,9 @@
 - 真实酷狗服务测试单独标记为手动或定时集成测试。
 - RequestFactory 使用固定时钟、虚构身份和精确 Body 字节生成 Node/Kotlin 快照；Fake Transport 验证 Endpoint 不依赖真实网络。
 - Cookie 覆盖属性剥离、值中等号、删除和 Header 注入；响应覆盖 HTTP、SSA 风控、非 Object JSON、服务端拒绝及脱敏 `toString()`。
+- OkHttp Transport 使用离线 Interceptor 验证 URL 编码、Header、二进制 Body、异步执行与 IOException 映射；生产实现会在协程取消时取消 Call，不启动真实酷狗请求。
+- 重试测试使用结果队列和虚拟 Delayer，精确断言超时/5xx 的次数与 250ms、500ms 退避，并验证其他错误不重放。
+- 首批四个 Endpoint 对路径、Host、Router、JSON Body、响应格式、重试属性和固定 `song_url` 签名做快照断言。
 
 ### `:data`
 
