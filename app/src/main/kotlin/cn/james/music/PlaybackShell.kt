@@ -1,59 +1,49 @@
 package cn.james.music
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import cn.james.music.core.designsystem.component.MoeMiniPlayer
+import cn.james.music.core.designsystem.component.MoeQueueRow
+import cn.james.music.core.designsystem.component.MoeSectionHeader
+import cn.james.music.core.model.playback.PlaybackArtwork
+import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.playback.PlaybackState
+import java.io.File
 
 @Composable
 internal fun MoeKoeMiniPlayer(
-    title: String,
-    artist: String,
+    item: PlaybackItem,
     isPlaying: Boolean,
+    progress: Float,
     onToggle: () -> Unit,
     onQueue: () -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, maxLines = 1, fontWeight = FontWeight.SemiBold)
-            Text(artist, maxLines = 1, style = MaterialTheme.typography.bodySmall)
-        }
-        TextButton(
-            onClick = onToggle,
-            modifier = Modifier.semantics { contentDescription = if (isPlaying) "暂停" else "播放" },
-        ) {
-            Text(if (isPlaying) "暂停" else "播放")
-        }
-        TextButton(onClick = onQueue) { Text("队列") }
-    }
+    MoeMiniPlayer(
+        title = item.title,
+        artist = item.artist,
+        isPlaying = isPlaying,
+        progress = progress,
+        playContentDescription = "播放",
+        pauseContentDescription = "暂停",
+        queueContentDescription = "播放队列",
+        onTogglePlayback = onToggle,
+        onOpenQueue = onQueue,
+        artwork = { PlaybackArtworkImage(item) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,30 +56,44 @@ internal fun MoeKoeQueueSheet(
     onClear: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("播放队列", style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = onClear) { Text("清空") }
-        }
+        MoeSectionHeader(
+            title = "播放队列",
+            modifier = Modifier.padding(horizontal = 20.dp),
+            action = { TextButton(onClick = onClear) { Text("清空") } },
+        )
         LazyColumn {
             items(state.queue.size, key = { state.queue[it].id }) { index ->
                 val item = state.queue[index]
-                Row(
-                    modifier = Modifier.fillMaxWidth().clickable { onPlayAt(index) }.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(if (index == state.currentIndex) "♪" else "", Modifier.size(28.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(item.title)
-                        Text(item.artist, style = MaterialTheme.typography.bodySmall)
-                    }
-                    TextButton(onClick = { onRemove(index) }) { Text("移除") }
-                }
+                MoeQueueRow(
+                    positionLabel = if (index == state.currentIndex) "♪" else "${index + 1}",
+                    title = item.title,
+                    subtitle = item.artist,
+                    onClick = { onPlayAt(index) },
+                    removeContentDescription = "从队列移除 ${item.title}",
+                    onRemove = { onRemove(index) },
+                    artwork = { PlaybackArtworkImage(item) },
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    isPlaying = index == state.currentIndex,
+                )
             }
         }
         Spacer(Modifier.height(24.dp))
     }
+}
+
+@Composable
+private fun PlaybackArtworkImage(item: PlaybackItem) {
+    val context = LocalContext.current
+    val model =
+        when (val artwork = item.artwork) {
+            is PlaybackArtwork.Remote -> artwork.value
+            is PlaybackArtwork.AppFile -> File(context.filesDir, artwork.value)
+            null -> null
+        }
+    AsyncImage(
+        model = model,
+        contentDescription = "${item.title} 封面",
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop,
+    )
 }

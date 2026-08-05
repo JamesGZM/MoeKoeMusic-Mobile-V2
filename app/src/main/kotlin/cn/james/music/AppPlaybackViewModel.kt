@@ -9,6 +9,7 @@ import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackCommandResult
 import cn.james.music.playback.PlaybackController
 import cn.james.music.playback.PlaybackError
+import cn.james.music.playback.PlaybackProgress
 import cn.james.music.playback.PlaybackSourceError
 import cn.james.music.playback.PlaybackState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,6 +41,8 @@ class AppPlaybackViewModel
                 SharingStarted.WhileSubscribed(5_000),
                 PlaybackState(),
             )
+
+        val progress: StateFlow<PlaybackProgress> = playbackController.progress
 
         fun play(song: Song) {
             play(song.toPlaybackItem())

@@ -2,20 +2,16 @@
 
 package cn.james.music.feature.localmusic
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,11 +30,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.model.local.DeviceAudioCandidate
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalMusic
@@ -109,11 +106,27 @@ private fun LocalMusicMessage(
 
 @Composable private fun MusicRow(music: LocalMusic, onClick: () -> Unit, onDelete: () -> Unit) {
     val context = LocalContext.current
-    Row(Modifier.fillMaxWidth().height(76.dp).clickable(onClick = onClick).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = music.artworkKey?.let { File(context.filesDir, it) }, contentDescription = "${music.title} 封面", modifier = Modifier.size(54.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest))
-        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) { Text(music.title, maxLines = 1, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium); Text(music.artist, maxLines = 1, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        TextButton(onClick = onDelete) { Text("删除") }
-    }
+    MoeSongRow(
+        title = music.title,
+        subtitle = music.artist,
+        metadata = formatDuration(music.durationMs),
+        onClick = onClick,
+        artwork = {
+            AsyncImage(
+                model = music.artworkKey?.let { File(context.filesDir, it) },
+                contentDescription = "${music.title} 封面",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        },
+        trailing = { TextButton(onClick = onDelete) { Text("删除") } },
+    )
+}
+
+private fun formatDuration(durationMs: Long): String {
+    val totalSeconds = durationMs.coerceAtLeast(0) / 1_000
+    val seconds = (totalSeconds % 60).toString().padStart(2, '0')
+    return "${totalSeconds / 60}:$seconds"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

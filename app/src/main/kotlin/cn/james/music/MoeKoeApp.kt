@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -53,6 +54,7 @@ fun MoeKoeApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val progress by viewModel.progress.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
     val appState = rememberMoeKoeAppState(navController)
     val currentDestination = appState.navController.currentBackStackEntryAsState().value?.destination
@@ -63,12 +65,24 @@ fun MoeKoeApp(
     Scaffold(
         contentWindowInsets = if (isImmersiveLogin) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         bottomBar = {
-            Column {
+            Column(
+                modifier =
+                    if (showBottomNavigation) {
+                        Modifier
+                    } else {
+                        Modifier.navigationBarsPadding()
+                    },
+            ) {
                 state.currentItem?.let { item ->
                     MoeKoeMiniPlayer(
-                        title = item.title,
-                        artist = item.artist,
+                        item = item,
                         isPlaying = state.isPlaying,
+                        progress =
+                            if (progress.durationMs > 0) {
+                                progress.positionMs.toFloat() / progress.durationMs
+                            } else {
+                                0f
+                            },
                         onToggle = viewModel::togglePlayback,
                         onQueue = { queueVisible = true },
                     )
