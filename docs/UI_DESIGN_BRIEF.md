@@ -129,6 +129,7 @@
 - 反馈组件：`12-feedback-components-v2.png`。
 - 登录主状态：`13-login-phone-immersive.png`。
 - 登录密码、扫码、安全验证与多账号补充状态：`19-login-password-states.png` 至 `22-login-multi-account.png`；已于 2026-08-05 确认，并建立对应本地交互原型。
+- 全屏播放器：`06-player-cover.png`、`07-player-lyrics.png`、`08-player-queue.png`；视觉已确认，[`player-flow`](design/prototypes/player-flow/README.md) 只补充分页、歌词定位、退出与队列返回优先级。
 - Design System：`14-design-foundations.png` 至 `18-mobile-states-overlays.png`。
 
 同页面旧版本只保留设计过程，不作为视觉验收依据。完整映射与阶段安排见 [`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md)。
@@ -147,5 +148,5 @@
 - 深色内容页、纯黑主题和高对比主题。
 - 平板、横屏和折叠屏双栏结构。
 - 大字体、TalkBack、触控目标和颜色对比度。
-- 播放器转场、封面与歌词分页、队列展开和性能降级动效。
+- 使用 [`player-flow`](design/prototypes/player-flow/README.md) 已锁定的交互关系完成播放器 Compose 转场、封面/歌词分页、队列展开、预测返回和性能降级动效验证。
 - 本地音乐列表、导入、扫描、批量结果与异常状态。

@@ -38,6 +38,8 @@
 
 `19` 至 `22` 已于 2026-08-05 使用 `frontend-design` 约束生成并经用户确认，现已加入 `DEVELOPMENT_PLAN.md` 的实现基线。对应 [`login-flow`](../prototypes/login-flow/README.md) 原型只验证交互关系，不替代 Android 实现和验收。
 
+`06` 至 `08` 是全屏播放器封面、歌词与队列的已确认视觉基线。对应 [`player-flow`](../prototypes/player-flow/README.md) 原型建立在这些设计图之后，只验证横向分页、歌词定位、纵向退出、队列覆盖层和系统返回优先级；原型内图标、封面、文案与时序均不是 Compose 实现来源。
+
 登录确认稿的 Android 生产 Hero 已派生为 [`../assets/login-hero.png`](../assets/login-hero.png)。该文件只提供无文字插画背景；返回、标题、表单和所有图标仍由 Compose 按确认设计与 Design System 原生绘制。
 
 ## 视觉门禁顺序
