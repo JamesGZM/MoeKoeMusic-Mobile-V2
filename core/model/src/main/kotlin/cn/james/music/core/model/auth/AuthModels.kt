@@ -81,6 +81,39 @@ sealed interface PasswordLoginResult {
     ) : PasswordLoginResult
 }
 
+data class QrLoginSession(
+    val key: String,
+    val loginUrl: String,
+) {
+    override fun toString(): String = "QrLoginSession(key=<redacted>, loginUrl=<redacted>)"
+}
+
+sealed interface QrLoginStartResult {
+    data class Ready(
+        val session: QrLoginSession,
+    ) : QrLoginStartResult
+
+    data class Failure(
+        val error: AuthError,
+    ) : QrLoginStartResult
+}
+
+sealed interface QrLoginCheckResult {
+    data object Waiting : QrLoginCheckResult
+
+    data class Scanned(
+        val nickname: String?,
+    ) : QrLoginCheckResult
+
+    data object Expired : QrLoginCheckResult
+
+    data object Authenticated : QrLoginCheckResult
+
+    data class Failure(
+        val error: AuthError,
+    ) : QrLoginCheckResult
+}
+
 sealed interface AuthRiskMethod {
     data object Sms : AuthRiskMethod
 
@@ -134,6 +167,10 @@ interface AuthRepository {
         username: String,
         password: String,
     ): PasswordLoginResult
+
+    suspend fun createQrLogin(): QrLoginStartResult
+
+    suspend fun checkQrLogin(key: String): QrLoginCheckResult
 
     suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult
 

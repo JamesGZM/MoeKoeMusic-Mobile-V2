@@ -11,10 +11,14 @@ import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginSession
+import cn.james.music.core.model.auth.QrLoginStartResult
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
 import cn.james.music.kugou.api.endpoint.KugouMobileLoginResult
 import cn.james.music.kugou.api.endpoint.KugouPasswordLoginResult
+import cn.james.music.kugou.api.endpoint.KugouQrLoginCheckResult
 import cn.james.music.kugou.api.endpoint.KugouRiskChallengeDto
 import cn.james.music.kugou.api.endpoint.KugouRiskMethodDto
 import cn.james.music.kugou.api.endpoint.KugouRiskProofDto
@@ -143,6 +147,48 @@ class KugouAuthRepository
                                 is KugouRiskMethodDto.Unsupported -> AuthRiskMethod.Unsupported(method.type)
                             },
                         )
+                    }
+                }
+            }
+
+        override suspend fun createQrLogin(): QrLoginStartResult {
+            val session = readySession() ?: return QrLoginStartResult.Failure(AuthError.SessionInitialization)
+            return when (val result = authClient.createQrLogin(session.requestContext())) {
+                is KugouApiResult.Failure -> {
+                    QrLoginStartResult.Failure(result.error.toAuthError())
+                }
+
+                is KugouApiResult.Success -> {
+                    QrLoginStartResult.Ready(QrLoginSession(result.value.key, result.value.loginUrl))
+                }
+            }
+        }
+
+        override suspend fun checkQrLogin(key: String): QrLoginCheckResult =
+            mutationMutex.withLock {
+                val session = readySession() ?: return@withLock QrLoginCheckResult.Failure(AuthError.SessionInitialization)
+                when (val result = authClient.checkQrLogin(key, session.requestContext())) {
+                    is KugouQrLoginCheckResult.Failure -> {
+                        QrLoginCheckResult.Failure(result.error.toAuthError())
+                    }
+
+                    KugouQrLoginCheckResult.Waiting -> {
+                        QrLoginCheckResult.Waiting
+                    }
+
+                    is KugouQrLoginCheckResult.Scanned -> {
+                        QrLoginCheckResult.Scanned(result.nickname)
+                    }
+
+                    KugouQrLoginCheckResult.Expired -> {
+                        QrLoginCheckResult.Expired
+                    }
+
+                    is KugouQrLoginCheckResult.Authenticated -> {
+                        when (commitAuthenticated(session, result.session)) {
+                            AuthActionResult.Success -> QrLoginCheckResult.Authenticated
+                            is AuthActionResult.Failure -> QrLoginCheckResult.Failure(AuthError.Storage)
+                        }
                     }
                 }
             }

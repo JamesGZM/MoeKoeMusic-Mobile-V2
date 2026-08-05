@@ -6,6 +6,7 @@ import cn.james.music.kugou.api.signing.KugouRequestSigner
 import cn.james.music.kugou.api.transport.KugouHttpMethod
 import cn.james.music.kugou.api.transport.KugouRequestSpec
 import cn.james.music.kugou.api.transport.KugouServiceErrorPolicy
+import cn.james.music.kugou.api.transport.KugouSignatureMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -149,6 +150,43 @@ internal class KugouAuthRequestBuilder(
         )
     }
 
+    fun createQrLogin(): KugouRequestSpec =
+        KugouRequestSpec(
+            id = "login_qr_key",
+            method = KugouHttpMethod.Get,
+            baseUrl = QR_LOGIN_ORIGIN,
+            path = "/v2/qrcode",
+            params =
+                mapOf(
+                    "appid" to QR_KEY_APP_ID,
+                    "type" to "1",
+                    "plat" to "4",
+                    "qrcode_txt" to "https://h5.kugou.com/apps/loginQRCode/html/index.html?appid=${platform.appId}&",
+                    "srcappid" to QR_SOURCE_APP_ID,
+                ),
+            signatureMode = KugouSignatureMode.Web,
+            serviceErrorPolicy = KugouServiceErrorPolicy.DecodeByEndpoint,
+        )
+
+    fun checkQrLogin(key: String): KugouRequestSpec {
+        require(key.isNotBlank()) { "QR login key must not be blank" }
+        return KugouRequestSpec(
+            id = "login_qr_check",
+            method = KugouHttpMethod.Get,
+            baseUrl = QR_LOGIN_ORIGIN,
+            path = "/v2/get_userinfo_qrcode",
+            params =
+                mapOf(
+                    "plat" to "4",
+                    "appid" to platform.appId,
+                    "srcappid" to QR_SOURCE_APP_ID,
+                    "qrcode" to key,
+                ),
+            signatureMode = KugouSignatureMode.Web,
+            serviceErrorPolicy = KugouServiceErrorPolicy.DecodeByEndpoint,
+        )
+    }
+
     fun getRiskMethod(
         eventId: String,
         userId: String?,
@@ -253,6 +291,9 @@ internal class KugouAuthRequestBuilder(
         const val STANDARD_T3 = "MCwwLDAsMCwwLDAsMCwwLDA="
         const val LOGIN_USER_AGENT = "Android16-1070-11440-130-0-LOGIN-wifi"
         const val RISK_CLIENT_VERSION = "11510"
+        const val QR_LOGIN_ORIGIN = "https://login-user.kugou.com"
+        const val QR_KEY_APP_ID = "1001"
+        const val QR_SOURCE_APP_ID = "2919"
         const val PASSWORD_T1 =
             "562a6f12a6e803453647d16a08f5f0c2ff7eee692cba2ab74cc4c8ab47fc467561a7c6b586ce7dc46a63613b246737c03a1dc8f8d162d8ce1d2c71893d19f1d4b797685a4c6d3d81341cbde65e488c4829a9b4d42ef2df470eb102979fa5adcdd9b4eecfea8b909ff7599abeb49867640f10c3c70fc444effca9d15db44a9a6c907731e2bb0f22cd9b3536380169995693e5f0e2424e3378097d3813186e3fe96bbe7023808a0981b4e2b6135a76faac"
         const val PASSWORD_T2 =

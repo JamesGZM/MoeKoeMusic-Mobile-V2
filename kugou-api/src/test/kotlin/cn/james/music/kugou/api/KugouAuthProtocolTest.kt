@@ -10,6 +10,9 @@ import cn.james.music.kugou.api.endpoint.KugouMobileLoginDecoder
 import cn.james.music.kugou.api.endpoint.KugouMobileLoginResult
 import cn.james.music.kugou.api.endpoint.KugouPasswordLoginDecoder
 import cn.james.music.kugou.api.endpoint.KugouPasswordLoginResult
+import cn.james.music.kugou.api.endpoint.KugouQrLoginCheckDecoder
+import cn.james.music.kugou.api.endpoint.KugouQrLoginCheckResult
+import cn.james.music.kugou.api.endpoint.KugouQrLoginKeyDecoder
 import cn.james.music.kugou.api.endpoint.KugouRiskChallengeDto
 import cn.james.music.kugou.api.endpoint.KugouRiskMethodDecoder
 import cn.james.music.kugou.api.endpoint.KugouRiskMethodDto
@@ -264,6 +267,89 @@ class KugouAuthProtocolTest {
             KugouApiResult.Success(KugouRiskMethodDto.Unsupported(99)),
             decoder.decode(Json.parseToJsonElement("""{"status":1,"data":{"v_type":99}}""")),
         )
+    }
+
+    @Test
+    fun qrLoginRequestsMatchFixedNodeWebSignatureContract() {
+        val create = requestFactory.prepare(requestBuilder.createQrLogin(), context)
+        val check = requestFactory.prepare(requestBuilder.checkQrLogin("fixture-qr-key"), context)
+
+        assertEquals("https://login-user.kugou.com", create.baseUrl)
+        assertEquals("/v2/qrcode", create.path)
+        assertEquals("1001", create.query["appid"])
+        assertEquals("2919", create.query["srcappid"])
+        assertEquals(
+            "https://h5.kugou.com/apps/loginQRCode/html/index.html?appid=1005&",
+            create.query["qrcode_txt"],
+        )
+        assertEquals("822b59eee388cbf5577c24e4436f6324", create.query["signature"])
+        assertEquals(cn.james.music.kugou.api.transport.KugouRetryMode.None, create.retryMode)
+
+        assertEquals("/v2/get_userinfo_qrcode", check.path)
+        assertEquals("fixture-qr-key", check.query["qrcode"])
+        assertEquals("1c35be8f9de268c0a265973ca7696350", check.query["signature"])
+        assertEquals(cn.james.music.kugou.api.transport.KugouRetryMode.None, check.retryMode)
+        assertFalse(check.toString().contains("fixture-qr-key"))
+    }
+
+    @Test
+    fun qrKeyDecoderBuildsExactMobileLoginUrlAndRedactsKey() {
+        val result =
+            KugouQrLoginKeyDecoder().decode(
+                Json.parseToJsonElement("""{"status":1,"data":{"qrcode":"fixture-qr-key"}}"""),
+            )
+
+        val session = (result as KugouApiResult.Success).value
+        assertEquals("fixture-qr-key", session.key)
+        assertEquals(
+            "https://h5.kugou.com/apps/loginQRCode/html/index.html?qrcode=fixture-qr-key",
+            session.loginUrl,
+        )
+        assertFalse(session.toString().contains("fixture-qr-key"))
+    }
+
+    @Test
+    fun qrCheckDecoderTypesAllFixedStatusesAndRejectsUnknown() {
+        val decoder = KugouQrLoginCheckDecoder()
+
+        assertEquals(
+            KugouQrLoginCheckResult.Expired,
+            decoder.decode(Json.parseToJsonElement("""{"status":1,"data":{"status":0}}"""), KugouCookies.Empty),
+        )
+        assertEquals(
+            KugouQrLoginCheckResult.Waiting,
+            decoder.decode(Json.parseToJsonElement("""{"status":1,"data":{"status":1}}"""), KugouCookies.Empty),
+        )
+        assertEquals(
+            KugouQrLoginCheckResult.Scanned("Fixture"),
+            decoder.decode(
+                Json.parseToJsonElement("""{"status":1,"data":{"status":2,"nickname":"Fixture"}}"""),
+                KugouCookies.Empty,
+            ),
+        )
+        val unknown =
+            decoder.decode(Json.parseToJsonElement("""{"status":1,"data":{"status":9}}"""), KugouCookies.Empty)
+        assertEquals(
+            KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse),
+            (unknown as KugouQrLoginCheckResult.Failure).error,
+        )
+    }
+
+    @Test
+    fun qrAuthenticatedDecoderMergesBodyIdentityWithResponseCookies() {
+        val result =
+            KugouQrLoginCheckDecoder().decode(
+                Json.parseToJsonElement(
+                    """{"status":1,"data":{"status":4,"token":"fixture-token","userid":42}}""",
+                ),
+                KugouCookies.from(mapOf("server" to "fixture")),
+            )
+
+        val session = (result as KugouQrLoginCheckResult.Authenticated).session
+        assertEquals("fixture-token", session.cookies.value("token"))
+        assertEquals("42", session.cookies.value("userid"))
+        assertEquals("fixture", session.cookies.value("server"))
+        assertFalse(session.toString().contains("fixture-token"))
     }
 
     @Test

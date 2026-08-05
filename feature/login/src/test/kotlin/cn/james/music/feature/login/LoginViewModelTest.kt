@@ -11,6 +11,8 @@ import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginStartResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -341,6 +343,10 @@ class LoginViewModelTest {
             passwordCalls += PasswordCall(username, password)
             return passwordResults.removeFirst()
         }
+
+        override suspend fun createQrLogin(): QrLoginStartResult = QrLoginStartResult.Failure(AuthError.Protocol)
+
+        override suspend fun checkQrLogin(key: String): QrLoginCheckResult = QrLoginCheckResult.Failure(AuthError.Protocol)
 
         override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
             riskMethodDeferred?.await() ?: riskMethodResults.removeFirst()

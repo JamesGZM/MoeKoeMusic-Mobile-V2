@@ -9,12 +9,16 @@ import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginStartResult
 import cn.james.music.kugou.api.endpoint.KugouAccountOptionDto
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouAuthenticatedSessionDto
 import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
 import cn.james.music.kugou.api.endpoint.KugouMobileLoginResult
 import cn.james.music.kugou.api.endpoint.KugouPasswordLoginResult
+import cn.james.music.kugou.api.endpoint.KugouQrLoginCheckResult
+import cn.james.music.kugou.api.endpoint.KugouQrLoginSessionDto
 import cn.james.music.kugou.api.endpoint.KugouRiskChallengeDto
 import cn.james.music.kugou.api.endpoint.KugouRiskMethodDto
 import cn.james.music.kugou.api.endpoint.KugouRiskProofDto
@@ -139,6 +143,67 @@ class KugouAuthRepositoryTest {
         }
 
     @Test
+    fun qrLoginKeyStaysTypedAndRedactedAcrossRepositoryBoundary() =
+        runBlocking {
+            val result =
+                repository(
+                    FakeAuthClient(
+                        qrStartResult =
+                            KugouApiResult.Success(
+                                KugouQrLoginSessionDto("fixture-qr-key", "https://example.test/fixture-qr-key"),
+                            ),
+                    ),
+                    RecordingMutator(),
+                ).createQrLogin()
+
+            val session = (result as QrLoginStartResult.Ready).session
+            assertEquals("fixture-qr-key", session.key)
+            assertFalse(session.toString().contains("fixture-qr-key"))
+        }
+
+    @Test
+    fun qrAuthenticationCommitsBeforeReportingSuccess() =
+        runBlocking {
+            val mutator = RecordingMutator()
+            val client =
+                FakeAuthClient(
+                    qrCheckResult =
+                        KugouQrLoginCheckResult.Authenticated(
+                            KugouAuthenticatedSessionDto(
+                                "fixture-token",
+                                "42",
+                                KugouCookies.from(mapOf("token" to "fixture-token", "userid" to "42")),
+                            ),
+                        ),
+                )
+
+            val result = repository(client, mutator).checkQrLogin("fixture-qr-key")
+
+            assertEquals(QrLoginCheckResult.Authenticated, result)
+            assertEquals("fixture-token", requireNotNull(mutator.replacement).token)
+        }
+
+    @Test
+    fun qrStorageFailureNeverReportsAuthenticated() =
+        runBlocking {
+            val client =
+                FakeAuthClient(
+                    qrCheckResult =
+                        KugouQrLoginCheckResult.Authenticated(
+                            KugouAuthenticatedSessionDto(
+                                "fixture-token",
+                                "42",
+                                KugouCookies.from(mapOf("token" to "fixture-token", "userid" to "42")),
+                            ),
+                        ),
+                )
+
+            val result = repository(client, RecordingMutator(fail = true)).checkQrLogin("fixture-qr-key")
+
+            assertEquals(QrLoginCheckResult.Failure(AuthError.Storage), result)
+        }
+
+    @Test
     fun logoutPreservesAnonymousIdentityAndDfid() =
         runBlocking {
             val authenticated =
@@ -246,6 +311,18 @@ class KugouAuthRepositoryTest {
                     cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
                 ),
             ),
+        private val qrStartResult: KugouApiResult<KugouQrLoginSessionDto> =
+            KugouApiResult.Failure(
+                cn.james.music.kugou.api.transport.KugouError.Protocol(
+                    cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
+                ),
+            ),
+        private val qrCheckResult: KugouQrLoginCheckResult =
+            KugouQrLoginCheckResult.Failure(
+                cn.james.music.kugou.api.transport.KugouError.Protocol(
+                    cn.james.music.kugou.api.transport.KugouError.Protocol.Reason.ServiceRejected,
+                ),
+            ),
     ) : KugouAuthenticationClient {
         var lastRiskProof: KugouRiskProofDto? = null
 
@@ -280,6 +357,13 @@ class KugouAuthRepositoryTest {
             lastRiskProof = proof
             return verifyResult
         }
+
+        override suspend fun createQrLogin(context: KugouRequestContext): KugouApiResult<KugouQrLoginSessionDto> = qrStartResult
+
+        override suspend fun checkQrLogin(
+            key: String,
+            context: KugouRequestContext,
+        ): KugouQrLoginCheckResult = qrCheckResult
     }
 
     private companion object {

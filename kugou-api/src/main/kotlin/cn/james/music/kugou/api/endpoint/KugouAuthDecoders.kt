@@ -90,6 +90,31 @@ sealed interface KugouPasswordLoginResult {
     ) : KugouPasswordLoginResult
 }
 
+data class KugouQrLoginSessionDto(
+    val key: String,
+    val loginUrl: String,
+) {
+    override fun toString(): String = "KugouQrLoginSessionDto(key=<redacted>, loginUrl=<redacted>)"
+}
+
+sealed interface KugouQrLoginCheckResult {
+    data object Waiting : KugouQrLoginCheckResult
+
+    data class Scanned(
+        val nickname: String?,
+    ) : KugouQrLoginCheckResult
+
+    data object Expired : KugouQrLoginCheckResult
+
+    data class Authenticated(
+        val session: KugouAuthenticatedSessionDto,
+    ) : KugouQrLoginCheckResult
+
+    data class Failure(
+        val error: KugouError,
+    ) : KugouQrLoginCheckResult
+}
+
 sealed interface KugouRiskMethodDto {
     data object Sms : KugouRiskMethodDto
 
@@ -277,6 +302,83 @@ internal class KugouRiskVerificationDecoder {
             ),
         )
     }
+}
+
+internal class KugouQrLoginKeyDecoder {
+    fun decode(body: JsonElement): KugouApiResult<KugouQrLoginSessionDto> {
+        val root = body as? JsonObject ?: return malformed()
+        if (root.valueText("status") != "1") return rejected(root)
+        val key = (root["data"] as? JsonObject)?.valueText("qrcode")?.takeIf(String::isNotBlank) ?: return missingField()
+        return KugouApiResult.Success(
+            KugouQrLoginSessionDto(
+                key = key,
+                loginUrl = "$QR_LOGIN_URL_PREFIX$key",
+            ),
+        )
+    }
+
+    private fun malformed(): KugouApiResult.Failure =
+        KugouApiResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
+
+    private fun missingField(): KugouApiResult.Failure =
+        KugouApiResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MissingRequiredField))
+
+    private fun rejected(root: JsonObject): KugouApiResult.Failure =
+        KugouApiResult.Failure(
+            KugouError.Protocol(
+                KugouError.Protocol.Reason.ServiceRejected,
+                root.valueText("error_code") ?: root.valueText("status"),
+            ),
+        )
+
+    private companion object {
+        const val QR_LOGIN_URL_PREFIX = "https://h5.kugou.com/apps/loginQRCode/html/index.html?qrcode="
+    }
+}
+
+internal class KugouQrLoginCheckDecoder {
+    fun decode(
+        body: JsonElement,
+        responseCookies: KugouCookies,
+    ): KugouQrLoginCheckResult {
+        val root = body as? JsonObject ?: return malformed()
+        if (root.valueText("status") != "1") return rejected(root)
+        val data = root["data"] as? JsonObject ?: return missingField()
+        return when (data.valueText("status")?.toIntOrNull()) {
+            0 -> KugouQrLoginCheckResult.Expired
+            1 -> KugouQrLoginCheckResult.Waiting
+            2 -> KugouQrLoginCheckResult.Scanned(data.valueText("nickname")?.takeIf(String::isNotBlank))
+            4 -> authenticated(data, responseCookies)
+            else -> malformed()
+        }
+    }
+
+    private fun authenticated(
+        data: JsonObject,
+        responseCookies: KugouCookies,
+    ): KugouQrLoginCheckResult {
+        val token = data.valueText("token") ?: responseCookies.value("token")
+        val userId = data.valueText("userid") ?: responseCookies.value("userid")
+        if (token.isNullOrBlank() || userId.isNullOrBlank() || userId == "0") return missingField()
+        val authCookies = responseCookies.asMap() + mapOf("token" to token, "userid" to userId)
+        return KugouQrLoginCheckResult.Authenticated(
+            KugouAuthenticatedSessionDto(token, userId, KugouCookies.from(authCookies)),
+        )
+    }
+
+    private fun malformed(): KugouQrLoginCheckResult.Failure =
+        KugouQrLoginCheckResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
+
+    private fun missingField(): KugouQrLoginCheckResult.Failure =
+        KugouQrLoginCheckResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MissingRequiredField))
+
+    private fun rejected(root: JsonObject): KugouQrLoginCheckResult.Failure =
+        KugouQrLoginCheckResult.Failure(
+            KugouError.Protocol(
+                KugouError.Protocol.Reason.ServiceRejected,
+                root.valueText("error_code") ?: root.valueText("status"),
+            ),
+        )
 }
 
 private fun JsonObject.valueText(name: String): String? {

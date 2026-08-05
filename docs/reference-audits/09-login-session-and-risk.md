@@ -8,7 +8,7 @@
 
 ## 当前实现与缺口
 
-- `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交；扫码 Endpoint 仍待迁移。
+- `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交，以及二维码 key/check Endpoint 和 `0/1/2/4` 类型化状态；扫码 UI 与生命周期轮询仍待实现。
 - `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
 - `:feature:login` 已拥有短信/多账号、密码与短信/腾讯安全验证状态，并实现验证成功后最多一次的原密码重试；`:app` 已提供非导出的隔离腾讯 Activity，扫码状态机仍待后续原子提交。
 - 登录设计稿 `13`、`19` 至 `22` 已确认，交互原型仅验证状态关系，不能作为 Compose 图标、尺寸或视觉实现依据。
@@ -113,6 +113,8 @@ ZXing Core 仅负责通用二维码算法；二维码颜色、留白、尺寸和
 | 提交验证 | `POST https://verifyservice.kugou.com/v4/verify_user_info?clientver=11510` | `Verified` | 票据错误、过期、取消、网络 |
 | 获取扫码 key | `GET https://login-user.kugou.com/v2/qrcode` | key + 登录 URL | 网络、协议错误 |
 | 检查扫码 | `GET https://login-user.kugou.com/v2/get_userinfo_qrcode` | Waiting/Scanned/Expired/Authenticated | 连续失败、未知状态 |
+
+二维码协议子切片已按 KuGouMusicApi `6efe84e` 的 `module/login_qr_key.js`、`module/login_qr_check.js`、`module/login_qr_create.js` 和 Mobile `ab71195` 的 `src/app/login.tsx` 固定实现：key 请求覆盖 `appid=1001` 并保留 `srcappid=2919`、`plat=4`、Web 签名；check 请求不启用传输自动重试；未知状态作为协议错误。状态 4 仅在 token/userid 解码且加密会话提交完成后返回认证成功，扫码 key 和登录 URL 的诊断字符串均脱敏。
 
 - `secu_params` 只能在 `:kugou-api` 用本次请求 AES key 解密；缺 token/userid 是协议错误。
 - `info_list` 只映射 `userid/nickname/pic/p_grade`，过滤空或 `0` userid；UI 不读取原始 JSON。

@@ -24,6 +24,13 @@ interface KugouAuthenticationClient {
         context: KugouRequestContext,
     ): KugouPasswordLoginResult
 
+    suspend fun createQrLogin(context: KugouRequestContext): KugouApiResult<KugouQrLoginSessionDto>
+
+    suspend fun checkQrLogin(
+        key: String,
+        context: KugouRequestContext,
+    ): KugouQrLoginCheckResult
+
     suspend fun getRiskMethod(
         eventId: String,
         context: KugouRequestContext,
@@ -44,6 +51,8 @@ class KugouAuthClient
         private val passwordLoginDecoder: KugouPasswordLoginDecoder = KugouPasswordLoginDecoder(),
         private val riskMethodDecoder: KugouRiskMethodDecoder = KugouRiskMethodDecoder(),
         private val riskVerificationDecoder: KugouRiskVerificationDecoder = KugouRiskVerificationDecoder(),
+        private val qrLoginKeyDecoder: KugouQrLoginKeyDecoder = KugouQrLoginKeyDecoder(),
+        private val qrLoginCheckDecoder: KugouQrLoginCheckDecoder = KugouQrLoginCheckDecoder(),
     ) : KugouAuthenticationClient {
         constructor(executor: KugouCallExecutor) : this(executor, KugouAuthRequestBuilder(), KugouMobileLoginDecoder())
 
@@ -113,6 +122,21 @@ class KugouAuthClient
             when (val response = executor.executeJson(requestBuilder.getRiskMethod(eventId, context.userId), context)) {
                 is KugouProtocolResult.Failure -> KugouApiResult.Failure(response.error)
                 is KugouProtocolResult.Success -> riskMethodDecoder.decode(response.body)
+            }
+
+        override suspend fun createQrLogin(context: KugouRequestContext): KugouApiResult<KugouQrLoginSessionDto> =
+            when (val response = executor.executeJson(requestBuilder.createQrLogin(), context)) {
+                is KugouProtocolResult.Failure -> KugouApiResult.Failure(response.error)
+                is KugouProtocolResult.Success -> qrLoginKeyDecoder.decode(response.body)
+            }
+
+        override suspend fun checkQrLogin(
+            key: String,
+            context: KugouRequestContext,
+        ): KugouQrLoginCheckResult =
+            when (val response = executor.executeJson(requestBuilder.checkQrLogin(key), context)) {
+                is KugouProtocolResult.Failure -> KugouQrLoginCheckResult.Failure(response.error)
+                is KugouProtocolResult.Success -> qrLoginCheckDecoder.decode(response.body, response.responseCookies)
             }
 
         override suspend fun verifyRisk(
