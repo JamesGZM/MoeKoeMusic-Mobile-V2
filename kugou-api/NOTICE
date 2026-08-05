@@ -1,0 +1,7 @@
+This module contains an independent Kotlin migration of selected protocol behavior from:
+
+KuGouMusicApi
+https://github.com/MakcRe/KuGouMusicApi
+Baseline commit: 6efe84e1971c15b11a5cf1a210c5e8e0cc9d7ddb
+Copyright (c) 2023 MakcRe
+Licensed under the MIT License. See LICENSE-KuGouMusicApi.
