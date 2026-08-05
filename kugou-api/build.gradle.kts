@@ -10,7 +10,7 @@ kotlin {
 dependencies {
     implementation(projects.core.common)
     implementation(libs.okhttp)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.core)
 }

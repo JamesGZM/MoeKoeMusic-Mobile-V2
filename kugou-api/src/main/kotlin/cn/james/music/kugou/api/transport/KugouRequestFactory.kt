@@ -70,6 +70,7 @@ class KugouRequestFactory(
             headers = headers.toMap(),
             body = spec.body?.copyOf(),
             responseFormat = spec.responseFormat,
+            retryMode = spec.retryMode,
         )
     }
 

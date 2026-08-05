@@ -20,6 +20,11 @@ enum class KugouResponseFormat {
     Bytes,
 }
 
+enum class KugouRetryMode {
+    None,
+    IdempotentRead,
+}
+
 data class KugouRequestContext(
     val mid: String,
     val dfid: String? = null,
@@ -44,11 +49,12 @@ data class KugouRequestSpec(
     val includeDefaultParams: Boolean = true,
     val generateSignKey: Boolean = false,
     val responseFormat: KugouResponseFormat = KugouResponseFormat.Json,
+    val retryMode: KugouRetryMode = KugouRetryMode.None,
 ) {
     override fun toString(): String =
         "KugouRequestSpec(id=$id, method=$method, path=$path, baseUrl=$baseUrl, " +
             "paramNames=${params.keys.sorted()}, headerNames=${headers.keys.sorted()}, bodyBytes=${body?.size ?: 0}, " +
-            "signatureMode=$signatureMode, responseFormat=$responseFormat)"
+            "signatureMode=$signatureMode, responseFormat=$responseFormat, retryMode=$retryMode)"
 }
 
 data class KugouPreparedRequest(
@@ -60,11 +66,12 @@ data class KugouPreparedRequest(
     val headers: Map<String, String>,
     val body: ByteArray?,
     val responseFormat: KugouResponseFormat,
+    val retryMode: KugouRetryMode = KugouRetryMode.None,
 ) {
     override fun toString(): String =
         "KugouPreparedRequest(id=$id, method=$method, baseUrl=$baseUrl, path=$path, " +
             "queryNames=${query.keys.sorted()}, headerNames=${headers.keys.sorted()}, bodyBytes=${body?.size ?: 0}, " +
-            "responseFormat=$responseFormat)"
+            "responseFormat=$responseFormat, retryMode=$retryMode)"
 }
 
 data class KugouRawResponse(
