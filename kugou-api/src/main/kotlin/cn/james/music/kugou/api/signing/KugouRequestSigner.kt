@@ -33,6 +33,12 @@ class KugouRequestSigner {
         appId: String,
     ): String = KugouDigests.md5("$hash$SIGN_KEY_SALT$appId$mid$userId")
 
+    fun signParamsKey(
+        data: String,
+        appId: String,
+        clientVersion: String,
+    ): String = KugouDigests.md5("$appId$ANDROID_SALT$clientVersion$data")
+
     private fun md5Parts(vararg parts: ByteArray): String {
         val output = ByteArrayOutputStream(parts.sumOf(ByteArray::size))
         parts.forEach(output::write)

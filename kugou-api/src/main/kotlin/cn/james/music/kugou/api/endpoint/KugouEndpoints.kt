@@ -1,6 +1,7 @@
 package cn.james.music.kugou.api.endpoint
 
 import cn.james.music.kugou.api.config.KugouPlatformConfig
+import cn.james.music.kugou.api.transport.KugouCleartextPolicy
 import cn.james.music.kugou.api.transport.KugouHttpMethod
 import cn.james.music.kugou.api.transport.KugouRequestSpec
 import cn.james.music.kugou.api.transport.KugouResponseFormat
@@ -12,6 +13,25 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 object KugouEndpoints {
+    fun sendMobileCode(mobile: String): KugouRequestSpec {
+        require(MOBILE_PATTERN.matches(mobile)) { "Mobile number must contain 11 digits and start with 1" }
+        val body =
+            buildJsonObject {
+                put("businessid", 5)
+                put("mobile", mobile)
+                put("plat", 3)
+            }
+        return KugouRequestSpec(
+            id = "captcha_sent",
+            method = KugouHttpMethod.Post,
+            baseUrl = "http://login.user.kugou.com",
+            path = "/v7/send_mobile_code",
+            headers = mapOf("Content-Type" to "application/json"),
+            body = Json.encodeToString(body).encodeToByteArray(),
+            cleartextPolicy = KugouCleartextPolicy.LoginMobileCode,
+        )
+    }
+
     fun registerDevice(
         encryptedBody: ByteArray,
         encryptedIdentity: String,
@@ -168,6 +188,7 @@ object KugouEndpoints {
 
     private val QUALITIES = listOf("128", "320", "flac", "high", "viper_atmos", "viper_tape", "viper_clear", "super", "multitrack")
     private val MAGIC_QUALITIES = setOf("piano", "acappella", "subwoofer", "ancient", "dj", "surnay").associateWith { "magic_$it" }
+    private val MOBILE_PATTERN = Regex("^1\\d{10}$")
 }
 
 data class KugouAudioResource(

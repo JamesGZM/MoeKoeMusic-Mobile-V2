@@ -13,12 +13,31 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class KugouEndpointsTest {
     private val factory = KugouRequestFactory(clock = EpochSecondsProvider { 1_700_000_000L })
     private val context = KugouRequestContext(mid = "fixture-mid", dfid = "fixture-dfid")
+
+    @Test
+    fun mobileCodeEndpointMatchesFixedCleartextContract() {
+        val request =
+            factory.prepare(
+                KugouEndpoints.sendMobileCode("13800000000"),
+                KugouRequestContext(mid = "fixture-mid"),
+            )
+
+        assertEquals("http://login.user.kugou.com", request.baseUrl)
+        assertEquals("/v7/send_mobile_code", request.path)
+        assertEquals("application/json", request.headers["Content-Type"])
+        assertEquals("""{"businessid":5,"mobile":"13800000000","plat":3}""", requireNotNull(request.body).decodeToString())
+        assertEquals("aa8b333f5b55fbbe1c972def01615522", request.query["signature"])
+        assertEquals(KugouRetryMode.None, request.retryMode)
+        assertFalse("Cookie" in request.headers)
+        assertThrows(IllegalArgumentException::class.java) { KugouEndpoints.sendMobileCode("23800000000") }
+    }
 
     @Test
     fun searchEndpointUsesFixedSongContract() {

@@ -40,6 +40,7 @@ class NodeCompatibilityTest {
         assertEquals("9c4be42f037465be9c780532ae6687c3", signer.registerSignature(params))
         assertEquals("f43c3d8a3944ebb584820feee6d32ff4", signer.webSignature(params))
         assertEquals("bcd8cf9e54fbd406da3260d9cc9abee0", signer.signKey("abcdef012345", "fixture-mid", appId = "1005"))
+        assertEquals("e3e86865c059fdec1dd020b6d640b8a5", signer.signParamsKey("1700000000123", appId = "1005", clientVersion = "20489"))
     }
 
     @Test
