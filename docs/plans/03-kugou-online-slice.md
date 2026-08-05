@@ -115,6 +115,7 @@ interface SearchRepository {
 - `:core:designsystem` 已按确认稿 `12-feedback-components-v2.png` 与 `18-mobile-states-overlays.png` 实现 `MoeSnackbar` 的成功、信息、错误和警告状态；App 根层在 MiniPlayer 上方显示单条播放反馈，可恢复错误提供一个“重试”动作，4 秒后按事件 id 安全收起。
 - `KugouPlaybackSourceResolverTest`、`PlaybackAddressRefreshPolicyTest` 和 `AppPlaybackViewModelTest` 覆盖类型映射、一次刷新、非网络错误豁免、重试与旧反馈隔离；`MoeSnackbarScreenshotTest` 已生成并通过 390dp 浅色截图基准。
 - 2026-08-05 在 Huawei ELE-AL00 / Android 10（API 29）安装最新 Debug 包，真实搜索 `Linkin Park` 后播放 `Numb`：MiniPlayer 显示“暂停”，系统媒体会话为 Playing、`error=null`，位置从约 2.9 秒增长到约 12.0 秒，证明预解析未破坏在线播放闭环。
+- 同一设备完整执行 `MainActivityTest`，6/6 通过且无跳过，覆盖根层反馈接入后的首页、搜索返回栈、我的、本地音乐、登录、密码登录和 QR 登录导航回归。
 
 当前剩余风险：真实 CDN 地址过期尚未在可控时间内自然复现，一次刷新目前由纯策略测试和 Media3 集成编译覆盖；无版权、VIP 与风控的线上样本也未稳定取得，因此对应 Snackbar 仍以协议 fixture、ViewModel 单测和截图基准为验收依据。API 26、33、36、后台播放和进程重启矩阵继续保留在阶段完成门禁中。
 
