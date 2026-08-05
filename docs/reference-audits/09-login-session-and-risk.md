@@ -8,7 +8,7 @@
 
 ## 当前实现与缺口
 
-- `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交，以及二维码 key/check Endpoint 和 `0/1/2/4` 类型化状态；扫码 UI 与生命周期轮询仍待实现。
+- `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交，以及二维码 key/check Endpoint 和 `0/1/2/4` 类型化状态；`:feature:login` 已按确认设计稿 20 实现 ZXing 渲染和生命周期轮询，真机可扫/服务兼容仍待验收。
 - `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
 - `:feature:login` 已拥有短信/多账号、密码与短信/腾讯安全验证状态，并实现验证成功后最多一次的原密码重试；`:app` 已提供非导出的隔离腾讯 Activity，扫码状态机仍待后续原子提交。
 - 登录设计稿 `13`、`19` 至 `22` 已确认，交互原型仅验证状态关系，不能作为 Compose 图标、尺寸或视觉实现依据。

@@ -1,5 +1,6 @@
 package cn.james.music.feature.login
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -7,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,7 +29,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Security
@@ -46,11 +52,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -69,6 +78,10 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeKoeImmersiveTopBar
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthError
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 
 @Composable
 internal fun LoginScreen(
@@ -77,6 +90,7 @@ internal fun LoginScreen(
     onPhoneChange: (String) -> Unit,
     onCodeChange: (String) -> Unit,
     onModeChange: (LoginMode) -> Unit,
+    onRefreshQrLogin: () -> Unit,
     onSendCode: () -> Unit,
     onSubmitMobileCode: () -> Unit,
     onUsernameChange: (String) -> Unit,
@@ -152,6 +166,14 @@ internal fun LoginScreen(
                                 onStartRiskVerification = onStartRiskVerification,
                                 onRetryTencentVerification = onRetryTencentVerification,
                                 onCancelRisk = onCancelRisk,
+                            )
+                        }
+
+                        LoginMode.QrCode -> {
+                            QrCodeContent(
+                                state = state,
+                                onModeChange = onModeChange,
+                                onRefresh = onRefreshQrLogin,
                             )
                         }
                     }
@@ -312,14 +334,287 @@ private fun LoginModeSelector(
             LoginModeItem(
                 label = stringResource(R.string.login_mode_qr),
                 icon = { Icon(Icons.Filled.QrCodeScanner, contentDescription = null) },
-                selected = false,
-                enabled = false,
-                onClick = {},
+                selected = selectedMode == LoginMode.QrCode,
+                enabled = enabled,
+                onClick = { onModeChange(LoginMode.QrCode) },
                 modifier = Modifier.weight(1f),
             )
         }
     }
 }
+
+@Composable
+private fun QrCodeContent(
+    state: LoginUiState,
+    onModeChange: (LoginMode) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        LoginModeSelector(state.mode, onModeChange, enabled = true)
+        when (val qr = state.qrLogin ?: QrLoginUiState.Generating) {
+            QrLoginUiState.Generating -> QrGeneratingContent()
+            is QrLoginUiState.Waiting -> {
+                QrReadyContent(qr.session.loginUrl, qr.remainingSeconds, scanned = false)
+            }
+
+            is QrLoginUiState.Scanned -> {
+                QrReadyContent(qr.session.loginUrl, qr.remainingSeconds, scanned = true, nickname = qr.nickname)
+            }
+
+            is QrLoginUiState.Expired -> QrExpiredContent(qr.session.loginUrl, onRefresh)
+            is QrLoginUiState.Failure -> QrFailureContent(qr.error, onRefresh, onModeChange)
+        }
+    }
+}
+
+@Composable
+private fun QrGeneratingContent() {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(186.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(progress = { 0.72f }, modifier = Modifier.size(54.dp), strokeWidth = 4.dp)
+        }
+        Text(stringResource(R.string.login_qr_generating), style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun QrReadyContent(
+    loginUrl: String,
+    remainingSeconds: Int,
+    scanned: Boolean,
+    nickname: String? = null,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            QrCodeImage(loginUrl)
+            if (scanned) {
+                Surface(
+                    modifier = Modifier.size(58.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    border = BorderStroke(3.dp, Color.White),
+                ) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(13.dp),
+                    )
+                }
+            }
+        }
+        Text(
+            stringResource(if (scanned) R.string.login_qr_scanned_title else R.string.login_qr_scan_title),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            if (scanned) {
+                nickname?.takeIf(String::isNotBlank)?.let { stringResource(R.string.login_qr_scanned_user, it) }
+                    ?: stringResource(R.string.login_qr_scanned_description)
+            } else {
+                stringResource(R.string.login_qr_expiry, remainingSeconds / 60, remainingSeconds % 60)
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        if (!scanned) QrLoginSteps()
+    }
+}
+
+@Composable
+private fun QrCodeImage(loginUrl: String) {
+    val bitmap = remember(loginUrl) { createQrBitmap(loginUrl) }
+    Box(
+        modifier = Modifier.size(190.dp).background(Color.White, RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = stringResource(R.string.login_qr_code_description),
+            modifier = Modifier.size(178.dp),
+        )
+        Surface(
+            modifier = Modifier.size(38.dp),
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.primary,
+            border = BorderStroke(3.dp, Color.White),
+        ) {
+            Icon(
+                Icons.Filled.MusicNote,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.padding(6.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QrLoginSteps() {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.login_qr_step_open), style = MaterialTheme.typography.labelMedium)
+            Text("→", color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.login_qr_step_scan), style = MaterialTheme.typography.labelMedium)
+            Text("→", color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.login_qr_step_confirm), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
+@Composable
+private fun QrExpiredContent(
+    loginUrl: String,
+    onRefresh: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Box(Modifier.alpha(0.28f)) { QrCodeImage(loginUrl) }
+            Surface(
+                modifier = Modifier.size(58.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.error,
+                border = BorderStroke(3.dp, Color.White),
+            ) {
+                Icon(
+                    Icons.Filled.ErrorOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.padding(13.dp),
+                )
+            }
+        }
+        Text(stringResource(R.string.login_qr_expired_title), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.login_qr_expired_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(
+            onClick = onRefresh,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(MoeKoeTheme.dimensions.largeButtonHeight),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text(stringResource(R.string.login_qr_refresh))
+        }
+    }
+}
+
+@Composable
+private fun QrFailureContent(
+    error: AuthError,
+    onRefresh: () -> Unit,
+    onModeChange: (LoginMode) -> Unit,
+) {
+    QrTerminalContent(
+        icon = { Icon(Icons.Filled.CloudOff, contentDescription = null) },
+        title = stringResource(R.string.login_qr_failure_title),
+        description = error.message(),
+    ) {
+        Button(
+            onClick = onRefresh,
+            modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text(stringResource(R.string.login_qr_retry))
+        }
+        OutlinedButton(
+            onClick = { onModeChange(LoginMode.MobileCode) },
+            modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text(stringResource(R.string.login_qr_use_mobile))
+        }
+    }
+}
+
+@Composable
+private fun QrTerminalContent(
+    icon: @Composable () -> Unit,
+    title: String,
+    description: String,
+    actions: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 34.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.error,
+        ) {
+            Box(Modifier.padding(19.dp), contentAlignment = Alignment.Center) { icon() }
+        }
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text(
+            description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        actions()
+    }
+}
+
+private fun createQrBitmap(content: String): Bitmap {
+    val matrix =
+        QRCodeWriter().encode(
+            content,
+            BarcodeFormat.QR_CODE,
+            QR_BITMAP_SIZE,
+            QR_BITMAP_SIZE,
+            mapOf(
+                EncodeHintType.CHARACTER_SET to "UTF-8",
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H,
+                EncodeHintType.MARGIN to 1,
+            ),
+        )
+    val pixels =
+        IntArray(QR_BITMAP_SIZE * QR_BITMAP_SIZE) { index ->
+            if (matrix[index % QR_BITMAP_SIZE, index / QR_BITMAP_SIZE]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        }
+    return Bitmap.createBitmap(QR_BITMAP_SIZE, QR_BITMAP_SIZE, Bitmap.Config.ARGB_8888).apply {
+        setPixels(pixels, 0, QR_BITMAP_SIZE, 0, 0, QR_BITMAP_SIZE, QR_BITMAP_SIZE)
+    }
+}
+
+private const val QR_BITMAP_SIZE = 512
 
 @Composable
 private fun LoginModeItem(

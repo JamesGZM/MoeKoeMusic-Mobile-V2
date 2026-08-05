@@ -26,6 +26,7 @@ guava = "33.3.1-android"
 work = "2.11.2"
 coil = "3.4.0"
 webkit = "1.16.0"
+zxing = "3.5.4"
 
 [libraries]
 android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -69,6 +70,7 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-navigation" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-navigation" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }

@@ -7,6 +7,8 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthError
+import cn.james.music.core.model.auth.QrLoginSession
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -108,6 +110,56 @@ fun LoginPasswordLargeTextScreenshot() {
     LoginScreenshotContent(LoginUiState(mode = LoginMode.Password))
 }
 
+@PreviewTest
+@Preview(name = "QrGenerating", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginQrGeneratingScreenshot() {
+    LoginScreenshotContent(LoginUiState(mode = LoginMode.QrCode, qrLogin = QrLoginUiState.Generating))
+}
+
+@PreviewTest
+@Preview(name = "QrWaiting", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginQrWaitingScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.QrCode,
+            qrLogin = QrLoginUiState.Waiting(previewQrSession, remainingSeconds = 106),
+        ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "QrScanned", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginQrScannedScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.QrCode,
+            qrLogin = QrLoginUiState.Scanned(previewQrSession, nickname = "MoeKoe", remainingSeconds = 94),
+        ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "QrExpired", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginQrExpiredScreenshot() {
+    LoginScreenshotContent(LoginUiState(mode = LoginMode.QrCode, qrLogin = QrLoginUiState.Expired(previewQrSession)))
+}
+
+@PreviewTest
+@Preview(name = "QrFailure", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginQrFailureScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.QrCode,
+            qrLogin = QrLoginUiState.Failure(AuthError.Connection),
+        ),
+    )
+}
+
 @Composable
 private fun LoginScreenshotContent(state: LoginUiState) {
     MoeKoeTheme(themeMode = ThemeMode.Light) {
@@ -118,6 +170,7 @@ private fun LoginScreenshotContent(state: LoginUiState) {
                 onPhoneChange = {},
                 onCodeChange = {},
                 onModeChange = {},
+                onRefreshQrLogin = {},
                 onSendCode = {},
                 onSubmitMobileCode = {},
                 onUsernameChange = {},
@@ -144,3 +197,4 @@ private val previewAccounts =
     )
 
 private val previewChallenge = AuthRiskChallenge("fixture-event", null, null)
+private val previewQrSession = QrLoginSession("fixture-key", "https://example.test/qr-login/fixture-key")

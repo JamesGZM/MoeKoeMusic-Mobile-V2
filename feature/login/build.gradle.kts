@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.coil.compose)
+    implementation(libs.zxing.core)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(platform(libs.androidx.compose.bom))

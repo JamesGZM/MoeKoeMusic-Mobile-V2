@@ -54,6 +54,7 @@ fun NavGraphBuilder.loginDestination(
             onPhoneChange = viewModel::updatePhone,
             onCodeChange = viewModel::updateCode,
             onModeChange = viewModel::switchMode,
+            onRefreshQrLogin = viewModel::refreshQrLogin,
             onSendCode = viewModel::sendCode,
             onSubmitMobileCode = viewModel::submitMobileCode,
             onUsernameChange = viewModel::updateUsername,

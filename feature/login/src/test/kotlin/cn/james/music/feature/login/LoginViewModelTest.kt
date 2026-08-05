@@ -12,6 +12,7 @@ import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
 import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginSession
 import cn.james.music.core.model.auth.QrLoginStartResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -303,6 +304,77 @@ class LoginViewModelTest {
             assertFalse(viewModel.state.value.resolvingRisk)
         }
 
+    @Test
+    fun qrModeCreatesSessionAndLeavingCancelsPolling() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("first-key"))
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+
+            assertTrue(viewModel.state.value.qrLogin is QrLoginUiState.Waiting)
+            viewModel.switchMode(LoginMode.MobileCode)
+            advanceTimeBy(2_000)
+            runCurrent()
+
+            assertTrue(repository.qrCheckedKeys.isEmpty())
+            assertEquals(null, viewModel.state.value.qrLogin)
+        }
+
+    @Test
+    fun qrPollingStopsAfterThreeConsecutiveFailures() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("fixture-key"))
+            repeat(3) { repository.qrCheckResults.add(QrLoginCheckResult.Failure(AuthError.Timeout)) }
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            repeat(3) {
+                advanceTimeBy(2_000)
+                runCurrent()
+            }
+
+            assertEquals(3, repository.qrCheckedKeys.size)
+            assertEquals(QrLoginUiState.Failure(AuthError.Timeout), viewModel.state.value.qrLogin)
+        }
+
+    @Test
+    fun qrRefreshCancelsOldRunAndUsesNewKey() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("first-key"))
+            repository.qrStartResults.add(qrReady("second-key"))
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            viewModel.refreshQrLogin()
+            runCurrent()
+            repository.qrCheckResults.add(QrLoginCheckResult.Expired)
+            advanceTimeBy(2_000)
+            runCurrent()
+
+            assertEquals(listOf("second-key"), repository.qrCheckedKeys)
+        }
+
+    @Test
+    fun qrScannedThenAuthenticatedEmitsCompletedEffect() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("fixture-key"))
+            repository.qrCheckResults.add(QrLoginCheckResult.Scanned("MoeKoe"))
+            repository.qrCheckResults.add(QrLoginCheckResult.Authenticated)
+            val effect = backgroundScope.async { viewModel.effects.first() }
+            runCurrent()
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertTrue(viewModel.state.value.qrLogin is QrLoginUiState.Scanned)
+            advanceTimeBy(2_000)
+            runCurrent()
+
+            assertEquals(LoginEffect.Completed, effect.await())
+        }
+
     private fun enterPasswordCredentials() {
         viewModel.switchMode(LoginMode.Password)
         viewModel.updateUsername("fixture-account")
@@ -319,6 +391,9 @@ class LoginViewModelTest {
         var riskMethodDeferred: CompletableDeferred<AuthRiskMethodResult>? = null
         val verifyResults = ArrayDeque<AuthActionResult>()
         val riskProofs = mutableListOf<AuthRiskProof>()
+        val qrStartResults = ArrayDeque<QrLoginStartResult>()
+        val qrCheckResults = ArrayDeque<QrLoginCheckResult>()
+        val qrCheckedKeys = mutableListOf<String>()
 
         override suspend fun currentState(): AuthState = AuthState.Anonymous
 
@@ -344,9 +419,12 @@ class LoginViewModelTest {
             return passwordResults.removeFirst()
         }
 
-        override suspend fun createQrLogin(): QrLoginStartResult = QrLoginStartResult.Failure(AuthError.Protocol)
+        override suspend fun createQrLogin(): QrLoginStartResult = qrStartResults.removeFirst()
 
-        override suspend fun checkQrLogin(key: String): QrLoginCheckResult = QrLoginCheckResult.Failure(AuthError.Protocol)
+        override suspend fun checkQrLogin(key: String): QrLoginCheckResult {
+            qrCheckedKeys += key
+            return qrCheckResults.removeFirst()
+        }
 
         override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
             riskMethodDeferred?.await() ?: riskMethodResults.removeFirst()
@@ -381,5 +459,7 @@ class LoginViewModelTest {
                 AuthAccountOption("10001", "Moe", null, null),
                 AuthAccountOption("20002", "Koe", null, null),
             )
+
+        fun qrReady(key: String): QrLoginStartResult = QrLoginStartResult.Ready(QrLoginSession(key, "https://example.test/$key"))
     }
 }

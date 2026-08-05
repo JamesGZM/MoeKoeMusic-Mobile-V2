@@ -68,4 +68,20 @@
     <string name="login_account_other">选择其他账号</string>
     <string name="login_account_required">请先选择一个账号</string>
     <string name="login_unavailable_mode">该登录方式正在接入</string>
+    <string name="login_qr_generating">正在生成二维码</string>
+    <string name="login_qr_scan_title">请使用酷狗音乐扫码</string>
+    <string name="login_qr_expiry">二维码将在 %1$02d:%2$02d 后过期</string>
+    <string name="login_qr_scanned_title">已扫码，请在手机上确认</string>
+    <string name="login_qr_scanned_description">请在手机上完成登录确认</string>
+    <string name="login_qr_scanned_user">%1$s，请在手机上确认登录</string>
+    <string name="login_qr_code_description">酷狗音乐登录二维码</string>
+    <string name="login_qr_step_open">打开酷狗音乐</string>
+    <string name="login_qr_step_scan">扫一扫</string>
+    <string name="login_qr_step_confirm">确认登录</string>
+    <string name="login_qr_expired_title">二维码已过期</string>
+    <string name="login_qr_expired_description">请刷新二维码后重新扫码</string>
+    <string name="login_qr_refresh">刷新二维码</string>
+    <string name="login_qr_failure_title">获取二维码失败</string>
+    <string name="login_qr_retry">重新获取</string>
+    <string name="login_qr_use_mobile">改用验证码</string>
 </resources>

@@ -12,6 +12,9 @@ import cn.james.music.core.model.auth.AuthRiskMethodResult
 import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginSession
+import cn.james.music.core.model.auth.QrLoginStartResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,6 +30,38 @@ import javax.inject.Inject
 internal enum class LoginMode {
     MobileCode,
     Password,
+    QrCode,
+}
+
+internal sealed interface QrLoginUiState {
+    data object Generating : QrLoginUiState
+
+    data class Waiting(
+        val session: QrLoginSession,
+        val remainingSeconds: Int,
+    ) : QrLoginUiState {
+        override fun toString(): String = "QrLoginUiState.Waiting(session=<redacted>, remainingSeconds=$remainingSeconds)"
+    }
+
+    data class Scanned(
+        val session: QrLoginSession,
+        val nickname: String?,
+        val remainingSeconds: Int,
+    ) : QrLoginUiState {
+        override fun toString(): String =
+            "QrLoginUiState.Scanned(session=<redacted>, nicknamePresent=${!nickname.isNullOrBlank()}, " +
+                "remainingSeconds=$remainingSeconds)"
+    }
+
+    data class Expired(
+        val session: QrLoginSession,
+    ) : QrLoginUiState {
+        override fun toString(): String = "QrLoginUiState.Expired(session=<redacted>)"
+    }
+
+    data class Failure(
+        val error: AuthError,
+    ) : QrLoginUiState
 }
 
 internal enum class LoginValidationError {
@@ -105,6 +140,7 @@ internal data class LoginUiState(
     val resolvingRisk: Boolean = false,
     val verifyingRisk: Boolean = false,
     val riskRetryAttempted: Boolean = false,
+    val qrLogin: QrLoginUiState? = null,
     val notice: LoginNotice? = null,
 ) {
     val hasMultipleAccounts: Boolean get() = mode == LoginMode.MobileCode && accounts.isNotEmpty()
@@ -126,7 +162,7 @@ internal data class LoginUiState(
             "usernamePresent=${username.isNotEmpty()}, passwordPresent=${password.isNotEmpty()}, " +
             "sendingCode=$sendingCode, loggingIn=$loggingIn, passwordLoggingIn=$passwordLoggingIn, " +
             "risk=${risk?.javaClass?.simpleName}, resolvingRisk=$resolvingRisk, verifyingRisk=$verifyingRisk, " +
-            "riskRetryAttempted=$riskRetryAttempted, notice=$notice)"
+            "riskRetryAttempted=$riskRetryAttempted, qrLogin=${qrLogin?.javaClass?.simpleName}, notice=$notice)"
 
     companion object {
         val PHONE_PATTERN = Regex("^1\\d{10}$")
@@ -145,11 +181,13 @@ internal class LoginViewModel
         private val mutableEffects = MutableSharedFlow<LoginEffect>(extraBufferCapacity = 1)
         val effects: SharedFlow<LoginEffect> = mutableEffects.asSharedFlow()
         private var countdownJob: Job? = null
+        private var qrLoginJob: Job? = null
 
         fun switchMode(mode: LoginMode) {
             val current = mutableState.value
             if (mode == current.mode || current.isBusy) return
             countdownJob?.cancel()
+            qrLoginJob?.cancel()
             mutableState.value =
                 when (mode) {
                     LoginMode.MobileCode -> {
@@ -159,7 +197,17 @@ internal class LoginViewModel
                     LoginMode.Password -> {
                         LoginUiState(mode = mode)
                     }
+
+                    LoginMode.QrCode -> {
+                        LoginUiState(mode = mode, qrLogin = QrLoginUiState.Generating)
+                    }
                 }
+            if (mode == LoginMode.QrCode) startQrLogin()
+        }
+
+        fun refreshQrLogin() {
+            if (mutableState.value.mode != LoginMode.QrCode) return
+            startQrLogin()
         }
 
         fun updatePhone(value: String) {
@@ -537,6 +585,81 @@ internal class LoginViewModel
                 }
         }
 
+        private fun startQrLogin() {
+            qrLoginJob?.cancel()
+            mutableState.value =
+                mutableState.value.copy(
+                    qrLogin = QrLoginUiState.Generating,
+                    notice = null,
+                )
+            qrLoginJob =
+                viewModelScope.launch {
+                    when (val start = repository.createQrLogin()) {
+                        is QrLoginStartResult.Failure -> {
+                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Failure(start.error))
+                        }
+
+                        is QrLoginStartResult.Ready -> {
+                            mutableState.value =
+                                mutableState.value.copy(
+                                    qrLogin = QrLoginUiState.Waiting(start.session, QR_LIFETIME_SECONDS),
+                                )
+                            pollQrLogin(start.session)
+                        }
+                    }
+                }
+        }
+
+        private suspend fun pollQrLogin(session: QrLoginSession) {
+            var consecutiveFailures = 0
+            while (mutableState.value.mode == LoginMode.QrCode) {
+                delay(QR_POLL_INTERVAL_MS)
+                when (val result = repository.checkQrLogin(session.key)) {
+                    is QrLoginCheckResult.Failure -> {
+                        consecutiveFailures += 1
+                        if (consecutiveFailures >= MAX_QR_CHECK_FAILURES) {
+                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Failure(result.error))
+                            return
+                        }
+                    }
+
+                    QrLoginCheckResult.Waiting -> {
+                        consecutiveFailures = 0
+                        val current = mutableState.value.qrLogin
+                        if (current !is QrLoginUiState.Scanned) {
+                            mutableState.value =
+                                mutableState.value.copy(
+                                    qrLogin = QrLoginUiState.Waiting(session, current.remainingSecondsAfterPoll()),
+                                )
+                        }
+                    }
+
+                    is QrLoginCheckResult.Scanned -> {
+                        consecutiveFailures = 0
+                        mutableState.value =
+                            mutableState.value.copy(
+                                qrLogin =
+                                    QrLoginUiState.Scanned(
+                                        session = session,
+                                        nickname = result.nickname,
+                                        remainingSeconds = mutableState.value.qrLogin.remainingSecondsAfterPoll(),
+                                    ),
+                            )
+                    }
+
+                    QrLoginCheckResult.Expired -> {
+                        mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
+                        return
+                    }
+
+                    QrLoginCheckResult.Authenticated -> {
+                        mutableEffects.emit(LoginEffect.Completed)
+                        return
+                    }
+                }
+            }
+        }
+
         private companion object {
             const val MAX_PHONE_LENGTH = 11
             const val MAX_CODE_LENGTH = 6
@@ -546,3 +669,14 @@ internal class LoginViewModel
             const val COUNTDOWN_SECONDS = 60
         }
     }
+
+private fun QrLoginUiState?.remainingSecondsAfterPoll(): Int =
+    when (this) {
+        is QrLoginUiState.Waiting -> remainingSeconds
+        is QrLoginUiState.Scanned -> remainingSeconds
+        else -> QR_LIFETIME_SECONDS
+    }.minus(2).coerceAtLeast(0)
+
+private const val QR_LIFETIME_SECONDS = 120
+private const val QR_POLL_INTERVAL_MS = 2_000L
+private const val MAX_QR_CHECK_FAILURES = 3
