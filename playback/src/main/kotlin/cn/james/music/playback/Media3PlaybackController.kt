@@ -32,6 +32,7 @@ internal class Media3PlaybackController
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
+        private val sourceResolver: PlaybackSourceResolver,
     ) : PlaybackController {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         private val lock = Any()
@@ -93,10 +94,18 @@ internal class Media3PlaybackController
                 PlaybackCommandResult.Accepted
             }
 
-        override suspend fun playNow(item: PlaybackItem): PlaybackCommandResult =
-            withController { controller ->
+        override suspend fun playNow(item: PlaybackItem): PlaybackCommandResult {
+            val request =
+                when (val result = sourceResolver.resolve(item)) {
+                    is PlaybackSourceResult.Resolved -> {
+                        PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
+                    }
+
+                    is PlaybackSourceResult.Unavailable -> return PlaybackCommandResult.Rejected(result.error)
+                }
+            return withController { controller ->
                 if (controller.mediaItemCount == 0) {
-                    controller.setMediaItem(PlaybackMediaItemMapper.toRequest(item))
+                    controller.setMediaItem(request)
                     controller.prepare()
                     controller.play()
                     return@withController PlaybackCommandResult.Accepted
@@ -106,9 +115,11 @@ internal class Media3PlaybackController
                 val targetIndex =
                     if (existingIndex >= 0) {
                         controller.moveMediaItem(existingIndex, insertionIndex.coerceAtMost(controller.mediaItemCount - 1))
-                        if (existingIndex < insertionIndex) insertionIndex - 1 else insertionIndex
+                        val movedIndex = if (existingIndex < insertionIndex) insertionIndex - 1 else insertionIndex
+                        controller.replaceMediaItem(movedIndex, request)
+                        movedIndex
                     } else {
-                        controller.addMediaItem(insertionIndex, PlaybackMediaItemMapper.toRequest(item))
+                        controller.addMediaItem(insertionIndex, request)
                         insertionIndex
                     }
                 controller.seekToDefaultPosition(targetIndex)
@@ -116,6 +127,7 @@ internal class Media3PlaybackController
                 controller.play()
                 PlaybackCommandResult.Accepted
             }
+        }
 
         override suspend fun playAt(index: Int): PlaybackCommandResult =
             withController { controller ->

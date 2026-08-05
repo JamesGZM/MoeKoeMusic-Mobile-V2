@@ -41,6 +41,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
     private var errorAdvanceJob: Job? = null
     private val initialRestoreComplete = CompletableDeferred<Unit>()
     private val errorPolicy = ConsecutivePlaybackErrorPolicy()
+    private val addressRefreshPolicy = PlaybackAddressRefreshPolicy()
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -179,25 +180,54 @@ class MoeKoePlaybackService : MediaLibraryService() {
                 ) {
                     scheduleSnapshot()
                 }
+                if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) {
+                    addressRefreshPolicy.onMediaItemTransition(player.currentMediaItem?.mediaId)
+                }
                 if (player.playbackState == Player.STATE_READY) errorPolicy.reset()
             }
 
             override fun onPlayerError(error: PlaybackException) {
                 errorAdvanceJob?.cancel()
-                if (!errorPolicy.shouldAdvance(player.mediaItemCount)) {
-                    player.pause()
+                val item = player.currentMediaItem?.let(PlaybackMediaItemMapper::toModel)
+                if (item != null && addressRefreshPolicy.shouldRefresh(item, error.errorCode)) {
+                    errorAdvanceJob = serviceScope.launch { refreshCurrentAddress(item) }
                     return
                 }
-                errorAdvanceJob =
-                    serviceScope.launch {
-                        delay(ERROR_ADVANCE_DELAY_MS)
-                        val nextIndex = (player.currentMediaItemIndex + 1) % player.mediaItemCount
-                        player.seekToDefaultPosition(nextIndex)
-                        player.prepare()
-                        player.play()
-                    }
+                handleUnrecoverablePlayerError()
             }
         }
+
+    private suspend fun refreshCurrentAddress(item: cn.james.music.core.model.playback.PlaybackItem) {
+        when (val result = sourceResolver.resolve(item)) {
+            is PlaybackSourceResult.Resolved -> {
+                val index = player.currentMediaItemIndex
+                if (index !in 0 until player.mediaItemCount || player.currentMediaItem?.mediaId != item.id) return
+                val positionMs = player.currentPosition.coerceAtLeast(0)
+                val refreshed = PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
+                player.replaceMediaItem(index, refreshed)
+                player.seekTo(index, positionMs)
+                player.prepare()
+                player.play()
+            }
+
+            is PlaybackSourceResult.Unavailable -> handleUnrecoverablePlayerError()
+        }
+    }
+
+    private fun handleUnrecoverablePlayerError() {
+        if (!errorPolicy.shouldAdvance(player.mediaItemCount)) {
+            player.pause()
+            return
+        }
+        errorAdvanceJob =
+            serviceScope.launch {
+                delay(ERROR_ADVANCE_DELAY_MS)
+                val nextIndex = (player.currentMediaItemIndex + 1) % player.mediaItemCount
+                player.seekToDefaultPosition(nextIndex)
+                player.prepare()
+                player.play()
+            }
+    }
 
     @OptIn(UnstableApi::class)
     private inner class SessionCallback : MediaLibrarySession.Callback {
@@ -222,8 +252,12 @@ class MoeKoePlaybackService : MediaLibraryService() {
             val future = SettableFuture.create<List<MediaItem>>()
             serviceScope.launch {
                 initialRestoreComplete.await()
-                val models = mediaItems.mapNotNull(PlaybackMediaItemMapper::toModel)
-                future.set(resolve(models))
+                future.set(
+                    mediaItems.mapNotNull { request ->
+                        request.localConfiguration?.uri?.let { request }
+                            ?: PlaybackMediaItemMapper.toModel(request)?.let { model -> resolve(listOf(model)).firstOrNull() }
+                    },
+                )
             }
             return future
         }

@@ -22,8 +22,17 @@ sealed interface PlaybackError {
     data class SourceUnavailable(
         val itemId: String,
         val reason: PlaybackSourceError,
-        override val recoverable: Boolean = true,
-    ) : PlaybackError
+    ) : PlaybackError {
+        override val recoverable: Boolean =
+            reason !in
+                setOf(
+                    PlaybackSourceError.NoCopyright,
+                    PlaybackSourceError.VipRequired,
+                    PlaybackSourceError.AuthenticationRequired,
+                    PlaybackSourceError.Protocol,
+                    PlaybackSourceError.InvalidSource,
+                )
+    }
 
     data class PlayerFailure(
         val itemId: String?,
