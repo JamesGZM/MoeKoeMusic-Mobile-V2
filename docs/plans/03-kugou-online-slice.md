@@ -97,9 +97,10 @@ interface SearchRepository {
 - `register_dev`、歌曲 `search`、`privilege_lite`、`song_url` 四个 Endpoint 已按固定源码构造；歌曲地址的 `signKey` 与完整签名继续通过固定 Node 输出验证。
 - 设备身份、会话端口、注册 AES/RSA 编解码和匿名初始化单飞已实现；身份先保存，注册成功并落库后才返回 Ready，恢复到已有 dfid 时不重复请求。
 - 2026-08-05 首次真实验证发现固定 Android 搜索在匿名注册后仍返回 `152`，独立 Go 实现也可复现；该接口不再作为匿名搜索完成依据。
-- 经 SPlayer-Next、UnblockNeteaseMusic 与当前服务补审，新增不携带设备身份的 HTTPS WebFilter 搜索。真实“设备注册 → 匿名歌曲搜索”测试已返回非空列表并通过；Android 加密会话存储仍待实现。
+- 经 SPlayer-Next、UnblockNeteaseMusic 与当前服务补审，新增不携带设备身份的 HTTPS WebFilter 搜索。真实“设备注册 → 匿名歌曲搜索”测试已返回非空列表并通过。
+- `:data` 已使用独立 DataStore 与 Android Keystore AES-256-GCM 实现会话端口，密文损坏和 key 失效会安全清除后重新初始化；API 29 真机已验证加解密、随机密文和删 key 后拒绝旧密文。
 - OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 默认离线测试与显式真实集成测试均通过。
-- 已保留上游 MIT NOTICE 与完整许可证。下一小步是 Android Keystore 会话存储、搜索 DTO/Repository 与 UI；真实验证记录只保留日期和结果分类，不保存 dfid、Cookie 或响应正文。
+- 已保留上游 MIT NOTICE 与完整许可证。下一小步是搜索 DTO/Repository 与独立 Search Route；真实验证记录只保留日期和结果分类，不保存 dfid、Cookie 或响应正文。
 
 测试矩阵补充：
 

@@ -18,7 +18,7 @@ License:    MIT
 
 统一请求层也已建立：RequestFactory 在固定时间和虚构身份下生成可快照的请求，Transport 是 suspend 端口，Cookie 与响应错误使用稳定类型。请求对象的诊断字符串只暴露字段名和字节数，不暴露参数、Header、Cookie 或 Body 值。
 
-OkHttp Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密和并发单飞初始化已经建立；Android 加密持久化仍待下一批接入。
+OkHttp Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密、并发单飞初始化和 Android 加密持久化已经建立。
 
 2026-08-05 的真实服务验证发现固定基准 `/v3/search/song` 即使在匿名注册取得 dfid 后仍返回 `error_code=152`，同日运行的独立 Go 迁移也得到相同结果。这不是 Kotlin 快照测试能发现的协议漂移。阶段 4 的匿名搜索因此改用独立验证通过的 HTTPS `songsearch.kugou.com/song_search_v2`，仅发送 `keyword/page/pagesize/platform=WebFilter`，不发送设备身份、Cookie 或签名；固定 Android Endpoint 暂时保留给未来登录会话验证，不作为匿名路径。
 
@@ -140,6 +140,8 @@ kugou-api/src/main/kotlin/.../
 Endpoint 不重复实现上述公共逻辑。
 
 不需要酷狗 App 身份的公开 HTTPS Endpoint 必须显式设置 `includeDefaultParams=false` 和 `signatureMode=None`。RequestFactory 对这类请求只保留 User-Agent 与 Endpoint 自有 Header，不注入 MID、dfid、Cookie 或协议签名，避免无意义的跨 Host 身份泄露。
+
+Android 会话使用 DataStore 保存版本化 AES-256-GCM 密文，随机 IV 与密文放在 App 私有目录，密钥由 Android Keystore 生成且不可导出。GUID、MID、dfid、token、userid 和 Cookie 只存在于解密后的内存模型；损坏密文、缺失 key 或认证标签失败会删除密文和旧 key，并在下一次用户请求时重新匿名注册。实现不读取 Android ID、IMEI、SIM、MAC 或广告标识。
 
 ## 类型与兼容策略
 

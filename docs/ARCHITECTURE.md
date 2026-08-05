@@ -200,7 +200,8 @@ ExoPlayer + MediaSession
 - 本地音乐以 App 专属目录中的已提交副本和 Room 索引为权威；MediaStore、Storage Access Framework 和外部 Intent 只提供导入来源。
 - WorkManager 的输入只保存 `batchId`；URI、逐项状态和进度归 Room 所有，全局唯一工作链保证复制串行执行。
 - `:core:database` 拥有 Schema 与 Migration；`:data` 负责文件事务、映射和导入编排。
-- 设置使用 DataStore；敏感会话使用 Keystore 支持的加密存储。
+- 设置使用 DataStore；酷狗敏感会话由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
+- 会话密文损坏、Keystore key 缺失或 GCM 校验失败时清除密文与旧 key，重新进入匿名注册；不把不可解密状态降级为明文存储。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
 
 ## 本地音乐与外部 Intent
@@ -250,7 +251,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 ## 测试架构
 
 - `:kugou-api`：加密、签名、Cookie、序列化和请求快照测试。
-- `:data`：Repository 和映射测试，使用真实替身而非过度 mock。
+- `:data`：Repository、映射和加密会话存储测试，使用真实替身而非过度 mock；Android Keystore 行为必须在设备上验证。
 - `:playback`：队列、播放模式、恢复和错误跳过状态机测试。
 - `:features`：ViewModel 单元测试、Compose UI 测试和关键截图测试。
 - `:app`：导航、启动、登录和播放闭环的设备测试。
