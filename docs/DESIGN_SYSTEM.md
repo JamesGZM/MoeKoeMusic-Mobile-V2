@@ -189,6 +189,8 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - Spacing 已补齐 `12dp`、`20dp` 和 `40dp`，并保留旧属性兼容现有页面。
 - Shapes 已增加 `36dp` Hero 语义，图标、触控、输入、Toolbar、MiniPlayer 和底部导航尺寸已建立 Token。
 - 已建立标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton；搜索、折叠和多选 Toolbar 在对应页面接入时继续完成。
-- 按钮、输入、歌曲行、Bottom Sheet 和页面状态组件仍待实现。
+- 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
+- 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
+- 按钮、输入、通用 Bottom Sheet、MoeToast 和页面状态组件仍待实现；队列拖拽属于播放器后续切片。
 
 后续组件修正继续通过浅色、深色、AMOLED、大字体和截图测试验证。

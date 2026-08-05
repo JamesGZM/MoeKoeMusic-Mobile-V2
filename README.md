@@ -6,7 +6,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 当前阶段
 
-项目已完成阶段 0（文档与决策）、阶段 1（工程基础）、阶段 2（播放内核）和阶段 3（本地音乐），阶段 4（酷狗在线闭环）正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v2、本地音乐复制导入、外部音频入口、基础 MiniPlayer 与“首页 / 发现 / 我的”导航；MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 的真实导入管线及失败恢复测试已通过。阶段 4 已完成协议基础、匿名会话加密存储、独立搜索页面和在线歌曲播放纵向闭环；2026-08-05 的 API 29 真机测试已验证从首页搜索真实歌曲、解析安全播放地址并由 Media3 持续播放。当前按 UI 优先里程碑先锁定登录与 Design System，再修正文档和 Compose 实现；无版权、VIP、网络错误反馈和地址失效刷新继续暂缓。
+项目已完成阶段 0（文档与决策）、阶段 1（工程基础）、阶段 2（播放内核）和阶段 3（本地音乐），阶段 4（酷狗在线闭环）与阶段 5A/5B 正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v3、本地音乐复制导入、外部音频入口、带封面和进度的 MiniPlayer、播放队列，以及“首页 / 发现 / 我的”导航；MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 的真实导入管线及失败恢复测试已通过。阶段 4 已完成协议基础、匿名会话加密存储、独立搜索页面和在线歌曲播放纵向闭环；无版权、VIP、网络、会话与协议错误已接入类型化反馈，在线地址失效时最多刷新一次。2026-08-05 的 API 29 真机测试已验证真实搜索、播放、MiniPlayer 和队列闭环；真实 CDN 自然过期及稀有服务错误样本仍待兼容性补证。
 
 应用壳现使用 Navigation Compose 2.9.8 类型安全目的地与真实返回栈，底部 Tab 保存并恢复各自状态；首页、发现、我的、搜索、本地音乐和 Debug Foundation 已按业务能力拆为独立 Feature 模块，应用壳状态与页面状态分离。酷狗通用传输使用 Ktor Client 3.5.1 + OkHttp Engine，签名、加密、会话和协议级重试继续保持独立。对应选型、固定源码和拒绝项见 `docs/reference-audits/06-navigation-architecture.md`、`07-kugou-http-client.md` 与 `08-feature-modularization.md`。
 
@@ -18,6 +18,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - Application ID 为 `cn.james.music`，最低支持 API 26，compile/target SDK 为 API 36。
 - 第一版 UI 视觉语言与核心页面设计稿已经确认。
 - 登录主状态、密码、扫码、安全验证、多账号、Toolbar、颜色、字体、间距和通用组件图板已经确认，Compose Token 与 TopBar 第一批校准已经完成；手机号/多账号、密码、短信安全验证 UI、腾讯隔离验证容器，以及二维码协议、ZXing 高对比渲染和生命周期轮询均已按确认设计图与安全审计落地，交互原型只作状态参考；扫码入口、离页切换与截图可解码已通过 ELE-AL00 / API 29 真机门禁，另一台已登录酷狗设备的实际扫码认证与真实风控兼容仍待用户主动验收。
+- 音乐内容组件已按 `17-music-content-components.png` 接入搜索、本地音乐、MiniPlayer 和队列；浅色、深色、`1.5×` 字体截图及 ELE-AL00 / API 29 真机回归已通过。
 - 本地音乐统一复制导入；外部“打开方式”在导入成功后立即播放。
 
 ## 本地构建
