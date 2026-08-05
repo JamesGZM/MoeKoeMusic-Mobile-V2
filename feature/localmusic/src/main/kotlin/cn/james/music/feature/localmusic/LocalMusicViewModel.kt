@@ -6,6 +6,7 @@ import cn.james.music.core.model.local.DeviceAudioCandidate
 import cn.james.music.core.model.local.LocalImportProgress
 import cn.james.music.core.model.local.LocalMusic
 import cn.james.music.core.model.local.LocalMusicRepository
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackController
@@ -72,4 +73,5 @@ private fun LocalMusic.toPlaybackItem() =
         artist = artist,
         albumTitle = albumTitle,
         source = PlaybackSource.ImportedLocal(id),
+        artwork = artworkKey?.let { runCatching { PlaybackArtwork.AppFile(it) }.getOrNull() },
     )

@@ -4,6 +4,7 @@ import cn.james.music.core.database.playback.PlaybackQueueItemEntity
 import cn.james.music.core.database.playback.PlaybackSnapshotDao
 import cn.james.music.core.database.playback.PlaybackSnapshotEntity
 import cn.james.music.core.database.playback.PlaybackSnapshotWithQueue
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
 import cn.james.music.core.model.playback.PlaybackSource
@@ -86,6 +87,7 @@ class RoomPlaybackSnapshotStoreTest {
             artist = "MoeKoe Test Lab",
             albumTitle = null,
             source = PlaybackSource.FoundationDemo,
+            artwork = PlaybackArtwork.Remote("https://example.test/$id.jpg"),
         )
 
     private fun snapshot(
@@ -111,6 +113,8 @@ class RoomPlaybackSnapshotStoreTest {
         albumTitle = null,
         sourceType = sourceType,
         sourceValue = null,
+        artworkType = null,
+        artworkValue = null,
     )
 }
 

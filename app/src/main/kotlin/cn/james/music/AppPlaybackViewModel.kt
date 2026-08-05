@@ -3,6 +3,7 @@ package cn.james.music
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.james.music.core.model.online.Song
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackCommandResult
@@ -135,4 +136,5 @@ private fun Song.toPlaybackItem() =
         artist = artistName.ifBlank { "未知艺术家" },
         albumTitle = albumTitle,
         source = PlaybackSource.Kugou(hash),
+        artwork = artworkUrl?.let { runCatching { PlaybackArtwork.Remote(it) }.getOrNull() },
     )

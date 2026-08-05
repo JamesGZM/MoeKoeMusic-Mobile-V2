@@ -18,7 +18,7 @@ import cn.james.music.core.database.playback.PlaybackSnapshotEntity
         LocalImportBatchEntity::class,
         LocalImportEntryEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class MoeKoeDatabase : RoomDatabase() {

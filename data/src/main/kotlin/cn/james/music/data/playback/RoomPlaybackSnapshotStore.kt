@@ -3,10 +3,12 @@ package cn.james.music.data.playback
 import android.content.Context
 import androidx.room.Room
 import cn.james.music.core.database.MIGRATION_1_2
+import cn.james.music.core.database.MIGRATION_2_3
 import cn.james.music.core.database.MoeKoeDatabase
 import cn.james.music.core.database.playback.PlaybackQueueItemEntity
 import cn.james.music.core.database.playback.PlaybackSnapshotDao
 import cn.james.music.core.database.playback.PlaybackSnapshotEntity
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
 import cn.james.music.core.model.playback.PlaybackSource
@@ -83,6 +85,7 @@ private fun PlaybackQueueItemEntity.toModel(): PlaybackItem? {
             artist = artist,
             albumTitle = albumTitle,
             source = source,
+            artwork = artworkType.toArtwork(artworkValue),
         )
     }.getOrNull()
 }
@@ -102,12 +105,30 @@ private fun PlaybackItem.toEntity(index: Int): PlaybackQueueItemEntity {
         albumTitle = albumTitle,
         sourceType = type,
         sourceValue = value,
+        artworkType =
+            when (artwork) {
+                is PlaybackArtwork.Remote -> ARTWORK_REMOTE
+                is PlaybackArtwork.AppFile -> ARTWORK_APP_FILE
+                null -> null
+            },
+        artworkValue = artwork?.value,
     )
 }
+
+private fun String?.toArtwork(value: String?): PlaybackArtwork? =
+    runCatching {
+        when (this) {
+            ARTWORK_REMOTE -> value?.let(PlaybackArtwork::Remote)
+            ARTWORK_APP_FILE -> value?.let(PlaybackArtwork::AppFile)
+            else -> null
+        }
+    }.getOrNull()
 
 private const val SOURCE_DEMO = "foundation_demo"
 private const val SOURCE_LOCAL = "imported_local"
 private const val SOURCE_KUGOU = "kugou"
+private const val ARTWORK_REMOTE = "remote"
+private const val ARTWORK_APP_FILE = "app_file"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -116,7 +137,11 @@ object PlaybackDatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-    ): MoeKoeDatabase = Room.databaseBuilder(context, MoeKoeDatabase::class.java, "moekoe.db").addMigrations(MIGRATION_1_2).build()
+    ): MoeKoeDatabase =
+        Room
+            .databaseBuilder(context, MoeKoeDatabase::class.java, "moekoe.db")
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .build()
 
     @Provides
     fun providePlaybackSnapshotDao(database: MoeKoeDatabase): PlaybackSnapshotDao = database.playbackSnapshotDao()

@@ -73,5 +73,7 @@ class PlaybackSnapshotDaoTest {
         albumTitle = null,
         sourceType = "foundation_demo",
         sourceValue = null,
+        artworkType = null,
+        artworkValue = null,
     )
 }

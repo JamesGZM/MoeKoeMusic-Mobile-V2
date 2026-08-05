@@ -42,6 +42,8 @@ data class PlaybackQueueItemEntity(
     @ColumnInfo(name = "album_title") val albumTitle: String?,
     @ColumnInfo(name = "source_type") val sourceType: String,
     @ColumnInfo(name = "source_value") val sourceValue: String?,
+    @ColumnInfo(name = "artwork_type") val artworkType: String?,
+    @ColumnInfo(name = "artwork_value") val artworkValue: String?,
 )
 
 data class PlaybackSnapshotWithQueue(

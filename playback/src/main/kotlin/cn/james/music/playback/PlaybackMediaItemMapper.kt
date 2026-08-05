@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
 
@@ -13,6 +14,10 @@ internal object PlaybackMediaItemMapper {
     private const val SOURCE_DEMO = "foundation_demo"
     private const val SOURCE_LOCAL = "imported_local"
     private const val SOURCE_KUGOU = "kugou"
+    private const val ARTWORK_TYPE_KEY = "cn.james.music.playback.ARTWORK_TYPE"
+    private const val ARTWORK_VALUE_KEY = "cn.james.music.playback.ARTWORK_VALUE"
+    private const val ARTWORK_REMOTE = "remote"
+    private const val ARTWORK_APP_FILE = "app_file"
 
     fun toRequest(item: PlaybackItem): MediaItem {
         val extras = Bundle()
@@ -31,18 +36,33 @@ internal object PlaybackMediaItemMapper {
                 extras.putString(SOURCE_VALUE_KEY, source.songHash)
             }
         }
+        item.artwork?.let { artwork ->
+            extras.putString(
+                ARTWORK_TYPE_KEY,
+                when (artwork) {
+                    is PlaybackArtwork.Remote -> ARTWORK_REMOTE
+                    is PlaybackArtwork.AppFile -> ARTWORK_APP_FILE
+                },
+            )
+            extras.putString(ARTWORK_VALUE_KEY, artwork.value)
+        }
+        val metadata =
+            MediaMetadata
+                .Builder()
+                .setTitle(item.title)
+                .setArtist(item.artist)
+                .setAlbumTitle(item.albumTitle)
+                .setExtras(extras)
+                .apply {
+                    (item.artwork as? PlaybackArtwork.Remote)?.let { artwork ->
+                        setArtworkUri(Uri.parse(artwork.value))
+                    }
+                }.build()
         return MediaItem
             .Builder()
             .setMediaId(item.id)
-            .setMediaMetadata(
-                MediaMetadata
-                    .Builder()
-                    .setTitle(item.title)
-                    .setArtist(item.artist)
-                    .setAlbumTitle(item.albumTitle)
-                    .setExtras(extras)
-                    .build(),
-            ).build()
+            .setMediaMetadata(metadata)
+            .build()
     }
 
     fun withUri(
@@ -60,6 +80,7 @@ internal object PlaybackMediaItemMapper {
                 artist = metadata.artist?.toString().orEmpty(),
                 albumTitle = metadata.albumTitle?.toString(),
                 source = source,
+                artwork = artworkFrom(metadata.extras),
             )
         }.getOrNull()
     }
@@ -71,4 +92,15 @@ internal object PlaybackMediaItemMapper {
             SOURCE_KUGOU -> extras.getString(SOURCE_VALUE_KEY)?.takeIf(String::isNotBlank)?.let(PlaybackSource::Kugou)
             else -> null
         }
+
+    private fun artworkFrom(extras: Bundle?): PlaybackArtwork? {
+        val value = extras?.getString(ARTWORK_VALUE_KEY)?.takeIf(String::isNotBlank) ?: return null
+        return runCatching {
+            when (extras.getString(ARTWORK_TYPE_KEY)) {
+                ARTWORK_REMOTE -> PlaybackArtwork.Remote(value)
+                ARTWORK_APP_FILE -> PlaybackArtwork.AppFile(value)
+                else -> null
+            }
+        }.getOrNull()
+    }
 }

@@ -21,3 +21,11 @@ val MIGRATION_1_2 =
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_local_import_entry_batchId` ON `local_import_entry` (`batchId`)")
         }
     }
+
+val MIGRATION_2_3 =
+    object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `playback_queue_item` ADD COLUMN `artwork_type` TEXT")
+            db.execSQL("ALTER TABLE `playback_queue_item` ADD COLUMN `artwork_value` TEXT")
+        }
+    }

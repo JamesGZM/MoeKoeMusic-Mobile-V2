@@ -24,6 +24,7 @@ import cn.james.music.core.database.local.LocalMusicEntity
 import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalImportEntryState
+import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackCommandResult
@@ -385,7 +386,18 @@ class LocalImportWorker
             return ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         }
 
-        private fun LocalMusicEntity.toPlaybackItem() = PlaybackItem(id, title, artist, albumTitle, PlaybackSource.ImportedLocal(id))
+        private fun LocalMusicEntity.toPlaybackItem() =
+            PlaybackItem(
+                id = id,
+                title = title,
+                artist = artist,
+                albumTitle = albumTitle,
+                source = PlaybackSource.ImportedLocal(id),
+                artwork =
+                    artworkKey?.let {
+                        runCatching { PlaybackArtwork.AppFile(it) }.getOrNull()
+                    },
+            )
 
         private suspend fun ensureBatchActive(batchId: String) {
             if (dao.findBatch(batchId)?.state?.substringBefore('|') == LocalImportBatchState.Cancelled.name) {
