@@ -28,7 +28,11 @@ class RoomPlaybackSnapshotStore
     ) : PlaybackSnapshotStore {
         override suspend fun load(): PlaybackSnapshot? {
             val stored = dao.getSnapshot() ?: return null
-            val mode = runCatching { PlaybackMode.valueOf(stored.snapshot.mode) }.getOrNull() ?: return null
+            val mode = runCatching { PlaybackMode.valueOf(stored.snapshot.mode) }.getOrNull()
+            if (mode == null) {
+                dao.clear()
+                return null
+            }
             val queue = stored.queue.sortedBy(PlaybackQueueItemEntity::queueIndex).mapNotNull { it.toModel() }
             if (queue.isEmpty()) {
                 dao.clear()
