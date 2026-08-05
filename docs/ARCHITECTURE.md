@@ -84,7 +84,7 @@ Repository
 - 酷狗平台配置、设备身份、会话和 Cookie。
 - MD5、SHA1、AES、RSA 和请求签名。
 - Ktor Client 请求编排、OkHttp Engine 与网络 DTO。
-- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient` 解码为类型化结果后才交给 `:data`。
+- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient` 与 `KugouUserClient` 分别将公开内容、已认证资料和 VIP 协议解码为类型化结果后才交给 `:data`。
 - 不依赖 Compose、Media3、Activity 或 Service。
 
 ### `:data`
@@ -106,6 +106,7 @@ Repository
 - 每个业务能力独立拥有导航键、导航注册、Route、Screen、ViewModel 和测试。
 - 当前模块为 `home`、`discover`、`my`、`search`、`localmusic`、`login` 与仅 Debug 可达的 `foundation`。
 - `:feature:login` 按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 拥有表单、倒计时、多账号选择、导航入口和测试；`:app` 只组合导航和平台安全配置，不持有认证 UI 状态。
+- `:feature:my` 消费 `UserProfileRepository` 与 `AuthRepository`，拥有匿名、加载、已认证、部分失败和完整失败状态，并在页面恢复时刷新资料；退出必须经过确认且仅在会话清除成功后切换匿名态。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
 - 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。
@@ -123,6 +124,7 @@ Repository
 :feature:localmusic ► LocalMusicRepository + :playback
 :feature:foundation ► :playback
 :feature:login ────► AuthRepository + :core:designsystem
+:feature:my ───────► UserProfileRepository + AuthRepository + :core:designsystem
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
@@ -200,6 +202,7 @@ ExoPlayer + MediaSession
 - 设置使用 DataStore；酷狗敏感会话由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
 - 会话密文损坏、Keystore key 缺失或 GCM 校验失败时清除密文与旧 key，重新进入匿名注册；不把不可解密状态降级为明文存储。
 - 登录成功响应由 `:kugou-api` 类型化解码，`:data` 在认证互斥区内合并并一次写入加密会话；存储完成前 UI 不进入已登录。退出只清除 token、userid 和登录 Cookie，保留匿名设备身份与 dfid。
+- `KugouUserProfileRepository` 并发读取用户资料和 VIP 摘要；用户资料是页面成立的权威结果，VIP 失败可降级为不可用状态。普通资料刷新失败不清除持久会话，也不以缓存或设计稿假数据伪装成功。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
 
 ## 本地音乐与外部 Intent
@@ -251,8 +254,8 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 - `:kugou-api`：加密、签名、Cookie、序列化和请求快照测试。
 - `:data`：Repository、DTO/Domain 映射和加密会话存储测试，使用真实替身而非过度 mock；Android Keystore 行为必须在设备上验证。搜索 Repository 只暴露稳定领域分页和类型化错误，匿名公开搜索请求不携带设备会话。
 - `:playback`：队列、播放模式、恢复和错误跳过状态机测试。
-- `:feature:*`：各自拥有 ViewModel 单元测试、Compose UI 测试和关键截图测试。
-- `:app`：导航、启动、登录和播放闭环的设备测试。
+- `:feature:*`：各自拥有 ViewModel 单元测试、Compose UI 测试和关键截图测试；“我的”覆盖匿名、已认证和 `1.5×` 字体基准。
+- `:app`：导航、启动、登录、账户状态和播放闭环的设备测试。
 - 外部 Intent：解析与导入协调单测，以及 API 26、32、33、36 设备测试。
 - 稳定后增加 Macrobenchmark 与 Baseline Profile。
 

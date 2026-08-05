@@ -2,10 +2,13 @@ package cn.james.music
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -28,6 +31,8 @@ class MainActivityTest {
     @Test
     fun debugPlaybackLabRemainsReachable() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForMyContent()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("打开播放工程实验台"))
         composeRule.onNodeWithText("打开播放工程实验台").performClick()
         composeRule.onNodeWithText("MoeKoe Music").assertIsDisplayed()
     }
@@ -47,7 +52,8 @@ class MainActivityTest {
     @Test
     fun loginIsAnIndependentPageReachedFromMy() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
-        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed().performClick()
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
         composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
@@ -55,6 +61,25 @@ class MainActivityTest {
         composeRule.runOnUiThread {
             composeRule.activity.onBackPressedDispatcher.onBackPressed()
         }
+        waitForAnonymousMyState()
         composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
+    }
+
+    private fun waitForAnonymousMyState() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule
+                .onAllNodesWithText("登录 MoeKoe Air")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun waitForMyContent() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule
+                .onAllNodesWithText("本地音乐")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
     }
 }
