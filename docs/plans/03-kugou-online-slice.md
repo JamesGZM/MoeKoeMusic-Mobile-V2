@@ -95,8 +95,11 @@ interface SearchRepository {
 - Fake Transport 验证请求可离线捕获；OkHttp Transport 使用 10 秒连接、15 秒读取和 20 秒整体超时，关闭 OkHttp 隐式连接重试，并在协程取消时取消 Call。
 - 网络异常已映射为离线、超时和连接错误。只有标记为幂等读取的超时或 5xx 最多额外尝试两次，退避为 250ms、500ms；4xx、离线、连接、风控和协议错误不自动重放。
 - `register_dev`、歌曲 `search`、`privilege_lite`、`song_url` 四个 Endpoint 已按固定源码构造；歌曲地址的 `signKey` 与完整签名继续通过固定 Node 输出验证。
-- OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 27 项测试通过。
-- 已保留上游 MIT NOTICE 与完整许可证。下一小步是会话端口、匿名设备注册编排和 Android Keystore 存储；截至当前仍未发起真实网络请求。
+- 设备身份、会话端口、注册 AES/RSA 编解码和匿名初始化单飞已实现；身份先保存，注册成功并落库后才返回 Ready，恢复到已有 dfid 时不重复请求。
+- 2026-08-05 首次真实验证发现固定 Android 搜索在匿名注册后仍返回 `152`，独立 Go 实现也可复现；该接口不再作为匿名搜索完成依据。
+- 经 SPlayer-Next、UnblockNeteaseMusic 与当前服务补审，新增不携带设备身份的 HTTPS WebFilter 搜索。真实“设备注册 → 匿名歌曲搜索”测试已返回非空列表并通过；Android 加密会话存储仍待实现。
+- OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 默认离线测试与显式真实集成测试均通过。
+- 已保留上游 MIT NOTICE 与完整许可证。下一小步是 Android Keystore 会话存储、搜索 DTO/Repository 与 UI；真实验证记录只保留日期和结果分类，不保存 dfid、Cookie 或响应正文。
 
 测试矩阵补充：
 

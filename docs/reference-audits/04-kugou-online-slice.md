@@ -106,3 +106,20 @@ PlaybackController (:playback)
 ```
 
 协议常量与算法只来自 MIT 固定基准；PC/Mobile 用于验证调用次序和产品语义。无 Node、WebView、JavaScript Runtime、遥测或额外权限进入 Android App。
+
+## 真实服务兼容性补审（2026-08-05）
+
+首次真实测试证明固定源码与离线向量不足以代表服务当前行为：
+
+- Kotlin `register_dev` 真实调用成功，响应可以解密并取得非空 dfid。
+- 随后调用固定版 `/v3/search/song` 返回类型化协议错误 `error_code=152`；不打印服务端正文。
+- `https://complexsearch.kugou.com/v6/search/complex` 返回 HTTP 200、`text/plain` 且内容不是 JSON，不能作为 Android JSON 协议使用。
+- `https://songsearch.kugou.com/song_search_v2` 使用最小匿名参数返回 `status=1`、`error_code=0` 和非空歌曲列表；Kotlin 的“注册 → 匿名搜索”真实集成测试随后通过。
+
+额外对照项目：
+
+- SPlayer-Next `75b4301ce12ffb62a556753b32a99642ae0cd831`，`electron/main/apis/kugou/modules/search.ts` 与 `core/config.ts`，AGPL-3.0。它将 `mobilecdn` 作为主路径、HTTPS `song_search_v2` 作为回退；本项目只采用“匿名搜索需要独立公开路径”的判断，不复制实现。其 `mobilecdn` 地址为 HTTP，且 HTTPS 证书主机名校验失败，因此不符合本项目全 HTTPS 边界。
+- UnblockNeteaseMusic/server `39e21bfb4b7581f39785b190aeced201d23f0d41`，`src/provider/kugou.js`，LGPL-3.0。它同样使用 `mobilecdn` 匿名搜索，证明该路径有长期实践；本项目不采用其 HTTP Endpoint、播放 URL 算法或代码。
+- kugou-music-api Go `950cbf0b6c60f980d316ab7a6568ef023820e89e`，`sdk/generated_api_specs.go` 与 `examples/simple/main.go`，MIT。2026-08-05 本地运行示例同样得到 `error_code=152` 和空列表，交叉证明固定 Android 搜索接口的当前限制不是 Kotlin 特有问题；该项目仍把 HTTP 200 当成功，本项目拒绝这种判定。
+
+结论：固定 `6efe84e` 仍是加密、签名、注册和登录后 Android 协议的基准，但 Endpoint 是否“当前可用”必须由真实服务测试决定。匿名搜索采用独立实现的最小 HTTPS WebFilter 请求；不引入 AGPL/LGPL 代码，也不放开明文流量。
