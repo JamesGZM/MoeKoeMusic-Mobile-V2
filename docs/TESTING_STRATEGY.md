@@ -31,7 +31,7 @@
 - OkHttp Transport 使用离线 Interceptor 验证 URL 编码、Header、二进制 Body、异步执行与 IOException 映射；生产实现会在协程取消时取消 Call，不启动真实酷狗请求。
 - 重试测试使用结果队列和虚拟 Delayer，精确断言超时/5xx 的次数与 250ms、500ms 退避，并验证其他错误不重放。
 - 首批四个 Endpoint 对路径、Host、Router、JSON Body、响应格式、重试属性和固定 `song_url` 签名做快照断言。
-- `LiveKugouIntegrationTest` 通过 `MOEKOE_RUN_LIVE_KUGOU_TESTS=true` 显式启用，当前覆盖真实匿名设备注册与匿名歌曲搜索；失败信息只包含类型化错误，不输出会话值或响应正文。
+- `LiveKugouIntegrationTest` 通过 `MOEKOE_RUN_LIVE_KUGOU_TESTS=true` 显式启用，覆盖纯协议层的真实匿名设备注册与匿名歌曲搜索。
 
 ### `:data`
 
@@ -41,6 +41,7 @@
 - 空间不足、源不可读、格式错误、数据库失败和重复内容。
 - 通过 Fake 传输、文件源、存储空间检查器和时钟保持确定性。
 - 加密会话覆盖往返、明文不落盘、损坏密文、key 丢失、清除和协程取消；AES-GCM 与 Android Keystore 的真实组合使用设备测试，不能只用 JVM Fake Cipher 代替。
+- `LiveKugouSearchRepositoryTest` 使用同一显式环境变量，覆盖真实注册、搜索、DTO 解码和领域映射；失败信息只包含类型化错误，不输出会话值、响应正文或歌曲内容。
 
 ### `:playback`
 
@@ -109,8 +110,8 @@ Intent 解析使用独立纯函数配合 Robolectric/Android 测试验证平台�
 
 ```bash
 MOEKOE_RUN_LIVE_KUGOU_TESTS=true \
-  ./gradlew :kugou-api:test \
-  --tests cn.james.music.kugou.api.LiveKugouIntegrationTest \
+  ./gradlew :kugou-api:test :data:testDebugUnitTest \
+  --tests '*LiveKugou*Test' \
   --rerun-tasks
 ```
 

@@ -100,7 +100,11 @@ interface SearchRepository {
 - 经 SPlayer-Next、UnblockNeteaseMusic 与当前服务补审，新增不携带设备身份的 HTTPS WebFilter 搜索。真实“设备注册 → 匿名歌曲搜索”测试已返回非空列表并通过。
 - `:data` 已使用独立 DataStore 与 Android Keystore AES-256-GCM 实现会话端口，密文损坏和 key 失效会安全清除后重新初始化；API 29 真机已验证加解密、随机密文和删 key 后拒绝旧密文。
 - OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 默认离线测试与显式真实集成测试均通过。
-- 已保留上游 MIT NOTICE 与完整许可证。下一小步是搜索 DTO/Repository 与独立 Search Route；真实验证记录只保留日期和结果分类，不保存 dfid、Cookie 或响应正文。
+- `:core:model` 已增加稳定的 `Song`、`SearchPage`、`SearchResult` 和 `SearchError`；网络字段、服务错误码和 Android URI 均未泄漏到领域层。
+- `KugouSongSearchDecoder` 已兼容 ID、时长和总数的字符串/数字漂移，跳过单个坏条目，但关键列表缺失或整页不可用时返回协议错误，不制造空歌曲。
+- `KugouSearchRepository` 已串联匿名会话、真实 Transport、协议解码、分页和类型化错误映射；搜索 Host 不接收 MID、dfid、Cookie 或签名，App Manifest 仅新增 `INTERNET` 权限。
+- 2026-08-05 显式运行 `LiveKugouSearchRepositoryTest`，真实完成“设备注册 → 匿名搜索 → DTO 解码 → Domain 映射”，服务返回非空领域歌曲列表；记录未保存关键词结果、响应正文、dfid 或 Cookie。
+- 已保留上游 MIT NOTICE 与完整许可证。下一小步是独立 Search Route；随后实现 `privilege_lite`、`song_url` 与 Media3 在线来源解析。
 
 测试矩阵补充：
 

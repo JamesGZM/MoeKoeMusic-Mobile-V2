@@ -20,7 +20,7 @@ License:    MIT
 
 OkHttp Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密、并发单飞初始化和 Android 加密持久化已经建立。
 
-2026-08-05 的真实服务验证发现固定基准 `/v3/search/song` 即使在匿名注册取得 dfid 后仍返回 `error_code=152`，同日运行的独立 Go 迁移也得到相同结果。这不是 Kotlin 快照测试能发现的协议漂移。阶段 4 的匿名搜索因此改用独立验证通过的 HTTPS `songsearch.kugou.com/song_search_v2`，仅发送 `keyword/page/pagesize/platform=WebFilter`，不发送设备身份、Cookie 或签名；固定 Android Endpoint 暂时保留给未来登录会话验证，不作为匿名路径。
+2026-08-05 的真实服务验证发现固定基准 `/v3/search/song` 即使在匿名注册取得 dfid 后仍返回 `error_code=152`，同日运行的独立 Go 迁移也得到相同结果。这不是 Kotlin 快照测试能发现的协议漂移。阶段 4 的匿名搜索因此改用独立验证通过的 HTTPS `songsearch.kugou.com/song_search_v2`，仅发送 `keyword/page/pagesize/platform=WebFilter`，不发送设备身份、Cookie 或签名；固定 Android Endpoint 暂时保留给未来登录会话验证，不作为匿名路径。搜索 DTO 与 Repository 随后完成，并再次通过真实“注册、搜索、解码、领域映射”全链路测试。
 
 ## 参考优先级
 
@@ -172,6 +172,8 @@ Node 与 Kotlin 使用相同的固定输入：
 - 完整请求 Query/Header 快照。
 
 含随机填充的 RSA 不能简单比较两次密文，应验证可解密结果或服务端接受行为。
+
+固定向量、Fake Transport 和脱敏响应 fixture 用于确定性回归，但不能单独证明上游接口当前可用。每个新 Endpoint 首次接入、协议兼容修复和发布候选都必须显式运行真实服务集成测试；测试只断言状态、类型化错误和必要字段，不保存响应正文、歌曲数据或匿名身份。普通 PR CI 保持离线，避免把第三方限流、网络故障或服务维护误判为代码回归。
 
 ## 上游升级
 

@@ -251,7 +251,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 ## 测试架构
 
 - `:kugou-api`：加密、签名、Cookie、序列化和请求快照测试。
-- `:data`：Repository、映射和加密会话存储测试，使用真实替身而非过度 mock；Android Keystore 行为必须在设备上验证。
+- `:data`：Repository、DTO/Domain 映射和加密会话存储测试，使用真实替身而非过度 mock；Android Keystore 行为必须在设备上验证。搜索 Repository 只暴露稳定领域分页和类型化错误，匿名公开搜索请求不携带设备会话。
 - `:playback`：队列、播放模式、恢复和错误跳过状态机测试。
 - `:features`：ViewModel 单元测试、Compose UI 测试和关键截图测试。
 - `:app`：导航、启动、登录和播放闭环的设备测试。
