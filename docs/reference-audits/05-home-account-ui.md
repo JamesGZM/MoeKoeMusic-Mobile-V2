@@ -58,3 +58,16 @@ Android 实现固定流程：
 - Android Material 3、Navigation Compose、伪本地化与 WebView 安全文档优先于第三方行为。
 
 视觉实现采用已批准的暖白、天空蓝和柔和语义容器。只有品牌标识或 Material Icons 确实不存在的专属图形才建立 SVG 母版。`frontend-design` 用于根据现有批准稿约束排版、留白和完成度，不引入 Web 前端运行时。生成式视觉图板只确认形态与方向，准确颜色、字号和组件行为以 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 为准。
+
+## 播放封面元数据与 Room 迁移补审
+
+音乐内容组件确认稿要求 MiniPlayer 和队列展示封面。固定源码已经证明封面属于稳定的展示元数据，而不是短期播放地址：
+
+- PC `52c9833` 的 `src/components/player/songQueue/OnlineMusicQueue.js` 将歌曲封面归一为队列项 `img`，`src/components/player/MediaSession.js` 再把它写入系统媒体会话 artwork。
+- Mobile `ab71195` 的 `src/features/player/types.ts` 在播放 Track 中保留可空 `coverUrl`，`src/features/player/store.ts` 将其规范化为播放器 `artworkUrl`。
+
+采用：`PlaybackItem` 增加可空封面引用，Media3 metadata、App MiniPlayer、队列和 Room 播放快照共享这一字段；在线歌曲保存非敏感 HTTPS 封面 URL，本地歌曲保存 App 专属目录内的相对 artwork key。Coil 继续作为唯一运行时图片加载库。
+
+拒绝：不把短期音频 URL 写入 Room；不复制 PC 的图片可访问性探针；不引入 Expo Image、额外图片缓存库或为了补封面增加协议请求。
+
+存储迁移遵循 [Android Room 官方迁移指南](https://developer.android.com/training/data-storage/room/migrating-db-versions)：显式增加逐版本 Migration、导出并提交新 schema、使用 `MigrationTestHelper` 在真实 Android SQLite 上验证旧队列数据保留，不启用破坏性迁移。新增列必须可空，使既有 v2 快照迁移后继续有效。
