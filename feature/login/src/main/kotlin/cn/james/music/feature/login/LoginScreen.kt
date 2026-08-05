@@ -84,6 +84,7 @@ internal fun LoginScreen(
     onTogglePasswordVisibility: () -> Unit,
     onSubmitPassword: () -> Unit,
     onStartRiskVerification: () -> Unit,
+    onRetryTencentVerification: () -> Unit,
     onRiskCodeChange: (String) -> Unit,
     onVerifyRiskCode: () -> Unit,
     onCancelRisk: () -> Unit,
@@ -149,6 +150,7 @@ internal fun LoginScreen(
                                 onTogglePasswordVisibility = onTogglePasswordVisibility,
                                 onSubmit = onSubmitPassword,
                                 onStartRiskVerification = onStartRiskVerification,
+                                onRetryTencentVerification = onRetryTencentVerification,
                                 onCancelRisk = onCancelRisk,
                             )
                         }
@@ -363,6 +365,7 @@ private fun PasswordContent(
     onTogglePasswordVisibility: () -> Unit,
     onSubmit: () -> Unit,
     onStartRiskVerification: () -> Unit,
+    onRetryTencentVerification: () -> Unit,
     onCancelRisk: () -> Unit,
 ) {
     Column(
@@ -392,7 +395,8 @@ private fun PasswordContent(
 
             is PasswordRiskUiState.Tencent -> {
                 TencentRiskFallbackContent(
-                    onUseMobileCode = { onModeChange(LoginMode.MobileCode) },
+                    state = state,
+                    onRetry = onRetryTencentVerification,
                     onCancel = onCancelRisk,
                 )
             }
@@ -556,12 +560,13 @@ private fun RiskRequiredContent(
 
 @Composable
 private fun TencentRiskFallbackContent(
-    onUseMobileCode: () -> Unit,
+    state: LoginUiState,
+    onRetry: () -> Unit,
     onCancel: () -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         shape = RoundedCornerShape(18.dp),
     ) {
         Row(
@@ -569,19 +574,21 @@ private fun TencentRiskFallbackContent(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            Icon(Icons.Filled.ErrorOutline, contentDescription = null)
+            Icon(Icons.Filled.Security, contentDescription = null)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.login_tencent_required_title), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.login_tencent_required_description), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
+    LoginNoticeText(state.notice)
     Button(
-        onClick = onUseMobileCode,
+        onClick = onRetry,
+        enabled = !state.isBusy,
         modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
         shape = RoundedCornerShape(16.dp),
     ) {
-        Text(stringResource(R.string.login_use_mobile_code))
+        Text(stringResource(R.string.login_tencent_retry))
     }
     OutlinedButton(
         onClick = onCancel,

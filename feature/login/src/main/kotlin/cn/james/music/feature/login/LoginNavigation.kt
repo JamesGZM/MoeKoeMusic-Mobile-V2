@@ -13,9 +13,23 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object LoginDestination
 
+sealed interface TencentCaptchaResult {
+    data class Success(
+        val ticket: String,
+        val randomString: String,
+    ) : TencentCaptchaResult {
+        override fun toString(): String = "TencentCaptchaResult.Success(ticket=<redacted>, randomString=<redacted>)"
+    }
+
+    data object Cancelled : TencentCaptchaResult
+
+    data object Failure : TencentCaptchaResult
+}
+
 fun NavGraphBuilder.loginDestination(
     onBack: () -> Unit,
     onLoggedIn: () -> Unit,
+    onLaunchTencentCaptcha: (String, (TencentCaptchaResult) -> Unit) -> Unit,
 ) {
     composable<LoginDestination> {
         val viewModel: LoginViewModel = hiltViewModel()
@@ -24,7 +38,13 @@ fun NavGraphBuilder.loginDestination(
         LaunchedEffect(viewModel) {
             viewModel.effects.collectLatest { effect ->
                 when (effect) {
-                    LoginEffect.Completed -> onLoggedIn()
+                    LoginEffect.Completed -> {
+                        onLoggedIn()
+                    }
+
+                    is LoginEffect.LaunchTencentCaptcha -> {
+                        onLaunchTencentCaptcha(effect.appId, viewModel::handleTencentCaptchaResult)
+                    }
                 }
             }
         }
@@ -41,6 +61,7 @@ fun NavGraphBuilder.loginDestination(
             onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
             onSubmitPassword = viewModel::submitPassword,
             onStartRiskVerification = viewModel::startRiskVerification,
+            onRetryTencentVerification = viewModel::retryTencentVerification,
             onRiskCodeChange = viewModel::updateRiskCode,
             onVerifyRiskCode = viewModel::verifyRiskCode,
             onCancelRisk = viewModel::cancelRisk,

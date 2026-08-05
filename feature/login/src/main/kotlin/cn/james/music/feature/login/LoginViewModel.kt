@@ -81,6 +81,10 @@ internal sealed interface PasswordRiskUiState {
 
 internal sealed interface LoginEffect {
     data object Completed : LoginEffect
+
+    data class LaunchTencentCaptcha(
+        val appId: String,
+    ) : LoginEffect
 }
 
 internal data class LoginUiState(
@@ -323,6 +327,7 @@ internal class LoginViewModel
                                         resolvingRisk = false,
                                         notice = null,
                                     )
+                                mutableEffects.emit(LoginEffect.LaunchTencentCaptcha(method.appId))
                             }
 
                             is AuthRiskMethod.Unsupported -> {
@@ -372,6 +377,63 @@ internal class LoginViewModel
                                 riskRetryAttempted = true,
                             )
                         performPasswordLogin(afterVerification = true)
+                    }
+                }
+            }
+        }
+
+        fun retryTencentVerification() {
+            val risk = mutableState.value.risk as? PasswordRiskUiState.Tencent ?: return
+            if (mutableState.value.isBusy) return
+            viewModelScope.launch { mutableEffects.emit(LoginEffect.LaunchTencentCaptcha(risk.appId)) }
+        }
+
+        fun handleTencentCaptchaResult(result: TencentCaptchaResult) {
+            val current = mutableState.value
+            val risk = current.risk as? PasswordRiskUiState.Tencent ?: return
+            when (result) {
+                TencentCaptchaResult.Cancelled -> {
+                    cancelRisk()
+                }
+
+                TencentCaptchaResult.Failure -> {
+                    mutableState.value = current.copy(notice = LoginNotice.RiskRejected)
+                }
+
+                is TencentCaptchaResult.Success -> {
+                    if (current.isBusy) return
+                    viewModelScope.launch {
+                        mutableState.value = mutableState.value.copy(verifyingRisk = true, notice = null)
+                        when (
+                            val verification =
+                                repository.verifyRisk(
+                                    risk.challenge,
+                                    AuthRiskProof.Tencent(result.ticket, result.randomString, risk.appId),
+                                )
+                        ) {
+                            is AuthActionResult.Failure -> {
+                                mutableState.value =
+                                    mutableState.value.copy(
+                                        verifyingRisk = false,
+                                        notice =
+                                            if (verification.error == AuthError.Rejected) {
+                                                LoginNotice.RiskRejected
+                                            } else {
+                                                LoginNotice.Failure(verification.error)
+                                            },
+                                    )
+                            }
+
+                            AuthActionResult.Success -> {
+                                mutableState.value =
+                                    mutableState.value.copy(
+                                        risk = null,
+                                        verifyingRisk = false,
+                                        riskRetryAttempted = true,
+                                    )
+                                performPasswordLogin(afterVerification = true)
+                            }
+                        }
                     }
                 }
             }

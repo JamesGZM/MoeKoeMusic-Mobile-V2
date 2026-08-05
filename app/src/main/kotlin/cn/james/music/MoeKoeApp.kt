@@ -31,6 +31,7 @@ import cn.james.music.feature.home.homeGraph
 import cn.james.music.feature.localmusic.LocalMusicDestination
 import cn.james.music.feature.localmusic.localMusicDestinations
 import cn.james.music.feature.login.LoginDestination
+import cn.james.music.feature.login.TencentCaptchaResult
 import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.search.SearchDestination
@@ -41,6 +42,7 @@ fun MoeKoeApp(
     onChooseFiles: () -> Unit,
     onRequestDeviceScan: (() -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
+    onLaunchTencentCaptcha: (String, (TencentCaptchaResult) -> Unit) -> Unit,
     foundationContent: (@Composable () -> Unit)?,
     viewModel: AppPlaybackViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
@@ -107,6 +109,7 @@ fun MoeKoeApp(
                 loginDestination(
                     onBack = navController::popBackStack,
                     onLoggedIn = navController::popBackStack,
+                    onLaunchTencentCaptcha = onLaunchTencentCaptcha,
                 )
                 localMusicDestinations(
                     navController = navController,

@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.data.local.LocalImportGateway
+import cn.james.music.feature.login.TencentCaptchaResult
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
     private var afterNotificationPermission: (() -> Unit)? = null
     private var afterMediaPermission: (() -> Unit)? = null
+    private var captchaResultCallback: ((TencentCaptchaResult) -> Unit)? = null
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             afterNotificationPermission?.invoke()
@@ -48,6 +51,23 @@ class MainActivity : ComponentActivity() {
             uris.forEach { uri -> runCatching { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } }
             if (uris.isNotEmpty()) enqueue(uris, LocalImportSource.DocumentPicker)
         }
+    private val captchaLauncher =
+        registerForActivityResult(
+            object : ActivityResultContract<String, TencentCaptchaResult>() {
+                override fun createIntent(
+                    context: android.content.Context,
+                    input: String,
+                ): Intent = RiskCaptchaActivity.intent(context, input)
+
+                override fun parseResult(
+                    resultCode: Int,
+                    intent: Intent?,
+                ): TencentCaptchaResult = RiskCaptchaActivity.parseResult(resultCode, intent)
+            },
+        ) { result ->
+            captchaResultCallback?.invoke(result)
+            captchaResultCallback = null
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,10 +79,20 @@ class MainActivity : ComponentActivity() {
                     onChooseFiles = { documentPicker.launch(arrayOf("audio/*")) },
                     onRequestDeviceScan = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,
+                    onLaunchTencentCaptcha = ::launchTencentCaptcha,
                     foundationContent = foundationContent(themeMode) { themeMode = it },
                 )
             }
         }
+    }
+
+    private fun launchTencentCaptcha(
+        appId: String,
+        onResult: (TencentCaptchaResult) -> Unit,
+    ) {
+        captchaResultCallback?.invoke(TencentCaptchaResult.Failure)
+        captchaResultCallback = onResult
+        captchaLauncher.launch(appId)
     }
 
     private fun enqueue(

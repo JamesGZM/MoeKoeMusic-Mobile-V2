@@ -10,7 +10,7 @@
 
 - `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交；扫码 Endpoint 仍待迁移。
 - `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
-- `:feature:login` 已拥有短信/多账号、密码与短信安全验证页面，并实现验证成功后最多一次的原密码重试；隔离腾讯 Activity 和扫码状态机仍待后续原子提交。
+- `:feature:login` 已拥有短信/多账号、密码与短信/腾讯安全验证状态，并实现验证成功后最多一次的原密码重试；`:app` 已提供非导出的隔离腾讯 Activity，扫码状态机仍待后续原子提交。
 - 登录设计稿 `13`、`19` 至 `22` 已确认，交互原型仅验证状态关系，不能作为 Compose 图标、尺寸或视觉实现依据。
 - 当前 `KugouRequestFactory` 拒绝 HTTP origin，而固定 `captcha_sent.js` 仍使用 `http://login.user.kugou.com`。不得因此全局允许明文流量。
 
@@ -29,6 +29,8 @@
 - [Unsafe file inclusion](https://developer.android.com/privacy-and-security/risks/webview-unsafe-file-inclusion) 要求禁用文件访问、`file://` 跨域能力和非必要内容访问。
 
 腾讯图形验证是项目唯一允许的登录 WebView：放在非导出的独立 Activity；只加载 HTTPS 且只允许 `turing.captcha.qcloud.com` 及验证实际跳转所需、经真机记录确认的腾讯域；禁止 `addJavascriptInterface`、文件访问、内容访问、文件选择、下载和任意外部导航；消息必须使用 AndroidX WebKit 的 origin allowlist；Activity 只返回成功、取消或类型化失败，不接触 Repository、token、Cookie 或密码。域名单在首次真机兼容验收中只增补实际证据，不预先宽放 `*.qq.com`。
+
+实现按[腾讯云 Web 客户端接入](https://cloud.tencent.com/document/product/1110/36841)使用官方 `https://turing.captcha.qcloud.com/TCaptcha.js`，并通过 AndroidX WebKit `addWebMessageListener` 精确 origin 规则接收类型化回调；CSP、请求拦截和导航策略初始只允许该 HTTPS origin。当前 ELE-AL00 / API 29 已验证最终 Manifest 中 Activity 非导出；真实验证码若请求其他腾讯资源域，只能在用户主动验收取得证据后逐个加入，不使用通配符。
 
 ### 会话存储
 

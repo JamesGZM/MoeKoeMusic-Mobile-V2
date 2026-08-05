@@ -26,6 +26,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".RiskCaptchaActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.MoeKoe" />
+        <activity
             android:name=".AudioImportActivity"
             android:exported="true"
             android:theme="@style/Theme.MoeKoe">

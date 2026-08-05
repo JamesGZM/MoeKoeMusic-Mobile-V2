@@ -239,6 +239,33 @@ class LoginViewModelTest {
         }
 
     @Test
+    fun tencentRiskSuccessSubmitsTypedProofAndRetriesOnce() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.passwordResults.add(PasswordLoginResult.Authenticated)
+            repository.riskMethodResults.add(AuthRiskMethodResult.Available(AuthRiskMethod.Tencent("123456789")))
+            repository.verifyResults.add(AuthActionResult.Success)
+            enterPasswordCredentials()
+            val launch = backgroundScope.async { viewModel.effects.first { it is LoginEffect.LaunchTencentCaptcha } }
+            runCurrent()
+
+            viewModel.submitPassword()
+            runCurrent()
+            viewModel.startRiskVerification()
+            runCurrent()
+
+            assertEquals(LoginEffect.LaunchTencentCaptcha("123456789"), launch.await())
+            viewModel.handleTencentCaptchaResult(TencentCaptchaResult.Success("fixture-ticket", "fixture-random"))
+            runCurrent()
+
+            val proof = repository.riskProofs.single() as AuthRiskProof.Tencent
+            assertEquals("fixture-ticket", proof.ticket)
+            assertEquals("fixture-random", proof.randomString)
+            assertEquals("123456789", proof.appId)
+            assertEquals(2, repository.passwordCalls.size)
+        }
+
+    @Test
     fun cancellingRiskReturnsToPasswordWithoutAutomaticRetry() =
         runTest(dispatcher) {
             repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))

@@ -88,6 +88,20 @@ fun LoginRiskSmsScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "RiskTencent", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginRiskTencentScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.Password,
+            username = "miyu.song@moekoe.com",
+            password = "fixture-password",
+            risk = PasswordRiskUiState.Tencent(previewChallenge, "123456789"),
+        ),
+    )
+}
+
+@PreviewTest
 @Preview(name = "PasswordLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
 fun LoginPasswordLargeTextScreenshot() {
@@ -111,6 +125,7 @@ private fun LoginScreenshotContent(state: LoginUiState) {
                 onTogglePasswordVisibility = {},
                 onSubmitPassword = {},
                 onStartRiskVerification = {},
+                onRetryTencentVerification = {},
                 onRiskCodeChange = {},
                 onVerifyRiskCode = {},
                 onCancelRisk = {},

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="risk_captcha_cancel">取消安全验证</string>
     <string name="app_name">MoeKoe Music</string>
     <string name="navigation_home">首页</string>
     <string name="navigation_discover">发现</string>
