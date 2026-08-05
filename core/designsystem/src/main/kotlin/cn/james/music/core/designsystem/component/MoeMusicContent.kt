@@ -150,12 +150,13 @@ fun MoeSongRow(
     badges: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
-    val titleLines = if (LocalDensity.current.fontScale >= LARGE_TEXT_SCALE) 2 else 1
+    val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
+    val titleLines = if (largeText) 2 else 1
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp)
+                .heightIn(min = if (largeText) 96.dp else 72.dp)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CONTENT_ALPHA)
                 .padding(vertical = MoeKoeTheme.spacing.small),
@@ -176,7 +177,7 @@ fun MoeSongRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = title,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
@@ -190,15 +191,30 @@ fun MoeSongRow(
                     content = badges,
                 )
             }
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = subtitle,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (largeText) {
+                    metadata?.let { text ->
+                        Text(
+                            text = text,
+                            modifier = Modifier.padding(start = MoeKoeTheme.spacing.small),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
         }
-        metadata?.let { text ->
+        if (!largeText) {
+            metadata?.let { text ->
             Text(
                 text = text,
                 modifier = Modifier.padding(end = MoeKoeTheme.spacing.small),
@@ -206,6 +222,7 @@ fun MoeSongRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
             )
+            }
         }
         trailing()
     }
