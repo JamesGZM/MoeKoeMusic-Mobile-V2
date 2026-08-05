@@ -1,10 +1,14 @@
 package cn.james.music
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -13,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -83,6 +88,26 @@ class MainActivityTest {
         composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
     }
 
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun qrLoginIsReachableAndLeavingStopsShowingQrState() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("扫码", useUnmergedTree = true).performClick()
+        composeRule.waitUntil(15_000) {
+            composeRule.onAllNodesWithContentDescription("酷狗音乐登录二维码").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("请使用酷狗音乐扫码").assertIsDisplayed()
+        saveDeviceScreenshot()
+
+        composeRule.onNodeWithText("验证码", useUnmergedTree = true).performClick()
+        Thread.sleep(2_500)
+        composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription("酷狗音乐登录二维码").assertCountEquals(0)
+    }
+
     private fun waitForAnonymousMyState() {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule
@@ -99,5 +124,21 @@ class MainActivityTest {
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
+    }
+
+    private fun saveDeviceScreenshot() {
+        composeRule.waitForIdle()
+        composeRule.runOnUiThread {
+            val root = composeRule.activity.window.decorView.rootView
+            val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
+            root.draw(Canvas(bitmap))
+            File(requireNotNull(composeRule.activity.getExternalFilesDir(null)), QR_DEVICE_SCREENSHOT).outputStream().use { output ->
+                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))
+            }
+        }
+    }
+
+    private companion object {
+        const val QR_DEVICE_SCREENSHOT = "qr-device.png"
     }
 }
