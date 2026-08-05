@@ -10,7 +10,7 @@
 
 - `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交；扫码 Endpoint 仍待迁移。
 - `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
-- `:feature:login` 已拥有短信/多账号页面；密码与安全验证 UI、隔离腾讯 Activity 和扫码状态机仍待后续原子提交。
+- `:feature:login` 已拥有短信/多账号、密码与短信安全验证页面，并实现验证成功后最多一次的原密码重试；隔离腾讯 Activity 和扫码状态机仍待后续原子提交。
 - 登录设计稿 `13`、`19` 至 `22` 已确认，交互原型仅验证状态关系，不能作为 Compose 图标、尺寸或视觉实现依据。
 - 当前 `KugouRequestFactory` 拒绝 HTTP origin，而固定 `captcha_sent.js` 仍使用 `http://login.user.kugou.com`。不得因此全局允许明文流量。
 

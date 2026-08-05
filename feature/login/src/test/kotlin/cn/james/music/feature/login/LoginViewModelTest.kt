@@ -2,13 +2,16 @@ package cn.james.music.feature.login
 
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthActionResult
+import cn.james.music.core.model.auth.AuthError
 import cn.james.music.core.model.auth.AuthRepository
 import cn.james.music.core.model.auth.AuthRiskChallenge
+import cn.james.music.core.model.auth.AuthRiskMethod
 import cn.james.music.core.model.auth.AuthRiskMethodResult
 import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -80,19 +83,19 @@ class LoginViewModelTest {
             viewModel.updatePhone(VALID_PHONE)
             viewModel.updateCode("123456")
 
-            viewModel.submit()
+            viewModel.submitMobileCode()
             runCurrent()
 
             assertEquals(ACCOUNTS, viewModel.state.value.accounts)
-            assertFalse(viewModel.state.value.canSubmit)
+            assertFalse(viewModel.state.value.canSubmitMobileCode)
 
-            viewModel.submit()
+            viewModel.submitMobileCode()
             assertEquals(LoginNotice.Validation(LoginValidationError.AccountRequired), viewModel.state.value.notice)
             assertEquals(1, repository.loginCalls.size)
 
             viewModel.selectAccount("20002")
-            assertTrue(viewModel.state.value.canSubmit)
-            viewModel.submit()
+            assertTrue(viewModel.state.value.canSubmitMobileCode)
+            viewModel.submitMobileCode()
             runCurrent()
 
             assertEquals("20002", repository.loginCalls.last().selectedUserId)
@@ -107,7 +110,7 @@ class LoginViewModelTest {
             val effect = backgroundScope.async { viewModel.effects.first() }
             runCurrent()
 
-            viewModel.submit()
+            viewModel.submitMobileCode()
             runCurrent()
 
             assertEquals(LoginEffect.Completed, effect.await())
@@ -119,7 +122,7 @@ class LoginViewModelTest {
             repository.loginResults.add(MobileCodeLoginResult.MultipleAccounts(ACCOUNTS))
             viewModel.updatePhone(VALID_PHONE)
             viewModel.updateCode("123456")
-            viewModel.submit()
+            viewModel.submitMobileCode()
             runCurrent()
 
             viewModel.chooseOtherAccount()
@@ -129,13 +132,164 @@ class LoginViewModelTest {
                     .isEmpty(),
             )
             assertEquals("", viewModel.state.value.code)
-            assertFalse(viewModel.state.value.canSubmit)
+            assertFalse(viewModel.state.value.canSubmitMobileCode)
         }
+
+    @Test
+    fun switchingModesClearsInputsFromThePreviousMode() =
+        runTest(dispatcher) {
+            viewModel.updatePhone(VALID_PHONE)
+            viewModel.updateCode("123456")
+
+            viewModel.switchMode(LoginMode.Password)
+
+            assertEquals("", viewModel.state.value.phone)
+            assertEquals("", viewModel.state.value.code)
+            viewModel.updateUsername("fixture-account")
+            viewModel.updatePassword("fixture-password")
+
+            viewModel.switchMode(LoginMode.MobileCode)
+
+            assertEquals("", viewModel.state.value.username)
+            assertEquals("", viewModel.state.value.password)
+        }
+
+    @Test
+    fun passwordAuthenticationEmitsCompletionAndRedactsStateString() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.Authenticated)
+            enterPasswordCredentials()
+            val effect = backgroundScope.async { viewModel.effects.first() }
+            runCurrent()
+
+            viewModel.submitPassword()
+            runCurrent()
+
+            assertEquals(LoginEffect.Completed, effect.await())
+            assertEquals(listOf(PasswordCall("fixture-account", "fixture-password")), repository.passwordCalls)
+            assertFalse(
+                viewModel.state.value
+                    .toString()
+                    .contains("fixture-password"),
+            )
+            assertEquals("", viewModel.state.value.password)
+        }
+
+    @Test
+    fun rejectedPasswordUsesCredentialSpecificNotice() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.Failure(AuthError.Rejected))
+            enterPasswordCredentials()
+
+            viewModel.submitPassword()
+            runCurrent()
+
+            assertEquals(LoginNotice.PasswordRejected, viewModel.state.value.notice)
+            assertEquals("fixture-password", viewModel.state.value.password)
+        }
+
+    @Test
+    fun smsRiskVerificationRetriesPasswordExactlyOnce() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.passwordResults.add(PasswordLoginResult.Authenticated)
+            repository.riskMethodResults.add(AuthRiskMethodResult.Available(AuthRiskMethod.Sms))
+            repository.verifyResults.add(AuthActionResult.Success)
+            enterPasswordCredentials()
+            val effect = backgroundScope.async { viewModel.effects.first() }
+            runCurrent()
+
+            viewModel.submitPassword()
+            runCurrent()
+            assertTrue(viewModel.state.value.risk is PasswordRiskUiState.Required)
+
+            viewModel.startRiskVerification()
+            runCurrent()
+            assertTrue(viewModel.state.value.risk is PasswordRiskUiState.Sms)
+
+            viewModel.updateRiskCode("246810")
+            viewModel.verifyRiskCode()
+            runCurrent()
+
+            assertEquals(LoginEffect.Completed, effect.await())
+            assertEquals(2, repository.passwordCalls.size)
+            assertEquals("246810", (repository.riskProofs.single() as AuthRiskProof.Sms).code)
+        }
+
+    @Test
+    fun repeatedRiskAfterVerificationStopsWithoutLooping() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.riskMethodResults.add(AuthRiskMethodResult.Available(AuthRiskMethod.Sms))
+            repository.verifyResults.add(AuthActionResult.Success)
+            enterPasswordCredentials()
+
+            viewModel.submitPassword()
+            runCurrent()
+            viewModel.startRiskVerification()
+            runCurrent()
+            viewModel.updateRiskCode("246810")
+            viewModel.verifyRiskCode()
+            runCurrent()
+
+            assertEquals(2, repository.passwordCalls.size)
+            assertEquals(LoginNotice.RiskRepeated, viewModel.state.value.notice)
+            assertEquals(null, viewModel.state.value.risk)
+        }
+
+    @Test
+    fun cancellingRiskReturnsToPasswordWithoutAutomaticRetry() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            enterPasswordCredentials()
+            viewModel.submitPassword()
+            runCurrent()
+
+            viewModel.cancelRisk()
+
+            assertEquals(null, viewModel.state.value.risk)
+            assertEquals(1, repository.passwordCalls.size)
+            assertEquals("fixture-password", viewModel.state.value.password)
+        }
+
+    @Test
+    fun cancellingWhileRiskMethodLoadsIgnoresTheStaleResult() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.riskMethodDeferred = CompletableDeferred()
+            enterPasswordCredentials()
+            viewModel.submitPassword()
+            runCurrent()
+
+            viewModel.startRiskVerification()
+            runCurrent()
+            assertTrue(viewModel.state.value.resolvingRisk)
+
+            viewModel.cancelRisk()
+            repository.riskMethodDeferred?.complete(AuthRiskMethodResult.Available(AuthRiskMethod.Sms))
+            runCurrent()
+
+            assertEquals(null, viewModel.state.value.risk)
+            assertFalse(viewModel.state.value.resolvingRisk)
+        }
+
+    private fun enterPasswordCredentials() {
+        viewModel.switchMode(LoginMode.Password)
+        viewModel.updateUsername("fixture-account")
+        viewModel.updatePassword("fixture-password")
+    }
 
     private class FakeAuthRepository : AuthRepository {
         val sentMobiles = mutableListOf<String>()
         val loginCalls = mutableListOf<LoginCall>()
         val loginResults = ArrayDeque<MobileCodeLoginResult>()
+        val passwordCalls = mutableListOf<PasswordCall>()
+        val passwordResults = ArrayDeque<PasswordLoginResult>()
+        val riskMethodResults = ArrayDeque<AuthRiskMethodResult>()
+        var riskMethodDeferred: CompletableDeferred<AuthRiskMethodResult>? = null
+        val verifyResults = ArrayDeque<AuthActionResult>()
+        val riskProofs = mutableListOf<AuthRiskProof>()
 
         override suspend fun currentState(): AuthState = AuthState.Anonymous
 
@@ -156,15 +310,21 @@ class LoginViewModelTest {
         override suspend fun loginWithPassword(
             username: String,
             password: String,
-        ): PasswordLoginResult = PasswordLoginResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
+        ): PasswordLoginResult {
+            passwordCalls += PasswordCall(username, password)
+            return passwordResults.removeFirst()
+        }
 
         override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
-            AuthRiskMethodResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
+            riskMethodDeferred?.await() ?: riskMethodResults.removeFirst()
 
         override suspend fun verifyRisk(
             challenge: AuthRiskChallenge,
             proof: AuthRiskProof,
-        ): AuthActionResult = AuthActionResult.Failure(cn.james.music.core.model.auth.AuthError.Rejected)
+        ): AuthActionResult {
+            riskProofs += proof
+            return verifyResults.removeFirst()
+        }
 
         override suspend fun logout(): AuthActionResult = AuthActionResult.Success
     }
@@ -175,8 +335,14 @@ class LoginViewModelTest {
         val selectedUserId: String?,
     )
 
+    private data class PasswordCall(
+        val username: String,
+        val password: String,
+    )
+
     private companion object {
         const val VALID_PHONE = "13800138000"
+        val CHALLENGE = AuthRiskChallenge("fixture-event", null, null)
         val ACCOUNTS =
             listOf(
                 AuthAccountOption("10001", "Moe", null, null),

@@ -1,5 +1,6 @@
 package cn.james.music.feature.login
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -19,6 +20,7 @@ fun NavGraphBuilder.loginDestination(
     composable<LoginDestination> {
         val viewModel: LoginViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        BackHandler(enabled = state.hasActiveRisk) { viewModel.cancelRisk() }
         LaunchedEffect(viewModel) {
             viewModel.effects.collectLatest { effect ->
                 when (effect) {
@@ -31,8 +33,17 @@ fun NavGraphBuilder.loginDestination(
             onBack = onBack,
             onPhoneChange = viewModel::updatePhone,
             onCodeChange = viewModel::updateCode,
+            onModeChange = viewModel::switchMode,
             onSendCode = viewModel::sendCode,
-            onSubmit = viewModel::submit,
+            onSubmitMobileCode = viewModel::submitMobileCode,
+            onUsernameChange = viewModel::updateUsername,
+            onPasswordChange = viewModel::updatePassword,
+            onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+            onSubmitPassword = viewModel::submitPassword,
+            onStartRiskVerification = viewModel::startRiskVerification,
+            onRiskCodeChange = viewModel::updateRiskCode,
+            onVerifyRiskCode = viewModel::verifyRiskCode,
+            onCancelRisk = viewModel::cancelRisk,
             onSelectAccount = viewModel::selectAccount,
             onChooseOtherAccount = viewModel::chooseOtherAccount,
         )

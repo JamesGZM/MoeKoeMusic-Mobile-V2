@@ -65,6 +65,24 @@ class MainActivityTest {
         composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
     }
 
+    @Test
+    fun passwordLoginIsReachableWithoutSubmittingCredentials() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("密码", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("请输入账号").assertIsDisplayed()
+        composeRule.onNodeWithText("请输入密码").assertIsDisplayed()
+        composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
+
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
+    }
+
     private fun waitForAnonymousMyState() {
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule
