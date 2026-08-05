@@ -21,6 +21,8 @@
 - 颜色、排版、输入框、按钮、Dialog 和页面状态遵循 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 与 [`../UI_COMPONENTS.md`](../UI_COMPONENTS.md)。
 - 密码、扫码、短信风控、腾讯图形验证和多账号状态设计稿已确认：[`19-login-password-states.png`](../design/mockups/19-login-password-states.png)、[`20-login-qr-states.png`](../design/mockups/20-login-qr-states.png)、[`21-login-risk-verification.png`](../design/mockups/21-login-risk-verification.png) 与 [`22-login-multi-account.png`](../design/mockups/22-login-multi-account.png)。[`login-flow`](../design/prototypes/login-flow/README.md) 原型验证交互与状态关系；Compose 编码仍需满足协议审计和组件门禁。
 - 登录先按独立 [`07-login-flow.md`](07-login-flow.md) 和 [`../reference-audits/09-login-session-and-risk.md`](../reference-audits/09-login-session-and-risk.md) 完成纵向闭环，再由本阶段消费稳定会话实现用户资料、签到、VIP 与音乐库。
+- 登录后的用户资料、VIP 摘要、刷新、部分失败和退出按 [`../reference-audits/10-user-profile-and-my-session.md`](../reference-audits/10-user-profile-and-my-session.md) 分三层落地：先 `:kugou-api`，再 `:data`，最后 `:feature:my`；不得在资料或资产接口完成前用设计稿内容和假计数填充页面。
+- “我的”已有确认设计 `04-my-v4.png`，本切片无需重新生图。未来新增会话失效等未覆盖布局时，必须先使用 `frontend-design` 按既有 Design System 补静态图并确认，之后才能制作必要原型或编码。
 
 ## 测试
 

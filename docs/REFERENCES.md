@@ -5,6 +5,7 @@
 - [应用导航架构](reference-audits/06-navigation-architecture.md)
 - [酷狗 HTTP 客户端选型](reference-audits/07-kugou-http-client.md)
 - [登录、会话与安全验证](reference-audits/09-login-session-and-risk.md)
+- [用户资料与“我的”会话态](reference-audits/10-user-profile-and-my-session.md)
 
 记录日期：2026-08-05。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
@@ -162,6 +163,8 @@
 首页、登录、“我的”、图形验证码和图标策略见 [`reference-audits/05-home-account-ui.md`](reference-audits/05-home-account-ui.md)。该审计固定了 PC 与 Mobile 的登录、风险验证和用户资产源码路径；标准语义优先使用 Apache-2.0 的 Compose Material Icons，验证码 WebView 仅作为腾讯官方 H5 验证的隔离例外。
 
 登录协议、会话原子提交、二维码和隔离安全验证的决策点审计见 [`reference-audits/09-login-session-and-risk.md`](reference-audits/09-login-session-and-risk.md)。审计固定 PC `52c9833`、Mobile `ab71195` 和 KuGouMusicApi `6efe84e` 的请求与消费文件，并采用 ZXing Core 3.5.4 生成二维码、AndroidX WebKit 1.16.0 提供 origin 受限的兼容 WebView API；二者均为 Apache-2.0。
+
+登录后的用户资料、VIP 摘要、刷新、部分失败、会话失效提示和退出边界见 [`reference-audits/10-user-profile-and-my-session.md`](reference-audits/10-user-profile-and-my-session.md)。审计固定 KuGouMusicApi `6efe84e`、PC `52c9833`、Mobile `ab71195` 及其 API submodule `283f1e97`，结论是复用现有 Ktor、RSA、Coil 与会话存储，不新增依赖；资料是主结果，VIP 是可降级附加结果，未接入的资产不得用假数据填充设计稿。
 
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 
