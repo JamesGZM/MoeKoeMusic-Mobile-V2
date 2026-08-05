@@ -2,6 +2,7 @@ package cn.james.music
 
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -19,7 +20,11 @@ class MainActivityTest {
     @Test
     fun showcaseDisplaysAndSwitchesTheme() {
         composeRule.onNodeWithTag("showcase-title").assertIsDisplayed()
-        composeRule.onNodeWithTag("theme-Dark").assertIsDisplayed().performClick()
+        composeRule
+            .onNodeWithTag("theme-Dark")
+            .assertIsDisplayed()
+            .performClick()
+            .assertIsSelected()
         composeRule.onNodeWithTag("theme-Dark").assertHeightIsAtLeast(48.dp)
         composeRule.onNodeWithTag("primary-action").assertHeightIsAtLeast(48.dp)
     }

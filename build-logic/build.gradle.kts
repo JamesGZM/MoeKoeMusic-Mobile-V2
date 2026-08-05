@@ -6,7 +6,7 @@ plugins {
 group = "cn.james.music.buildlogic"
 
 dependencies {
-    implementation("com.android.tools.build:gradle:9.3.0")
+    implementation(libs.android.tools.gradle)
 }
 
 gradlePlugin {
