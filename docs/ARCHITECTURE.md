@@ -41,7 +41,12 @@ Repository
 :kugou-api
 :data
 :playback
-:features
+:feature:home
+:feature:discover
+:feature:my
+:feature:search
+:feature:localmusic
+:feature:foundation
 ```
 
 ### `:app`
@@ -77,7 +82,8 @@ Repository
 
 - 酷狗平台配置、设备身份、会话和 Cookie。
 - MD5、SHA1、AES、RSA 和请求签名。
-- OkHttp 请求执行与网络 DTO。
+- Ktor Client 请求编排、OkHttp Engine 与网络 DTO。
+- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient` 解码为类型化结果后才交给 `:data`。
 - 不依赖 Compose、Media3、Activity 或 Service。
 
 ### `:data`
@@ -94,38 +100,26 @@ Repository
 - `PlaybackController` 与可观察的 `PlaybackState`。
 - 歌曲地址解析通过 `KugouSourceResolver` 端口注入，不直接依赖具体酷狗实现；`:data` 返回短期 HTTPS 字符串，`:playback` 在 Service 边界转换为 Android `Uri`，地址不进入 Room 快照。
 
-### `:features`
+### `:feature:*`
 
-初期使用单一 Android Library，内部按功能 package 划分：
-
-```text
-feature/home
-feature/discover
-feature/search
-feature/details
-feature/library
-feature/player
-feature/account
-feature/settings
-feature/cloud
-feature/localmusic
-feature/recognize
-```
-
-当单个功能编译时间、所有权或复用需求明显增长时，再拆成独立 Gradle Module。
+- 每个业务能力独立拥有导航键、导航注册、Route、Screen、ViewModel 和测试。
+- 当前模块为 `home`、`discover`、`my`、`search`、`localmusic` 与仅 Debug 可达的 `foundation`。
+- Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
+- Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
+- 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。
 
 ## 模块依赖约束
 
 ```text
-:app ───────────────► :features
-  │                       │
+:app ───────────────► :feature:*
   ├──────────────► :playback
   └──────────────► :data
 
-:features ────────► :core:model
-:features ────────► :core:designsystem
-:features ────────► :playback
-:features ────────► Repository interfaces
+:feature:* ───────► :core:model（按需）
+:feature:* ───────► :core:designsystem
+:feature:search ──► SearchRepository
+:feature:localmusic ► LocalMusicRepository + :playback
+:feature:foundation ► :playback
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
@@ -253,7 +247,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 - `:kugou-api`：加密、签名、Cookie、序列化和请求快照测试。
 - `:data`：Repository、DTO/Domain 映射和加密会话存储测试，使用真实替身而非过度 mock；Android Keystore 行为必须在设备上验证。搜索 Repository 只暴露稳定领域分页和类型化错误，匿名公开搜索请求不携带设备会话。
 - `:playback`：队列、播放模式、恢复和错误跳过状态机测试。
-- `:features`：ViewModel 单元测试、Compose UI 测试和关键截图测试。
+- `:feature:*`：各自拥有 ViewModel 单元测试、Compose UI 测试和关键截图测试。
 - `:app`：导航、启动、登录和播放闭环的设备测试。
 - 外部 Intent：解析与导入协调单测，以及 API 26、32、33、36 设备测试。
 - 稳定后增加 Macrobenchmark 与 Baseline Profile。

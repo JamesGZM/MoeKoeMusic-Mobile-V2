@@ -33,7 +33,7 @@
 
 - `:playback` 暴露 Controller、状态流、来源解析和快照存储端口。
 - `:data` 实现播放快照存储端口，使用 `:core:database` 的 Room DAO。
-- `:features` 通过 ViewModel 使用 Controller，不直接访问 MediaController 或 Service。
+- `:feature:*` 通过各自 ViewModel 使用 Controller，不直接访问 MediaController 或 Service。
 - Service 只持有运行时播放状态，不解析酷狗业务或执行本地音乐导入。
 
 ## 测试

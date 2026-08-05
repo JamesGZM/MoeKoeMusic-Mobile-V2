@@ -1,6 +1,6 @@
 # ADR-0002：轻量模块化架构
 
-- 状态：Accepted
+- 状态：部分被 ADR-0004 取代
 - 日期：2026-08-04
 
 ## 背景
@@ -24,6 +24,8 @@
 - `:features`
 
 Feature 初期在单模块内按 package 组织，达到明确拆分条件后再独立模块化。
+
+2026-08-05：Feature 拆分条件已经满足，单一 `:features` 的决定由 [ADR-0004](0004-feature-owned-modules.md) 取代；Core、Data、Playback 和 API 边界继续有效。
 
 ## 理由
 

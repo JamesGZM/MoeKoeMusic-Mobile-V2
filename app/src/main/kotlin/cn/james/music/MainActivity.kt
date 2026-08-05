@@ -21,8 +21,6 @@ import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.data.local.LocalImportGateway
-import cn.james.music.features.app.MoeKoeAppRoute
-import cn.james.music.features.designsystem.FoundationShowcaseRoute
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -57,16 +55,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             var themeMode by rememberSaveable { mutableStateOf(ThemeMode.System) }
             MoeKoeTheme(themeMode = themeMode) {
-                MoeKoeAppRoute(
+                MoeKoeApp(
                     onChooseFiles = { documentPicker.launch(arrayOf("audio/*")) },
                     onRequestDeviceScan = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,
-                    openFoundationLab =
-                        if (BuildConfig.DEBUG) {
-                            { FoundationShowcaseRoute(themeMode, { themeMode = it }) }
-                        } else {
-                            null
-                        },
+                    foundationContent = foundationContent(themeMode) { themeMode = it },
                 )
             }
         }

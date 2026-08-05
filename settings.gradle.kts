@@ -28,5 +28,10 @@ include(
     ":kugou-api",
     ":data",
     ":playback",
-    ":features",
+    ":feature:home",
+    ":feature:discover",
+    ":feature:my",
+    ":feature:search",
+    ":feature:localmusic",
+    ":feature:foundation",
 )

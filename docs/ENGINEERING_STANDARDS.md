@@ -12,6 +12,8 @@
 
 功能计划使用 [`templates/FEATURE_SPEC_TEMPLATE.md`](templates/FEATURE_SPEC_TEMPLATE.md)。源码审计保存到 `reference-audits/`，包含仓库、提交、许可证、具体文件、采用点和拒绝点。官方文档的行为定义高于第三方实现。门禁材料存在关键待定项时不得通过占位接口或临时实现提前编码。
 
+审计必须以“决策点”而不是“项目名称”为单位。每个决策点至少列出：当前实现、官方约束、两个固定版本源码文件、可复用成熟库、候选方案对比、最终选择、拒绝理由和可执行验收项。只写“参考某项目的架构/UI”不视为完成审计。已有成熟库能够覆盖通用能力时，默认采用成熟库；自行实现必须说明库无法满足的协议、性能、安全或平台约束，并由测试覆盖该差异。
+
 豁免范围仅限不改变行为边界的小型缺陷、文案和机械修改。新增依赖、权限、持久化结构、后台任务或公共接口不属于豁免。
 
 ## 技术基线
@@ -22,9 +24,9 @@
 - Android 模块使用 AGP 内置 Kotlin；纯 JVM 模块使用 Kotlin 2.3.21。
 - Jetpack Compose + Material 3。
 - Coroutines + Flow。
-- Navigation Compose。
+- 类型安全 Navigation Compose；禁止用页面枚举和 `when` 模拟应用返回栈。
 - Hilt。
-- OkHttp + Kotlin Serialization。
+- Ktor Client + OkHttp Engine + Kotlin Serialization；酷狗签名、加密和动态协议解析保持独立。
 - Room + DataStore。
 - Media3 ExoPlayer + MediaLibraryService。
 - Coil。
@@ -81,6 +83,17 @@
 - 大封面使用适配尺寸加载，不解码不必要的原图。
 - 动态背景取色与模糊在后台计算，并提供静态回退。
 - 性能结论以 Layout Inspector、Compose metrics 和 Macrobenchmark 为依据。
+
+## Feature 与文件职责
+
+- `:app` 只承担组合根、应用级导航、应用壳和系统入口；不得持有某个业务页面的 Repository、列表状态或导入状态。
+- 每个业务能力拥有独立 Feature 模块，并在模块内拥有导航键、导航注册、Route、Screen、ViewModel 和测试。Feature 不依赖 `:app`，也不直接依赖其他 Feature 的实现。
+- Route 只负责获取 ViewModel、生命周期感知地收集状态和连接导航；Screen 接收不可变状态与事件，不获取 NavController、Repository 或其他页面 ViewModel。
+- Kotlin 声明默认使用最小可见性：页面实现和辅助组件优先 `internal/private`，只有组合根或其他模块确实需要的导航入口、稳定模型和事件才公开。
+- 一个 Kotlin 文件只承担一种主要角色。禁止把导航图、多个页面、God ViewModel、共享组件和领域转换堆入同一文件；文件出现两个以上独立变化原因时必须拆分。
+- 不以行数作为唯一标准；通常超过 300 行或同时包含 ViewModel、复杂 Screen 与导航注册时必须解释并拆分。
+- Feature 的 `api/impl` 拆分不是默认仪式。只有出现跨 Feature API 依赖、多 App 复用、可替换实现或需要编译期隐藏实现依赖时才拆分，并记录决策。
+- 应用壳状态与业务状态分开：MiniPlayer/全局反馈可以属于 App State，搜索、本地音乐、登录等状态必须由各自 Feature 持有。
 
 ## 可访问性
 

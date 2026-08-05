@@ -1,5 +1,10 @@
 # 参考项目与来源
 
+技术决策点级审计：
+
+- [应用导航架构](reference-audits/06-navigation-architecture.md)
+- [酷狗 HTTP 客户端选型](reference-audits/07-kugou-http-client.md)
+
 记录日期：2026-08-05。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
 ## MoeKoeMusic 系列
@@ -92,6 +97,8 @@
 
 ## 官方架构与媒体参考
 
+- [Now in Android](https://github.com/android/nowinandroid) `7d45eae4f8720a0c77f507712ba2437ff974b6ed`：Feature 模块化、应用组合根、App State、导航所有权、Route/Screen/ViewModel 和最小可见性参考；本项目不机械复制 Navigation 3 或每个 Feature 的 `api/impl` 双模块结构。详见 [`reference-audits/08-feature-modularization.md`](reference-audits/08-feature-modularization.md)。
+
 ### 阶段 1 构建与 UI 基础
 
 - AGP 9.3 版本说明与兼容矩阵：https://developer.android.com/build/releases/agp-9-3-0-release-notes
@@ -101,7 +108,7 @@
 
 采用点：AGP/Gradle/JDK 组合、官方截图测试、Hilt Android 组合根与 Material 3 主题体系。Hilt 2.59 开始明确支持 AGP 9，因此工程使用 2.59.2，而不是计划中无法加载 AGP 9 扩展的 2.57.1。Compose Screenshot Testing 仍为实验插件，仅用于视觉回归。
 
-主要阶段 1 依赖许可证：AndroidX、Compose、Room、DataStore、Media3 与 Hilt 为 Apache-2.0；Kotlin 与 Coroutines 为 Apache-2.0；Spotless 为 Apache-2.0；OkHttp 为 Apache-2.0。它们分别承担平台 UI/存储/媒体能力、依赖注入、语言与并发、格式检查和后续网络传输，未引入遥测或远程托管服务。
+主要依赖许可证：AndroidX、Compose、Room、DataStore、Media3、Hilt、Ktor 与 OkHttp 为 Apache-2.0；Kotlin 与 Coroutines 为 Apache-2.0；Spotless 为 Apache-2.0。它们分别承担平台 UI/存储/媒体能力、依赖注入、语言与并发、格式检查和网络传输，未引入遥测或远程托管服务。
 
 ### Now in Android
 

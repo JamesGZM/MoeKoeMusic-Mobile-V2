@@ -96,7 +96,7 @@ SearchRepository (:data)
 KugouClient (:kugou-api)
     ├── DeviceIdentity + SessionStore port
     ├── Signer / Crypto / RequestFactory
-    └── OkHttp Transport + DTO
+    └── Ktor Client + OkHttp Engine + DTO
 
 Kugou PlaybackSource
     ↓

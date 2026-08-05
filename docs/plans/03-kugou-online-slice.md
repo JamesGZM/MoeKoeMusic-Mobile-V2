@@ -24,10 +24,10 @@
 
 ## 技术栈与模块边界
 
-- 继续使用已有 OkHttp 5.4.0、Kotlin Serialization 1.11.0、Coroutines、Hilt、DataStore 和 Android Keystore，不新增网络或加密依赖。
+- 本条已由 2026-08-05 的客户端选型补审替代：使用 Ktor Client + OkHttp Engine + Kotlin Serialization，详见 `../reference-audits/07-kugou-http-client.md`。
 - `:kugou-api` 是纯 JVM 模块，拥有协议配置、加密签名、Endpoint、DTO、Cookie 与传输；不依赖 Android、Compose 或 Media3。
 - `:data` 实现设备身份和加密会话存储、Search Repository、DTO/Domain 映射与 `Kugou` 播放来源解析。
-- `:features` 只消费搜索领域状态；`:playback` 继续只依赖 `PlaybackSourceResolver`，不直接调用网络。
+- `:feature:search` 只消费搜索领域状态；`:playback` 继续只依赖 `PlaybackSourceResolver`，不直接调用网络。
 - App 只新增 `INTERNET` 权限，阶段 4 Endpoint 全部使用 HTTPS，不放开 cleartext。
 
 首批稳定领域接口：
@@ -63,7 +63,7 @@ interface SearchRepository {
 2. 注册成功且响应包含 dfid 后原子更新加密会话；失败保留 GUID/MID，下一次用户操作按错误类型重试。
 3. 搜索通过统一 RequestFactory 注入身份、时间、平台参数、签名与 Router Header。
 4. 选歌先请求 `privilege_lite` 得到可用资源，再调用 `song_url`；无可用地址时映射为无版权或 VIP，不制造空 URL。
-5. OkHttp Transport 合并 Set-Cookie；协议层忽略未知字段，但关键字段缺失返回 `ProtocolError`。
+5. Ktor Transport 保留 Set-Cookie，KugouSession 显式合并；协议层忽略未知字段，但关键字段缺失返回 `ProtocolError`。
 6. 超时和 5xx 仅对幂等读取最多重试两次并指数退避；签名失败、风控、4xx 和解析错误不自动重放。
 7. 地址解析成功后构造现有 `PlaybackItem` 并交给播放内核；Media3 是运行时播放状态唯一来源。
 
@@ -92,14 +92,14 @@ interface SearchRepository {
 - `KugouRequestFactory` 统一注入平台、身份、时间、认证参数、协议 Header、Cookie、`signKey` 和签名；固定搜索请求与 Node 快照一致，并在 Transport 前拒绝明文 Endpoint。
 - Cookie 合并保留值中的 `=`、支持服务端删除且拒绝 CR/LF 注入；请求、上下文、响应和 Cookie 的 `toString()` 均不输出敏感值。
 - JSON 解码要求顶层 Object，并区分 HTTP、风控、畸形响应和服务端拒绝；服务端正文不会进入错误对象。
-- Fake Transport 验证请求可离线捕获；OkHttp Transport 使用 10 秒连接、15 秒读取和 20 秒整体超时，关闭 OkHttp 隐式连接重试，并在协程取消时取消 Call。
+- Fake Transport 验证请求可离线捕获；Ktor Client 使用 10 秒连接、15 秒读取和 20 秒整体超时，OkHttp Engine 关闭隐式连接重试，协程取消传播到底层 Call。
 - 网络异常已映射为离线、超时和连接错误。只有标记为幂等读取的超时或 5xx 最多额外尝试两次，退避为 250ms、500ms；4xx、离线、连接、风控和协议错误不自动重放。
 - `register_dev`、歌曲 `search`、`privilege_lite`、`song_url` 四个 Endpoint 已按固定源码构造；歌曲地址的 `signKey` 与完整签名继续通过固定 Node 输出验证。
 - 设备身份、会话端口、注册 AES/RSA 编解码和匿名初始化单飞已实现；身份先保存，注册成功并落库后才返回 Ready，恢复到已有 dfid 时不重复请求。
 - 2026-08-05 首次真实验证发现固定 Android 搜索在匿名注册后仍返回 `152`，独立 Go 实现也可复现；该接口不再作为匿名搜索完成依据。
 - 经 SPlayer-Next、UnblockNeteaseMusic 与当前服务补审，新增不携带设备身份的 HTTPS WebFilter 搜索。真实“设备注册 → 匿名歌曲搜索”测试已返回非空列表并通过。
 - `:data` 已使用独立 DataStore 与 Android Keystore AES-256-GCM 实现会话端口，密文损坏和 key 失效会安全清除后重新初始化；API 29 真机已验证加解密、随机密文和删 key 后拒绝旧密文。
-- OkHttp 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 默认离线测试与显式真实集成测试均通过。
+- Ktor + OkHttp Engine 使用离线拦截器验证 Unicode Query、Header、原始 Body 字节、响应 Header 和异常映射；当前 `:kugou-api` 默认离线测试与显式真实集成测试均通过。
 - `:core:model` 已增加稳定的 `Song`、`SearchPage`、`SearchResult` 和 `SearchError`；网络字段、服务错误码和 Android URI 均未泄漏到领域层。
 - `KugouSongSearchDecoder` 已兼容 ID、时长和总数的字符串/数字漂移，跳过单个坏条目，但关键列表缺失或整页不可用时返回协议错误，不制造空歌曲。
 - `KugouSearchRepository` 已串联匿名会话、真实 Transport、协议解码、分页和类型化错误映射；搜索 Host 不接收 MID、dfid、Cookie 或签名，App Manifest 仅新增 `INTERNET` 权限。

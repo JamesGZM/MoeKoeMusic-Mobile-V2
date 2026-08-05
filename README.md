@@ -8,6 +8,8 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 项目已完成阶段 0（文档与决策）、阶段 1（工程基础）、阶段 2（播放内核）和阶段 3（本地音乐），阶段 4（酷狗在线闭环）正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v2、本地音乐复制导入、外部音频入口、基础 MiniPlayer 与“首页 / 发现 / 我的”导航；MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 的真实导入管线及失败恢复测试已通过。阶段 4 已完成协议基础、匿名会话加密存储、独立搜索页面和在线歌曲播放纵向闭环；2026-08-05 的 API 29 真机测试已验证从首页搜索真实歌曲、解析安全播放地址并由 Media3 持续播放。当前按 UI 优先里程碑先锁定登录与 Design System，再修正文档和 Compose 实现；无版权、VIP、网络错误反馈和地址失效刷新继续暂缓。
 
+应用壳现使用 Navigation Compose 2.9.8 类型安全目的地与真实返回栈，底部 Tab 保存并恢复各自状态；首页、发现、我的、搜索、本地音乐和 Debug Foundation 已按业务能力拆为独立 Feature 模块，应用壳状态与页面状态分离。酷狗通用传输使用 Ktor Client 3.5.1 + OkHttp Engine，签名、加密、会话和协议级重试继续保持独立。对应选型、固定源码和拒绝项见 `docs/reference-audits/06-navigation-architecture.md`、`07-kugou-http-client.md` 与 `08-feature-modularization.md`。
+
 - Android 原生 Kotlin + Jetpack Compose。
 - 直接访问酷狗官方接口，不依赖自建服务器。
 - 以 `KuGouMusicApi@6efe84e1971c15b11a5cf1a210c5e8e0cc9d7ddb` 为协议迁移基准。
@@ -57,6 +59,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 - [ADR-0001：原生直连酷狗接口](docs/decisions/0001-native-direct-api.md)
 - [ADR-0002：轻量模块化架构](docs/decisions/0002-lightweight-modular-architecture.md)
 - [ADR-0003：复制导入本地音乐](docs/decisions/0003-copy-imported-local-music.md)
+- [ADR-0004：Feature 所有权与模块边界](docs/decisions/0004-feature-owned-modules.md)
 
 ## 文档维护原则
 

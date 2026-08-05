@@ -17,7 +17,7 @@ class MainActivityTest {
 
     @Test
     fun formalNavigationContainsOnlyThreeTopLevelDestinations() {
-        composeRule.onAllNodesWithText("首页", useUnmergedTree = true).assertCountEquals(2)
+        composeRule.onAllNodesWithText("首页", useUnmergedTree = true).assertCountEquals(1)
         composeRule.onNodeWithText("发现", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("本地音乐").assertIsDisplayed().performClick()
@@ -30,5 +30,17 @@ class MainActivityTest {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("打开播放工程实验台").performClick()
         composeRule.onNodeWithText("MoeKoe Music").assertIsDisplayed()
+    }
+
+    @Test
+    fun searchUsesSystemBackStackInsteadOfReturningToAHardcodedPage() {
+        composeRule.onNodeWithText("搜索音乐").performClick()
+        composeRule.onNodeWithText("想听什么？").assertIsDisplayed()
+
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeRule.onNodeWithText("轻松发现下一首喜欢的音乐").assertIsDisplayed()
     }
 }
