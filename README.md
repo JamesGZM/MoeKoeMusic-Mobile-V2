@@ -6,7 +6,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 当前阶段
 
-项目已完成阶段 0（文档与决策）、阶段 1（工程基础）和阶段 2（播放内核）。当前 `develop` 分支已具备可后台运行的 Media3 播放服务、系统媒体控制、Room 队列快照和播放工程实验台；下一阶段将实现本地音乐复制导入闭环。
+项目已完成阶段 0（文档与决策）、阶段 1（工程基础）和阶段 2（播放内核），阶段 3（本地音乐）正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v2、本地音乐复制导入、外部音频入口、基础 MiniPlayer 与“首页 / 发现 / 我的”导航；API 29、32、33、36 的当前代码设备测试与本地音乐截图基准已通过，阶段 3 尚需完成 API 26 最终复测、多格式逐项验收和导入失败恢复测试后才能关闭。
 
 - Android 原生 Kotlin + Jetpack Compose。
 - 直接访问酷狗官方接口，不依赖自建服务器。
@@ -30,6 +30,12 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 ```
 
 截图插件当前为实验版，其任务暂不兼容 Configuration Cache，因此只对截图命令局部关闭缓存。Debug APK 输出到 `app/build/outputs/apk/debug/`。
+
+本地音乐格式 fixture 使用仓库脚本按需生成，不提交第三方音频：
+
+```bash
+./scripts/generate-local-music-fixtures.sh
+```
 
 ## 文档索引
 

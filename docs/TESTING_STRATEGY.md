@@ -60,6 +60,8 @@
 
 Intent 解析使用独立纯函数配合 Robolectric/Android 测试验证平台差异；复制状态机通过抽象输入流和文件系统边界在 JVM 测试。
 
+格式 fixture 由 `scripts/generate-local-music-fixtures.sh` 使用 440Hz、1 秒合成音调生成 MP3、M4A/AAC、FLAC、Ogg/Opus 和 WAV。输出位于被 Git 忽略的 `build/local-music-fixtures/`，不得使用第三方歌曲代替。
+
 ## Compose UI 与截图测试
 
 主要页面覆盖加载、内容、空数据、错误、离线、浅色、深色、纯黑和大字体。导航测试明确底部只有“首页、发现、我的”，搜索不是一级 Tab。

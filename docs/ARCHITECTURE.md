@@ -130,7 +130,7 @@ feature/recognize
 :data ────────────► :kugou-api
 :data ────────────► :core:database
 :data ────────────► :core:model
-:data ────────────► :playback（仅实现 Snapshot Store SPI）
+:data ────────────► :playback（实现 Snapshot、已导入来源解析及导入完成命令）
 
 :playback ────────► :core:model
 :kugou-api ───────► :core:common
@@ -198,6 +198,8 @@ ExoPlayer + MediaSession
 - 在线内容默认 network-first，并对短期可复用页面数据做内存缓存。
 - 用户歌单和收藏以远端为权威，Room 可保存展示快照和待重试操作。
 - 本地音乐以 App 专属目录中的已提交副本和 Room 索引为权威；MediaStore、Storage Access Framework 和外部 Intent 只提供导入来源。
+- WorkManager 的输入只保存 `batchId`；URI、逐项状态和进度归 Room 所有，全局唯一工作链保证复制串行执行。
+- `:core:database` 拥有 Schema 与 Migration；`:data` 负责文件事务、映射和导入编排。
 - 设置使用 DataStore；敏感会话使用 Keystore 支持的加密存储。
 - 不为了模仿 Now in Android 而强制所有在线内容采用完整 offline-first。
 
@@ -219,6 +221,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 ```
 
 - 外部入口 Activity 只解析和转交，不直接访问 Room 或 ExoPlayer。
+- `AudioImportActivity` 只观察领域导入进度；Hilt Worker 执行复制，播放器仍只能由 `PlaybackController` 控制。
 - 所有入口共用复制、校验、去重和提交管线。
 - `ACTION_VIEW` 只有在文件落盘与 Room 提交成功后才发送播放命令。
 - 外部 URI、ContentResolver 和绝对路径不得泄露到稳定领域模型。
