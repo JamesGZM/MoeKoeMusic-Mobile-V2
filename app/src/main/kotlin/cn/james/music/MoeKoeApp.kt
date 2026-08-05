@@ -12,12 +12,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -36,6 +38,9 @@ import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
+import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import kotlinx.coroutines.delay
 
 @Composable
 fun MoeKoeApp(
@@ -48,6 +53,7 @@ fun MoeKoeApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val notice by viewModel.notice.collectAsStateWithLifecycle()
     val appState = rememberMoeKoeAppState(navController)
     val currentDestination = appState.navController.currentBackStackEntryAsState().value?.destination
     var queueVisible by rememberSaveable { mutableStateOf(false) }
@@ -86,6 +92,20 @@ fun MoeKoeApp(
                 }
             }
         },
+        snackbarHost = {
+            notice?.let { currentNotice ->
+                MoeSnackbar(
+                    message = currentNotice.message,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    tone = MoeSnackbarTone.Error,
+                    actionLabel = if (currentNotice.canRetry) "重试" else null,
+                    onAction = {
+                        viewModel.dismissNotice(currentNotice.id)
+                        viewModel.retryPlayback()
+                    },
+                )
+            }
+        },
     ) { contentPadding ->
         Box(
             modifier =
@@ -120,6 +140,12 @@ fun MoeKoeApp(
                 foundationContent?.let { addFoundationDestination(it) }
             }
         }
+    }
+
+    LaunchedEffect(notice?.id) {
+        val currentNotice = notice ?: return@LaunchedEffect
+        delay(4_000)
+        viewModel.dismissNotice(currentNotice.id)
     }
 
     if (queueVisible) {
