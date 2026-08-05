@@ -57,6 +57,33 @@ object KugouEndpoints {
         )
     }
 
+    fun searchSongsAnonymous(
+        keyword: String,
+        page: Int,
+        pageSize: Int = 30,
+    ): KugouRequestSpec {
+        val normalizedKeyword = keyword.trim()
+        require(normalizedKeyword.isNotEmpty()) { "Search keyword must not be blank" }
+        require(page > 0) { "Page must be positive" }
+        require(pageSize in 1..100) { "Page size must be between 1 and 100" }
+        return KugouRequestSpec(
+            id = "search.song.anonymous",
+            method = KugouHttpMethod.Get,
+            baseUrl = "https://songsearch.kugou.com",
+            path = "/song_search_v2",
+            params =
+                linkedMapOf(
+                    "keyword" to normalizedKeyword,
+                    "page" to page.toString(),
+                    "pagesize" to pageSize.toString(),
+                    "platform" to "WebFilter",
+                ),
+            signatureMode = cn.james.music.kugou.api.transport.KugouSignatureMode.None,
+            includeDefaultParams = false,
+            retryMode = KugouRetryMode.IdempotentRead,
+        )
+    }
+
     fun privilegeLite(resources: List<KugouAudioResource>): KugouRequestSpec {
         require(resources.isNotEmpty()) { "At least one resource is required" }
         val body =

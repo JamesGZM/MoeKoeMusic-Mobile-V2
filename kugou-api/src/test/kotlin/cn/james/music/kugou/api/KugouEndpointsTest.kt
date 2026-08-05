@@ -32,6 +32,22 @@ class KugouEndpointsTest {
     }
 
     @Test
+    fun anonymousSearchUsesHttpsLegacyContractWithoutDeviceHeaders() {
+        val request = factory.prepare(KugouEndpoints.searchSongsAnonymous("  MoeKoe 测试  ", page = 2), context)
+
+        assertEquals("https://songsearch.kugou.com", request.baseUrl)
+        assertEquals("/song_search_v2", request.path)
+        assertEquals("MoeKoe 测试", request.query["keyword"])
+        assertEquals("2", request.query["page"])
+        assertEquals("WebFilter", request.query["platform"])
+        assertFalse("signature" in request.query)
+        assertFalse("mid" in request.query)
+        assertFalse("mid" in request.headers)
+        assertFalse("Cookie" in request.headers)
+        assertEquals(KugouRetryMode.IdempotentRead, request.retryMode)
+    }
+
+    @Test
     fun registerEndpointKeepsEncryptedBytesAndDoesNotRetry() {
         val body = byteArrayOf(0, 1, 2, -1)
         val request = factory.prepare(KugouEndpoints.registerDevice(body, "fixture-encrypted-identity"), context)

@@ -41,24 +41,25 @@ class KugouRequestFactory(
             params["signature"] = signature(spec.signatureMode, params, spec.body.orEmpty())
         }
 
-        val clientTime = requireNotNull(params["clienttime"]) { "clienttime is required" }
         val dfid = context.dfid?.takeIf(String::isNotBlank) ?: "-"
         val headers =
             linkedMapOf(
                 "User-Agent" to platform.userAgent,
             ).apply {
                 spec.headers.forEach(::putHeader)
-                putHeader("dfid", dfid)
-                putHeader("clienttime", clientTime)
-                putHeader("mid", context.mid)
-                putHeader("kg-rc", "1")
-                putHeader("kg-thash", "5d816a0")
-                putHeader("kg-rec", "1")
-                putHeader("kg-rf", "B9EDA08A64250DEFFBCADDEE00F8F25F")
-                context.cookies
-                    .headerValue()
-                    .takeIf(String::isNotEmpty)
-                    ?.let { putHeader("Cookie", it) }
+                if (spec.includeDefaultParams) {
+                    putHeader("dfid", dfid)
+                    putHeader("clienttime", requireNotNull(params["clienttime"]) { "clienttime is required" })
+                    putHeader("mid", context.mid)
+                    putHeader("kg-rc", "1")
+                    putHeader("kg-thash", "5d816a0")
+                    putHeader("kg-rec", "1")
+                    putHeader("kg-rf", "B9EDA08A64250DEFFBCADDEE00F8F25F")
+                    context.cookies
+                        .headerValue()
+                        .takeIf(String::isNotEmpty)
+                        ?.let { putHeader("Cookie", it) }
+                }
             }
 
         return KugouPreparedRequest(
