@@ -124,11 +124,13 @@ feature/recognize
 
 :features ────────► :core:model
 :features ────────► :core:designsystem
+:features ────────► :playback
 :features ────────► Repository interfaces
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
 :data ────────────► :core:model
+:data ────────────► :playback（仅实现 Snapshot Store SPI）
 
 :playback ────────► :core:model
 :kugou-api ───────► :core:common
@@ -185,7 +187,9 @@ ExoPlayer + MediaSession
 ### 状态来源
 
 - Media3 是运行时播放状态的唯一事实来源。
-- Room 保存队列、历史和恢复快照，不与播放器争夺实时状态所有权。
+- `:playback` 定义 `PlaybackSnapshotStore` 端口，`:data` 使用 `:core:database` 的 Room DAO 实现；该 SPI 依赖不允许数据层控制 ExoPlayer。
+- Room 原子保存有序队列、当前索引、位置和模式，不保存 `isPlaying`，也不与播放器争夺实时状态所有权。
+- 冷启动恢复固定暂停；只有 App 操作、系统媒体卡片或媒体按钮等主动入口可以请求继续播放。
 - Compose 通过 Controller 事件转换出的 StateFlow 观察播放器。
 - 播放进度使用独立低粒度流，避免整页高频重组。
 

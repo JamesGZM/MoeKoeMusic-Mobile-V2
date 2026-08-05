@@ -1,6 +1,6 @@
 # 参考项目与来源
 
-记录日期：2026-08-04。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
+记录日期：2026-08-05。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
 ## MoeKoeMusic 系列
 
@@ -122,6 +122,16 @@
 - 文档：https://developer.android.com/media/media3
 - 借鉴：ExoPlayer、MediaSession、MediaLibraryService、MediaController、通知栏和系统媒体集成。
 - 规则：播放器生命周期和系统行为优先遵循 Media3 官方文档，而非第三方项目的兼容写法。
+
+### 阶段 2 后台播放与恢复
+
+- 后台播放与 `MediaLibraryService`：https://developer.android.com/media/media3/session/background-playback
+- Playback resumption：https://developer.android.com/media/media3/session/background-playback#playback-resumption
+- Android 13 通知权限与媒体会话豁免：https://developer.android.com/develop/ui/views/notifications/notification-permission#exemptions
+
+采用点：Service 独占 ExoPlayer、Media3 管理 MediaStyle 通知、仅播放期间维持前台服务，并通过 `onPlaybackResumption` 响应系统媒体入口。App 不申请 `POST_NOTIFICATIONS`，但不会把豁免扩展到普通通知。
+
+阶段 2 演示音频不来自外部作品：仓库中的 `PlaybackSourceResolver.kt` 通过 `DemoAudioFile` 使用固定音符序列在 App 专属目录生成 12 秒 PCM WAV。这样既能离线重复测试，也不提交受版权约束的音频二进制；三个演示条目只复用这一个自制来源。
 
 ## Android 本地文件与系统集成
 

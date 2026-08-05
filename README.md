@@ -6,7 +6,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 当前阶段
 
-项目已完成阶段 0（文档与决策）和阶段 1（工程基础）。当前 `develop` 分支包含可编译的 Android 多模块工程、Hilt 组合根、Design System Showcase、视觉回归基准与 CI；播放器、本地导入和在线业务尚未开始。
+项目已完成阶段 0（文档与决策）、阶段 1（工程基础）和阶段 2（播放内核）。当前 `develop` 分支已具备可后台运行的 Media3 播放服务、系统媒体控制、Room 队列快照和播放工程实验台；下一阶段将实现本地音乐复制导入闭环。
 
 - Android 原生 Kotlin + Jetpack Compose。
 - 直接访问酷狗官方接口，不依赖自建服务器。
@@ -35,7 +35,9 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 - [产品范围](docs/PRODUCT_SCOPE.md)
 - [总开发计划](docs/DEVELOPMENT_PLAN.md)
-- [分阶段开发文档](docs/plans/00-project-foundation.md)
+- [阶段 0/1：工程基础](docs/plans/00-project-foundation.md)
+- [阶段 2：播放内核](docs/plans/01-playback-core.md)
+- [阶段 3：本地音乐](docs/plans/02-local-music.md)
 - [测试策略](docs/TESTING_STRATEGY.md)
 - [本地音乐规格](docs/LOCAL_MUSIC.md)
 - [软件架构](docs/ARCHITECTURE.md)
