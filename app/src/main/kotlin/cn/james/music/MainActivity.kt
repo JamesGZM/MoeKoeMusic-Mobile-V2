@@ -10,7 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
-import cn.james.music.features.designsystem.DesignSystemShowcaseScreen
+import cn.james.music.features.designsystem.FoundationShowcaseRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
             var themeMode by rememberSaveable { mutableStateOf(ThemeMode.System) }
 
             MoeKoeTheme(themeMode = themeMode) {
-                DesignSystemShowcaseScreen(
+                FoundationShowcaseRoute(
                     selectedTheme = themeMode,
                     onThemeSelected = { themeMode = it },
                 )
