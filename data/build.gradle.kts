@@ -18,7 +18,10 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)
+    implementation(libs.kotlinx.serialization.json)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }
