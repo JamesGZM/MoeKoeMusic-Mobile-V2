@@ -13,6 +13,14 @@
 - 独立用户主页展示资料、等级、VIP、签名、关系统计、听歌概览和公开歌单。
 - 用户主页不重复签到、VIP 领取、云盘、本地音乐或设置。
 
+## 视觉与组件基线
+
+- 登录主状态使用 [`../design/mockups/13-login-phone-immersive.png`](../design/mockups/13-login-phone-immersive.png)，顶部 edge-to-edge 且无独立标题栏。
+- 验证码、密码和扫码使用统一分段控件与表单 Surface；多账号选择只在接口返回多个账号后出现。
+- 普通返回、手机、密码、二维码和安全图标优先复用 Material Icons，不重复生成 SVG。
+- 颜色、排版、输入框、按钮、Dialog 和页面状态遵循 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 与 [`../UI_COMPONENTS.md`](../UI_COMPONENTS.md)。
+- 密码、扫码、短信风控、腾讯图形验证和多账号状态在布局编码前补齐设计稿。
+
 ## 测试
 
 - 会话恢复、过期、二次验证和脱敏存储测试。

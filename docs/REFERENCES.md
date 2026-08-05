@@ -151,6 +151,8 @@
 
 阶段 4 的协议、移动初始化与 PC 产品语义审计见 [`reference-audits/04-kugou-online-slice.md`](reference-audits/04-kugou-online-slice.md)。该审计固定了 PC `52c9833`、Mobile `ab71195` 和 KuGouMusicApi `6efe84e` 的具体文件；仅迁移目标 Endpoint 所需的 MIT 协议实现，不复制整个配置或无关第三方凭据。
 
+首页、登录、“我的”、图形验证码和图标策略见 [`reference-audits/05-home-account-ui.md`](reference-audits/05-home-account-ui.md)。该审计固定了 PC 与 Mobile 的登录、风险验证和用户资产源码路径；标准语义优先使用 Apache-2.0 的 Compose Material Icons，验证码 WebView 仅作为腾讯官方 H5 验证的隔离例外。
+
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 
 ## 许可证注意

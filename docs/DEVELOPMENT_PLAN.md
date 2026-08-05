@@ -2,7 +2,7 @@
 
 状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 进行中。更新日期：2026-08-05。
 
-本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话和搜索数据层，正式搜索页面与在线播放仍待实现。
+本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。当前先完成 UI 优先里程碑的设计锁定与 Design System 校准，再继续账号和内容页面实现。
 
 ## 技术基线
 
@@ -17,7 +17,7 @@
 ## 开发原则
 
 - 每个阶段形成可运行、可测试的纵向闭环，不先铺满空页面。
-- 页面实现以已批准设计稿和 Design System token 为共同验收依据。
+- 页面实现以已批准设计稿和 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) 为共同验收依据；顺序固定为“设计图确认 → 文档同步 → Token/组件代码 → 业务页面”。
 - 新行为与对应测试在同一变更中提交；签名、导入、队列和播放模式是强制单测区域。
 - 阶段未满足退出条件时，不开始依赖它的下一阶段。
 - 协议、模块边界和产品语义变化必须同步更新文档与 ADR。
@@ -62,8 +62,16 @@
 | 用户主页 | [`10-user-profile.png`](design/mockups/10-user-profile.png) | 与“我的”分离，不重复工具入口 |
 | Dialog | [`11-dialog-components.png`](design/mockups/11-dialog-components.png) | 统一形状、操作顺序和遮罩 |
 | 反馈组件 | [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png) | 自定义 Snackbar、受限 MoeToast |
+| 登录主状态 | [`13-login-phone-immersive.png`](design/mockups/13-login-phone-immersive.png) | 沉浸式顶部；无重复标题；三种登录方式共享表单结构 |
+| 基础 Token | [`14-design-foundations.png`](design/mockups/14-design-foundations.png) | 数值以 `DESIGN_SYSTEM.md` 为准 |
+| Toolbar 与导航 | [`15-toolbar-navigation.png`](design/mockups/15-toolbar-navigation.png) | 沉浸式、标准、折叠、搜索和多选变体 |
+| 操作与输入 | [`16-actions-inputs.png`](design/mockups/16-actions-inputs.png) | Material Icons 优先；统一状态与触控尺寸 |
+| 音乐内容组件 | [`17-music-content-components.png`](design/mockups/17-music-content-components.png) | 保持紧凑列表，不将所有内容卡片化 |
+| 页面状态与覆盖层 | [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png) | 所有覆盖层按真实手机视口与层级验收 |
 
 底部导航固定为“首页、发现、我的”。搜索和用户主页是子页面；播放器由歌曲、MiniPlayer 或系统恢复入口进入。
+
+现有 `:core:designsystem` 是阶段 1 工程基础，不是最终视觉真值。Primary、Typography、Spacing、Shapes 和通用组件需按 `DESIGN_SYSTEM.md` 校准后，才开始正式登录和首页布局。无版权、VIP、网络、会话与协议错误接入自定义 Snackbar，以及播放地址失效后最多刷新一次，在本轮 UI 基础完成前保持暂缓。
 
 本地音乐列表、设备扫描、多选导入、外部打开进度、批量结果及异常状态已建立基础 Compose 实现，并沿用现有 Material 3 token。本地音乐空状态、内容状态和 `1.5×` 字体导入状态已建立稳定截图基准；API 26、29、32、33、36 当前代码设备矩阵已通过。五种目标格式、损坏输入、重复内容、部分成功、取消清理和中断遗留 `.partial` 恢复已通过真实 ContentResolver、WorkManager 与 Room 管线测试，阶段 3 退出条件已满足。
 

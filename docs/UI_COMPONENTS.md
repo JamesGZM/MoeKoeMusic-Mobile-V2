@@ -1,11 +1,12 @@
 # UI 反馈与 Dialog 组件规范
 
-状态：第一版视觉与交互基准。本文约束 Compose 中的 Dialog、`MoeSnackbar`、`MoeToast` 和系统 Toast；具体颜色值在建立 `:core:designsystem` 时落入语义化 token，并通过截图测试和真机继续校准。
+状态：第一版视觉与交互基准。本文约束 Compose 中的 Bottom Sheet、Dialog、`MoeSnackbar`、`MoeToast` 和系统 Toast；颜色、排版、间距与形状 Token 统一遵循 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md)，并通过截图测试和真机继续校准。
 
 视觉参考：
 
 - [`11-dialog-components.png`](design/mockups/11-dialog-components.png)
 - [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png)
+- [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png)
 
 ## 反馈方式选择
 
@@ -18,6 +19,17 @@
 | 复制完成等低优先级、无操作反馈 | `MoeToast` | 应用前台内保持品牌一致性 |
 | Compose Host 不可用且无需统一外观 | 系统 Toast | 接受 Android 系统样式 |
 | 加载、空数据、持续错误 | 页面内状态 | 状态持续存在，不应依赖瞬时提示 |
+
+同一时间只允许一个模态覆盖层。页面内状态、Snackbar、MiniPlayer 和底部导航可以按固定层级共存，但 Snackbar 不得覆盖 MiniPlayer。
+
+## Bottom Sheet
+
+- 手机端 Bottom Sheet 必须附着在当前视口底部，占满可用宽度，只在顶部使用 `28.dp` 圆角。
+- 使用系统遮罩表达模态层级，处理手势导航和底部安全区；不得画成居中的桌面悬浮卡片。
+- 播放队列支持展开状态；排序、筛选、音质和上下文操作优先使用半高或内容自适应状态。
+- 顶部拖拽手柄只表达可拖动性，不替代标题。操作行最小高度 `48.dp`，当前选项同时使用图标或选中标记，不能只依赖颜色。
+- 内容超过可用高度时 Sheet 内部滚动；大字体下优先增高或展开，不压缩字号。
+- ViewModel 保存业务选择和结果，Sheet 的显示状态由 Route 协调；Composable 不直接访问 Repository。
 
 禁止用 `MoeToast` 或系统 Toast 呈现登录失效、领取 VIP 失败、播放失败、网络重试或任何需要用户操作的信息。
 
@@ -108,5 +120,6 @@
 
 - Dialog 打开后焦点进入标题或首个输入控件，关闭后返回触发它的控件。
 - `MoeSnackbar` 和 `MoeToast` 使用适当的 live region 语义；Snackbar 操作按钮必须有可读文本，不能只有图标。
+- Bottom Sheet 打开后焦点进入标题或首个操作，关闭后回到触发控件；系统返回先关闭最上层 Sheet 或 Dialog。
 - 在 `1.0×`、`1.3×`、`1.5×` 字体倍率下验证不裁切，并测试 TalkBack、横屏、深色和纯黑主题。
 - `MoeAlertDialog`、`MoeInputDialog`、`MoeSnackbarHost` 和 `MoeToastHost` 建立后，为四种 Dialog、四种 Snackbar 语义和两种 Toast 长度分别提供 Preview 或截图测试。

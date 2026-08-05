@@ -15,7 +15,9 @@
 
 ## 视觉验收
 
-页面与设计稿的唯一映射见 [`../DEVELOPMENT_PLAN.md`](../DEVELOPMENT_PLAN.md)。实现时先把颜色、排版、间距、圆角和组件尺寸固化为 Design System token。文字必须支持 `1.0×`、`1.3×`、`1.5×`、`2.0×` 字体，交互目标不小于 `48dp`。
+页面与设计稿的唯一映射见 [`../DEVELOPMENT_PLAN.md`](../DEVELOPMENT_PLAN.md)。颜色、排版、间距、圆角和组件尺寸以 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 为准确实现依据，视觉形态参考 `14` 至 `18` 号通用组件图板。文字必须支持 `1.0×`、`1.3×`、`1.5×`、`2.0×` 字体，交互目标不小于 `48dp`。
+
+当前 `:core:designsystem` 仍是阶段 1 临时基线。正式页面布局前先完成 Primary、Typography、Spacing、Shapes、Toolbar 和音乐内容组件校准；不得在业务页面用局部常量绕过校准。
 
 ## 测试
 
