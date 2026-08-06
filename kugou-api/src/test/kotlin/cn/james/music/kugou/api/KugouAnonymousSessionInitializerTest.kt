@@ -47,7 +47,7 @@ class KugouAnonymousSessionInitializerTest {
             assertEquals(1, transport.calls)
             assertEquals(FIXTURE_DFID, store.snapshot?.dfid)
             assertEquals(FIXTURE_DFID, store.snapshot?.cookies?.value("dfid"))
-            assertEquals(store.snapshot, initializer.sessions.value)
+            assertEquals(store.snapshot, initializer.state.value.session)
             assertFalse(store.snapshot.toString().contains(FIXTURE_DFID))
         }
 
@@ -78,12 +78,14 @@ class KugouAnonymousSessionInitializerTest {
             assertEquals(KugouSessionMutationResult.Updated(authenticated), mutation)
             assertEquals(authenticated, store.snapshot)
             assertEquals(KugouInitializationResult.Ready(authenticated), initializer.initialize())
-            assertEquals(authenticated, initializer.sessions.value)
+            assertEquals(authenticated, initializer.state.value.session)
+            assertEquals(2L, initializer.state.value.generation)
 
             initializer.clear()
 
             assertNull(store.snapshot)
-            assertNull(initializer.sessions.value)
+            assertNull(initializer.state.value.session)
+            assertEquals(3L, initializer.state.value.generation)
         }
 
     @Test
@@ -98,7 +100,8 @@ class KugouAnonymousSessionInitializerTest {
             val result = initializer.replace(stored.copy(token = "unstored", userId = "42"))
 
             assertEquals(KugouSessionMutationResult.StorageFailure, result)
-            assertEquals(stored, initializer.sessions.value)
+            assertEquals(stored, initializer.state.value.session)
+            assertEquals(1L, initializer.state.value.generation)
         }
 
     @Test
@@ -130,7 +133,8 @@ class KugouAnonymousSessionInitializerTest {
 
             assertEquals(KugouInitializationResult.Failure(KugouInitializationError.StorageWrite), result)
             assertEquals(0, transport.calls)
-            assertNull(initializer.sessions.value)
+            assertNull(initializer.state.value.session)
+            assertEquals(0L, initializer.state.value.generation)
         }
 
     @Test

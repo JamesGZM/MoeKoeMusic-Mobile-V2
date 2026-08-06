@@ -1,12 +1,25 @@
 package cn.james.music.kugou.api.endpoint
 
 import cn.james.music.kugou.api.transport.KugouError
+import cn.james.music.kugou.api.transport.KugouRequestContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.longOrNull
+
+interface KugouHomeService {
+    suspend fun fetchHomeBanners(context: KugouRequestContext): KugouApiResult<List<KugouHomeBannerDto>>
+
+    suspend fun fetchDailyRecommendations(context: KugouRequestContext): KugouApiResult<List<KugouHomeSongDto>>
+
+    suspend fun fetchTopPlaylists(
+        context: KugouRequestContext,
+        page: Int = 1,
+        pageSize: Int = 6,
+    ): KugouApiResult<List<KugouHomePlaylistDto>>
+}
 
 data class KugouHomeBannerDto(
     val id: String,

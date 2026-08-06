@@ -36,7 +36,7 @@ class KugouOnlineClient(
     private val searchDecoder: KugouSongSearchDecoder = KugouSongSearchDecoder(),
     private val playbackAddressDecoder: KugouPlaybackAddressDecoder = KugouPlaybackAddressDecoder(),
     private val privilegeDecoder: KugouPrivilegeDecoder = KugouPrivilegeDecoder(),
-) {
+) : KugouHomeService {
     private val lyricsCandidateDecoder = KugouLyricsCandidateDecoder()
     private val lyricsDownloadDecoder = KugouLyricsDownloadDecoder()
     private val homeRequestBuilder = KugouHomeRequestBuilder()
@@ -44,16 +44,16 @@ class KugouOnlineClient(
     private val dailyRecommendationDecoder = KugouDailyRecommendationDecoder()
     private val topPlaylistDecoder = KugouTopPlaylistDecoder()
 
-    suspend fun fetchHomeBanners(context: KugouRequestContext): KugouApiResult<List<KugouHomeBannerDto>> =
+    override suspend fun fetchHomeBanners(context: KugouRequestContext): KugouApiResult<List<KugouHomeBannerDto>> =
         executeAndDecode(homeRequestBuilder.banners(context), context, homeBannerDecoder::decode)
 
-    suspend fun fetchDailyRecommendations(context: KugouRequestContext): KugouApiResult<List<KugouHomeSongDto>> =
+    override suspend fun fetchDailyRecommendations(context: KugouRequestContext): KugouApiResult<List<KugouHomeSongDto>> =
         executeAndDecode(homeRequestBuilder.dailyRecommendations(), context, dailyRecommendationDecoder::decode)
 
-    suspend fun fetchTopPlaylists(
+    override suspend fun fetchTopPlaylists(
         context: KugouRequestContext,
-        page: Int = 1,
-        pageSize: Int = 6,
+        page: Int,
+        pageSize: Int,
     ): KugouApiResult<List<KugouHomePlaylistDto>> =
         executeAndDecode(homeRequestBuilder.topPlaylists(context, page, pageSize), context, topPlaylistDecoder::decode)
 

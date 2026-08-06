@@ -71,6 +71,8 @@ kugou-api/src/main/kotlin/.../
 | Express 路由 | 类型化 Endpoint 函数 |
 | localStorage/SecureStore | App 提供的加密 SessionStore |
 
+会话观察只在加密存储成功后发布新快照，并携带进程内单调代际；首页等身份分区 Repository 同时校验缓存键与会话代际，防止登录/退出往返期间旧请求提交。
+
 ## 公共迁移顺序
 
 1. 平台常量与 `lite` 配置。

@@ -40,6 +40,7 @@
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；`07-player-lyrics.png` 与 `23a` 至 `23h` 加载、空、离线、错误和大字体状态均已确认，允许在首页与用户链路优先切片完成后实现歌词 Compose。
 - Room v4 已新增脱敏键控的 KRC 成功缓存表；`3→4`、完整 `1→4` 与 DAO 覆盖已随本轮数据库回归在用户指定真机通过。
 - 首页缓存已将 Room 升至 v5，新增按 `home:v1:anonymous` / `home:v1:user:<userid>` 分区的可观察完整快照 DAO；`4→5`、完整 `1→5`、DAO 覆盖与既有数据库回归已在 ELE-AL00 / API 29 真机 13/13 通过。
+- 首页 Repository 已完成 Room stale-while-revalidate、15 分钟 TTL、匿名/用户分区自动切换与刷新、完整快照提交、部分失败保护、single-flight、强制刷新和会话双代际隔离；15 项 JVM 测试覆盖旧缓存首发、自动刷新问题、取消、缓存损坏和并发竞态，下一切片进入 Home ViewModel。
 - 歌词 Repository 已完成仅支持酷狗来源的缓存优先读取、损坏缓存删除后单次回源、同 Hash 并发单飞、旧请求取消透传和成功解析后缓存；匿名歌词客户端不再接受账号请求上下文，JVM 行为测试与 App Hilt 装配已通过。
 - `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页必须共享当前歌曲封面派生的语义色板。动态取色已经完成独立 [`13-player-artwork-palette`](../reference-audits/13-player-artwork-palette.md) 审计，允许先实现调色基础与现有封面页接入。
 

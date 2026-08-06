@@ -17,8 +17,13 @@ interface KugouSessionProvider {
 }
 
 interface KugouSessionObserver {
-    val sessions: StateFlow<KugouSessionSnapshot?>
+    val state: StateFlow<KugouSessionState>
 }
+
+data class KugouSessionState(
+    val session: KugouSessionSnapshot?,
+    val generation: Long,
+)
 
 class KugouAnonymousSessionInitializer internal constructor(
     private val store: KugouSessionStore,
@@ -46,11 +51,11 @@ class KugouAnonymousSessionInitializer internal constructor(
     )
 
     private val mutex = Mutex()
-    private val mutableSessions = MutableStateFlow<KugouSessionSnapshot?>(null)
+    private val mutableState = MutableStateFlow(KugouSessionState(session = null, generation = 0))
     private var current: KugouSessionSnapshot? = null
     private var inFlight: CompletableDeferred<KugouInitializationResult>? = null
 
-    override val sessions: StateFlow<KugouSessionSnapshot?> = mutableSessions.asStateFlow()
+    override val state: StateFlow<KugouSessionState> = mutableState.asStateFlow()
 
     override suspend fun initialize(): KugouInitializationResult {
         val pending =
@@ -66,7 +71,7 @@ class KugouAnonymousSessionInitializer internal constructor(
             mutex.withLock {
                 if (result is KugouInitializationResult.Ready) {
                     current = result.session
-                    mutableSessions.value = result.session
+                    publish(result.session)
                 }
                 inFlight = null
             }
@@ -92,7 +97,7 @@ class KugouAnonymousSessionInitializer internal constructor(
             try {
                 store.write(snapshot)
                 current = snapshot
-                mutableSessions.value = snapshot
+                publish(snapshot)
                 KugouSessionMutationResult.Updated(snapshot)
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -107,8 +112,12 @@ class KugouAnonymousSessionInitializer internal constructor(
             current = null
             inFlight?.cancel()
             inFlight = null
-            mutableSessions.value = null
+            publish(null)
         }
+    }
+
+    private fun publish(session: KugouSessionSnapshot?) {
+        mutableState.value = KugouSessionState(session, mutableState.value.generation + 1)
     }
 
     private suspend fun initializeOnce(): KugouInitializationResult {
