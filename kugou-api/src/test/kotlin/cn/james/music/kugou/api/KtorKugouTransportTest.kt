@@ -82,6 +82,18 @@ class KtorKugouTransportTest {
         }
 
     @Test
+    fun preparedRequestProtocolIsPreserved() =
+        runBlocking {
+            val interceptor = CapturingInterceptor(::response)
+            val transport = KtorKugouTransport(OkHttpClient.Builder().addInterceptor(interceptor).build())
+
+            transport.execute(request(baseUrl = "http://login.user.kugou.com"))
+
+            assertEquals("http", interceptor.requests.single().url.scheme)
+            assertEquals("login.user.kugou.com", interceptor.requests.single().url.host)
+        }
+
+    @Test
     fun ioFailuresMapToTypedNetworkErrors() =
         runBlocking {
             val timeout = transportThrowing(SocketTimeoutException("fixture timeout")).execute(request())
@@ -107,6 +119,7 @@ class KtorKugouTransportTest {
 
     private fun request(
         method: KugouHttpMethod = KugouHttpMethod.Get,
+        baseUrl: String = "https://example.test",
         path: String = "/fixture",
         query: Map<String, String> = emptyMap(),
         headers: Map<String, String> = emptyMap(),
@@ -114,7 +127,7 @@ class KtorKugouTransportTest {
     ) = KugouPreparedRequest(
         id = "fixture",
         method = method,
-        baseUrl = "https://example.test",
+        baseUrl = baseUrl,
         path = path,
         query = query,
         headers = headers,

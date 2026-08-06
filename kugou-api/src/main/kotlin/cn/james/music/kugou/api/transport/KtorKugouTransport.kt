@@ -10,7 +10,6 @@ import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.HttpMethod
-import io.ktor.http.URLProtocol
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
@@ -38,7 +37,6 @@ class KtorKugouTransport(
                         }
                     url {
                         takeFrom(request.baseUrl)
-                        protocol = URLProtocol.HTTPS
                         encodedPathSegments = request.path.split('/')
                         request.query.forEach(parameters::append)
                     }
