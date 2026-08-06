@@ -50,7 +50,7 @@
 
 | 能力 | 固定请求 | 关键响应路径 | Kotlin 稳定结果 |
 | --- | --- | --- | --- |
-| 轮播 | `POST /ads.gateway/v3/listen_banner`，Android 加密；Body 保留 `plat=0`、`channel=201`、`operator=7`、`networktype=2`、`apiver=5`、`ability=2`、`mode=normal` 等固定字段，`userid` 来自会话否则为 `0` | `data.ads[]`；图片读取 `img_url/image`，标题读取 `title/extra.title`，ID 缺失可用规范化图片 URL | `HomeBanner`；图片必填，标题可使用本地通用文案；首切片不暴露远端跳转 URL |
+| 轮播（可选） | `POST /ads.gateway/v3/listen_banner`，Android 加密；Body 保留 `plat=0`、`channel=201`、`operator=7`、`networktype=2`、`apiver=5`、`ability=2`、`mode=normal` 等固定字段，`userid` 来自会话否则为 `0` | `data.ads[]`；图片读取 `img_url/image`，标题读取 `title/extra.title`，ID 缺失可用规范化图片 URL | `HomeBanner`；图片必填，标题可使用本地通用文案；首切片不暴露远端跳转 URL。2026-08-06 当前服务返回 `31136`，因此不作为首版完整快照的必需区块 |
 | 每日推荐 | `POST /everyday_song_recommend?platform=ios`，Android 加密，`x-router=everydayrec.service.kugou.com` | `data.song_list[]`；`hash` 必填，标题按 `ori_audio_name/songname/filename`，歌手、封面、专辑、时长和权益字段按固定 Mobile 消费层容错 | 复用稳定 `Song`，附加首页推荐说明只进入 Home 领域模型；不得把 DTO 直接交给 UI |
 | 推荐歌单 | `POST /v2/special_recommend`，Android 加密，`x-router=specialrec.service.kugou.com`；固定 `platform=android`、分页、签名 `key` 与 `special_recommend` Body | `data.special_list[]`；`global_collection_id` 与 `specialname` 必填，封面读取 `flexible_cover/cover`，播放量只作展示映射 | `HomePlaylist`；GID、标题必填，封面和播放量可空 |
 
@@ -72,8 +72,8 @@
 
 1. Repository 先读取当前身份分区的 Room 快照并立即暴露。
 2. 快照未超过 15 分钟时，普通页面重新订阅不重复请求；无缓存、过期或用户显式刷新时启动远端刷新。15 分钟只控制自动刷新频率，不是展示硬过期时间；有效旧快照在离线时可继续显示。
-3. 三个 Endpoint 并发读取。全部请求成功且映射后至少每日推荐或推荐歌单非空，才在一个 DAO 事务中替换持久快照。
-4. 部分失败时不得覆盖旧快照。有旧快照则继续暴露旧内容并返回非阻断刷新问题；无旧快照时可暴露本次内存中的有效区块和问题标记，但不持久化部分结果。三个区块均不可展示时返回首次加载错误。
+3. 三个 Endpoint 并发读取。每日推荐和推荐歌单成功、映射后至少一个必需区块非空，才在一个 DAO 事务中替换持久快照；轮播成功时一并保存，类型化不可用时保存空轮播且不伪造数据。
+4. 任一必需区块失败时不得覆盖旧快照。有旧快照则继续暴露旧内容并返回非阻断刷新问题；无旧快照时可暴露本次内存中的有效区块和问题标记，但不持久化部分结果。每日推荐与推荐歌单均不可展示时返回首次加载错误；可选轮播失败不单独触发页面错误。
 5. 每个 `cache_key` 只允许一个刷新 single-flight。显式刷新开始新代际；较旧结果即使更晚完成也不得提交或覆盖新状态。调用方取消时不转换成普通失败，也不写入半成品。
 6. 会话身份变化后切换缓存分区并启动该分区读取/刷新；不复制、合并或删除其他账号快照。缓存清理属于后续设置能力，不在首页首切片增加全局清理任务。
 
@@ -116,7 +116,7 @@ KugouHomeRepository (:data)
 
 ## 实施切片与自动验收
 
-1. 协议：三个 Request 快照、Decoder fixture、错误/取消/Fake Transport 测试；受控真实兼容测试独立显式启用。
+1. 协议：三个 Request 快照、Decoder fixture、错误/取消/Fake Transport 测试；受控真实兼容测试独立显式启用。2026-08-06 自动真实测试确认每日推荐返回 30 项、推荐歌单返回 11 项；轮播固定请求被服务端以 `31136` 拒绝，最新上游源码仍与固定提交一致，因此只保留类型化可选能力，不宣称当前可用。
 2. Room：v5 Entity/DAO、完整替换事务、损坏删除、`4→5` 与完整迁移测试。
 3. Repository：身份分区、cache-first、15 分钟刷新门槛、部分失败不落盘、single-flight、代际隔离和取消测试。
 4. Feature：ViewModel 首次/缓存/刷新/部分/空/错误/身份切换测试。
@@ -135,4 +135,4 @@ KugouHomeRepository (:data)
 
 ## 门禁结论
 
-产品范围、Android 约束、三个 Endpoint、字段容错、身份分区、缓存 Schema/TTL、失败恢复、模块所有权、视觉状态和自动测试矩阵均无关键待定项。允许按上述顺序开始首页协议、缓存、Repository、ViewModel 与 Compose 原子切片；不得把发现页内容、任意远端跳转或假数据夹带进首页。
+产品范围、Android 约束、三个 Endpoint、字段容错、身份分区、缓存 Schema/TTL、失败恢复、模块所有权、视觉状态和自动测试矩阵均无关键待定项。允许按上述顺序开始首页协议、缓存、Repository、ViewModel 与 Compose 原子切片；每日推荐与推荐歌单构成首版完整快照，轮播恢复前保持可选且不使用假数据。不得把发现页内容、任意远端跳转或假数据夹带进首页。

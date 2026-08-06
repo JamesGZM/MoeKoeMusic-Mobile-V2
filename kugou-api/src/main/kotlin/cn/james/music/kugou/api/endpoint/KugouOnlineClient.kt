@@ -4,6 +4,8 @@ import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouError
 import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRequestContext
+import cn.james.music.kugou.api.transport.KugouRequestSpec
+import kotlinx.serialization.json.JsonElement
 
 sealed interface KugouApiResult<out T> {
     data class Success<T>(
@@ -37,6 +39,23 @@ class KugouOnlineClient(
 ) {
     private val lyricsCandidateDecoder = KugouLyricsCandidateDecoder()
     private val lyricsDownloadDecoder = KugouLyricsDownloadDecoder()
+    private val homeRequestBuilder = KugouHomeRequestBuilder()
+    private val homeBannerDecoder = KugouHomeBannerDecoder()
+    private val dailyRecommendationDecoder = KugouDailyRecommendationDecoder()
+    private val topPlaylistDecoder = KugouTopPlaylistDecoder()
+
+    suspend fun fetchHomeBanners(context: KugouRequestContext): KugouApiResult<List<KugouHomeBannerDto>> =
+        executeAndDecode(homeRequestBuilder.banners(context), context, homeBannerDecoder::decode)
+
+    suspend fun fetchDailyRecommendations(context: KugouRequestContext): KugouApiResult<List<KugouHomeSongDto>> =
+        executeAndDecode(homeRequestBuilder.dailyRecommendations(), context, dailyRecommendationDecoder::decode)
+
+    suspend fun fetchTopPlaylists(
+        context: KugouRequestContext,
+        page: Int = 1,
+        pageSize: Int = 6,
+    ): KugouApiResult<List<KugouHomePlaylistDto>> =
+        executeAndDecode(homeRequestBuilder.topPlaylists(context, page, pageSize), context, topPlaylistDecoder::decode)
 
     suspend fun searchSongs(
         keyword: String,
@@ -138,6 +157,16 @@ class KugouOnlineClient(
                     }
                 }
             }
+        }
+
+    private suspend fun <T> executeAndDecode(
+        spec: KugouRequestSpec,
+        context: KugouRequestContext,
+        decode: (JsonElement) -> KugouApiResult<T>,
+    ): KugouApiResult<T> =
+        when (val response = executor.executeJson(spec, context)) {
+            is KugouProtocolResult.Failure -> KugouApiResult.Failure(response.error)
+            is KugouProtocolResult.Success -> decode(response.body)
         }
 
     private companion object {

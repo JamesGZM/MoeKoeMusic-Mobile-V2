@@ -106,6 +106,8 @@ kugou-api/src/main/kotlin/.../
 
 首页首批实现只迁移 `yueku_banner`、`everyday_recommend` 与 `top_playlist`，具体请求、字段容错、身份分区和缓存边界见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。`rank_list`、`rank_audio` 与 `top_song` 虽被 Mobile 参考实现聚合到首页，但本项目的信息架构已将排行榜和新歌归入发现页，因此不进入首页首批协议切片。
 
+2026-08-06 的自动真实兼容测试确认 `everyday_recommend` 与 `top_playlist` 当前可用；`yueku_banner` 的固定请求和最新上游实现均被当前服务以 `31136` 拒绝。轮播因此只保留为类型化可选能力，不作为首页首版完整快照的必需区块，也不以线上响应猜测替代 Endpoint 源码证据。
+
 ### 登录与音乐库
 
 - `captcha_sent`

@@ -1,6 +1,8 @@
 package cn.james.music.kugou.api
 
+import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouEndpoints
+import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.session.KugouAnonymousSessionInitializer
 import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
@@ -10,6 +12,7 @@ import cn.james.music.kugou.api.session.KugouSessionSnapshot
 import cn.james.music.kugou.api.session.KugouSessionStore
 import cn.james.music.kugou.api.transport.KtorKugouTransport
 import cn.james.music.kugou.api.transport.KugouCallExecutor
+import cn.james.music.kugou.api.transport.KugouError
 import cn.james.music.kugou.api.transport.KugouProtocolResult
 import cn.james.music.kugou.api.transport.KugouRequestFactory
 import kotlinx.coroutines.runBlocking
@@ -56,6 +59,38 @@ class LiveKugouIntegrationTest {
             val body = (result as KugouProtocolResult.Success).body.jsonObject
             val items = body["data"]?.jsonObject?.get("lists")?.jsonArray
             assertTrue("Current service returned no song list", !items.isNullOrEmpty())
+        }
+
+    @Test
+    fun anonymousHomeEndpointsAreAcceptedByCurrentService() =
+        runBlocking {
+            assumeTrue("Live Kugou tests are opt-in", System.getenv(LIVE_TEST_ENV) == "true")
+            val requestFactory = KugouRequestFactory()
+            val transport = KtorKugouTransport()
+            val initialization =
+                KugouAnonymousSessionInitializer(
+                    store = MemorySessionStore(),
+                    identityFactory = KugouDeviceIdentityFactory(),
+                    profileProvider = KugouDeviceProfileProvider { LIVE_DEVICE_PROFILE },
+                    requestFactory = requestFactory,
+                    transport = transport,
+                ).initialize()
+            assertTrue("Current service rejected anonymous device registration", initialization is KugouInitializationResult.Ready)
+            val session = (initialization as KugouInitializationResult.Ready).session
+            val client = KugouOnlineClient(KugouCallExecutor(requestFactory, transport))
+
+            val banners = client.fetchHomeBanners(session.requestContext())
+            val daily = client.fetchDailyRecommendations(session.requestContext())
+            val playlists = client.fetchTopPlaylists(session.requestContext())
+
+            val bannerIsCompatibleOrTypedUnavailable =
+                banners is KugouApiResult.Success || (banners as? KugouApiResult.Failure)?.error is KugouError.Protocol
+            assertTrue("Current banner response is neither compatible nor a typed protocol failure", bannerIsCompatibleOrTypedUnavailable)
+            assertTrue("Current daily recommendation response is unsupported", daily is KugouApiResult.Success)
+            assertTrue("Current top-playlist response is unsupported", playlists is KugouApiResult.Success)
+            val dailyItems = (daily as KugouApiResult.Success).value
+            val playlistItems = (playlists as KugouApiResult.Success).value
+            assertTrue("Current home service returned no primary content", dailyItems.isNotEmpty() || playlistItems.isNotEmpty())
         }
 
     private class MemorySessionStore : KugouSessionStore {

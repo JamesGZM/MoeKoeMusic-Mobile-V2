@@ -208,7 +208,7 @@ ExoPlayer + MediaSession
 - 首页、发现等可缓存内容采用 stale-while-revalidate：页面先读取并展示上次完整成功快照，同时自动在后台刷新；刷新成功后原位替换内容并更新快照，失败时保留旧内容并只给弱提示。只有从未存在可展示缓存时才进入首次加载或全屏错误状态。
 - 页面缓存由所属 Repository 管理，ViewModel 通过不可变状态同时表达 `content`、`isRefreshing` 与非阻断刷新错误。缓存读取、远端刷新和快照提交可取消且按请求代际隔离，旧刷新结果不得覆盖更新内容。
 - 内存缓存用于同进程快速恢复；需要跨进程保留的首页/发现完整成功快照使用 Room 或经审计的数据存储。缓存键包含用户身份、分页和影响响应的参数，未完成、部分损坏或协议失败结果不得覆盖最后一次成功快照。
-- 首页具体使用 `home:v1:anonymous` / `home:v1:user:<userid>` 身份分区的 Room 单行版本化快照；15 分钟只抑制重复自动刷新，不作为展示硬过期。三个首页 Endpoint 全部成功且至少每日推荐或推荐歌单可展示时才事务替换持久快照；部分结果只可作为当前进程的临时内容，不能覆盖旧快照。损坏 payload、未知 schema、single-flight 与请求代际规则见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。
+- 首页具体使用 `home:v1:anonymous` / `home:v1:user:<userid>` 身份分区的 Room 单行版本化快照；15 分钟只抑制重复自动刷新，不作为展示硬过期。每日推荐和推荐歌单成功且至少一个必需区块可展示时才事务替换持久快照；当前服务拒绝的轮播是可选区块，成功时随完整快照保存，失败时不伪造内容。其他部分结果只可作为当前进程的临时内容，不能覆盖旧快照。损坏 payload、未知 schema、single-flight 与请求代际规则见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。
 - 用户歌单和收藏以远端为权威，Room 可保存展示快照和待重试操作。
 - 本地音乐以 App 专属目录中的已提交副本和 Room 索引为权威；MediaStore、Storage Access Framework 和外部 Intent 只提供导入来源。
 - WorkManager 的输入只保存 `batchId`；URI、逐项状态和进度归 Room 所有，全局唯一工作链保证复制串行执行。
