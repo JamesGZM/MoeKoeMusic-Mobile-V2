@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Phone
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -584,21 +584,20 @@ private fun QrFailureContent(
     onModeChange: (LoginMode) -> Unit,
 ) {
     QrTerminalContent(
-        icon = { Icon(Icons.Filled.CloudOff, contentDescription = null) },
+        icon = { Icon(Icons.Filled.WifiOff, contentDescription = null) },
         title = stringResource(R.string.login_qr_failure_title),
         description = error.message(),
     ) {
         Button(
             onClick = onRefresh,
-            modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
+            modifier = Modifier.width(176.dp).height(MoeKoeTheme.dimensions.largeButtonHeight),
             shape = RoundedCornerShape(16.dp),
         ) {
             Text(stringResource(R.string.login_qr_retry))
         }
-        OutlinedButton(
+        TextButton(
             onClick = { onModeChange(LoginMode.MobileCode) },
-            modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.width(176.dp).height(MoeKoeTheme.dimensions.buttonHeight),
         ) {
             Text(stringResource(R.string.login_qr_use_mobile))
         }
