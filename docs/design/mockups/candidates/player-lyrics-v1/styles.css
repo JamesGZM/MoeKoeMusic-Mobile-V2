@@ -1,0 +1,256 @@
+:root {
+  color-scheme: dark;
+  font-family: "Hiragino Sans GB", "Heiti SC", sans-serif;
+  background: #070c1b;
+  color: #f7f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 853px;
+  height: 1844px;
+  margin: 0;
+  overflow: hidden;
+}
+
+.canvas,
+.base {
+  width: 853px;
+  height: 1844px;
+}
+
+.canvas {
+  position: relative;
+  overflow: hidden;
+  background: #070c1b;
+}
+
+.base {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.lyrics-region {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  text-align: center;
+}
+
+.lyrics-region::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 853px;
+  height: 1844px;
+  background: url("../../07-player-lyrics.png") 0 0 / 853px 1844px no-repeat;
+  filter: blur(64px) saturate(0.92);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 250px,
+    #000 350px,
+    #000 1210px,
+    transparent 1260px,
+    transparent 100%
+  );
+  transform: scale(1.07);
+}
+
+.lyrics-region::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 48% 42%, rgba(44, 42, 77, 0.12), rgba(5, 11, 25, 0.1) 64%),
+    rgba(7, 12, 27, 0.2);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 250px,
+    #000 350px,
+    #000 1210px,
+    transparent 1260px,
+    transparent 100%
+  );
+}
+
+.state,
+.lyrics-list {
+  position: relative;
+  z-index: 1;
+}
+
+.preserve-settings {
+  position: absolute;
+  z-index: 3;
+  top: 228px;
+  left: 736px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: url("../../07-player-lyrics.png") -736px -228px / 853px 1844px no-repeat;
+}
+
+.state {
+  position: absolute;
+  top: 520px;
+  left: 131px;
+  width: 590px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.state-icon {
+  width: 112px;
+  height: 112px;
+  margin-bottom: 34px;
+  border: 2px solid rgba(192, 194, 255, 0.18);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #aaa6ff;
+  background: rgba(104, 100, 185, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.state-icon svg {
+  width: 54px;
+  height: 54px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.spinner {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 40px;
+  border: 7px solid rgba(176, 174, 233, 0.18);
+  border-top-color: #9b92ff;
+  border-radius: 50%;
+}
+
+.state h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 52px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.state p {
+  max-width: 560px;
+  margin: 18px 0 0;
+  color: rgba(235, 236, 246, 0.64);
+  font-size: 30px;
+  line-height: 44px;
+  font-weight: 400;
+}
+
+.retry {
+  min-width: 244px;
+  height: 105px;
+  margin-top: 40px;
+  padding: 0 44px;
+  border: 0;
+  border-radius: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #141329;
+  background: linear-gradient(135deg, #b7aaff, #8587ff);
+  box-shadow: 0 16px 40px rgba(91, 79, 187, 0.22);
+  font: 600 30px/1 "Hiragino Sans GB", "Heiti SC", sans-serif;
+}
+
+.retry svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.lyrics-list {
+  position: absolute;
+  top: 318px;
+  left: 72px;
+  width: 100%;
+  max-width: 709px;
+}
+
+.lyric-line {
+  margin: 0 0 44px;
+  color: rgba(231, 232, 240, 0.38);
+  font-size: 33px;
+  line-height: 48px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+.lyric-line .secondary {
+  display: block;
+  margin-top: 10px;
+  color: rgba(231, 232, 240, 0.34);
+  font-size: 27px;
+  line-height: 38px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.lyric-line.active {
+  color: #f8f8fb;
+  font-size: 44px;
+  line-height: 58px;
+  font-weight: 650;
+}
+
+.lyric-line.active .accent {
+  color: #9790ff;
+}
+
+.lyrics-list.font-150 .lyric-line {
+  margin-bottom: 56px;
+  font-size: 42px;
+  line-height: 58px;
+}
+
+.lyrics-list.font-150 .lyric-line .secondary {
+  margin-top: 12px;
+  font-size: 34px;
+  line-height: 48px;
+}
+
+.lyrics-list.font-150 .lyric-line.active {
+  font-size: 54px;
+  line-height: 70px;
+}
+
+.lyrics-list.font-200 .lyric-line {
+  margin-bottom: 68px;
+  font-size: 49px;
+  line-height: 66px;
+}
+
+.lyrics-list.font-200 .lyric-line .secondary {
+  margin-top: 14px;
+  font-size: 40px;
+  line-height: 56px;
+}
+
+.lyrics-list.font-200 .lyric-line.active {
+  font-size: 62px;
+  line-height: 80px;
+}
