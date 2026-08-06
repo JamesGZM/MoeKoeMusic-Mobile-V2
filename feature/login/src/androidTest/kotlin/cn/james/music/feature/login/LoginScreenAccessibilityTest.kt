@@ -153,6 +153,52 @@ class LoginScreenAccessibilityTest {
             assertEquals(1, modeChanges)
         }
     }
+
+    @Test
+    fun accountsExposeOneRadioSelectionActionPerRow() {
+        var selectedUserId: String? = null
+        var selectionChanges = 0
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                LoginScreen(
+                    state = expiredAccountState.copy(notice = null),
+                    onBack = {},
+                    onPhoneChange = {},
+                    onCodeChange = {},
+                    onModeChange = {},
+                    onRefreshQrLogin = {},
+                    onSendCode = {},
+                    onSubmitMobileCode = {},
+                    onUsernameChange = {},
+                    onPasswordChange = {},
+                    onTogglePasswordVisibility = {},
+                    onSubmitPassword = {},
+                    onStartRiskVerification = {},
+                    onRetryTencentVerification = {},
+                    onRiskCodeChange = {},
+                    onVerifyRiskCode = {},
+                    onCancelRisk = {},
+                    onSelectAccount = {
+                        selectedUserId = it
+                        selectionChanges += 1
+                    },
+                    onChooseOtherAccount = {},
+                )
+            }
+        }
+
+        val radioRole = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        composeRule.onNodeWithText("MoeKoe").assert(radioRole).assertIsSelected()
+        composeRule
+            .onNodeWithText("夏日旋律")
+            .assert(radioRole)
+            .assertIsNotSelected()
+            .performClick()
+        composeRule.runOnIdle {
+            assertEquals("10000001", selectedUserId)
+            assertEquals(1, selectionChanges)
+        }
+    }
 }
 
 private val expiredAccountState =

@@ -870,7 +870,7 @@ private fun AccountSelectionContent(
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
-            Column {
+            Column(Modifier.selectableGroup()) {
                 state.accounts.forEachIndexed { index, account ->
                     AccountRow(
                         account = account,
@@ -969,7 +969,10 @@ private fun AccountRow(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
@@ -991,7 +994,11 @@ private fun AccountRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        RadioButton(selected = selected, onClick = onClick)
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            modifier = Modifier.size(48.dp),
+        )
     }
 }
 
