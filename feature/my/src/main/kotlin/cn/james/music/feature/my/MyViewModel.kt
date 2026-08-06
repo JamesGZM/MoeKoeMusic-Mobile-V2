@@ -59,10 +59,12 @@ internal class MyViewModel
         private val mutableState = MutableStateFlow(MyUiState())
         val state: StateFlow<MyUiState> = mutableState.asStateFlow()
         private var refreshJob: Job? = null
+        private var refreshGeneration = 0L
 
         fun refresh() {
             if (mutableState.value.loggingOut) return
             refreshJob?.cancel()
+            val generation = ++refreshGeneration
             refreshJob =
                 viewModelScope.launch {
                     val previousAccount = mutableState.value.account
@@ -75,7 +77,9 @@ internal class MyViewModel
                             refreshError = null,
                             logoutError = null,
                         )
-                    when (val result = profileRepository.load()) {
+                    val result = profileRepository.load()
+                    if (generation != refreshGeneration) return@launch
+                    when (result) {
                         UserProfileResult.Anonymous -> {
                             mutableState.value = MyUiState(account = MyAccountUiState.Anonymous)
                         }
@@ -119,14 +123,16 @@ internal class MyViewModel
 
         fun confirmLogout() {
             if (mutableState.value.account !is MyAccountUiState.Authenticated || mutableState.value.loggingOut) return
+            refreshGeneration += 1
             refreshJob?.cancel()
+            mutableState.value =
+                mutableState.value.copy(
+                    refreshing = false,
+                    showLogoutConfirmation = false,
+                    loggingOut = true,
+                    logoutError = null,
+                )
             viewModelScope.launch {
-                mutableState.value =
-                    mutableState.value.copy(
-                        showLogoutConfirmation = false,
-                        loggingOut = true,
-                        logoutError = null,
-                    )
                 when (val result = authRepository.logout()) {
                     AuthActionResult.Success -> {
                         mutableState.value = MyUiState(account = MyAccountUiState.Anonymous)

@@ -19,11 +19,13 @@ import cn.james.music.core.model.auth.QrLoginStartResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -142,11 +144,96 @@ class MyViewModelTest {
             assertFalse(viewModel.state.value.loggingOut)
         }
 
+    @Test
+    fun logoutFailureStopsInFlightRefreshAndKeepsAuthenticatedState() =
+        runTest(dispatcher) {
+            profileRepository.results.add(UserProfileResult.Success(FIXTURE_PROFILE))
+            viewModel.refresh()
+            runCurrent()
+            profileRepository.deferredResult = CompletableDeferred()
+            authRepository.logoutResult = AuthActionResult.Failure(AuthError.Storage)
+
+            viewModel.refresh()
+            runCurrent()
+            assertTrue(viewModel.state.value.refreshing)
+
+            viewModel.requestLogout()
+            viewModel.confirmLogout()
+
+            assertFalse(viewModel.state.value.refreshing)
+            assertTrue(viewModel.state.value.loggingOut)
+            runCurrent()
+            assertTrue(viewModel.state.value.account is MyAccountUiState.Authenticated)
+            assertEquals(AuthError.Storage, viewModel.state.value.logoutError)
+            assertFalse(viewModel.state.value.refreshing)
+        }
+
+    @Test
+    fun cancelledRefreshCannotReplaceAnonymousStateAfterLogout() =
+        runTest(dispatcher) {
+            profileRepository.results.add(UserProfileResult.Success(FIXTURE_PROFILE))
+            viewModel.refresh()
+            runCurrent()
+            profileRepository.deferredResult = CompletableDeferred()
+            profileRepository.ignoreDeferredCancellation = true
+
+            viewModel.refresh()
+            runCurrent()
+            viewModel.requestLogout()
+            viewModel.confirmLogout()
+            runCurrent()
+            assertEquals(MyAccountUiState.Anonymous, viewModel.state.value.account)
+
+            profileRepository.deferredResult?.complete(
+                UserProfileResult.Success(FIXTURE_PROFILE.copy(nickname = "Stale")),
+            )
+            runCurrent()
+
+            assertEquals(MyAccountUiState.Anonymous, viewModel.state.value.account)
+        }
+
+    @Test
+    fun repeatedLogoutConfirmationStartsSingleLogout() =
+        runTest(dispatcher) {
+            profileRepository.results.add(UserProfileResult.Success(FIXTURE_PROFILE))
+            viewModel.refresh()
+            runCurrent()
+
+            viewModel.requestLogout()
+            viewModel.confirmLogout()
+            viewModel.confirmLogout()
+            runCurrent()
+
+            assertEquals(1, authRepository.logoutCalls)
+        }
+
+    @Test
+    fun dismissLogoutHidesConfirmationWithoutCallingLogout() =
+        runTest(dispatcher) {
+            profileRepository.results.add(UserProfileResult.Success(FIXTURE_PROFILE))
+            viewModel.refresh()
+            runCurrent()
+
+            viewModel.requestLogout()
+            viewModel.dismissLogout()
+
+            assertFalse(viewModel.state.value.showLogoutConfirmation)
+            assertEquals(0, authRepository.logoutCalls)
+        }
+
     private class FakeProfileRepository : UserProfileRepository {
         val results = ArrayDeque<UserProfileResult>()
         var deferredResult: CompletableDeferred<UserProfileResult>? = null
+        var ignoreDeferredCancellation = false
 
-        override suspend fun load(): UserProfileResult = deferredResult?.await() ?: results.removeFirst()
+        override suspend fun load(): UserProfileResult =
+            deferredResult?.let { deferred ->
+                if (ignoreDeferredCancellation) {
+                    withContext(NonCancellable) { deferred.await() }
+                } else {
+                    deferred.await()
+                }
+            } ?: results.removeFirst()
     }
 
     private class FakeAuthRepository : AuthRepository {
