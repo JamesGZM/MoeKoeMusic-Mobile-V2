@@ -657,13 +657,13 @@ private fun PasswordContent(
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         LoginModeSelector(state.mode, onModeChange, enabled = !state.isBusy && !state.hasActiveRisk)
+        Text(stringResource(R.string.login_password_title), style = MaterialTheme.typography.headlineLarge)
         PasswordForm(
             state = state,
             onUsernameChange = onUsernameChange,
             onPasswordChange = onPasswordChange,
             onTogglePasswordVisibility = onTogglePasswordVisibility,
             onSubmit = onSubmit,
-            onUseMobileCode = { onModeChange(LoginMode.MobileCode) },
         )
         LoginFooter()
     }
@@ -676,7 +676,6 @@ private fun PasswordForm(
     onPasswordChange: (String) -> Unit,
     onTogglePasswordVisibility: () -> Unit,
     onSubmit: () -> Unit,
-    onUseMobileCode: () -> Unit,
 ) {
     OutlinedTextField(
         value = state.username,
@@ -744,19 +743,6 @@ private fun PasswordForm(
                 stringResource(R.string.login_password_submit)
             },
         )
-    }
-    if (
-        state.notice is LoginNotice.PasswordRejected ||
-            state.notice is LoginNotice.PasswordMultipleAccounts ||
-            state.notice is LoginNotice.UnsupportedRisk
-    ) {
-        OutlinedButton(
-            onClick = onUseMobileCode,
-            modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            Text(stringResource(R.string.login_use_mobile_code))
-        }
     }
 }
 

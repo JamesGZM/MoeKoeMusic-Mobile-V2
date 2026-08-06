@@ -91,6 +91,7 @@ class MainActivityTest {
         composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("密码", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("密码登录").assertIsDisplayed()
         composeRule.onNodeWithText("请输入账号").assertIsDisplayed()
         composeRule.onNodeWithText("请输入密码").assertIsDisplayed()
         composeRule.onNodeWithText("登录并继续").assertIsDisplayed()

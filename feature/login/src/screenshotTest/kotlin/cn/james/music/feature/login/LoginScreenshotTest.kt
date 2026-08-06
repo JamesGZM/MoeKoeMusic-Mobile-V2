@@ -47,6 +47,13 @@ fun LoginMobileCodeLargeTextScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "Password", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginPasswordScreenshot() {
+    LoginScreenshotContent(LoginUiState(mode = LoginMode.Password))
+}
+
+@PreviewTest
 @Preview(name = "PasswordRejected", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginPasswordRejectedScreenshot() {
