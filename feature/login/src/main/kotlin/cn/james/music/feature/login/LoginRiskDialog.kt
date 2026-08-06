@@ -18,10 +18,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +46,7 @@ internal fun LoginRiskDialog(
 ) {
     val risk = state.risk ?: return
     if (risk is PasswordRiskUiState.Tencent && state.notice == null) return
+    val dialogWidth = if (risk is PasswordRiskUiState.Sms) 320.dp else 304.dp
     Dialog(
         onDismissRequest = { if (!state.isBusy) onCancel() },
         properties =
@@ -55,34 +56,38 @@ internal fun LoginRiskDialog(
                 usePlatformDefaultWidth = false,
             ),
     ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 36.dp),
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 12.dp,
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            when (risk) {
-                is PasswordRiskUiState.Required ->
-                    RiskRequiredDialogContent(
-                        state = state,
-                        onStart = onStartVerification,
-                        onCancel = onCancel,
-                    )
+            Surface(
+                modifier = Modifier.width(dialogWidth),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                when (risk) {
+                    is PasswordRiskUiState.Required ->
+                        RiskRequiredDialogContent(
+                            state = state,
+                            onStart = onStartVerification,
+                            onCancel = onCancel,
+                        )
 
-                is PasswordRiskUiState.Sms ->
-                    RiskSmsDialogContent(
-                        state = state,
-                        onRiskCodeChange = onRiskCodeChange,
-                        onVerify = onVerifyRiskCode,
-                        onCancel = onCancel,
-                    )
+                    is PasswordRiskUiState.Sms ->
+                        RiskSmsDialogContent(
+                            state = state,
+                            onRiskCodeChange = onRiskCodeChange,
+                            onVerify = onVerifyRiskCode,
+                            onCancel = onCancel,
+                        )
 
-                is PasswordRiskUiState.Tencent ->
-                    TencentFailureDialogContent(
-                        state = state,
-                        onRetry = onRetryTencentVerification,
-                        onCancel = onCancel,
-                    )
+                    is PasswordRiskUiState.Tencent ->
+                        TencentFailureDialogContent(
+                            state = state,
+                            onRetry = onRetryTencentVerification,
+                            onCancel = onCancel,
+                        )
+                }
             }
         }
     }
@@ -186,18 +191,18 @@ private fun RiskDialogLayout(
     actions: @Composable () -> Unit,
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 26.dp),
+        modifier = Modifier.padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(title, style = MaterialTheme.typography.titleMedium)
         Text(
             description,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         content()
         LoginNoticeText(notice)
-        actions()
+        Box(Modifier.fillMaxWidth().padding(top = 8.dp)) { actions() }
     }
 }
 
@@ -213,17 +218,18 @@ private fun RiskDialogActions(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        TextButton(
+        FilledTonalButton(
             onClick = onCancel,
             enabled = !busy,
-            modifier = Modifier.weight(1f).height(52.dp),
+            modifier = Modifier.weight(1f).height(48.dp),
+            shape = RoundedCornerShape(16.dp),
         ) {
             Text(stringResource(R.string.login_risk_cancel_short))
         }
         Button(
             onClick = onPrimary,
             enabled = primaryEnabled,
-            modifier = Modifier.weight(1f).height(52.dp),
+            modifier = Modifier.weight(1f).height(48.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             if (busy) {
