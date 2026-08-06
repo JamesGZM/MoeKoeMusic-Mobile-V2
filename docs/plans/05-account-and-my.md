@@ -6,7 +6,7 @@
 
 ## 当前进度
 
-- 手机验证码登录与多账号选择已经形成可运行切片；账号密码、扫码和风控验证仍待实现，不能据此将登录阶段标记完成。
+- 手机验证码、多账号、账号密码、扫码和风控验证的协议、状态机与功能 UI 已形成可运行切片；现有 Compose 仍需按已确认独立单状态图返工，真实扫码 `2→4`、会话恢复和主动风控兼容验收尚未完成，因此登录阶段仍不能标记完成。
 - 登录后资料、VIP 摘要、页面恢复刷新、部分失败降级和确认退出已经贯通 `:kugou-api`、`:data` 与 `:feature:my`，并使用真实会话和服务结果。
 - “我的”顶部账户卡片、匿名态、加载/错误状态、响应式布局和本地音乐入口已经按确认设计实现；签到、VIP 领取、云盘、历史、收藏、关注及歌单资产接口未迁移前，相关控件保持禁用或明确标记待接入，不展示假计数或假列表。
 - 用户主页与其余音乐库能力仍待后续审计、设计核对和纵向切片，阶段 5B 尚未完成。
@@ -26,7 +26,7 @@
 - 验证码、密码和扫码使用统一分段控件与表单 Surface；多账号选择只在接口返回多个账号后出现。
 - 普通返回、手机、密码、二维码和安全图标优先复用 Material Icons，不重复生成 SVG。
 - 颜色、排版、输入框、按钮、Dialog 和页面状态遵循 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) 与 [`../UI_COMPONENTS.md`](../UI_COMPONENTS.md)。
-- 旧密码、扫码、短信风控、腾讯图形验证和多账号横向状态稿已撤销实现基线资格；新版独立单状态图见 [`login-v2` 候选索引](../design/mockups/candidates/login-v2/README.md)，确认前不得据此修改 Compose。[`login-flow`](../design/prototypes/login-flow/README.md) 只保留为历史交互参考。
+- 旧密码、扫码、短信风控、腾讯图形验证和多账号横向状态稿已撤销实现基线资格；新版独立单状态图见 [`login-v2` 确认稿索引](../design/mockups/candidates/login-v2/README.md)，可直接用于 Compose 返工。[`login-flow`](../design/prototypes/login-flow/README.md) 只保留为历史交互参考。
 - 登录先按独立 [`07-login-flow.md`](07-login-flow.md) 和 [`../reference-audits/09-login-session-and-risk.md`](../reference-audits/09-login-session-and-risk.md) 完成纵向闭环，再由本阶段消费稳定会话实现用户资料、签到、VIP 与音乐库。
 - 登录后的用户资料、VIP 摘要、刷新、部分失败和退出按 [`../reference-audits/10-user-profile-and-my-session.md`](../reference-audits/10-user-profile-and-my-session.md) 分三层落地：先 `:kugou-api`，再 `:data`，最后 `:feature:my`；不得在资料或资产接口完成前用设计稿内容和假计数填充页面。
 - “我的”已有确认设计 `04-my-v4.png`，本切片无需重新生图。未来新增会话失效等未覆盖布局时，必须先使用 `frontend-design` 按既有 Design System 补静态图并确认，之后才能制作必要原型或编码。

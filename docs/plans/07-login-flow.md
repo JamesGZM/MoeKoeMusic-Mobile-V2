@@ -20,18 +20,18 @@
 
 ## 视觉设计门禁
 
-登录主状态 `13` 仍为已确认基线；旧 `19` 至 `22` 已撤销实现基线资格，新版补充状态仍待确认：
+登录主状态 `13` 与新版补充单状态图均为已确认基线；旧 `19` 至 `22` 横向总览已撤销实现基线资格：
 
 | 状态 | 权威设计图 |
 | --- | --- |
 | 手机号默认、发送与通用结构 | [`13-login-phone-immersive.png`](../design/mockups/13-login-phone-immersive.png) |
-| 密码默认、提交、凭据错误、风控触发 | [`login-v2` 候选 19](../design/mockups/candidates/login-v2/README.md#19--密码登录)（待确认） |
-| 扫码生成、等待、已扫码、过期、失败 | [`login-v2` 候选 20](../design/mockups/candidates/login-v2/README.md#20--扫码登录)（待确认） |
-| 短信默认、提交、错误与腾讯加载、失败返回 | [`login-v2` 候选 21](../design/mockups/candidates/login-v2/README.md#21--风险验证)（待确认） |
-| 多账号选择、未选择禁用、提交失败、切换 | [`login-v2` 候选 22](../design/mockups/candidates/login-v2/README.md#22--多账号)（待确认） |
+| 密码默认、提交、凭据错误、风控触发 | [`login-v2` 确认稿 19](../design/mockups/candidates/login-v2/README.md#19--密码登录) |
+| 扫码生成、等待、已扫码、过期、失败 | [`login-v2` 确认稿 20](../design/mockups/candidates/login-v2/README.md#20--扫码登录) |
+| 短信默认、提交、错误与腾讯加载、失败返回 | [`login-v2` 确认稿 21](../design/mockups/candidates/login-v2/README.md#21--风险验证) |
+| 多账号选择、未选择禁用、提交失败、切换 | [`login-v2` 确认稿 22](../design/mockups/candidates/login-v2/README.md#22--多账号) |
 | 离线、通用错误和临时反馈 | [`18-mobile-states-overlays.png`](../design/mockups/18-mobile-states-overlays.png) |
 
-[`login-flow`](../design/prototypes/login-flow/README.md) 是基于已撤销旧稿建立的历史原型，只能参考切换、返回、提交锁定、轮询取消和状态转移；不得用其页面结构、密度或图标覆盖新版候选。新版确认后仅在确有必要时更新原型。
+[`login-flow`](../design/prototypes/login-flow/README.md) 是基于已撤销旧稿建立的历史原型，只能参考切换、返回、提交锁定、轮询取消和状态转移；不得用其页面结构、密度或图标覆盖新版确认稿。仅在确有必要验证复杂交互时更新原型。
 
 视觉沿用 MoeKoe Air 的明亮蓝色、沉浸式顶部、统一分段控件和表单 Surface。Token 来自 `:core:designsystem`，正式图标使用固定 Material Icons，二维码使用 ZXing 数据矩阵并按设计图绘制。
 
