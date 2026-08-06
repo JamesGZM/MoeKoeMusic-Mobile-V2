@@ -66,10 +66,20 @@ sealed interface HomeRefreshResult {
     ) : HomeRefreshResult
 }
 
+sealed interface HomeAutomaticRefreshState {
+    data object Idle : HomeAutomaticRefreshState
+
+    data object Refreshing : HomeAutomaticRefreshState
+
+    data class Complete(
+        val result: HomeRefreshResult,
+    ) : HomeAutomaticRefreshState
+}
+
 interface HomeRepository {
     fun observeContent(): Flow<HomeContent?>
 
-    fun observeAutomaticRefreshResult(): Flow<HomeRefreshResult?>
+    fun observeAutomaticRefresh(): Flow<HomeAutomaticRefreshState>
 
     suspend fun refresh(force: Boolean = false): HomeRefreshResult
 }

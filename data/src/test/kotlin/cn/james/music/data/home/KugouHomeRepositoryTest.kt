@@ -2,6 +2,7 @@ package cn.james.music.data.home
 
 import cn.james.music.core.database.home.HomeContentSnapshotDao
 import cn.james.music.core.database.home.HomeContentSnapshotEntity
+import cn.james.music.core.model.home.HomeAutomaticRefreshState
 import cn.james.music.core.model.home.HomeBanner
 import cn.james.music.core.model.home.HomeContent
 import cn.james.music.core.model.home.HomePlaylist
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
@@ -155,7 +156,14 @@ class KugouHomeRepositoryTest {
                         playlist = { KugouApiResult.Failure(KugouError.Network(KugouError.Network.Kind.Offline)) },
                     ),
                 )
-            val failure = async { repository.observeAutomaticRefreshResult().filterNotNull().first() }
+            val failure =
+                async {
+                    repository
+                        .observeAutomaticRefresh()
+                        .filterIsInstance<HomeAutomaticRefreshState.Complete>()
+                        .first()
+                        .result
+                }
             val staleObserved = CompletableDeferred<Unit>()
             val observation =
                 launch {
@@ -411,6 +419,14 @@ class KugouHomeRepositoryTest {
             val observer = FakeSessionObserver(null)
             val repository = repository(dao, FakeHomeService(), observer)
             val unavailableObserved = CompletableDeferred<Unit>()
+            val initializationFailure =
+                async {
+                    repository
+                        .observeAutomaticRefresh()
+                        .filterIsInstance<HomeAutomaticRefreshState.Complete>()
+                        .first()
+                        .result
+                }
 
             val values =
                 async {
@@ -421,6 +437,10 @@ class KugouHomeRepositoryTest {
                         .toList()
                 }
             unavailableObserved.await()
+            assertEquals(
+                HomeRefreshResult.Failure(HomeRefreshProblem.SessionInitialization),
+                initializationFailure.await(),
+            )
             observer.publish(ANONYMOUS_SESSION)
 
             assertEquals(

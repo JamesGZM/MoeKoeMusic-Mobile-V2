@@ -3,6 +3,7 @@ package cn.james.music.data.home
 import cn.james.music.core.database.MoeKoeDatabase
 import cn.james.music.core.database.home.HomeContentSnapshotDao
 import cn.james.music.core.database.home.HomeContentSnapshotEntity
+import cn.james.music.core.model.home.HomeAutomaticRefreshState
 import cn.james.music.core.model.home.HomeBanner
 import cn.james.music.core.model.home.HomeContent
 import cn.james.music.core.model.home.HomePlaylist
@@ -66,11 +67,14 @@ class KugouHomeRepository
         private val flightMutex = Mutex()
         private val generations = mutableMapOf<String, Long>()
         private val flights = mutableMapOf<String, RefreshFlight>()
-        private val automaticRefreshResult = MutableStateFlow<HomeRefreshResult?>(null)
+        private val automaticRefresh = MutableStateFlow<HomeAutomaticRefreshState>(HomeAutomaticRefreshState.Idle)
 
         override fun observeContent(): Flow<HomeContent?> =
             flow {
-                sessionProvider.initialize()
+                if (sessionProvider.initialize() is KugouInitializationResult.Failure) {
+                    automaticRefresh.value =
+                        HomeAutomaticRefreshState.Complete(HomeRefreshResult.Failure(HomeRefreshProblem.SessionInitialization))
+                }
                 emitAll(
                     sessionObserver.state
                         .map { state -> state.session?.let { session -> SessionScope(session, state.generation) } }
@@ -79,7 +83,7 @@ class KugouHomeRepository
                 )
             }
 
-        override fun observeAutomaticRefreshResult(): Flow<HomeRefreshResult?> = automaticRefreshResult.asStateFlow()
+        override fun observeAutomaticRefresh(): Flow<HomeAutomaticRefreshState> = automaticRefresh.asStateFlow()
 
         override suspend fun refresh(force: Boolean): HomeRefreshResult {
             val session =
@@ -98,8 +102,8 @@ class KugouHomeRepository
                     emit(content)
                     if (!refreshStarted) {
                         refreshStarted = true
-                        automaticRefreshResult.value = null
-                        automaticRefreshResult.value = singleFlight(scope, force = false)
+                        automaticRefresh.value = HomeAutomaticRefreshState.Refreshing
+                        automaticRefresh.value = HomeAutomaticRefreshState.Complete(singleFlight(scope, force = false))
                     }
                 }
             }
