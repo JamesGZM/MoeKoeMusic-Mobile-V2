@@ -392,19 +392,11 @@ private fun QrLoginInstruction() {
 @Composable
 private fun QrGeneratingContent() {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 54.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(186.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(progress = { 0.72f }, modifier = Modifier.size(54.dp), strokeWidth = 4.dp)
-        }
+        CircularProgressIndicator(progress = { 0.72f }, modifier = Modifier.size(64.dp), strokeWidth = 4.dp)
         Text(stringResource(R.string.login_qr_generating), style = MaterialTheme.typography.titleMedium)
     }
 }

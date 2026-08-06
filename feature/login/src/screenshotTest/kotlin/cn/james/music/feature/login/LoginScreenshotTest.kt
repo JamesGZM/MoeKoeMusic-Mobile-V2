@@ -230,6 +230,13 @@ fun LoginQrGeneratingScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "QrGeneratingLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Composable
+fun LoginQrGeneratingLargeTextScreenshot() {
+    LoginScreenshotContent(LoginUiState(mode = LoginMode.QrCode, qrLogin = QrLoginUiState.Generating))
+}
+
+@PreviewTest
 @Preview(name = "QrWaiting", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginQrWaitingScreenshot() {
