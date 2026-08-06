@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -114,7 +115,8 @@ class MainActivityTest {
         composeRule.waitUntil(15_000) {
             composeRule.onAllNodesWithContentDescription("酷狗音乐登录二维码").fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText("请使用酷狗音乐扫码").assertIsDisplayed()
+        composeRule.onNodeWithText("扫码登录").assertIsDisplayed()
+        composeRule.onNodeWithTag("qr_login_instruction").assertIsDisplayed()
         saveDeviceScreenshot()
 
         composeRule.onNodeWithText("验证码", useUnmergedTree = true).performClick()

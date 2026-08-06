@@ -257,6 +257,18 @@ fun LoginQrFailureScreenshot() {
     )
 }
 
+@PreviewTest
+@Preview(name = "QrFailureLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Composable
+fun LoginQrFailureLargeTextScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.QrCode,
+            qrLogin = QrLoginUiState.Failure(AuthError.Connection),
+        ),
+    )
+}
+
 @Composable
 private fun LoginScreenshotContent(state: LoginUiState) {
     MoeKoeTheme(themeMode = ThemeMode.Light) {

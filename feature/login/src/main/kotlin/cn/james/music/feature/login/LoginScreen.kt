@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -347,6 +348,12 @@ private fun QrCodeContent(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         LoginModeSelector(state.mode, onModeChange, enabled = true)
+        Text(
+            stringResource(R.string.login_qr_title),
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.headlineLarge,
+        )
+        QrLoginInstruction()
         when (val qr = state.qrLogin ?: QrLoginUiState.Generating) {
             QrLoginUiState.Generating -> QrGeneratingContent()
             is QrLoginUiState.Waiting -> {
@@ -360,7 +367,26 @@ private fun QrCodeContent(
             is QrLoginUiState.Expired -> QrExpiredContent(qr.session.loginUrl, onRefresh)
             is QrLoginUiState.Failure -> QrFailureContent(qr.error, onRefresh, onModeChange)
         }
+        QrLoginSteps()
+        LoginFooter()
     }
+}
+
+@Composable
+private fun QrLoginInstruction() {
+    Text(
+        buildAnnotatedString {
+            append(stringResource(R.string.login_qr_instruction_prefix))
+            pushStyle(SpanStyle(color = MaterialTheme.colorScheme.primary))
+            append(stringResource(R.string.login_qr_instruction_app))
+            pop()
+            append(stringResource(R.string.login_qr_instruction_suffix))
+        },
+        modifier = Modifier.fillMaxWidth().testTag("qr_login_instruction"),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -413,11 +439,13 @@ private fun QrReadyContent(
                 }
             }
         }
-        Text(
-            stringResource(if (scanned) R.string.login_qr_scanned_title else R.string.login_qr_scan_title),
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-        )
+        if (scanned) {
+            Text(
+                stringResource(R.string.login_qr_scanned_title),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
+        }
         Text(
             if (scanned) {
                 nickname?.takeIf(String::isNotBlank)?.let { stringResource(R.string.login_qr_scanned_user, it) }
@@ -429,7 +457,6 @@ private fun QrReadyContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        if (!scanned) QrLoginSteps()
     }
 }
 
