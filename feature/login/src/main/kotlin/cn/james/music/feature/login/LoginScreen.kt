@@ -753,6 +753,8 @@ private fun AccountSelectionContent(
     onSubmit: () -> Unit,
     onChooseOtherAccount: () -> Unit,
 ) {
+    val accountFailure = (state.notice as? LoginNotice.Failure)?.error
+    val requiresPhoneReverification = accountFailure == AuthError.Rejected
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -778,7 +780,6 @@ private fun AccountSelectionContent(
                 }
             }
         }
-        LoginNoticeText(state.notice)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -797,9 +798,14 @@ private fun AccountSelectionContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        if (accountFailure != null) {
+            AccountFailureNotice(accountFailure)
+        } else {
+            LoginNoticeText(state.notice)
+        }
         Button(
-            onClick = onSubmit,
-            enabled = state.canSubmitMobileCode,
+            onClick = if (requiresPhoneReverification) onChooseOtherAccount else onSubmit,
+            enabled = if (requiresPhoneReverification) !state.loggingIn else state.canSubmitMobileCode,
             modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
             shape = RoundedCornerShape(16.dp),
         ) {
@@ -807,7 +813,15 @@ private fun AccountSelectionContent(
                 CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
                 Spacer(Modifier.width(10.dp))
             }
-            Text(stringResource(R.string.login_account_submit))
+            Text(
+                stringResource(
+                    if (requiresPhoneReverification) {
+                        R.string.login_account_reverify_phone
+                    } else {
+                        R.string.login_account_submit
+                    },
+                ),
+            )
         }
         OutlinedButton(
             onClick = onChooseOtherAccount,
@@ -816,6 +830,33 @@ private fun AccountSelectionContent(
             shape = RoundedCornerShape(16.dp),
         ) {
             Text(stringResource(R.string.login_account_other))
+        }
+    }
+}
+
+@Composable
+private fun AccountFailureNotice(error: AuthError) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.ErrorOutline, contentDescription = null)
+            Text(
+                if (error == AuthError.Rejected) {
+                    stringResource(R.string.login_account_verification_expired)
+                } else {
+                    error.message()
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }

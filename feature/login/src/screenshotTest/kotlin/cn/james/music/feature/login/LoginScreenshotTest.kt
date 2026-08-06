@@ -40,6 +40,49 @@ fun LoginMultipleAccountsScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "MultipleAccountsUnselected", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginMultipleAccountsUnselectedScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            phone = "13800138000",
+            code = "123456",
+            accounts = previewAccounts,
+        ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "MultipleAccountsFailure", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginMultipleAccountsFailureScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            phone = "13800138000",
+            code = "123456",
+            accounts = previewAccounts,
+            selectedUserId = "10000002",
+            notice = LoginNotice.Failure(AuthError.Rejected),
+        ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "MultipleAccountsFailureLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Composable
+fun LoginMultipleAccountsFailureLargeTextScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            phone = "13800138000",
+            code = "123456",
+            accounts = previewAccounts,
+            selectedUserId = "10000002",
+            notice = LoginNotice.Failure(AuthError.Rejected),
+        ),
+    )
+}
+
+@PreviewTest
 @Preview(name = "MobileCodeLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
 fun LoginMobileCodeLargeTextScreenshot() {

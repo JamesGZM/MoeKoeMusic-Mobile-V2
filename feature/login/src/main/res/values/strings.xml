@@ -70,6 +70,8 @@
     <string name="login_account_avatar">%1$s 的头像</string>
     <string name="login_account_unnamed">未命名账号</string>
     <string name="login_account_submit">登录所选账号</string>
+    <string name="login_account_reverify_phone">重新验证手机号</string>
+    <string name="login_account_verification_expired">登录验证已失效，请重新验证手机号</string>
     <string name="login_account_other">选择其他账号</string>
     <string name="login_account_required">请先选择一个账号</string>
     <string name="login_unavailable_mode">该登录方式正在接入</string>

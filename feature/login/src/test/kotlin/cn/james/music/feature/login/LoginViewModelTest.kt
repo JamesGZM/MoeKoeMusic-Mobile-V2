@@ -105,6 +105,27 @@ class LoginViewModelTest {
         }
 
     @Test
+    fun multiAccountFailureKeepsSelectionAndVerificationContext() =
+        runTest(dispatcher) {
+            repository.loginResults.add(MobileCodeLoginResult.MultipleAccounts(ACCOUNTS))
+            repository.loginResults.add(MobileCodeLoginResult.Failure(AuthError.Rejected))
+            viewModel.updatePhone(VALID_PHONE)
+            viewModel.updateCode("123456")
+            viewModel.submitMobileCode()
+            runCurrent()
+            viewModel.selectAccount("20002")
+
+            viewModel.submitMobileCode()
+            runCurrent()
+
+            assertEquals(ACCOUNTS, viewModel.state.value.accounts)
+            assertEquals("20002", viewModel.state.value.selectedUserId)
+            assertEquals(VALID_PHONE, viewModel.state.value.phone)
+            assertEquals("123456", viewModel.state.value.code)
+            assertEquals(LoginNotice.Failure(AuthError.Rejected), viewModel.state.value.notice)
+        }
+
+    @Test
     fun authenticatedResultEmitsCompletedEffect() =
         runTest(dispatcher) {
             repository.loginResults.add(MobileCodeLoginResult.Authenticated)
