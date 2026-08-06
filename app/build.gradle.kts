@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.webkit)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)

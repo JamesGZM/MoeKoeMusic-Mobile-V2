@@ -114,7 +114,7 @@
 
 采用点：AGP/Gradle/JDK 组合、官方截图测试、Hilt Android 组合根与 Material 3 主题体系。Hilt 2.59 开始明确支持 AGP 9，因此工程使用 2.59.2，而不是计划中无法加载 AGP 9 扩展的 2.57.1。Compose Screenshot Testing 仍为实验插件，仅用于视觉回归。
 
-主要依赖许可证：AndroidX、Compose、Room、DataStore、Media3、Hilt、Ktor 与 OkHttp 为 Apache-2.0；Kotlin 与 Coroutines 为 Apache-2.0；Spotless 为 Apache-2.0。它们分别承担平台 UI/存储/媒体能力、依赖注入、语言与并发、格式检查和网络传输，未引入遥测或远程托管服务。
+主要依赖许可证：AndroidX、Compose、Room、DataStore、Media3、Hilt、Ktor、OkHttp 与 Coil 为 Apache-2.0；Kotlin 与 Coroutines 为 Apache-2.0；Spotless 为 Apache-2.0。它们分别承担平台 UI/存储/媒体能力、依赖注入、语言与并发、格式检查、网络传输和图片加载，未引入遥测或远程托管服务。Coil 3 的 Compose 与 OkHttp 网络 artifact 使用同一固定版本；网络模块只在 `:app` 组合根装配，使各 Feature 的 `AsyncImage` 能消费已有 HTTPS 图片地址。
 
 ### Now in Android
 
