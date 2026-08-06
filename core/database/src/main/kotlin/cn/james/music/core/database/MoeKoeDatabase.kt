@@ -2,6 +2,8 @@ package cn.james.music.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import cn.james.music.core.database.home.HomeContentSnapshotDao
+import cn.james.music.core.database.home.HomeContentSnapshotEntity
 import cn.james.music.core.database.local.LocalImportBatchEntity
 import cn.james.music.core.database.local.LocalImportEntryEntity
 import cn.james.music.core.database.local.LocalMusicDao
@@ -20,8 +22,9 @@ import cn.james.music.core.database.playback.PlaybackSnapshotEntity
         LocalImportBatchEntity::class,
         LocalImportEntryEntity::class,
         LyricsCacheEntity::class,
+        HomeContentSnapshotEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class MoeKoeDatabase : RoomDatabase() {
@@ -30,4 +33,6 @@ abstract class MoeKoeDatabase : RoomDatabase() {
     abstract fun localMusicDao(): LocalMusicDao
 
     abstract fun lyricsCacheDao(): LyricsCacheDao
+
+    abstract fun homeContentSnapshotDao(): HomeContentSnapshotDao
 }

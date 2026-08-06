@@ -117,7 +117,7 @@ KugouHomeRepository (:data)
 ## 实施切片与自动验收
 
 1. 协议：三个 Request 快照、Decoder fixture、错误/取消/Fake Transport 测试；受控真实兼容测试独立显式启用。2026-08-06 自动真实测试确认每日推荐返回 30 项、推荐歌单返回 11 项；轮播固定请求被服务端以 `31136` 拒绝，最新上游源码仍与固定提交一致，因此只保留类型化可选能力，不宣称当前可用。
-2. Room：v5 Entity/DAO、完整替换事务、损坏删除、`4→5` 与完整迁移测试。
+2. Room：已完成 v5 Entity/可观察 DAO、单行原子替换与删除、脱敏输出、导出 Schema、`4→5` 与完整 `1→5` 迁移测试；2026-08-06 在 ELE-AL00 / API 29 真机的 13 项数据库测试全部通过。损坏 payload 的识别与定向删除归 Repository 切片。
 3. Repository：身份分区、cache-first、15 分钟刷新门槛、部分失败不落盘、single-flight、代际隔离和取消测试。
 4. Feature：ViewModel 首次/缓存/刷新/部分/空/错误/身份切换测试。
 5. Compose：按确认稿替换临时首页，复用 Design System，建立浅色、深色和大字体截图；运行 `MainActivityTest` 与已连接真机自动化。需要用户手动判断的轮播手势、列表滚动体验和真实歌曲点击播放留到最后单独列出，不阻塞前四个自动切片的原子提交。

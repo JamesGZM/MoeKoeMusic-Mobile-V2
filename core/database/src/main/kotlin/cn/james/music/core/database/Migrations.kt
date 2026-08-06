@@ -38,3 +38,12 @@ val MIGRATION_3_4 =
             )
         }
     }
+
+val MIGRATION_4_5 =
+    object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `home_content_snapshots` (`cache_key` TEXT NOT NULL, `payload_json` TEXT NOT NULL, `schema_version` INTEGER NOT NULL, `updated_at_epoch_ms` INTEGER NOT NULL, PRIMARY KEY(`cache_key`))",
+            )
+        }
+    }
