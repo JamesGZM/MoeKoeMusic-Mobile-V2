@@ -48,6 +48,7 @@ Repository
 :feature:localmusic
 :feature:foundation
 :feature:login
+:feature:player
 ```
 
 ### `:app`
@@ -104,9 +105,10 @@ Repository
 ### `:feature:*`
 
 - 每个业务能力独立拥有导航键、导航注册、Route、Screen、ViewModel 和测试。
-- 当前模块为 `home`、`discover`、`my`、`search`、`localmusic`、`login` 与仅 Debug 可达的 `foundation`。
+- 当前模块为 `home`、`discover`、`my`、`search`、`localmusic`、`login`、`player` 与仅 Debug 可达的 `foundation`。
 - `:feature:login` 按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 拥有表单、倒计时、多账号选择、导航入口和测试；`:app` 只组合导航和平台安全配置，不持有认证 UI 状态。
 - `:feature:my` 消费 `UserProfileRepository` 与 `AuthRepository`，拥有匿名、加载、已认证、部分失败和完整失败状态，并在页面恢复时刷新资料；退出必须经过确认且仅在会话清除成功后切换匿名态。
+- `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 传入的播放状态与事件，不依赖 `:playback`、Service、Repository、数据库或网络。歌词协议、解析和缓存另行审计后才能接入。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
 - 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。
@@ -125,6 +127,7 @@ Repository
 :feature:foundation ► :playback
 :feature:login ────► AuthRepository + :core:designsystem
 :feature:my ───────► UserProfileRepository + AuthRepository + :core:designsystem
+:feature:player ───► :core:model + :core:designsystem
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
@@ -157,10 +160,13 @@ sealed interface SearchUiState {
 ## 播放器边界
 
 ```text
-PlayerScreen / MiniPlayer
-          │
+PlayerScreen / MiniPlayer (:feature:player / :core:designsystem)
+          │ values + event lambdas
           ▼
-PlaybackController
+AppPlaybackViewModel (:app)
+          │ StateFlow + commands
+          ▼
+PlaybackController (:playback)
           │ MediaController
           ▼
 MediaLibraryService
@@ -190,7 +196,8 @@ ExoPlayer + MediaSession
 - Room 原子保存有序队列、当前索引、位置和模式，不保存 `isPlaying`，也不与播放器争夺实时状态所有权。
 - 冷启动恢复固定暂停；只有 App 操作、系统媒体卡片或媒体按钮等主动入口可以请求继续播放。
 - Compose 通过 Controller 事件转换出的 StateFlow 观察播放器。
-- 播放进度使用独立低粒度流，避免整页高频重组。
+- 播放进度使用独立低粒度流；`:app` 将其映射为独立 `PlayerProgressUiState`，只有进度条和时间子组合读取该 `State`，封面、背景和标题不订阅每秒更新。
+- 全屏播放器是 Navigation Compose 子目的地，不是一级 Tab；进入后隐藏 MiniPlayer 和底部导航，退出后恢复原来源页面。队列仍是同层 `ModalBottomSheet`，返回先关闭队列再退出播放器。
 
 ## 数据策略
 

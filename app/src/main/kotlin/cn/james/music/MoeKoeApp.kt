@@ -14,8 +14,11 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +31,8 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.feature.discover.discoverGraph
 import cn.james.music.feature.home.HomeGraph
 import cn.james.music.feature.home.homeGraph
@@ -37,10 +42,14 @@ import cn.james.music.feature.login.LoginDestination
 import cn.james.music.feature.login.TencentCaptchaResult
 import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
+import cn.james.music.feature.player.PlayerDestination
+import cn.james.music.feature.player.PlayerProgressUiState
+import cn.james.music.feature.player.PlayerUiState
+import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
-import cn.james.music.core.designsystem.component.MoeSnackbar
-import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.playback.PlaybackConnectionState
+import cn.james.music.playback.PlaybackStatus
 import kotlinx.coroutines.delay
 
 @Composable
@@ -54,16 +63,37 @@ fun MoeKoeApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val progress by viewModel.progress.collectAsStateWithLifecycle()
+    val progress = viewModel.progress.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
     val appState = rememberMoeKoeAppState(navController)
     val currentDestination = appState.navController.currentBackStackEntryAsState().value?.destination
     var queueVisible by rememberSaveable { mutableStateOf(false) }
-    val showBottomNavigation = appState.isTopLevel(currentDestination)
+    val isPlayer = currentDestination?.hasRoute<PlayerDestination>() == true
+    val showBottomNavigation = !isPlayer && appState.isTopLevel(currentDestination)
     val isImmersiveLogin = currentDestination?.hasRoute<LoginDestination>() == true
+    val playerUiState =
+        rememberUpdatedState(
+            PlayerUiState(
+                item = state.currentItem,
+                isPlaying = state.isPlaying,
+                isBuffering = state.status == PlaybackStatus.Buffering,
+                controlsEnabled = state.connection == PlaybackConnectionState.Connected,
+                mode = state.mode,
+            ),
+        )
+    val playerProgressUiState =
+        remember(progress) {
+            derivedStateOf {
+                val currentProgress = progress.value
+                PlayerProgressUiState(
+                    positionMs = currentProgress.positionMs,
+                    durationMs = currentProgress.durationMs,
+                )
+            }
+        }
 
     Scaffold(
-        contentWindowInsets = if (isImmersiveLogin) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
+        contentWindowInsets = if (isImmersiveLogin || isPlayer) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         bottomBar = {
             Column(
                 modifier =
@@ -73,18 +103,22 @@ fun MoeKoeApp(
                         Modifier.navigationBarsPadding()
                     },
             ) {
-                state.currentItem?.let { item ->
+                state.currentItem?.takeUnless { isPlayer }?.let { item ->
+                    val currentProgress = progress.value
                     MoeKoeMiniPlayer(
                         item = item,
                         isPlaying = state.isPlaying,
                         progress =
-                            if (progress.durationMs > 0) {
-                                progress.positionMs.toFloat() / progress.durationMs
+                            if (currentProgress.durationMs > 0) {
+                                currentProgress.positionMs.toFloat() / currentProgress.durationMs
                             } else {
                                 0f
                             },
                         onToggle = viewModel::togglePlayback,
                         onQueue = { queueVisible = true },
+                        onOpenPlayer = {
+                            navController.navigate(PlayerDestination) { launchSingleTop = true }
+                        },
                     )
                 }
                 if (showBottomNavigation) {
@@ -151,6 +185,17 @@ fun MoeKoeApp(
                     onRequestDeviceScan = onRequestDeviceScan,
                     onImportCandidates = onImportCandidates,
                 )
+                playerDestination(
+                    state = playerUiState,
+                    progress = playerProgressUiState,
+                    onBack = navController::popBackStack,
+                    onTogglePlayback = viewModel::togglePlayback,
+                    onSeek = viewModel::seekTo,
+                    onPrevious = viewModel::skipPrevious,
+                    onNext = viewModel::skipNext,
+                    onChangeMode = viewModel::cycleMode,
+                    onOpenQueue = { queueVisible = true },
+                )
                 foundationContent?.let { addFoundationDestination(it) }
             }
         }
@@ -160,6 +205,13 @@ fun MoeKoeApp(
         val currentNotice = notice ?: return@LaunchedEffect
         delay(4_000)
         viewModel.dismissNotice(currentNotice.id)
+    }
+
+    LaunchedEffect(isPlayer, state.currentItem) {
+        if (isPlayer && state.currentItem == null) {
+            queueVisible = false
+            navController.popBackStack()
+        }
     }
 
     if (queueVisible) {

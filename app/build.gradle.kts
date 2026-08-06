@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.feature.search)
     implementation(projects.feature.localmusic)
     implementation(projects.feature.login)
+    implementation(projects.feature.player)
     debugImplementation(projects.feature.foundation)
     implementation(projects.data)
     implementation(projects.playback)

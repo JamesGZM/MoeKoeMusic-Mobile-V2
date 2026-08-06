@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cn.james.music.core.model.online.Song
 import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
+import cn.james.music.core.model.playback.PlaybackMode
 import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackCommandResult
 import cn.james.music.playback.PlaybackController
@@ -65,20 +66,43 @@ class AppPlaybackViewModel
 
         fun togglePlayback() {
             viewModelScope.launch {
-                if (state.value.isPlaying) playbackController.pause() else playbackController.play()
+                (if (state.value.isPlaying) playbackController.pause() else playbackController.play()).reportFailure()
             }
         }
 
+        fun seekTo(positionMs: Long) {
+            viewModelScope.launch { playbackController.seekTo(positionMs).reportFailure() }
+        }
+
+        fun skipPrevious() {
+            viewModelScope.launch { playbackController.skipPrevious().reportFailure() }
+        }
+
+        fun skipNext() {
+            viewModelScope.launch { playbackController.skipNext().reportFailure() }
+        }
+
+        fun cycleMode() {
+            val nextMode =
+                when (state.value.mode) {
+                    PlaybackMode.Sequential -> PlaybackMode.RepeatAll
+                    PlaybackMode.RepeatAll -> PlaybackMode.RepeatOne
+                    PlaybackMode.RepeatOne -> PlaybackMode.Shuffle
+                    PlaybackMode.Shuffle -> PlaybackMode.Sequential
+                }
+            viewModelScope.launch { playbackController.setMode(nextMode).reportFailure() }
+        }
+
         fun playAt(index: Int) {
-            viewModelScope.launch { playbackController.playAt(index) }
+            viewModelScope.launch { playbackController.playAt(index).reportFailure() }
         }
 
         fun removeAt(index: Int) {
-            viewModelScope.launch { playbackController.remove(index) }
+            viewModelScope.launch { playbackController.remove(index).reportFailure() }
         }
 
         fun clearQueue() {
-            viewModelScope.launch { playbackController.clear() }
+            viewModelScope.launch { playbackController.clear().reportFailure() }
         }
 
         private fun PlaybackCommandResult.reportFailure() {

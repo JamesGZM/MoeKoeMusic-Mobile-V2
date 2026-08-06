@@ -35,4 +35,5 @@ include(
     ":feature:localmusic",
     ":feature:foundation",
     ":feature:login",
+    ":feature:player",
 )

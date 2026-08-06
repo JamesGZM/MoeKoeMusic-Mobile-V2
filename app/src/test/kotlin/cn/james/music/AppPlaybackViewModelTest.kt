@@ -77,6 +77,40 @@ class AppPlaybackViewModelTest {
             assertEquals(2, playback.playNowCalls)
         }
 
+    @Test
+    fun forwardsFullscreenPlayerCommandsAndCyclesMode() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController(PlaybackCommandResult.Accepted)
+            playback.state.value = PlaybackState(mode = PlaybackMode.RepeatAll)
+            val viewModel = AppPlaybackViewModel(playback)
+
+            viewModel.seekTo(84_000)
+            viewModel.skipPrevious()
+            viewModel.skipNext()
+            viewModel.cycleMode()
+            advanceUntilIdle()
+
+            assertEquals(84_000L, playback.lastSeekPositionMs)
+            assertEquals(1, playback.previousCalls)
+            assertEquals(1, playback.nextCalls)
+            assertEquals(PlaybackMode.RepeatOne, playback.lastMode)
+        }
+
+    @Test
+    fun rejectedFullscreenPlayerCommandPublishesTypedNotice() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController(PlaybackCommandResult.Rejected(PlaybackError.InvalidCommand))
+            val viewModel = AppPlaybackViewModel(playback)
+
+            viewModel.skipNext()
+            advanceUntilIdle()
+
+            val notice = requireNotNull(viewModel.notice.value)
+            assertEquals(PlaybackError.InvalidCommand, notice.error)
+            assertEquals("当前操作无法执行", notice.message)
+            assertFalse(notice.canRetry)
+        }
+
     private fun song() =
         Song(
             id = "fixture-id",
@@ -93,17 +127,21 @@ class AppPlaybackViewModelTest {
         PlaybackCommandResult.Rejected(PlaybackError.SourceUnavailable("kugou:fixture-hash", reason))
 
     private class FakePlaybackController(
-        private val playNowResult: PlaybackCommandResult,
+        private val commandResult: PlaybackCommandResult,
     ) : PlaybackController {
         override val state = MutableStateFlow(PlaybackState())
         override val progress = MutableStateFlow(PlaybackProgress())
         var lastItem: PlaybackItem? = null
         var playNowCalls = 0
+        var lastSeekPositionMs: Long? = null
+        var previousCalls = 0
+        var nextCalls = 0
+        var lastMode: PlaybackMode? = null
 
         override suspend fun playNow(item: PlaybackItem): PlaybackCommandResult {
             lastItem = item
             playNowCalls += 1
-            return playNowResult
+            return commandResult
         }
 
         override suspend fun replaceQueue(
@@ -131,14 +169,26 @@ class AppPlaybackViewModelTest {
 
         override suspend fun pause() = accepted()
 
-        override suspend fun seekTo(positionMs: Long) = accepted()
+        override suspend fun seekTo(positionMs: Long): PlaybackCommandResult {
+            lastSeekPositionMs = positionMs
+            return accepted()
+        }
 
-        override suspend fun skipNext() = accepted()
+        override suspend fun skipNext(): PlaybackCommandResult {
+            nextCalls += 1
+            return accepted()
+        }
 
-        override suspend fun skipPrevious() = accepted()
+        override suspend fun skipPrevious(): PlaybackCommandResult {
+            previousCalls += 1
+            return accepted()
+        }
 
-        override suspend fun setMode(mode: PlaybackMode) = accepted()
+        override suspend fun setMode(mode: PlaybackMode): PlaybackCommandResult {
+            lastMode = mode
+            return accepted()
+        }
 
-        private fun accepted() = PlaybackCommandResult.Accepted
+        private fun accepted() = commandResult
     }
 }

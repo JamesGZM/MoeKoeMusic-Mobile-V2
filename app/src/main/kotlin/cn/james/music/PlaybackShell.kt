@@ -31,6 +31,7 @@ internal fun MoeKoeMiniPlayer(
     progress: Float,
     onToggle: () -> Unit,
     onQueue: () -> Unit,
+    onOpenPlayer: () -> Unit,
 ) {
     MoeMiniPlayer(
         title = item.title,
@@ -42,6 +43,7 @@ internal fun MoeKoeMiniPlayer(
         queueContentDescription = "播放队列",
         onTogglePlayback = onToggle,
         onOpenQueue = onQueue,
+        onOpenPlayer = onOpenPlayer,
         artwork = { PlaybackArtworkImage(item) },
     )
 }
