@@ -4,13 +4,25 @@
 
 ## 视觉权威
 
-- 登录页面结构、Hero、密度与比例：[`13-login-phone-immersive.png`](../../13-login-phone-immersive.png)。
+- 登录页面结构、Hero、密度与比例：[`13-login-phone-immersive.png`](../../13-login-phone-immersive.png)。它是必须直接复用的像素基座，不是仅供模型自由发挥的风格参考。
 - Dialog：[`11-dialog-components.png`](../../11-dialog-components.png) 与 [`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md)。
 - 操作、输入与按钮层级：[`16-actions-inputs.png`](../../16-actions-inputs.png)。
 - 页面状态、Dialog 与 Bottom Sheet：[`18-mobile-states-overlays.png`](../../18-mobile-states-overlays.png)。
 - “我的”切换账号背景：[`04-my-v4.png`](../../04-my-v4.png)。
 
 所有候选均为独立的 `852 × 1846` 完整手机画布，不使用一张横向总览图承载多个状态。自动生成的示例账号、二维码和服务内容仅表达视觉，不是协议或正式数据。
+
+### 页面基座矩阵
+
+| 状态 | 固定基座 | 允许变化区域 |
+| --- | --- | --- |
+| `19a–c`、`20a–e` | `13-login-phone-immersive.png` 完整画布 | 登录卡片中分段控件以下的标题、字段、状态反馈和操作内容 |
+| `19d`、`21a–c`、`21e` | 对应 `19` 密码页原状态 | 统一遮罩与独立居中 Dialog；底层页面像素不得变化 |
+| `21d` | 隔离安全验证 Activity | Activity 自身加载与失败恢复区域；这是明确例外，不复用登录卡片 |
+| `22a–c` | `13-login-phone-immersive.png` 的 Hero 与页面容器 | 登录完成后的账号选择内容；容器边界和页面密度不得变化 |
+| `22d` | `04-my-v4.png` 完整画布 | 统一遮罩与符合 `18-mobile-states-overlays.png` 的独立 Bottom Sheet |
+
+重建或补图时必须先复制固定基座，再对允许变化区域做局部设计或确定性合成；禁止为每个状态重新生成整张页面。
 
 ## 19 · 密码登录
 

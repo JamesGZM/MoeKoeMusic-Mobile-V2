@@ -53,6 +53,7 @@
 ## 登录视觉
 
 - 登录主状态采用 [`13-login-phone-immersive.png`](design/mockups/13-login-phone-immersive.png) 的沉浸式方向。
+- 登录补充状态必须直接以 `13-login-phone-immersive.png` 的完整画布作为像素基座，只替换登录卡片内规格允许变化的状态内容；Hero、卡片外框、分段控件及固定间距不得重新生成。隔离安全验证 Activity 和“我的”页账号切换 Bottom Sheet 分别使用各自明确记录的页面基座，不套用登录卡片。
 - 插画绘制到状态栏后方，不设置独立白色 App Bar，也不重复显示“登录”标题。
 - 返回按钮位于系统安全区内，使用标准 Material 返回图标、`48dp` 触控区域和约 `40dp` 半透明圆形 Surface。
 - 验证码、密码和扫码使用同一表单 Surface 内的分段切换，不拆成三套无关视觉语言。
