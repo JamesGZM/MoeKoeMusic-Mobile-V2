@@ -22,6 +22,7 @@ import cn.james.music.kugou.api.session.KugouDeviceIdentityFactory
 import cn.james.music.kugou.api.session.KugouDeviceProfile
 import cn.james.music.kugou.api.session.KugouDeviceProfileProvider
 import cn.james.music.kugou.api.session.KugouSessionMutator
+import cn.james.music.kugou.api.session.KugouSessionObserver
 import cn.james.music.kugou.api.session.KugouSessionProvider
 import cn.james.music.kugou.api.session.KugouSessionStore
 import cn.james.music.kugou.api.transport.KtorKugouTransport
@@ -148,6 +149,9 @@ object KugouSessionModule {
 
     @Provides
     fun provideSessionProvider(initializer: KugouAnonymousSessionInitializer): KugouSessionProvider = initializer
+
+    @Provides
+    fun provideSessionObserver(initializer: KugouAnonymousSessionInitializer): KugouSessionObserver = initializer
 
     @Provides
     fun provideSessionMutator(initializer: KugouAnonymousSessionInitializer): KugouSessionMutator = initializer

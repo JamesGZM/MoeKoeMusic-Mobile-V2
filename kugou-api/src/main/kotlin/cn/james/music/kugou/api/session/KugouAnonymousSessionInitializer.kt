@@ -6,11 +6,18 @@ import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 interface KugouSessionProvider {
     suspend fun initialize(): KugouInitializationResult
+}
+
+interface KugouSessionObserver {
+    val sessions: StateFlow<KugouSessionSnapshot?>
 }
 
 class KugouAnonymousSessionInitializer internal constructor(
@@ -21,6 +28,7 @@ class KugouAnonymousSessionInitializer internal constructor(
     private val transport: KugouTransport,
     private val registrationCodec: KugouRegistrationCodec = KugouRegistrationCodec(),
 ) : KugouSessionProvider,
+    KugouSessionObserver,
     KugouSessionMutator {
     constructor(
         store: KugouSessionStore,
@@ -38,8 +46,11 @@ class KugouAnonymousSessionInitializer internal constructor(
     )
 
     private val mutex = Mutex()
+    private val mutableSessions = MutableStateFlow<KugouSessionSnapshot?>(null)
     private var current: KugouSessionSnapshot? = null
     private var inFlight: CompletableDeferred<KugouInitializationResult>? = null
+
+    override val sessions: StateFlow<KugouSessionSnapshot?> = mutableSessions.asStateFlow()
 
     override suspend fun initialize(): KugouInitializationResult {
         val pending =
@@ -53,7 +64,10 @@ class KugouAnonymousSessionInitializer internal constructor(
         return try {
             val result = initializeOnce()
             mutex.withLock {
-                if (result is KugouInitializationResult.Ready) current = result.session
+                if (result is KugouInitializationResult.Ready) {
+                    current = result.session
+                    mutableSessions.value = result.session
+                }
                 inFlight = null
             }
             pending.result.complete(result)
@@ -78,6 +92,7 @@ class KugouAnonymousSessionInitializer internal constructor(
             try {
                 store.write(snapshot)
                 current = snapshot
+                mutableSessions.value = snapshot
                 KugouSessionMutationResult.Updated(snapshot)
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -88,11 +103,12 @@ class KugouAnonymousSessionInitializer internal constructor(
 
     suspend fun clear() {
         mutex.withLock {
+            store.clear()
             current = null
             inFlight?.cancel()
             inFlight = null
+            mutableSessions.value = null
         }
-        store.clear()
     }
 
     private suspend fun initializeOnce(): KugouInitializationResult {

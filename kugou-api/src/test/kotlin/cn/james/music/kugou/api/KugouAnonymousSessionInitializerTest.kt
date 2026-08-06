@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Base64
@@ -46,6 +47,7 @@ class KugouAnonymousSessionInitializerTest {
             assertEquals(1, transport.calls)
             assertEquals(FIXTURE_DFID, store.snapshot?.dfid)
             assertEquals(FIXTURE_DFID, store.snapshot?.cookies?.value("dfid"))
+            assertEquals(store.snapshot, initializer.sessions.value)
             assertFalse(store.snapshot.toString().contains(FIXTURE_DFID))
         }
 
@@ -76,6 +78,27 @@ class KugouAnonymousSessionInitializerTest {
             assertEquals(KugouSessionMutationResult.Updated(authenticated), mutation)
             assertEquals(authenticated, store.snapshot)
             assertEquals(KugouInitializationResult.Ready(authenticated), initializer.initialize())
+            assertEquals(authenticated, initializer.sessions.value)
+
+            initializer.clear()
+
+            assertNull(store.snapshot)
+            assertNull(initializer.sessions.value)
+        }
+
+    @Test
+    fun failedReplacementDoesNotPublishUnstoredSession() =
+        runBlocking {
+            val stored = KugouSessionSnapshot(identity = FIXTURE_IDENTITY, dfid = FIXTURE_DFID)
+            val store = MemoryStore(stored)
+            val initializer = initializer(store, RegistrationTransport())
+            assertEquals(KugouInitializationResult.Ready(stored), initializer.initialize())
+            store.failWrites = true
+
+            val result = initializer.replace(stored.copy(token = "unstored", userId = "42"))
+
+            assertEquals(KugouSessionMutationResult.StorageFailure, result)
+            assertEquals(stored, initializer.sessions.value)
         }
 
     @Test
@@ -101,11 +124,13 @@ class KugouAnonymousSessionInitializerTest {
         runBlocking {
             val store = MemoryStore(failWrites = true)
             val transport = RegistrationTransport()
+            val initializer = initializer(store, transport)
 
-            val result = initializer(store, transport).initialize()
+            val result = initializer.initialize()
 
             assertEquals(KugouInitializationResult.Failure(KugouInitializationError.StorageWrite), result)
             assertEquals(0, transport.calls)
+            assertNull(initializer.sessions.value)
         }
 
     @Test
@@ -150,7 +175,7 @@ class KugouAnonymousSessionInitializerTest {
 
     private class MemoryStore(
         initial: KugouSessionSnapshot? = null,
-        private val failWrites: Boolean = false,
+        var failWrites: Boolean = false,
     ) : KugouSessionStore {
         var snapshot: KugouSessionSnapshot? = initial
 
