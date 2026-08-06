@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.border
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,7 +34,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -60,7 +58,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -105,16 +102,6 @@ internal fun LoginScreen(
     onSelectAccount: (String) -> Unit,
     onChooseOtherAccount: () -> Unit,
 ) {
-    if (state.risk is PasswordRiskUiState.Sms) {
-        RiskSmsScreen(
-            state = state,
-            onBack = onCancelRisk,
-            onRiskCodeChange = onRiskCodeChange,
-            onVerify = onVerifyRiskCode,
-            onCancel = onCancelRisk,
-        )
-        return
-    }
     Box(
         modifier =
             Modifier
@@ -163,9 +150,6 @@ internal fun LoginScreen(
                                 onPasswordChange = onPasswordChange,
                                 onTogglePasswordVisibility = onTogglePasswordVisibility,
                                 onSubmit = onSubmitPassword,
-                                onStartRiskVerification = onStartRiskVerification,
-                                onRetryTencentVerification = onRetryTencentVerification,
-                                onCancelRisk = onCancelRisk,
                             )
                         }
 
@@ -185,6 +169,14 @@ internal fun LoginScreen(
             onNavigateBack = onBack,
             foregroundColor = MaterialTheme.colorScheme.onSurface,
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+        )
+        LoginRiskDialog(
+            state = state,
+            onStartVerification = onStartRiskVerification,
+            onRetryTencentVerification = onRetryTencentVerification,
+            onRiskCodeChange = onRiskCodeChange,
+            onVerifyRiskCode = onVerifyRiskCode,
+            onCancel = onCancelRisk,
         )
     }
 }
@@ -659,45 +651,20 @@ private fun PasswordContent(
     onPasswordChange: (String) -> Unit,
     onTogglePasswordVisibility: () -> Unit,
     onSubmit: () -> Unit,
-    onStartRiskVerification: () -> Unit,
-    onRetryTencentVerification: () -> Unit,
-    onCancelRisk: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         LoginModeSelector(state.mode, onModeChange, enabled = !state.isBusy && !state.hasActiveRisk)
-        when (val risk = state.risk) {
-            null -> {
-                PasswordForm(
-                    state = state,
-                    onUsernameChange = onUsernameChange,
-                    onPasswordChange = onPasswordChange,
-                    onTogglePasswordVisibility = onTogglePasswordVisibility,
-                    onSubmit = onSubmit,
-                    onUseMobileCode = { onModeChange(LoginMode.MobileCode) },
-                )
-            }
-
-            is PasswordRiskUiState.Required -> {
-                RiskRequiredContent(
-                    state = state,
-                    onStart = onStartRiskVerification,
-                    onCancel = onCancelRisk,
-                )
-            }
-
-            is PasswordRiskUiState.Tencent -> {
-                TencentRiskFallbackContent(
-                    state = state,
-                    onRetry = onRetryTencentVerification,
-                    onCancel = onCancelRisk,
-                )
-            }
-
-            is PasswordRiskUiState.Sms -> Unit
-        }
+        PasswordForm(
+            state = state,
+            onUsernameChange = onUsernameChange,
+            onPasswordChange = onPasswordChange,
+            onTogglePasswordVisibility = onTogglePasswordVisibility,
+            onSubmit = onSubmit,
+            onUseMobileCode = { onModeChange(LoginMode.MobileCode) },
+        )
         LoginFooter()
     }
 }
@@ -715,7 +682,7 @@ private fun PasswordForm(
         value = state.username,
         onValueChange = onUsernameChange,
         modifier = Modifier.fillMaxWidth(),
-        enabled = !state.passwordLoggingIn,
+        enabled = !state.passwordLoggingIn && !state.hasActiveRisk,
         leadingIcon = {
             FieldLeadingIcon { Icon(Icons.Filled.AccountCircle, contentDescription = null) }
         },
@@ -728,12 +695,12 @@ private fun PasswordForm(
         value = state.password,
         onValueChange = onPasswordChange,
         modifier = Modifier.fillMaxWidth(),
-        enabled = !state.passwordLoggingIn,
+        enabled = !state.passwordLoggingIn && !state.hasActiveRisk,
         leadingIcon = {
             FieldLeadingIcon { Icon(Icons.Filled.Lock, contentDescription = null) }
         },
         trailingIcon = {
-            IconButton(onClick = onTogglePasswordVisibility) {
+            IconButton(onClick = onTogglePasswordVisibility, enabled = !state.hasActiveRisk) {
                 Icon(
                     imageVector = if (state.passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                     contentDescription =
@@ -753,10 +720,10 @@ private fun PasswordForm(
         visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         shape = RoundedCornerShape(18.dp),
     )
-    LoginNoticeText(state.notice)
+    LoginNoticeText(state.notice.takeUnless { state.hasActiveRisk })
     Button(
         onClick = onSubmit,
-        enabled = state.canSubmitPassword,
+        enabled = state.canSubmitPassword && !state.hasActiveRisk,
         modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
         shape = RoundedCornerShape(16.dp),
     ) {
@@ -769,7 +736,7 @@ private fun PasswordForm(
             Spacer(Modifier.width(10.dp))
         }
         Text(
-            if (state.passwordLoggingIn) {
+            if (state.passwordLoggingIn || state.hasActiveRisk) {
                 stringResource(R.string.login_password_submitting)
             } else if (state.notice is LoginNotice.PasswordRejected) {
                 stringResource(R.string.login_password_retry)
@@ -791,260 +758,6 @@ private fun PasswordForm(
             Text(stringResource(R.string.login_use_mobile_code))
         }
     }
-}
-
-@Composable
-private fun RiskRequiredContent(
-    state: LoginUiState,
-    onStart: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    Surface(
-        color = MoeKoeTheme.extraColors.warningContainer,
-        contentColor = MoeKoeTheme.extraColors.onWarningContainer,
-        shape = RoundedCornerShape(18.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(18.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            Icon(Icons.Filled.Security, contentDescription = null, tint = MoeKoeTheme.extraColors.warning)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.login_risk_required_title), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.login_risk_required_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MoeKoeTheme.extraColors.onWarningContainer.copy(alpha = 0.8f),
-                )
-            }
-        }
-    }
-    LoginNoticeText(state.notice)
-    Button(
-        onClick = onStart,
-        enabled = !state.isBusy,
-        modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        if (state.resolvingRisk) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
-                strokeWidth = 2.dp,
-            )
-            Spacer(Modifier.width(10.dp))
-        }
-        Text(
-            if (state.resolvingRisk) {
-                stringResource(R.string.login_risk_loading)
-            } else {
-                stringResource(R.string.login_risk_start)
-            },
-        )
-    }
-    OutlinedButton(
-        onClick = onCancel,
-        enabled = !state.isBusy,
-        modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Text(stringResource(R.string.login_risk_cancel))
-    }
-}
-
-@Composable
-private fun TencentRiskFallbackContent(
-    state: LoginUiState,
-    onRetry: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        shape = RoundedCornerShape(18.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(18.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            Icon(Icons.Filled.Security, contentDescription = null)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.login_tencent_required_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.login_tencent_required_description), style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-    LoginNoticeText(state.notice)
-    Button(
-        onClick = onRetry,
-        enabled = !state.isBusy,
-        modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Text(stringResource(R.string.login_tencent_retry))
-    }
-    OutlinedButton(
-        onClick = onCancel,
-        modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Text(stringResource(R.string.login_risk_cancel))
-    }
-}
-
-@Composable
-private fun RiskSmsScreen(
-    state: LoginUiState,
-    onBack: () -> Unit,
-    onRiskCodeChange: (String) -> Unit,
-    onVerify: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .padding(start = 24.dp, top = 96.dp, end = 24.dp, bottom = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Surface(
-                modifier = Modifier.size(76.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Security, contentDescription = null, modifier = Modifier.size(40.dp))
-                }
-            }
-            Text(
-                stringResource(R.string.login_risk_sms_title),
-                modifier = Modifier.padding(top = 24.dp),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                stringResource(R.string.login_risk_sms_description),
-                modifier = Modifier.padding(top = 10.dp),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(top = 28.dp),
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 18.dp)) {
-                    OtpCodeField(state.riskCode, onRiskCodeChange, enabled = !state.verifyingRisk)
-                    Text(
-                        stringResource(R.string.login_risk_sms_expiry),
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-            LoginNoticeText(state.notice)
-            Button(
-                onClick = onVerify,
-                enabled = state.canSubmitRiskCode,
-                modifier = Modifier.fillMaxWidth().padding(top = 26.dp).height(MoeKoeTheme.dimensions.largeButtonHeight),
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                if (state.verifyingRisk || state.passwordLoggingIn) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                    )
-                    Spacer(Modifier.width(10.dp))
-                }
-                Text(
-                    if (state.verifyingRisk || state.passwordLoggingIn) {
-                        stringResource(R.string.login_risk_verifying)
-                    } else {
-                        stringResource(R.string.login_risk_verify_continue)
-                    },
-                )
-            }
-            OutlinedButton(
-                onClick = onCancel,
-                enabled = !state.isBusy,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp).height(MoeKoeTheme.dimensions.buttonHeight),
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                Text(stringResource(R.string.login_risk_cancel_login))
-            }
-            Spacer(Modifier.height(34.dp))
-            LoginFooter()
-        }
-        MoeKoeImmersiveTopBar(
-            navigationContentDescription = stringResource(R.string.login_back),
-            onNavigateBack = onBack,
-            foregroundColor = MaterialTheme.colorScheme.onSurface,
-            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
-        )
-    }
-}
-
-@Composable
-private fun OtpCodeField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    enabled: Boolean,
-) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth().height(58.dp),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-        textStyle = MaterialTheme.typography.titleLarge.copy(color = Color.Transparent),
-        cursorBrush = SolidColor(Color.Transparent),
-        decorationBox = { innerTextField ->
-            Box {
-                innerTextField()
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    repeat(6) { index ->
-                        Box(
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = value.getOrNull(index)?.toString().orEmpty(),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.align(Alignment.BottomCenter),
-                                thickness = if (index == value.length.coerceAtMost(5)) 2.dp else 1.dp,
-                                color =
-                                    if (index == value.length.coerceAtMost(5)) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    },
-                            )
-                        }
-                    }
-                }
-            }
-        },
-    )
 }
 
 @Composable
@@ -1155,7 +868,7 @@ private fun AccountRow(
 }
 
 @Composable
-private fun LoginNoticeText(notice: LoginNotice?) {
+internal fun LoginNoticeText(notice: LoginNotice?) {
     if (notice == null) return
     val isError = notice !is LoginNotice.CodeSent
     Text(

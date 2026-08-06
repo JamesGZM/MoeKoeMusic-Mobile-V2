@@ -26,10 +26,12 @@
     <string name="login_password_multiple_accounts">该账号关联多个用户，请改用验证码登录选择账号</string>
     <string name="login_use_mobile_code">改用验证码登录</string>
     <string name="login_risk_required_title">为保障账号安全，需要额外验证</string>
+    <string name="login_risk_required_dialog_title">需要安全验证</string>
     <string name="login_risk_required_description">检测到当前登录环境存在风险，请先完成一次安全验证后再登录。</string>
     <string name="login_risk_start">开始验证</string>
     <string name="login_risk_loading">正在获取验证方式…</string>
     <string name="login_risk_cancel">取消并返回</string>
+    <string name="login_risk_cancel_short">取消</string>
     <string name="login_risk_sms_title">确认是你本人</string>
     <string name="login_risk_sms_description">我们已向该账号绑定的手机号发送验证码</string>
     <string name="login_risk_sms_expiry">验证码已发送，10 分钟内有效</string>
@@ -41,8 +43,10 @@
     <string name="login_risk_repeated">验证后仍需安全校验，请改用验证码登录</string>
     <string name="login_risk_unsupported">暂不支持该安全验证方式（类型 %1$d），请改用验证码登录</string>
     <string name="login_tencent_required_title">需要完成图形安全验证</string>
+    <string name="login_tencent_failure_title">验证未完成</string>
+    <string name="login_tencent_failure_description">安全验证未完成或加载失败，请重试。</string>
     <string name="login_tencent_required_description">验证将在独立安全页面中完成，本页不会接触你的密码或会话。</string>
-    <string name="login_tencent_retry">重新打开安全验证</string>
+    <string name="login_tencent_retry">重新打开</string>
     <string name="login_terms_prefix">登录即代表同意 </string>
     <string name="login_terms_user_agreement">用户协议</string>
     <string name="login_terms_and"> 和 </string>

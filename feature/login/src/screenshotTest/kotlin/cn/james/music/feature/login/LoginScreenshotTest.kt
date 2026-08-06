@@ -61,6 +61,20 @@ fun LoginPasswordRejectedScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "PasswordSubmitting", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginPasswordSubmittingScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.Password,
+            username = "miyu.song@moekoe.com",
+            password = "fixture-password",
+            passwordLoggingIn = true,
+        ),
+    )
+}
+
+@PreviewTest
 @Preview(name = "PasswordRiskRequired", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginPasswordRiskRequiredScreenshot() {
@@ -90,6 +104,38 @@ fun LoginRiskSmsScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "RiskSmsSubmitting", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginRiskSmsSubmittingScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.Password,
+            username = "miyu.song@moekoe.com",
+            password = "fixture-password",
+            risk = PasswordRiskUiState.Sms(previewChallenge),
+            riskCode = "281946",
+            verifyingRisk = true,
+        ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "RiskSmsRejected", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginRiskSmsRejectedScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            mode = LoginMode.Password,
+            username = "miyu.song@moekoe.com",
+            password = "fixture-password",
+            risk = PasswordRiskUiState.Sms(previewChallenge),
+            riskCode = "281946",
+            notice = LoginNotice.RiskRejected,
+        ),
+    )
+}
+
+@PreviewTest
 @Preview(name = "RiskTencent", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginRiskTencentScreenshot() {
@@ -99,6 +145,7 @@ fun LoginRiskTencentScreenshot() {
             username = "miyu.song@moekoe.com",
             password = "fixture-password",
             risk = PasswordRiskUiState.Tencent(previewChallenge, "123456789"),
+            notice = LoginNotice.RiskRejected,
         ),
     )
 }
