@@ -165,7 +165,10 @@ fun MoeKoeApp(
                 navController = appState.navController,
                 startDestination = HomeGraph,
             ) {
-                homeGraph(onSearch = { navController.navigate(SearchDestination) })
+                homeGraph(
+                    onSearch = { navController.navigate(SearchDestination) },
+                    onPlay = viewModel::play,
+                )
                 discoverGraph()
                 myGraph(
                     onLogin = { navController.navigate(LoginDestination) },

@@ -44,7 +44,7 @@ class MainActivityTest {
 
     @Test
     fun searchUsesSystemBackStackInsteadOfReturningToAHardcodedPage() {
-        composeRule.onNodeWithText("搜索音乐").performClick()
+        composeRule.onNodeWithText("搜索音乐、歌手、歌单…").performClick()
         composeRule.onNodeWithText("想听什么？").assertIsDisplayed()
 
         composeRule.runOnUiThread {
