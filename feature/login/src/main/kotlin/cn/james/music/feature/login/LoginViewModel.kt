@@ -191,15 +191,15 @@ internal class LoginViewModel
             mutableState.value =
                 when (mode) {
                     LoginMode.MobileCode -> {
-                        LoginUiState(mode = mode)
+                        LoginUiState(mode = mode, phone = current.phone)
                     }
 
                     LoginMode.Password -> {
-                        LoginUiState(mode = mode)
+                        LoginUiState(mode = mode, phone = current.phone)
                     }
 
                     LoginMode.QrCode -> {
-                        LoginUiState(mode = mode, qrLogin = QrLoginUiState.Generating)
+                        LoginUiState(mode = mode, phone = current.phone, qrLogin = QrLoginUiState.Generating)
                     }
                 }
             if (mode == LoginMode.QrCode) startQrLogin()

@@ -139,20 +139,21 @@ class LoginViewModelTest {
         }
 
     @Test
-    fun switchingModesClearsInputsFromThePreviousMode() =
+    fun switchingModesPreservesPhoneButClearsSensitiveModeInputs() =
         runTest(dispatcher) {
             viewModel.updatePhone(VALID_PHONE)
             viewModel.updateCode("123456")
 
             viewModel.switchMode(LoginMode.Password)
 
-            assertEquals("", viewModel.state.value.phone)
+            assertEquals(VALID_PHONE, viewModel.state.value.phone)
             assertEquals("", viewModel.state.value.code)
             viewModel.updateUsername("fixture-account")
             viewModel.updatePassword("fixture-password")
 
             viewModel.switchMode(LoginMode.MobileCode)
 
+            assertEquals(VALID_PHONE, viewModel.state.value.phone)
             assertEquals("", viewModel.state.value.username)
             assertEquals("", viewModel.state.value.password)
         }
