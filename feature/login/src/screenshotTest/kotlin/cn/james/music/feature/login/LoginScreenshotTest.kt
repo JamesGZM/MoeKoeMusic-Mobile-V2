@@ -261,6 +261,13 @@ fun LoginQrExpiredScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "QrExpiredLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Composable
+fun LoginQrExpiredLargeTextScreenshot() {
+    LoginScreenshotContent(LoginUiState(mode = LoginMode.QrCode, qrLogin = QrLoginUiState.Expired(previewQrSession)))
+}
+
+@PreviewTest
 @Preview(name = "QrFailure", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginQrFailureScreenshot() {

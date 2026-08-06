@@ -569,7 +569,7 @@ private fun QrExpiredContent(
         )
         Button(
             onClick = onRefresh,
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(MoeKoeTheme.dimensions.largeButtonHeight),
+            modifier = Modifier.width(176.dp).padding(top = 8.dp).height(MoeKoeTheme.dimensions.largeButtonHeight),
             shape = RoundedCornerShape(16.dp),
         ) {
             Text(stringResource(R.string.login_qr_refresh))
