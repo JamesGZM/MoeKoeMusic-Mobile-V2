@@ -89,8 +89,18 @@ class KtorKugouTransportTest {
 
             transport.execute(request(baseUrl = "http://login.user.kugou.com"))
 
-            assertEquals("http", interceptor.requests.single().url.scheme)
-            assertEquals("login.user.kugou.com", interceptor.requests.single().url.host)
+            assertEquals(
+                "http",
+                interceptor.requests
+                    .single()
+                    .url.scheme,
+            )
+            assertEquals(
+                "login.user.kugou.com",
+                interceptor.requests
+                    .single()
+                    .url.host,
+            )
         }
 
     @Test

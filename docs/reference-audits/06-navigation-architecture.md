@@ -11,7 +11,7 @@
 - 使用 Navigation Compose `2.9.8`，不再以 Compose `remember` 枚举模拟路由。
 - 无参数目的地使用 `@Serializable data object`，带参数目的地使用 `@Serializable data class`。
 - 参数由 `NavBackStackEntry.toRoute()` 或 `SavedStateHandle.toRoute()` 读取，不传递完整业务对象。
-- 一级目的地使用嵌套 Graph；切换底部 Tab 时使用 `popUpTo + saveState + restoreState + launchSingleTop`。
+- 一级目的地使用嵌套 Graph；切换底部 Tab 时使用 `popUpTo(graph.findStartDestination().id) + saveState + restoreState + launchSingleTop`。`popUpTo` 必须指向最终起始 Destination，而不是外层嵌套 Graph。
 - 返回动作优先 `NavController.popBackStack()`，不把目标页写死为某个 Tab。
 - `:app` 创建并持有应用级 `NavController`、`NavHost` 与 Scaffold；各 `:feature:*` 模块只向 `NavGraphBuilder` 暴露自己的注册入口。
 
@@ -61,12 +61,16 @@ Feature 模块粒度、文件职责与 Now in Android 对照见 [`08-feature-mod
 - Debug 实验台只在 Debug 构建注册，不进入 Release 导航图。
 - Bottom Sheet 队列当前是应用级临时 UI 状态，不伪装为一级页面；正式播放器阶段再决定是否建模为 destination。
 - 导航 Route 不携带显示文案；文案始终来自资源。
+- 一级 Tab 根页面不形成按点击先后排列的历史；`首页 → 发现 → 我的 → Back` 返回首页。发现、我的各自的子页面栈仍独立保存并在重新选择该 Tab 时恢复。
+- Tab 恢复不得触发页面首次加载闪烁。ViewModel 可在生命周期恢复时校验会话或刷新，但必须保留已经得到的正常或匿名内容，把刷新建模为后台刷新而不是把状态重置为 Loading。
 
 ## 验收矩阵
 
 - 搜索页系统返回键回到实际来源页。
 - 本地音乐 → 设备扫描 → 返回，仍保留本地音乐页面状态。
 - 三个底部 Tab 往返后分别恢复栈和页面状态。
+- 首页 → 发现 → 我的后按系统 Back 直接返回首页，不回放 Tab 点击历史。
+- 已确认匿名的“我的”在离开并返回时持续显示登录卡片，不闪回骨架或全屏 Loading。
 - 重复点击当前 Tab 不堆叠重复目的地。
 - Activity 重建后恢复当前目的地。
 - Release 导航图不存在播放实验台。

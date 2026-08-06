@@ -72,6 +72,9 @@
 
 - ViewModel 内部使用 `MutableStateFlow`，外部只暴露 `StateFlow`。
 - 使用 `stateIn` 时明确 `SharingStarted` 和初始值。
+- 页面状态必须区分首次加载与已有内容刷新。一级 Tab 恢复、前后台切换或生命周期重新订阅时，已有正常、匿名或可恢复错误内容必须保留；不得重新退回全屏 Loading。只有该页面从未得到过可展示状态时才能使用首次加载占位。
+- 表单草稿由页面级 ViewModel 持有，模式切换必须基于当前状态做定向更新，禁止用新的默认 `UiState` 重建整个表单。手机号、搜索词等需要跨同页模式复用的草稿按产品语义保留；验证码、密码、票据等敏感值必须逐项规定清理时机，不得以“全部保留”或“全部清空”替代状态设计。
+- `rememberSaveable` 只保存纯 UI、非敏感且不属于业务提交的数据；进程恢复需要保留的非敏感表单字段才可进入 `SavedStateHandle`。密码、验证码、token、Cookie 和风险票据不得写入可保存实例状态。
 - 搜索、切歌等可过期请求必须使用取消或序列号防止旧结果覆盖新状态。
 - 不在 Composable 中直接启动不受生命周期管理的协程。
 - 播放进度、歌词行和常规页面状态拆分更新频率。
@@ -111,6 +114,13 @@
 - 不以行数作为唯一标准；通常超过 300 行或同时包含 ViewModel、复杂 Screen 与导航注册时必须解释并拆分。
 - Feature 的 `api/impl` 拆分不是默认仪式。只有出现跨 Feature API 依赖、多 App 复用、可替换实现或需要编译期隐藏实现依赖时才拆分，并记录决策。
 - 应用壳状态与业务状态分开：MiniPlayer/全局反馈可以属于 App State，搜索、本地音乐、登录等状态必须由各自 Feature 持有。
+
+## 导航与一级 Tab
+
+- 一级 Tab 使用独立嵌套 Graph，并通过 `popUpTo(graph.findStartDestination().id) + saveState + restoreState + launchSingleTop` 保存各自内部返回栈；禁止把嵌套 Graph 自身的 id 当作最终起始 Destination。
+- 切换一级 Tab 只改变当前工作区，不建立按点击时间排列的 Tab 历史。位于任一一级 Tab 根页面时，系统 Back 返回应用起始 Tab；位于 Tab 子页面时，先弹出该 Tab 自己的内部栈。
+- 重复点击当前 Tab 不创建重复 Destination；是否回到该 Tab 根页面必须作为产品行为单独定义和测试，不能依赖偶然的 NavController 行为。
+- Tab 切换后的状态恢复包含导航栈、列表位置、已加载内容和非敏感页面草稿；恢复不等于重新发起首次加载。
 
 ## 可访问性
 

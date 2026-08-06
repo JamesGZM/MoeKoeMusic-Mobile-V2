@@ -1,10 +1,11 @@
-@file:Suppress("ktlint:standard:max-line-length")
+@file:Suppress("ktlint:standard:function-naming")
 
 package cn.james.music.feature.localmusic
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,23 +35,35 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.model.local.DeviceAudioCandidate
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalMusic
 import cn.james.music.core.model.local.LocalMusicSort
+import coil3.compose.AsyncImage
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable internal fun LocalMusicScreen(state: LocalMusicUiState, onBack: () -> Unit, onChooseFiles: () -> Unit, onScan: () -> Unit, onPlay: (LocalMusic, List<LocalMusic>) -> Unit, onDelete: (String) -> Unit, onCancelImport: (String) -> Unit) {
+@Composable
+internal fun LocalMusicScreen(
+    state: LocalMusicUiState,
+    onBack: () -> Unit,
+    onChooseFiles: () -> Unit,
+    onScan: () -> Unit,
+    onPlay: (LocalMusic, List<LocalMusic>) -> Unit,
+    onDelete: (String) -> Unit,
+    onCancelImport: (String) -> Unit,
+) {
     var deleting by remember { mutableStateOf<LocalMusic?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(LocalMusicSort.Newest) }
     val visible =
         state.music
-            .filter { query.isBlank() || it.title.contains(query, ignoreCase = true) || it.artist.contains(query, ignoreCase = true) }
-            .let { music ->
+            .filter { music ->
+                query.isBlank() ||
+                    music.title.contains(query, ignoreCase = true) ||
+                    music.artist.contains(query, ignoreCase = true)
+            }.let { music ->
                 when (sort) {
                     LocalMusicSort.Newest -> music.sortedByDescending(LocalMusic::importedAtEpochMs)
                     LocalMusicSort.Title -> music.sortedBy(LocalMusic::title)
@@ -59,36 +72,108 @@ import java.io.File
                 }
             }
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("本地音乐") }, navigationIcon = { TextButton(onClick = onBack) { Text("返回") } })
-        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { Button(onClick = onChooseFiles) { Text("导入文件") }; Button(onClick = onScan) { Text("扫描设备") } }
-        state.imports.firstOrNull { it.state == LocalImportBatchState.Running || it.state == LocalImportBatchState.Queued }?.let { progress ->
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("正在导入 ${progress.completedCount}/${progress.totalCount}", Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
-                TextButton(onClick = { onCancelImport(progress.batchId) }) { Text("取消") }
-            }
+        TopAppBar(
+            title = { Text("本地音乐") },
+            navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Button(onClick = onChooseFiles) { Text("导入文件") }
+            Button(onClick = onScan) { Text("扫描设备") }
         }
+        state.imports
+            .firstOrNull { progress ->
+                progress.state == LocalImportBatchState.Running ||
+                    progress.state == LocalImportBatchState.Queued
+            }?.let { progress ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "正在导入 ${progress.completedCount}/${progress.totalCount}",
+                        Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    TextButton(onClick = { onCancelImport(progress.batchId) }) { Text("取消") }
+                }
+            }
         if (state.music.isNotEmpty()) {
-            OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("搜索歌曲或艺术家") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
-            LazyRow(contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("搜索歌曲或艺术家") },
+                singleLine = true,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 items(LocalMusicSort.entries) { option ->
-                    FilterChip(selected = sort == option, onClick = { sort = option }, label = { Text(option.label) })
+                    FilterChip(
+                        selected = sort == option,
+                        onClick = { sort = option },
+                        label = { Text(option.label) },
+                    )
                 }
             }
         }
-        if (state.music.isEmpty()) LocalMusicMessage("还没有本地音乐", "选择音频文件，MoeKoe 会复制到 App 专属目录") else if (visible.isEmpty()) LocalMusicMessage("没有找到歌曲", "试试其他歌曲名或艺术家") else LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)) {
-            items(visible, key = LocalMusic::id) { music -> MusicRow(music, onClick = { onPlay(music, visible) }, onDelete = { deleting = music }); HorizontalDivider() }
+        if (state.music.isEmpty()) {
+            LocalMusicMessage("还没有本地音乐", "选择音频文件，MoeKoe 会复制到 App 专属目录")
+        } else if (visible.isEmpty()) {
+            LocalMusicMessage("没有找到歌曲", "试试其他歌曲名或艺术家")
+        } else {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+            ) {
+                items(visible, key = LocalMusic::id) { music ->
+                    MusicRow(
+                        music = music,
+                        onClick = { onPlay(music, visible) },
+                        onDelete = { deleting = music },
+                    )
+                    HorizontalDivider()
+                }
+            }
         }
     }
-    deleting?.let { music -> AlertDialog(onDismissRequest = { deleting = null }, title = { Text("删除本地音乐？") }, text = { Text("将删除 MoeKoe 保存的副本，不影响原始文件。") }, confirmButton = { TextButton(onClick = { onDelete(music.id); deleting = null }) { Text("删除") } }, dismissButton = { TextButton(onClick = { deleting = null }) { Text("取消") } }) }
+    deleting?.let { music ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text("删除本地音乐？") },
+            text = { Text("将删除 MoeKoe 保存的副本，不影响原始文件。") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(music.id)
+                        deleting = null
+                    },
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleting = null }) { Text("取消") }
+            },
+        )
+    }
 }
 
 private val LocalMusicSort.label: String
-    get() = when (this) {
-        LocalMusicSort.Newest -> "最近导入"
-        LocalMusicSort.Title -> "标题"
-        LocalMusicSort.Artist -> "艺术家"
-        LocalMusicSort.Duration -> "时长"
-    }
+    get() =
+        when (this) {
+            LocalMusicSort.Newest -> "最近导入"
+            LocalMusicSort.Title -> "标题"
+            LocalMusicSort.Artist -> "艺术家"
+            LocalMusicSort.Duration -> "时长"
+        }
 
 @Composable
 private fun LocalMusicMessage(
@@ -100,11 +185,20 @@ private fun LocalMusicMessage(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-        Text(message, modifier = Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = message,
+            modifier = Modifier.padding(top = 12.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
-@Composable private fun MusicRow(music: LocalMusic, onClick: () -> Unit, onDelete: () -> Unit) {
+@Composable
+private fun MusicRow(
+    music: LocalMusic,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val context = LocalContext.current
     MoeSongRow(
         title = music.title,
@@ -164,7 +258,10 @@ internal fun DeviceScanScreen(
                         Text(if (candidate.mediaStoreId in selected) "✓ " else "○ ")
                         Column {
                             Text(candidate.displayName)
-                            Text(candidate.artist ?: "未知艺术家", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                text = candidate.artist ?: "未知艺术家",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }
