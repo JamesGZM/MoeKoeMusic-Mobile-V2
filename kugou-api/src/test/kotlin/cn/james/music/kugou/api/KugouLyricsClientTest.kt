@@ -7,7 +7,6 @@ import cn.james.music.kugou.api.transport.EpochSecondsProvider
 import cn.james.music.kugou.api.transport.KugouCallExecutor
 import cn.james.music.kugou.api.transport.KugouPreparedRequest
 import cn.james.music.kugou.api.transport.KugouRawResponse
-import cn.james.music.kugou.api.transport.KugouRequestContext
 import cn.james.music.kugou.api.transport.KugouRequestFactory
 import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
@@ -27,13 +26,18 @@ class KugouLyricsClientTest {
                     jsonResponse("""{"status":200,"candidates":[{"id":42,"accesskey":"fixture-key"}]}"""),
                     jsonResponse("""{"status":200,"contenttype":0,"content":"$NODE_KRC_VECTOR"}"""),
                 )
-            val result = client(transport).fetchLyrics("ABCDEF", context())
+            val result = client(transport).fetchLyrics("ABCDEF")
 
             assertTrue(result is KugouApiResult.Success)
             val lyrics = (result as KugouApiResult.Success).value as KugouLyricsFetchResult.Available
             assertEquals(FIXTURE_KRC_TEXT, lyrics.source.krcText)
             assertEquals(listOf("/search", "/download"), transport.requests.map { it.path })
             assertEquals("ABCDEF", transport.requests.first().query["hash"])
+            transport.requests.forEach { request ->
+                assertTrue("mid" !in request.query)
+                assertTrue("dfid" !in request.query)
+                assertTrue("Cookie" !in request.headers)
+            }
             assertFalseSensitiveDataInResult(result)
         }
 
@@ -41,7 +45,7 @@ class KugouLyricsClientTest {
     fun noCandidateStopsBeforeDownload() =
         runBlocking {
             val transport = QueueTransport(jsonResponse("""{"status":200,"candidates":[]}"""))
-            val result = client(transport).fetchLyrics("ABCDEF", context())
+            val result = client(transport).fetchLyrics("ABCDEF")
 
             assertEquals(KugouLyricsFetchResult.NotFound, (result as KugouApiResult.Success).value)
             assertEquals(listOf("/search"), transport.requests.map { it.path })
@@ -52,7 +56,7 @@ class KugouLyricsClientTest {
         val transport = KugouTransport { throw CancellationException("fixture cancellation") }
 
         assertThrows(CancellationException::class.java) {
-            runBlocking { client(transport).fetchLyrics("ABCDEF", context()) }
+            runBlocking { client(transport).fetchLyrics("ABCDEF") }
         }
     }
 
@@ -63,8 +67,6 @@ class KugouLyricsClientTest {
                 transport = transport,
             ),
         )
-
-    private fun context() = KugouRequestContext(mid = "fixture-mid", dfid = "fixture-dfid")
 
     private fun jsonResponse(body: String) =
         KugouTransportResult.Success(

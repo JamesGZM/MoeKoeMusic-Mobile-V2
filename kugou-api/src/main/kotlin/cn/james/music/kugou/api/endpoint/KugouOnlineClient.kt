@@ -100,11 +100,8 @@ class KugouOnlineClient(
             }
         }
 
-    suspend fun fetchLyrics(
-        songHash: String,
-        context: KugouRequestContext,
-    ): KugouApiResult<KugouLyricsFetchResult> =
-        when (val response = executor.executeJson(KugouEndpoints.searchLyrics(songHash), context)) {
+    suspend fun fetchLyrics(songHash: String): KugouApiResult<KugouLyricsFetchResult> =
+        when (val response = executor.executeJson(KugouEndpoints.searchLyrics(songHash), LYRICS_REQUEST_CONTEXT)) {
             is KugouProtocolResult.Failure -> {
                 KugouApiResult.Failure(response.error)
             }
@@ -113,20 +110,17 @@ class KugouOnlineClient(
                 when (val decoded = lyricsCandidateDecoder.decode(response.body)) {
                     is KugouLyricsCandidateDecodeResult.Failure -> KugouApiResult.Failure(decoded.error)
                     KugouLyricsCandidateDecodeResult.NotFound -> KugouApiResult.Success(KugouLyricsFetchResult.NotFound)
-                    is KugouLyricsCandidateDecodeResult.Found -> downloadLyrics(decoded.candidate, context)
+                    is KugouLyricsCandidateDecodeResult.Found -> downloadLyrics(decoded.candidate)
                 }
             }
         }
 
-    private suspend fun downloadLyrics(
-        candidate: KugouLyricsCandidate,
-        context: KugouRequestContext,
-    ): KugouApiResult<KugouLyricsFetchResult> =
+    private suspend fun downloadLyrics(candidate: KugouLyricsCandidate): KugouApiResult<KugouLyricsFetchResult> =
         when (
             val response =
                 executor.executeJson(
                     KugouEndpoints.downloadLyrics(candidate.id, candidate.accessKey),
-                    context,
+                    LYRICS_REQUEST_CONTEXT,
                 )
         ) {
             is KugouProtocolResult.Failure -> {
@@ -145,4 +139,8 @@ class KugouOnlineClient(
                 }
             }
         }
+
+    private companion object {
+        val LYRICS_REQUEST_CONTEXT = KugouRequestContext(mid = "-")
+    }
 }
