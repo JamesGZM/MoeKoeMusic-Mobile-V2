@@ -83,6 +83,21 @@ fun LoginMultipleAccountsFailureLargeTextScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "MultipleAccountsFailureLargestText", widthDp = 390, heightDp = 844, fontScale = 2f)
+@Composable
+fun LoginMultipleAccountsFailureLargestTextScreenshot() {
+    LoginScreenshotContent(
+        LoginUiState(
+            phone = "13800138000",
+            code = "123456",
+            accounts = previewAccounts,
+            selectedUserId = "10000002",
+            notice = LoginNotice.Failure(AuthError.Rejected),
+        ),
+    )
+}
+
+@PreviewTest
 @Preview(name = "MobileCodeLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
 fun LoginMobileCodeLargeTextScreenshot() {
