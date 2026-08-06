@@ -66,9 +66,11 @@ internal class MyViewModel
             refreshJob =
                 viewModelScope.launch {
                     val previousAccount = mutableState.value.account
+                    val hasStableContent =
+                        previousAccount is MyAccountUiState.Authenticated || previousAccount is MyAccountUiState.Anonymous
                     mutableState.value =
                         mutableState.value.copy(
-                            account = if (previousAccount is MyAccountUiState.Authenticated) previousAccount else MyAccountUiState.Loading,
+                            account = if (hasStableContent) previousAccount else MyAccountUiState.Loading,
                             refreshing = previousAccount is MyAccountUiState.Authenticated,
                             refreshError = null,
                             logoutError = null,
@@ -80,7 +82,7 @@ internal class MyViewModel
 
                         is UserProfileResult.Failure -> {
                             mutableState.value =
-                                if (previousAccount is MyAccountUiState.Authenticated) {
+                                if (hasStableContent) {
                                     mutableState.value.copy(
                                         account = previousAccount,
                                         refreshing = false,

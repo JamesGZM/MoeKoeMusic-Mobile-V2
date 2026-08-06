@@ -14,6 +14,9 @@ import cn.james.music.core.model.auth.AuthRiskProof
 import cn.james.music.core.model.auth.AuthState
 import cn.james.music.core.model.auth.MobileCodeLoginResult
 import cn.james.music.core.model.auth.PasswordLoginResult
+import cn.james.music.core.model.auth.QrLoginCheckResult
+import cn.james.music.core.model.auth.QrLoginStartResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -89,6 +92,22 @@ class MyViewModelTest {
         }
 
     @Test
+    fun returningToKnownAnonymousStateDoesNotFlashLoading() =
+        runTest(dispatcher) {
+            profileRepository.results.add(UserProfileResult.Anonymous)
+            viewModel.refresh()
+            runCurrent()
+            profileRepository.deferredResult = CompletableDeferred()
+
+            viewModel.refresh()
+            runCurrent()
+
+            assertEquals(MyAccountUiState.Anonymous, viewModel.state.value.account)
+            profileRepository.deferredResult?.complete(UserProfileResult.Anonymous)
+            runCurrent()
+        }
+
+    @Test
     fun logoutRequiresConfirmationAndSwitchesToAnonymousAfterCommit() =
         runTest(dispatcher) {
             profileRepository.results.add(UserProfileResult.Success(FIXTURE_PROFILE))
@@ -125,8 +144,9 @@ class MyViewModelTest {
 
     private class FakeProfileRepository : UserProfileRepository {
         val results = ArrayDeque<UserProfileResult>()
+        var deferredResult: CompletableDeferred<UserProfileResult>? = null
 
-        override suspend fun load(): UserProfileResult = results.removeFirst()
+        override suspend fun load(): UserProfileResult = deferredResult?.await() ?: results.removeFirst()
     }
 
     private class FakeAuthRepository : AuthRepository {
@@ -147,6 +167,10 @@ class MyViewModelTest {
             username: String,
             password: String,
         ): PasswordLoginResult = PasswordLoginResult.Failure(AuthError.Protocol)
+
+        override suspend fun createQrLogin(): QrLoginStartResult = QrLoginStartResult.Failure(AuthError.Protocol)
+
+        override suspend fun checkQrLogin(key: String): QrLoginCheckResult = QrLoginCheckResult.Failure(AuthError.Protocol)
 
         override suspend fun getRiskMethod(challenge: AuthRiskChallenge): AuthRiskMethodResult =
             AuthRiskMethodResult.Failure(AuthError.Protocol)
