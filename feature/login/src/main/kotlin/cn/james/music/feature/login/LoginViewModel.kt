@@ -626,23 +626,36 @@ internal class LoginViewModel
                     QrLoginCheckResult.Waiting -> {
                         consecutiveFailures = 0
                         val current = mutableState.value.qrLogin
-                        if (current !is QrLoginUiState.Scanned) {
-                            mutableState.value =
-                                mutableState.value.copy(
-                                    qrLogin = QrLoginUiState.Waiting(session, current.remainingSecondsAfterPoll()),
-                                )
+                        val remainingSeconds = current.remainingSecondsAfterPoll()
+                        if (remainingSeconds == 0) {
+                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
+                            return
                         }
+                        mutableState.value =
+                            mutableState.value.copy(
+                                qrLogin =
+                                    if (current is QrLoginUiState.Scanned) {
+                                        current.copy(remainingSeconds = remainingSeconds)
+                                    } else {
+                                        QrLoginUiState.Waiting(session, remainingSeconds)
+                                    },
+                            )
                     }
 
                     is QrLoginCheckResult.Scanned -> {
                         consecutiveFailures = 0
+                        val remainingSeconds = mutableState.value.qrLogin.remainingSecondsAfterPoll()
+                        if (remainingSeconds == 0) {
+                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
+                            return
+                        }
                         mutableState.value =
                             mutableState.value.copy(
                                 qrLogin =
                                     QrLoginUiState.Scanned(
                                         session = session,
                                         nickname = result.nickname,
-                                        remainingSeconds = mutableState.value.qrLogin.remainingSecondsAfterPoll(),
+                                        remainingSeconds = remainingSeconds,
                                     ),
                             )
                     }

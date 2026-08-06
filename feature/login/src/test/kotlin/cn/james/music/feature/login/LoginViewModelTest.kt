@@ -397,6 +397,52 @@ class LoginViewModelTest {
             assertEquals(LoginEffect.Completed, effect.await())
         }
 
+    @Test
+    fun qrWaitingExpiresLocallyAndStopsPollingAtZero() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("fixture-key"))
+            repeat(60) { repository.qrCheckResults.add(QrLoginCheckResult.Waiting) }
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            repeat(60) {
+                advanceTimeBy(2_000)
+                runCurrent()
+            }
+
+            assertEquals(
+                QrLoginUiState.Expired(QrLoginSession("fixture-key", "https://example.test/fixture-key")),
+                viewModel.state.value.qrLogin,
+            )
+            assertEquals(60, repository.qrCheckedKeys.size)
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertEquals(60, repository.qrCheckedKeys.size)
+        }
+
+    @Test
+    fun qrScannedExpiresLocallyAndStopsPollingAtZero() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("fixture-key"))
+            repeat(60) { repository.qrCheckResults.add(QrLoginCheckResult.Scanned("MoeKoe")) }
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            repeat(60) {
+                advanceTimeBy(2_000)
+                runCurrent()
+            }
+
+            assertEquals(
+                QrLoginUiState.Expired(QrLoginSession("fixture-key", "https://example.test/fixture-key")),
+                viewModel.state.value.qrLogin,
+            )
+            assertEquals(60, repository.qrCheckedKeys.size)
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertEquals(60, repository.qrCheckedKeys.size)
+        }
+
     private fun enterPasswordCredentials() {
         viewModel.switchMode(LoginMode.Password)
         viewModel.updateUsername("fixture-account")
