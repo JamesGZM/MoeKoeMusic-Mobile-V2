@@ -69,17 +69,17 @@
 | 操作与输入 | [`16-actions-inputs.png`](design/mockups/16-actions-inputs.png) | Material Icons 优先；统一状态与触控尺寸 |
 | 音乐内容组件 | [`17-music-content-components.png`](design/mockups/17-music-content-components.png) | 保持紧凑列表，不将所有内容卡片化 |
 | 页面状态与覆盖层 | [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png) | 所有覆盖层按真实手机视口与层级验收 |
-| 密码登录与风控 | [`19-login-password-states.png`](design/mockups/19-login-password-states.png) | 凭据错误内联；触发风控后停止原提交 |
-| 扫码登录状态 | [`20-login-qr-states.png`](design/mockups/20-login-qr-states.png) | 生成、等待、已扫码、过期和失败分别建模 |
-| 登录安全验证 | [`21-login-risk-verification.png`](design/mockups/21-login-risk-verification.png) | 原生短信与隔离腾讯验证具有明确安全边界 |
-| 手机号多账号 | [`22-login-multi-account.png`](design/mockups/22-login-multi-account.png) | 只在多账号响应后展示，不自动选择 |
+| 密码登录与风控 | [`login-v2` 候选](design/mockups/candidates/login-v2/README.md#19--密码登录) | 待确认；凭据错误内联，风险确认使用居中 Dialog |
+| 扫码登录状态 | [`login-v2` 候选](design/mockups/candidates/login-v2/README.md#20--扫码登录) | 待确认；生成、等待、已扫码、过期和失败分别建模 |
+| 登录安全验证 | [`login-v2` 候选](design/mockups/candidates/login-v2/README.md#21--风险验证) | 待确认；短信 Dialog 与隔离腾讯验证保持安全边界 |
+| 手机号多账号 | [`login-v2` 候选](design/mockups/candidates/login-v2/README.md#22--多账号) | 待确认；只在多账号响应后展示，不自动选择 |
 
-登录流程 `19` 至 `22` 号设计稿已于 2026-08-05 确认，并建立 [`login-flow`](design/prototypes/login-flow/README.md) 本地交互原型验证切换、返回、提交锁定、二维码生命周期、安全验证隔离和多账号选择。原型不替代协议审计、组件实现、Compose 测试或真机验收。
+旧登录流程 `19` 至 `22` 号横向设计稿的实现基线资格已撤销；[`login-flow`](design/prototypes/login-flow/README.md) 仅保留为历史交互参考。新版独立单状态候选确认前，不更新原型，也不开始 Compose 视觉返工。
 
 登录纵向闭环的协议、会话、安全和成熟库选型审计已经通过，见 [`reference-audits/09-login-session-and-risk.md`](reference-audits/09-login-session-and-risk.md)。实施按协议基础、短信/多账号、密码/安全验证、扫码和整体验收拆为原子提交；当前验收只使用已连接的 API 29 真机，不创建或启动模拟器。
-短信/多账号、密码、安全验证与扫码五态已经进入 `:feature:login` Compose 实现：页面结构以 13/19/20/21/22 号确认设计图为准，原型只提供交互参考；运行时图片由 Coil 处理，二维码由 ZXing Core 3.5.4 生成，正式图标来自 Material Icons。密码入口、字段和系统返回已通过 ELE-AL00 / API 29 真机测试；扫码入口、真实 key 生成、离页切换和设备截图 ZXing 解码也已通过同一真机门禁。另一台已登录酷狗设备的状态 `2→4` 实际扫码认证仍需用户主动验收，未提交真实凭据或二维码。
+短信/多账号、密码、安全验证与扫码五态已经进入 `:feature:login` Compose 功能实现；运行时图片由 Coil 处理，二维码由 ZXing Core 3.5.4 生成，正式图标来自 Material Icons。现有登录 Compose 仍包含旧稿遗留的密度、滚动与风险内容替换问题，必须等待新版单状态设计确认后返工；密码入口、系统返回、扫码入口、真实 key、离页切换和二维码解码等既有真机结果仅继续作为行为证据。另一台已登录酷狗设备的状态 `2→4` 实际扫码认证仍需用户主动验收，未提交真实凭据或二维码。
 
-“我的”首个账户纵向切片已经贯通 `:kugou-api`、`:data` 与 `:feature:my`：按 `04-my-v4.png` 展示真实用户资料和 VIP 摘要，覆盖匿名、加载、部分失败、刷新与退出确认，不用假资产计数填补尚未迁移的接口；匿名、已认证和 `1.5×` 字体截图基准及 API 29 真机导航验证已经通过。密码与安全验证已完成协议、领域、一次重试状态机、正式 UI 和隔离腾讯验证容器；二维码已完成协议、领域、2 秒生命周期轮询、连续三次失败恢复、五态 UI 与截图，并通过 API 29 真机入口、真实 key、离页和截图解码门禁。腾讯 Activity 非导出门禁也已通过；真实扫码状态 `2→4`、会话恢复和真实风控域名/票据兼容仍需用户主动验收。签到、VIP 领取和音乐库资产属于后续切片。
+“我的”首个账户纵向切片已经贯通 `:kugou-api`、`:data` 与 `:feature:my`：按 `04-my-v4.png` 展示真实用户资料和 VIP 摘要，覆盖匿名、加载、部分失败、刷新与退出确认，不用假资产计数填补尚未迁移的接口；匿名、已认证和 `1.5×` 字体截图基准及 API 29 真机导航验证已经通过。密码与安全验证已完成协议、领域、一次重试状态机、旧版功能 UI 和隔离腾讯验证容器；二维码已完成协议、领域、2 秒生命周期轮询、连续三次失败恢复、五态功能 UI 与截图，并通过 API 29 真机入口、真实 key、离页和截图解码门禁。登录视觉仍需在新版候选确认后统一返工。腾讯 Activity 非导出门禁也已通过；真实扫码状态 `2→4`、会话恢复和真实风控域名/票据兼容仍需用户主动验收。签到、VIP 领取和音乐库资产属于后续切片。
 
 底部导航固定为“首页、发现、我的”。搜索和用户主页是子页面；播放器由歌曲、MiniPlayer 或系统恢复入口进入。
 

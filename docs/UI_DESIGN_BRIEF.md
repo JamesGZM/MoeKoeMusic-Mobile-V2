@@ -129,7 +129,7 @@
 - Dialog：`11-dialog-components.png`。
 - 反馈组件：`12-feedback-components-v2.png`。
 - 登录主状态：`13-login-phone-immersive.png`。
-- 登录密码、扫码、安全验证与多账号补充状态：`19-login-password-states.png` 至 `22-login-multi-account.png`；已于 2026-08-05 确认，并建立对应本地交互原型。
+- 登录密码、扫码、安全验证与多账号旧补充稿 `19-login-password-states.png` 至 `22-login-multi-account.png` 已撤销实现基线资格；新版独立单状态图见 [`candidates/login-v2`](design/mockups/candidates/login-v2/README.md)，待用户确认后才能提升为唯一页面映射。既有本地交互原型只保留为历史状态流参考。
 - 全屏播放器：`06-player-cover.png`、`07-player-lyrics.png`、`08-player-queue.png`；视觉已确认，[`player-flow`](design/prototypes/player-flow/README.md) 只补充分页、歌词定位、退出与队列返回优先级。
 - Design System：`14-design-foundations.png` 至 `18-mobile-states-overlays.png`。
 

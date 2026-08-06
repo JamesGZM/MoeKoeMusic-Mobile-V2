@@ -29,14 +29,14 @@
 16. [`16-actions-inputs.png`](16-actions-inputs.png)：按钮、IconButton、分段控件、Chip、输入框、选择控件和进度组件。
 17. [`17-music-content-components.png`](17-music-content-components.png)：Section Header、歌曲行、封面内容、用户资产、徽标、MiniPlayer 和队列行。
 18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：手机视口中的页面状态、权限与账号门槛、Bottom Sheet、Dialog、反馈和临时表面。
-19. [`19-login-password-states.png`](19-login-password-states.png)：已确认；密码登录的默认、提交、凭据错误与安全验证触发状态。
-20. [`20-login-qr-states.png`](20-login-qr-states.png)：已确认；扫码登录的生成、待扫码、已扫码、过期与获取失败状态。
-21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：已确认；短信二次验证、隔离腾讯图形验证、失败与成功状态。
-22. [`22-login-multi-account.png`](22-login-multi-account.png)：已确认；手机号多账号选择、提交失败与账号切换 Sheet。
+19. [`19-login-password-states.png`](19-login-password-states.png)：旧版横向状态总览，仅保留设计演进记录。
+20. [`20-login-qr-states.png`](20-login-qr-states.png)：旧版横向状态总览，仅保留设计演进记录。
+21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：旧版横向状态总览，仅保留设计演进记录。
+22. [`22-login-multi-account.png`](22-login-multi-account.png)：旧版横向状态总览，仅保留设计演进记录。
 
 未带 `v2` 后缀的前四张图片以及 `04-my-v2.png`、`04-my-v3.png`、`12-feedback-components.png` 保留为早期方案，仅用于设计演进对照，不再作为实现基准。
 
-`19` 至 `22` 已于 2026-08-05 使用 `frontend-design` 约束生成并经用户确认，现已加入 `DEVELOPMENT_PLAN.md` 的实现基线。对应 [`login-flow`](../prototypes/login-flow/README.md) 原型只验证交互关系，不替代 Android 实现和验收。
+旧 `19` 至 `22` 曾于 2026-08-05 确认，但其实现基线资格已因密度、覆盖层和单图分辨率复核于 2026-08-06 撤销。新版独立单状态图位于 [`candidates/login-v2`](candidates/login-v2/README.md)，当前仍待用户确认；确认前不得更新原型或据此修改 Compose。
 
 `06` 至 `08` 是全屏播放器封面、歌词与队列的已确认视觉基线。对应 [`player-flow`](../prototypes/player-flow/README.md) 原型建立在这些设计图之后，只验证横向分页、歌词定位、纵向退出、队列覆盖层和系统返回优先级；原型内图标、封面、文案与时序均不是 Compose 实现来源。
 
