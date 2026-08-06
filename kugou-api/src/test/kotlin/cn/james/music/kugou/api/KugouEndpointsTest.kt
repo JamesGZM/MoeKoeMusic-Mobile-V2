@@ -67,6 +67,43 @@ class KugouEndpointsTest {
     }
 
     @Test
+    fun lyricsEndpointsUseAnonymousUnsignedHttpsContracts() {
+        val search = factory.prepare(KugouEndpoints.searchLyrics("  ABCDEF012345  "), context)
+        val download = factory.prepare(KugouEndpoints.downloadLyrics("42", "fixture-access-key"), context)
+
+        assertEquals("https://lyrics.kugou.com", search.baseUrl)
+        assertEquals("/search", search.path)
+        assertEquals(
+            mapOf("ver" to "1", "man" to "yes", "client" to "pc", "hash" to "ABCDEF012345"),
+            search.query,
+        )
+        assertEquals("https://lyrics.kugou.com", download.baseUrl)
+        assertEquals("/download", download.path)
+        assertEquals(
+            mapOf(
+                "ver" to "1",
+                "client" to "android",
+                "id" to "42",
+                "accesskey" to "fixture-access-key",
+                "fmt" to "krc",
+                "charset" to "utf8",
+            ),
+            download.query,
+        )
+        listOf(search, download).forEach { request ->
+            assertFalse("signature" in request.query)
+            assertFalse("mid" in request.query)
+            assertFalse("dfid" in request.query)
+            assertFalse("mid" in request.headers)
+            assertFalse("dfid" in request.headers)
+            assertFalse("Cookie" in request.headers)
+            assertEquals(KugouRetryMode.IdempotentRead, request.retryMode)
+        }
+        assertFalse(download.toString().contains("fixture-access-key"))
+        assertThrows(IllegalArgumentException::class.java) { KugouEndpoints.searchLyrics("  ") }
+    }
+
+    @Test
     fun registerEndpointKeepsEncryptedBytesAndDoesNotRetry() {
         val body = byteArrayOf(0, 1, 2, -1)
         val request = factory.prepare(KugouEndpoints.registerDevice(body, "fixture-encrypted-identity"), context)

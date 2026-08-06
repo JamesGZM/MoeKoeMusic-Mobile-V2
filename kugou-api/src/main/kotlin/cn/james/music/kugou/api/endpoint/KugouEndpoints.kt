@@ -6,6 +6,7 @@ import cn.james.music.kugou.api.transport.KugouHttpMethod
 import cn.james.music.kugou.api.transport.KugouRequestSpec
 import cn.james.music.kugou.api.transport.KugouResponseFormat
 import cn.james.music.kugou.api.transport.KugouRetryMode
+import cn.james.music.kugou.api.transport.KugouSignatureMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -104,6 +105,53 @@ object KugouEndpoints {
         )
     }
 
+    fun searchLyrics(songHash: String): KugouRequestSpec {
+        val normalizedHash = songHash.trim()
+        require(normalizedHash.isNotEmpty()) { "Song hash must not be blank" }
+        return KugouRequestSpec(
+            id = "lyrics.search",
+            method = KugouHttpMethod.Get,
+            baseUrl = LYRICS_BASE_URL,
+            path = "/search",
+            params =
+                linkedMapOf(
+                    "ver" to "1",
+                    "man" to "yes",
+                    "client" to "pc",
+                    "hash" to normalizedHash,
+                ),
+            signatureMode = KugouSignatureMode.None,
+            includeDefaultParams = false,
+            retryMode = KugouRetryMode.IdempotentRead,
+        )
+    }
+
+    internal fun downloadLyrics(
+        candidateId: String,
+        accessKey: String,
+    ): KugouRequestSpec {
+        require(candidateId.isNotBlank()) { "Lyrics candidate id must not be blank" }
+        require(accessKey.isNotBlank()) { "Lyrics access key must not be blank" }
+        return KugouRequestSpec(
+            id = "lyrics.download",
+            method = KugouHttpMethod.Get,
+            baseUrl = LYRICS_BASE_URL,
+            path = "/download",
+            params =
+                linkedMapOf(
+                    "ver" to "1",
+                    "client" to "android",
+                    "id" to candidateId,
+                    "accesskey" to accessKey,
+                    "fmt" to "krc",
+                    "charset" to "utf8",
+                ),
+            signatureMode = KugouSignatureMode.None,
+            includeDefaultParams = false,
+            retryMode = KugouRetryMode.IdempotentRead,
+        )
+    }
+
     fun privilegeLite(resources: List<KugouAudioResource>): KugouRequestSpec {
         require(resources.isNotEmpty()) { "At least one resource is required" }
         val body =
@@ -189,6 +237,7 @@ object KugouEndpoints {
     private val QUALITIES = listOf("128", "320", "flac", "high", "viper_atmos", "viper_tape", "viper_clear", "super", "multitrack")
     private val MAGIC_QUALITIES = setOf("piano", "acappella", "subwoofer", "ancient", "dj", "surnay").associateWith { "magic_$it" }
     private val MOBILE_PATTERN = Regex("^1\\d{10}$")
+    private const val LYRICS_BASE_URL = "https://lyrics.kugou.com"
 }
 
 data class KugouAudioResource(

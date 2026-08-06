@@ -35,6 +35,9 @@ class KugouOnlineClient(
     private val playbackAddressDecoder: KugouPlaybackAddressDecoder = KugouPlaybackAddressDecoder(),
     private val privilegeDecoder: KugouPrivilegeDecoder = KugouPrivilegeDecoder(),
 ) {
+    private val lyricsCandidateDecoder = KugouLyricsCandidateDecoder()
+    private val lyricsDownloadDecoder = KugouLyricsDownloadDecoder()
+
     suspend fun searchSongs(
         keyword: String,
         page: Int,
@@ -93,6 +96,52 @@ class KugouOnlineClient(
                 when (val decoded = privilegeDecoder.decode(response.body)) {
                     is KugouPrivilegeDecodeResult.Failure -> KugouApiResult.Failure(decoded.error)
                     is KugouPrivilegeDecodeResult.Success -> KugouApiResult.Success(decoded.candidates)
+                }
+            }
+        }
+
+    suspend fun fetchLyrics(
+        songHash: String,
+        context: KugouRequestContext,
+    ): KugouApiResult<KugouLyricsFetchResult> =
+        when (val response = executor.executeJson(KugouEndpoints.searchLyrics(songHash), context)) {
+            is KugouProtocolResult.Failure -> {
+                KugouApiResult.Failure(response.error)
+            }
+
+            is KugouProtocolResult.Success -> {
+                when (val decoded = lyricsCandidateDecoder.decode(response.body)) {
+                    is KugouLyricsCandidateDecodeResult.Failure -> KugouApiResult.Failure(decoded.error)
+                    KugouLyricsCandidateDecodeResult.NotFound -> KugouApiResult.Success(KugouLyricsFetchResult.NotFound)
+                    is KugouLyricsCandidateDecodeResult.Found -> downloadLyrics(decoded.candidate, context)
+                }
+            }
+        }
+
+    private suspend fun downloadLyrics(
+        candidate: KugouLyricsCandidate,
+        context: KugouRequestContext,
+    ): KugouApiResult<KugouLyricsFetchResult> =
+        when (
+            val response =
+                executor.executeJson(
+                    KugouEndpoints.downloadLyrics(candidate.id, candidate.accessKey),
+                    context,
+                )
+        ) {
+            is KugouProtocolResult.Failure -> {
+                KugouApiResult.Failure(response.error)
+            }
+
+            is KugouProtocolResult.Success -> {
+                when (val decoded = lyricsDownloadDecoder.decode(response.body)) {
+                    is KugouLyricsDownloadDecodeResult.Failure -> {
+                        KugouApiResult.Failure(decoded.error)
+                    }
+
+                    is KugouLyricsDownloadDecodeResult.Success -> {
+                        KugouApiResult.Success(KugouLyricsFetchResult.Available(decoded.source))
+                    }
                 }
             }
         }
