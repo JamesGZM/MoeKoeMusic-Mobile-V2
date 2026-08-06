@@ -398,7 +398,7 @@ private fun QrGeneratingContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        CircularProgressIndicator(progress = { 0.72f }, modifier = Modifier.size(64.dp), strokeWidth = 4.dp)
+        CircularProgressIndicator(modifier = Modifier.size(64.dp), strokeWidth = 4.dp)
         Text(stringResource(R.string.login_qr_generating), style = MaterialTheme.typography.titleMedium)
     }
 }

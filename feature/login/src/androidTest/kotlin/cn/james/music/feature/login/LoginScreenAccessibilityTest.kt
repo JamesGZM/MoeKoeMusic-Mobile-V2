@@ -2,6 +2,9 @@ package cn.james.music.feature.login
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
@@ -61,6 +64,43 @@ class LoginScreenAccessibilityTest {
         composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("重新验证手机号"))
         composeRule.onNodeWithText("重新验证手机号").assertIsDisplayed().performClick()
         composeRule.runOnIdle { assertEquals(1, recoverClicks) }
+    }
+
+    @Test
+    fun qrGeneratingUsesIndeterminateProgress() {
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                LoginScreen(
+                    state = LoginUiState(mode = LoginMode.QrCode, qrLogin = QrLoginUiState.Generating),
+                    onBack = {},
+                    onPhoneChange = {},
+                    onCodeChange = {},
+                    onModeChange = {},
+                    onRefreshQrLogin = {},
+                    onSendCode = {},
+                    onSubmitMobileCode = {},
+                    onUsernameChange = {},
+                    onPasswordChange = {},
+                    onTogglePasswordVisibility = {},
+                    onSubmitPassword = {},
+                    onStartRiskVerification = {},
+                    onRetryTencentVerification = {},
+                    onRiskCodeChange = {},
+                    onVerifyRiskCode = {},
+                    onCancelRisk = {},
+                    onSelectAccount = {},
+                    onChooseOtherAccount = {},
+                )
+            }
+        }
+
+        composeRule
+            .onNode(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ProgressBarRangeInfo,
+                    ProgressBarRangeInfo.Indeterminate,
+                ),
+            ).assertIsDisplayed()
     }
 }
 
