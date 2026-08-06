@@ -55,6 +55,20 @@ class MainActivityTest {
     }
 
     @Test
+    fun topLevelTabsDoNotBuildAChronologicalBackStack() {
+        composeRule.onNodeWithText("发现", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("排行榜、歌单和电台仍在规划阶段").assertIsDisplayed()
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForMyContent()
+
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeRule.onNodeWithText("轻松发现下一首喜欢的音乐").assertIsDisplayed()
+    }
+
+    @Test
     fun loginIsAnIndependentPageReachedFromMy() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForAnonymousMyState()

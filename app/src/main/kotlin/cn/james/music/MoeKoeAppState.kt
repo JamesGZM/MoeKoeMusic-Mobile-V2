@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import cn.james.music.feature.discover.DiscoverDestination
 import cn.james.music.feature.discover.DiscoverGraph
@@ -58,7 +59,7 @@ internal class MoeKoeAppState(
                 TopLevelDestination.My -> MyGraph
             }
         navController.navigate(route) {
-            popUpTo(navController.graph.startDestinationId) { saveState = true }
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
             restoreState = true
         }
