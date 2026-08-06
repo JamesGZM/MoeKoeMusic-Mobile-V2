@@ -27,6 +27,7 @@ work = "2.11.2"
 coil = "3.4.0"
 webkit = "1.16.0"
 zxing = "3.5.4"
+lyrics-core = "0.4.7"
 
 [libraries]
 android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -74,6 +75,7 @@ zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-navigation" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-navigation" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+lyrics-core = { module = "com.mocharealm.accompanist:lyrics-core", version.ref = "lyrics-core" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

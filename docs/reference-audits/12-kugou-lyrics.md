@@ -93,7 +93,7 @@
 
 ## 成熟库选型
 
-采用 Maven Central `com.mocharealm.accompanist:lyrics-core:0.4.7`，源码固定为 `6xingyv/accompanist-lyrics-core@d1bea0b27d915183d960467a9b3b65072b10ddf4`，Apache-2.0。审计时该版本使用 Kotlin 2.3.0 与 kotlinx.serialization 1.10.0，和工程 Kotlin 2.3.21 / serialization 1.11.0 二进制方向兼容；接入后仍必须通过完整编译验证。
+采用 Maven Central `com.mocharealm.accompanist:lyrics-core:0.4.7`，源码固定为 `6xingyv/accompanist-lyrics-core@d1bea0b27d915183d960467a9b3b65072b10ddf4`，Apache-2.0。该版本使用 Kotlin 2.3.0、kotlinx.serialization 1.10.0，并以 Java 21 classfile 发布 JVM 变体。2026-08-06 接入验证确认 Kotlin 2.3.21 / serialization 1.11.0 可以编译，AGP 9.3/D8 可以将其转换进 Java 17 目标的 Debug APK；JVM 单元测试必须使用 Java 21 toolchain，不能继续由 Java 17 Test Worker 加载该依赖。
 
 采用理由：
 

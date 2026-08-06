@@ -23,7 +23,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ## 本地构建
 
-使用 Android Studio 2026.1 的 JBR 21 同步工程；命令行构建使用 JDK 17 或更高版本：
+使用 Android Studio 2026.1 的 JBR 21 同步工程；命令行完整验证需要本机提供可被 Gradle toolchain 发现的 JDK 21。Android 模块仍以 Java 17 为源码与目标字节码级别，JDK 21 用于运行 `lyrics-core 0.4.7` 的 JVM 测试：
 
 ```bash
 ./gradlew spotlessCheck
