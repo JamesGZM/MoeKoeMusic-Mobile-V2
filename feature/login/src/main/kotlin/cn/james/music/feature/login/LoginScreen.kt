@@ -357,11 +357,11 @@ private fun QrCodeContent(
         when (val qr = state.qrLogin ?: QrLoginUiState.Generating) {
             QrLoginUiState.Generating -> QrGeneratingContent()
             is QrLoginUiState.Waiting -> {
-                QrReadyContent(qr.session.loginUrl, qr.remainingSeconds, scanned = false)
+                QrWaitingContent(qr.session.loginUrl, qr.remainingSeconds)
             }
 
             is QrLoginUiState.Scanned -> {
-                QrReadyContent(qr.session.loginUrl, qr.remainingSeconds, scanned = true, nickname = qr.nickname)
+                QrScannedContent(qr.nickname, qr.remainingSeconds)
             }
 
             is QrLoginUiState.Expired -> QrExpiredContent(qr.session.loginUrl, onRefresh)
@@ -410,49 +410,75 @@ private fun QrGeneratingContent() {
 }
 
 @Composable
-private fun QrReadyContent(
+private fun QrWaitingContent(
     loginUrl: String,
     remainingSeconds: Int,
-    scanned: Boolean,
-    nickname: String? = null,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            QrCodeImage(loginUrl)
-            if (scanned) {
+        QrCodeImage(loginUrl)
+        Text(
+            stringResource(R.string.login_qr_expiry, remainingSeconds / 60, remainingSeconds % 60),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun QrScannedContent(
+    nickname: String?,
+    remainingSeconds: Int,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Surface(
-                    modifier = Modifier.size(58.dp),
+                    modifier = Modifier.size(64.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary,
-                    border = BorderStroke(3.dp, Color.White),
                 ) {
                     Icon(
                         Icons.Filled.Check,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(13.dp),
+                        modifier = Modifier.padding(15.dp),
                     )
                 }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    stringResource(R.string.login_qr_scanned_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    nickname?.takeIf(String::isNotBlank)?.let { stringResource(R.string.login_qr_scanned_user, it) }
+                        ?: stringResource(R.string.login_qr_scanned_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
-        if (scanned) {
-            Text(
-                stringResource(R.string.login_qr_scanned_title),
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-            )
-        }
         Text(
-            if (scanned) {
-                nickname?.takeIf(String::isNotBlank)?.let { stringResource(R.string.login_qr_scanned_user, it) }
-                    ?: stringResource(R.string.login_qr_scanned_description)
-            } else {
-                stringResource(R.string.login_qr_expiry, remainingSeconds / 60, remainingSeconds % 60)
-            },
+            stringResource(R.string.login_qr_expiry, remainingSeconds / 60, remainingSeconds % 60),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
