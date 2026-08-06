@@ -7,6 +7,7 @@
 - [登录、会话与安全验证](reference-audits/09-login-session-and-risk.md)
 - [用户资料与“我的”会话态](reference-audits/10-user-profile-and-my-session.md)
 - [酷狗同步歌词协议、解析与缓存](reference-audits/12-kugou-lyrics.md)
+- [播放器封面动态调色](reference-audits/13-player-artwork-palette.md)
 
 记录日期：2026-08-05。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
@@ -170,6 +171,8 @@
 全屏播放器的 Compose Pager、返回、系统栏、无障碍、模块边界和首个封面页切片见 [`reference-audits/11-fullscreen-player-ui.md`](reference-audits/11-fullscreen-player-ui.md)。审计固定 Kreate `f02577e`、Metrolist `289ed45`、PC `52c9833` 与 Mobile `ab71195` 的具体播放器文件；只采用状态与性能策略，不复制 GPL-3.0 实现，也不在歌词协议审计前接入伪歌词数据。
 
 酷狗同步歌词的 `/search`、`/download`、KRC 解包、逐字/翻译/音译解析、成功缓存与 UI 状态门禁见 [`reference-audits/12-kugou-lyrics.md`](reference-audits/12-kugou-lyrics.md)。解析采用 Maven Central `lyrics-core 0.4.7`（Apache-2.0，固定源码 `d1bea0b`），不自行重写完整 KRC parser；协议解包继续使用 JDK Base64/zlib，且公共歌词 Host 不发送设备身份、Cookie 或签名。
+
+播放器封面动态调色的依赖、线程、颜色修正、失败回退和切歌隔离见 [`reference-audits/13-player-artwork-palette.md`](reference-audits/13-player-artwork-palette.md)。后续实现固定 AndroidX Palette `1.0.0`（Apache-2.0），只消费 Coil 已解码图片，不新增封面请求；审计固定 Kreate `f02577e` 与 Metrolist `289ed45` 的具体播放器文件，只借鉴状态和降级策略，不复制 GPL-3.0 代码。当前切片只提交方案说明，尚未接入代码。
 
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 

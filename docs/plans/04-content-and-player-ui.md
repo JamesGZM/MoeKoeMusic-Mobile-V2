@@ -36,6 +36,7 @@
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；允许先实现协议/数据层。`07-player-lyrics.png` 只覆盖内容主态，加载、空、离线和错误状态补图确认前仍不得开始歌词 Compose。
 - Room 已升至 v4 并新增脱敏键控的 KRC 成功缓存表；`3→4` 与完整 `1→2→3→4` MigrationTest、DAO 覆盖已编译进 androidTest APK，仍需在用户指定真机的真实 SQLite 上执行后才能标记迁移验收通过。
 - 歌词 Repository 已完成仅支持酷狗来源的缓存优先读取、损坏缓存删除后单次回源、同 Hash 并发单飞、旧请求取消透传和成功解析后缓存；匿名歌词客户端不再接受账号请求上下文，JVM 行为测试与 App Hilt 装配已通过。
+- `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页必须共享当前歌曲封面派生的语义色板。动态取色已经完成独立 [`13-player-artwork-palette`](../reference-audits/13-player-artwork-palette.md) 审计，允许先实现调色基础与现有封面页接入。
 
 ## 当前剩余
 

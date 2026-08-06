@@ -40,6 +40,8 @@
 
 `06` 至 `08` 是全屏播放器封面、歌词与队列的已确认视觉基线。对应 [`player-flow`](../prototypes/player-flow/README.md) 原型建立在这些设计图之后，只验证横向分页、歌词定位、纵向退出、队列覆盖层和系统返回优先级；原型内图标、封面、文案与时序均不是 Compose 实现来源。
 
+歌词补充状态 `23a` 至 `23h` 位于 [`candidates/player-lyrics-v1`](candidates/player-lyrics-v1/README.md)，页面结构与状态表达已于 2026-08-06 确认。播放器图片固定结构而不固定单曲色板：`06`、`07` 和 `23a` 至 `23h` 中的背景与强调色只表示示例，生产实现统一按当前歌曲封面派生并遵循动态调色门禁。
+
 登录确认稿的 Android 生产 Hero 已派生为 [`../assets/login-hero.png`](../assets/login-hero.png)。该文件只提供无文字插画背景；返回、标题、表单和所有图标仍由 Compose 按确认设计与 Design System 原生绘制。
 
 ## 视觉门禁顺序
@@ -56,6 +58,6 @@
 - 设计系统图板中的自动生成日期、说明文字或标注数值不作为实现依据；准确 Token 和组件行为以 [`DESIGN_SYSTEM.md`](../../DESIGN_SYSTEM.md) 为准。
 - Compose 实现应将颜色、排版、形状和间距提取到 `:core:designsystem`。
 - Dialog、Snackbar 与 Toast 的行为和尺寸以 [`UI_COMPONENTS.md`](../../UI_COMPONENTS.md) 为实现规范，图片只作为视觉参考。
-- 播放器背景必须提供静态渐变回退，不要求低性能设备实时模糊。
+- 播放器封面页与歌词页共享当前歌曲封面派生的语义色板，并必须提供静态深色渐变回退；不要求低性能设备实时模糊。完整规则见 [`13-player-artwork-palette.md`](../../reference-audits/13-player-artwork-palette.md)。
 - 真正落地前需在 `390 × 844 dp`、大字体和不同屏幕宽度下重新验证。
 - 自动生成图中的示例账号、二维码、日期、响应文案与尺寸标注只用于视觉表达；实现必须使用虚构测试数据、字符串资源、固定协议审计和 Design System Token。
