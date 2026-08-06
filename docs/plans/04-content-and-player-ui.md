@@ -25,7 +25,7 @@
 
 - `:core:designsystem` 已实现 Section Header、封面容器、媒体徽标、歌曲行、MiniPlayer 和队列行，并建立浅色、深色与 `1.5×` 字体截图基准。
 - Search 与 LocalMusic 已移除各自的重复歌曲行布局，统一使用 `MoeSongRow`；在线封面和 App 专属目录本地封面继续由 Coil 3 加载。
-- `PlaybackItem` 使用 `Remote(HTTPS)` 与 `AppFile(相对路径)` 两类稳定封面引用；Media3 metadata、MiniPlayer、队列和 Room v3 快照共享该字段，不持久化短期音频地址。
+- `PlaybackItem` 使用 `Remote(HTTPS)` 与 `AppFile(相对路径)` 两类稳定封面引用；Media3 metadata、MiniPlayer、队列和 Room v4 中的播放快照共享该字段，不持久化短期音频地址。
 - Room `2→3` 与完整 `1→2→3` 迁移已在 ELE-AL00 / API 29 的真实 SQLite 上 2/2 通过；既有队列迁移后封面字段保持可空。
 - 应用壳 MiniPlayer 已展示真实播放进度、封面及明确播放/暂停和队列语义；子页面隐藏一级导航时会单独处理系统导航栏安全区。
 - Search/LocalMusic 截图验证、相关 JVM 单测、Debug 构建与 `MainActivityTest` 真机回归 6/6 通过；真机手动搜索并播放在线歌曲后，MiniPlayer、恢复为暂停状态和队列 Bottom Sheet 均已检查。
@@ -34,6 +34,7 @@
 - 播放页仅消费 `:app` 映射的不可变 UI 状态和事件，不直接依赖 `:playback`；高频进度由独立 `State` 交给进度子组合读取。标准视口不依赖尺寸分档，只有内容实际溢出时允许纵向滚动。
 - 全屏封面已覆盖正常、暂停、缓冲、控制器未连接、封面失败、未知时长、空播放项及 `1.5×`/`2.0×` 字体截图基准；真机导航、手势、队列返回优先级和播放命令仍待用户手动验收。
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；允许先实现协议/数据层。`07-player-lyrics.png` 只覆盖内容主态，加载、空、离线和错误状态补图确认前仍不得开始歌词 Compose。
+- Room 已升至 v4 并新增脱敏键控的 KRC 成功缓存表；`3→4` 与完整 `1→2→3→4` MigrationTest、DAO 覆盖已编译进 androidTest APK，仍需在用户指定真机的真实 SQLite 上执行后才能标记迁移验收通过。
 
 ## 当前剩余
 

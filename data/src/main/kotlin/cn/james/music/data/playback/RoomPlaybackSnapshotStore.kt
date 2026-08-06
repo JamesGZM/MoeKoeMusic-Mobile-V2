@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import cn.james.music.core.database.MIGRATION_1_2
 import cn.james.music.core.database.MIGRATION_2_3
+import cn.james.music.core.database.MIGRATION_3_4
 import cn.james.music.core.database.MoeKoeDatabase
 import cn.james.music.core.database.playback.PlaybackQueueItemEntity
 import cn.james.music.core.database.playback.PlaybackSnapshotDao
@@ -140,7 +141,7 @@ object PlaybackDatabaseModule {
     ): MoeKoeDatabase =
         Room
             .databaseBuilder(context, MoeKoeDatabase::class.java, "moekoe.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
 
     @Provides

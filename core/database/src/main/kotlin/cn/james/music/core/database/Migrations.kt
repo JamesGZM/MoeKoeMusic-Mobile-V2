@@ -29,3 +29,12 @@ val MIGRATION_2_3 =
             db.execSQL("ALTER TABLE `playback_queue_item` ADD COLUMN `artwork_value` TEXT")
         }
     }
+
+val MIGRATION_3_4 =
+    object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `lyrics_cache` (`source_key` TEXT NOT NULL, `krc_text` TEXT NOT NULL, `parser_version` INTEGER NOT NULL, `updated_at_epoch_ms` INTEGER NOT NULL, PRIMARY KEY(`source_key`))",
+            )
+        }
+    }
