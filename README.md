@@ -8,7 +8,7 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 项目已完成阶段 0（文档与决策）、阶段 1（工程基础）、阶段 2（播放内核）和阶段 3（本地音乐），阶段 4（酷狗在线闭环）与阶段 5A/5B 正在进行。当前 `develop` 分支已具备 Media3 后台播放、Room v4、本地音乐复制导入、外部音频入口、带封面和进度的 MiniPlayer、播放队列，以及“首页 / 发现 / 我的”导航；MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 的真实导入管线及失败恢复测试已通过。阶段 4 已完成协议基础、匿名会话加密存储、独立搜索页面和在线歌曲播放纵向闭环；无版权、VIP、网络、会话与协议错误已接入类型化反馈，在线地址失效时最多刷新一次。2026-08-05 的 API 29 真机测试已验证真实搜索、播放、MiniPlayer 和队列闭环；真实 CDN 自然过期及稀有服务错误样本仍待兼容性补证。
 
-当前开发顺序固定为“品牌与启动基建 → 首页真实闭环 → 我的与登录用户链路 → 播放器完整链路 → 发现页”。首页与发现目前仍是临时页面；全屏播放器只完成封面首个切片且仍有真机交互待验，不能据此跳过前置页面继续扩展。正式产品名已统一为 MoeKoe Air，PC/Mobile 同源 Launcher 资源与 Android 系统 SplashScreen 已落地；尚无设计图的条件启动门禁必须先完成静态设计确认。
+当前开发顺序固定为“品牌与启动基建 → 首页真实闭环 → 我的与登录用户链路 → 播放器完整链路 → 发现页”。首页与发现目前仍是临时页面；全屏播放器只完成封面首个切片且仍有真机交互待验，不能据此跳过前置页面继续扩展。正式产品名已统一为 MoeKoe Air，PC/Mobile 同源 Launcher 资源与 Android 系统 SplashScreen 已落地；系统 Splash 结束后立即进入应用壳。首页等可缓存页面优先展示上次成功内容并自动后台刷新，不用会话、网络或数据库结果阻塞首屏。
 
 应用壳现使用 Navigation Compose 2.9.8 类型安全目的地与真实返回栈，底部 Tab 保存并恢复各自状态；首页、发现、我的、搜索、本地音乐和 Debug Foundation 已按业务能力拆为独立 Feature 模块，应用壳状态与页面状态分离。酷狗通用传输使用 Ktor Client 3.5.1 + OkHttp Engine，签名、加密、会话和协议级重试继续保持独立。对应选型、固定源码和拒绝项见 `docs/reference-audits/06-navigation-architecture.md`、`07-kugou-http-client.md` 与 `08-feature-modularization.md`。
 

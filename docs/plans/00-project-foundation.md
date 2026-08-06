@@ -35,7 +35,7 @@
 - `:app` 已接入 Hilt、edge-to-edge 和 Design System Showcase；Manifest 未暴露媒体、分享、外部打开或后台服务能力。
 - `:core:designsystem` 已提供浅色、深色、AMOLED 主题、排版、形状、间距和扩展语义色。
 - 已生成三套主题截图参考图，并加入 Compose UI smoke test 与 GitHub Actions。
-- 正式产品名已统一为 MoeKoe Air，并接入 PC/Mobile 同源女孩耳机 Logo 的 legacy、round、Adaptive、monochrome Launcher 资源与 AndroidX 系统 SplashScreen；条件启动门禁因尚无已确认设计图而留待后续切片。
+- 正式产品名已统一为 MoeKoe Air，并接入 PC/Mobile 同源女孩耳机 Logo 的 legacy、round、Adaptive、monochrome Launcher 资源与 AndroidX 系统 SplashScreen；系统 Splash 后直接进入应用壳，不再规划条件启动门禁。
 - 已通过格式检查、单元测试任务、Lint、截图验证、Debug APK 和测试 APK 编译。
 
 ## 兼容性说明
@@ -45,3 +45,4 @@
 - Compose Preview Screenshot Testing `0.0.1-alpha15` 的截图任务暂不兼容 Configuration Cache，仅截图更新和验证命令使用 `--no-configuration-cache`。
 - API 26 与 API 36 的安装启动仍由设备矩阵执行；当前提交已完成 APK 与 instrumentation test APK 编译。2026-08-05 已在一台解锁的 API 29 真机上，以 1.0×、1.5× 和 2.0× 字体缩放通过 MainActivity Compose UI smoke test。
 - 2026-08-06 已在指定 ELE-AL00 / API 29 真机完成 MoeKoe Air APK 安装、桌面名称与正式图标、冷/热启动及无崩溃复验；该设备不提供可用录屏命令，连续截图未留住瞬时系统 Splash 画面。Android 12+ Splash、Android 13+ 主题图标与锁屏场景仍未验证，且未使用模拟器替代。
+- 直接启动策略校准后，同一真机 5 次 `am force-stop` + `am start -W` 的 Launcher 冷启动 `TotalTime` 为 `1927–1990 ms`，平均约 `1961 ms`，未发现 `AndroidRuntime`/`FATAL EXCEPTION`。该结果是当前 Debug 构建实测，不替代首页真实缓存落地后的 Macrobenchmark 与 Release 性能验收。

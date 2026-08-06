@@ -35,6 +35,8 @@
 - Hilt WorkManager 全局唯一工作链串行复制；使用 `.partial`、流式哈希、250ms 节流进度、媒体探测、元数据降级、原子改名和失败回滚。
 - SAF、MediaStore 扫描、`ACTION_VIEW`、`ACTION_SEND`、`ACTION_SEND_MULTIPLE` 已接入统一管线；HTTP/HTTPS 与缺失 URI 会在复制前拒绝。
 - `ACTION_VIEW` 真机测试确认只有 Room 提交成功后才调用 `playNow`；重复内容复用已有记录，不播放原始 URI。
+- 外部导入 Activity 使用 `singleTop`，冷启动创建入口、顶部热启动通过 `onNewIntent` 复用；新 Intent 只替换页面观察目标，不取消已经提交的旧导入批次。
+- 2026-08-06 在指定 ELE-AL00 / API 29 真机重新运行 `AudioImportActivityTest` 5/5 通过，包含冷启动复制提交后播放、顶部热启动同实例处理第二个 `ACTION_VIEW`，以及远端 URI、缺失 URI 和错误 MIME 拒绝。
 - 正式三项底部导航、本地列表、搜索、排序、设备多选、基础 MiniPlayer 与队列 Bottom Sheet 已建立；播放工程实验台只在 Debug 可达。
 - Room Migration 与唯一约束测试已加入；本地音乐空状态、内容状态和 `1.5×` 字体导入状态已有稳定截图基准。
 - 外部导入完成动作现由播放控制器统一切换到 Media3 应用线程；Service 初始快照恢复增加顺序屏障，避免冷启动恢复覆盖新播放命令。

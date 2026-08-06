@@ -35,6 +35,7 @@
         <activity
             android:name=".AudioImportActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.MoeKoe">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

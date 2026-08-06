@@ -55,7 +55,7 @@ Repository
 
 - Application、MainActivity 和应用级导航壳。
 - Hilt 组合根与模块装配。
-- Deep Link、外部音频 Intent、启动流程和顶层错误恢复。
+- Deep Link、外部音频 Intent、Android 系统启动入口和顶层应用壳。
 - 不放具体页面业务。
 
 ### `:core:model`
@@ -201,7 +201,13 @@ ExoPlayer + MediaSession
 
 ## 数据策略
 
-- 在线内容默认 network-first，并对短期可复用页面数据做内存缓存。
+- Android 系统 Splash 结束后立即组合应用壳；`:app` 不建立 `AppStartupRepository`、条件启动门禁或跨业务初始化状态机，也不等待会话、网络、Room、DataStore 或缓存后再绘制首屏。
+- `MainActivity` 的本地导入入口使用 Hilt `Lazy`，只有用户实际发起导入或扫描时才解析 `LocalImportGateway`，避免为未使用功能在 Activity 创建阶段构造 Room/WorkManager 依赖图。
+- 匿名设备会话由真正需要它的 Repository 按需初始化；首页、搜索、“我的”等 Feature 分别拥有加载、错误、离线、刷新与缓存内容状态。缓存只改变页面取数和恢复策略，不改变启动导航。
+- 数据库或缓存错误由对应 Repository 映射为页面状态或功能反馈；不能为保护某个业务数据源而把整个应用阻断在启动页。
+- 首页、发现等可缓存内容采用 stale-while-revalidate：页面先读取并展示上次完整成功快照，同时自动在后台刷新；刷新成功后原位替换内容并更新快照，失败时保留旧内容并只给弱提示。只有从未存在可展示缓存时才进入首次加载或全屏错误状态。
+- 页面缓存由所属 Repository 管理，ViewModel 通过不可变状态同时表达 `content`、`isRefreshing` 与非阻断刷新错误。缓存读取、远端刷新和快照提交可取消且按请求代际隔离，旧刷新结果不得覆盖更新内容。
+- 内存缓存用于同进程快速恢复；需要跨进程保留的首页/发现完整成功快照使用 Room 或经审计的数据存储。缓存键包含用户身份、分页和影响响应的参数，未完成、部分损坏或协议失败结果不得覆盖最后一次成功快照。
 - 用户歌单和收藏以远端为权威，Room 可保存展示快照和待重试操作。
 - 本地音乐以 App 专属目录中的已提交副本和 Room 索引为权威；MediaStore、Storage Access Framework 和外部 Intent 只提供导入来源。
 - WorkManager 的输入只保存 `batchId`；URI、逐项状态和进度归 Room 所有，全局唯一工作链保证复制串行执行。
@@ -233,6 +239,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 
 - 外部入口 Activity 只解析和转交，不直接访问 Room 或 ExoPlayer。
 - `AudioImportActivity` 只观察领域导入进度；Hilt Worker 执行复制，播放器仍只能由 `PlaybackController` 控制。
+- `AudioImportActivity` 使用 `singleTop`：冷启动创建独立导入入口；应用已运行但导入页不在顶部时仍创建导入页；导入页已在顶部时通过 `onNewIntent` 复用当前实例。每个新 Intent 停止旧 UI 观察并观察新批次，但不取消已经交给 WorkManager 的导入事务。
 - 所有入口共用复制、校验、去重和提交管线。
 - `ACTION_VIEW` 只有在文件落盘与 Room 提交成功后才发送播放命令。
 - 外部 URI、ContentResolver 和绝对路径不得泄露到稳定领域模型。

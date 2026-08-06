@@ -33,8 +33,8 @@ import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.core.model.local.LocalMusicRepository
 import cn.james.music.data.local.LocalImportGateway
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,6 +46,7 @@ class AudioImportActivity : ComponentActivity() {
     internal var message by mutableStateOf("正在准备导入…")
     private var finished by mutableStateOf(false)
     private var pendingIntent: Intent? = null
+    private var importObservation: Job? = null
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             pendingIntent?.let(::handle)
@@ -101,26 +102,31 @@ class AudioImportActivity : ComponentActivity() {
     private fun handle(intent: Intent) {
         val uris = intent.audioUris()
         if (!intent.hasReadableAudioSource()) {
+            importObservation?.cancel()
             message = "无法读取这个音频来源"
             finished = true
             return
         }
         val isView = intent.action == Intent.ACTION_VIEW
-        lifecycleScope.launch {
-            val batchId =
-                gateway.enqueue(
-                    uris,
-                    if (isView) LocalImportSource.ExternalView else LocalImportSource.ExternalShare,
-                    if (isView) ImportCompletionAction.PlayImportedTrack else ImportCompletionAction.OpenLocalLibrary,
-                )
-            repository.observeImports().map { rows -> rows.firstOrNull { it.batchId == batchId } }.filterNotNull().collect { progress ->
-                message = progress.toUserMessage()
-                if (progress.state in terminalStates) {
-                    finished = true
-                    return@collect
+        importObservation?.cancel()
+        message = "正在准备导入…"
+        finished = false
+        importObservation =
+            lifecycleScope.launch {
+                val batchId =
+                    gateway.enqueue(
+                        uris,
+                        if (isView) LocalImportSource.ExternalView else LocalImportSource.ExternalShare,
+                        if (isView) ImportCompletionAction.PlayImportedTrack else ImportCompletionAction.OpenLocalLibrary,
+                    )
+                repository.observeImports().first { rows ->
+                    val progress = rows.firstOrNull { it.batchId == batchId } ?: return@first false
+                    message = progress.toUserMessage()
+                    (progress.state in terminalStates).also { isTerminal ->
+                        if (isTerminal) finished = true
+                    }
                 }
             }
-        }
     }
 
     @Suppress("DEPRECATION")

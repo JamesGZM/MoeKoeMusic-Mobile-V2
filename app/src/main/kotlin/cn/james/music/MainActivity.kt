@@ -24,13 +24,14 @@ import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.data.local.LocalImportGateway
 import cn.james.music.feature.login.TencentCaptchaResult
+import dagger.Lazy
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject lateinit var importGateway: LocalImportGateway
+    @Inject lateinit var importGateway: Lazy<LocalImportGateway>
 
     private var afterNotificationPermission: (() -> Unit)? = null
     private var afterMediaPermission: (() -> Unit)? = null
@@ -102,7 +103,7 @@ class MainActivity : ComponentActivity() {
         source: LocalImportSource,
     ) {
         withNotificationPermission {
-            lifecycleScope.launch { importGateway.enqueue(uris, source, ImportCompletionAction.OpenLocalLibrary) }
+            lifecycleScope.launch { importGateway.get().enqueue(uris, source, ImportCompletionAction.OpenLocalLibrary) }
         }
     }
 
@@ -125,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
     private fun enqueueMediaStore(ids: List<Long>) {
         withNotificationPermission {
-            lifecycleScope.launch { importGateway.enqueueMediaStore(ids) }
+            lifecycleScope.launch { importGateway.get().enqueueMediaStore(ids) }
         }
     }
 

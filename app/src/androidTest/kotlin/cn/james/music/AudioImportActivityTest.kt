@@ -100,6 +100,51 @@ class AudioImportActivityTest {
         }
     }
 
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun actionViewWhileImportActivityIsTopReusesActivityAndHandlesNewIntent() {
+        grantNotificationPermissionWhenRequired()
+        val firstIntent =
+            Intent(Intent.ACTION_VIEW).apply {
+                setClassName("cn.james.music.debug", AudioImportActivity::class.java.name)
+                type = "audio/mpeg"
+            }
+        val secondUri = Uri.parse("content://cn.james.music.debug.test.audio/tone.mp3")
+
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val activity =
+            instrumentation.startActivitySync(
+                firstIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+            ) as AudioImportActivity
+        try {
+            val originalInstance = System.identityHashCode(activity)
+            instrumentation.runOnMainSync {
+                activity.startActivity(
+                    Intent(Intent.ACTION_VIEW).apply {
+                        setClass(activity, AudioImportActivity::class.java)
+                        setDataAndType(secondUri, "audio/mpeg")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    },
+                )
+            }
+
+            composeRule.waitUntil(10_000) {
+                var completed = false
+                instrumentation.runOnMainSync {
+                    completed = activity.intent.data == secondUri && activity.message == "导入完成 · 1/1"
+                }
+                completed
+            }
+            instrumentation.runOnMainSync {
+                assertEquals(originalInstance, System.identityHashCode(activity))
+                assertEquals(secondUri, activity.intent.data)
+                assertEquals("导入完成 · 1/1", activity.message)
+            }
+        } finally {
+            instrumentation.runOnMainSync { activity.finishAndRemoveTask() }
+        }
+    }
+
     private fun grantNotificationPermissionWhenRequired() {
         if (Build.VERSION.SDK_INT >= 33) {
             InstrumentationRegistry
