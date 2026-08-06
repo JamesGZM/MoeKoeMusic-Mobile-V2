@@ -15,14 +15,21 @@ import com.android.tools.screenshot.PreviewTest
 @Preview(name = "MobileCode", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginMobileCodeScreenshot() {
-    LoginScreenshotContent(
-        LoginUiState(
-            phone = "13800138000",
-            code = "123456",
-            countdownSeconds = 48,
-            notice = LoginNotice.CodeSent,
-        ),
-    )
+    LoginScreenshotContent(previewMobileCodeState)
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeDark", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginMobileCodeDarkScreenshot() {
+    LoginScreenshotContent(previewMobileCodeState, themeMode = ThemeMode.Dark)
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeAmoled", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginMobileCodeAmoledScreenshot() {
+    LoginScreenshotContent(previewMobileCodeState, themeMode = ThemeMode.Amoled)
 }
 
 @PreviewTest
@@ -299,8 +306,11 @@ fun LoginQrFailureLargeTextScreenshot() {
 }
 
 @Composable
-private fun LoginScreenshotContent(state: LoginUiState) {
-    MoeKoeTheme(themeMode = ThemeMode.Light) {
+private fun LoginScreenshotContent(
+    state: LoginUiState,
+    themeMode: ThemeMode = ThemeMode.Light,
+) {
+    MoeKoeTheme(themeMode = themeMode) {
         Surface {
             LoginScreen(
                 state = state,
@@ -326,6 +336,14 @@ private fun LoginScreenshotContent(state: LoginUiState) {
         }
     }
 }
+
+private val previewMobileCodeState =
+    LoginUiState(
+        phone = "13800138000",
+        code = "123456",
+        countdownSeconds = 48,
+        notice = LoginNotice.CodeSent,
+    )
 
 private val previewAccounts =
     listOf(

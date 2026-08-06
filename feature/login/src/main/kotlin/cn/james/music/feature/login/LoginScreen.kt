@@ -58,6 +58,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -184,6 +185,7 @@ internal fun LoginScreen(
 
 @Composable
 private fun LoginHero() {
+    val heroOverlayAlpha = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.86f else 0.28f
     Box(Modifier.fillMaxWidth().height(300.dp)) {
         Image(
             painter = painterResource(R.drawable.login_hero),
@@ -198,7 +200,7 @@ private fun LoginHero() {
                     .fillMaxSize()
                     .background(
                         Brush.horizontalGradient(
-                            0f to MaterialTheme.colorScheme.surface.copy(alpha = 0.28f),
+                            0f to MaterialTheme.colorScheme.surface.copy(alpha = heroOverlayAlpha),
                             0.58f to MaterialTheme.colorScheme.surface.copy(alpha = 0.02f),
                             1f to MaterialTheme.colorScheme.surface.copy(alpha = 0f),
                         ),
