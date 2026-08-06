@@ -508,23 +508,66 @@ private fun QrCodeImage(loginUrl: String) {
 
 @Composable
 private fun QrLoginSteps() {
-    Surface(
+    Row(
         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        verticalAlignment = Alignment.Top,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(stringResource(R.string.login_qr_step_open), style = MaterialTheme.typography.labelMedium)
-            Text("→", color = MaterialTheme.colorScheme.primary)
-            Text(stringResource(R.string.login_qr_step_scan), style = MaterialTheme.typography.labelMedium)
-            Text("→", color = MaterialTheme.colorScheme.primary)
-            Text(stringResource(R.string.login_qr_step_confirm), style = MaterialTheme.typography.labelMedium)
-        }
+        QrLoginStep(
+            icon = { Icon(Icons.Filled.MusicNote, contentDescription = null) },
+            label = stringResource(R.string.login_qr_step_open),
+            modifier = Modifier.weight(1f),
+        )
+        QrStepConnector()
+        QrLoginStep(
+            icon = { Icon(Icons.Filled.QrCodeScanner, contentDescription = null) },
+            label = stringResource(R.string.login_qr_step_scan),
+            modifier = Modifier.weight(1f),
+        )
+        QrStepConnector()
+        QrLoginStep(
+            icon = { Icon(Icons.Filled.VerifiedUser, contentDescription = null) },
+            label = stringResource(R.string.login_qr_step_confirm),
+            modifier = Modifier.weight(1f),
+        )
     }
+}
+
+@Composable
+private fun QrLoginStep(
+    icon: @Composable () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+            contentColor = MaterialTheme.colorScheme.primary,
+        ) {
+            Box(Modifier.padding(9.dp), contentAlignment = Alignment.Center) { icon() }
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun QrStepConnector() {
+    Text(
+        "····",
+        modifier = Modifier.padding(top = 9.dp),
+        color = MaterialTheme.colorScheme.outlineVariant,
+        style = MaterialTheme.typography.titleMedium,
+    )
 }
 
 @Composable
