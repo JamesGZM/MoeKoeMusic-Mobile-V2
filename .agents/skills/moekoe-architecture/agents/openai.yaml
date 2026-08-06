@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe 架构"
+  short_description: "维护 Android 模块边界、状态所有权与依赖方向"
+  default_prompt: "Use $moekoe-architecture to design or review this MoeKoeMusic architecture change."
+policy:
+  allow_implicit_invocation: true

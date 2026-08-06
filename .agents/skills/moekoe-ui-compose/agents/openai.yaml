@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe UI 与 Compose"
+  short_description: "按已确认设计与 Compose 规范处理用户界面变更"
+  default_prompt: "Use $moekoe-ui-compose to plan or review this MoeKoeMusic UI change."
+policy:
+  allow_implicit_invocation: true

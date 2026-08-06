@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe 功能审计"
+  short_description: "在重大功能编码前完成规格、平台约束、参考与许可证审计门禁"
+  default_prompt: "Use $moekoe-spec-audit to audit this MoeKoeMusic feature before implementation."
+policy:
+  allow_implicit_invocation: true

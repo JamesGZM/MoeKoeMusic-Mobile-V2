@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe 本地导入"
+  short_description: "处理 SAF、本地音乐复制导入、回滚与外部 Intent"
+  default_prompt: "Use $moekoe-local-import to plan or review this local music import change."
+policy:
+  allow_implicit_invocation: true
