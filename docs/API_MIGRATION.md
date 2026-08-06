@@ -18,6 +18,8 @@ License:    MIT
 
 当前已完成第一批纯 JVM 对照：MD5、SHA-1、MID、Android/Register/Web 签名、带字节 Body 的签名、`signKey`、playlist AES 与 RSA PKCS#1 行为。固定输入全部为虚构数据。
 
+同步歌词的独立门禁已完成，见 [`reference-audits/12-kugou-lyrics.md`](reference-audits/12-kugou-lyrics.md)。2026-08-06 最小匿名探针确认固定 `/v1/search` 已漂移为空正文，当前兼容路径为 HTTPS `/search` 与 `/download`；两者不需要且不得注入 MID、dfid、Cookie 或签名。KRC 的 Base64/`krc1`/XOR/zlib 属于协议层，逐字、翻译和音译结构解析采用 Apache-2.0 的 `lyrics-core 0.4.7`，第三方类型不越过 `:data`。
+
 统一请求层也已建立：RequestFactory 在固定时间和虚构身份下生成可快照的请求，Transport 是 suspend 端口，Cookie 与响应错误使用稳定类型。请求对象的诊断字符串只暴露字段名和字节数，不暴露参数、Header、Cookie 或 Body 值。
 
 Ktor Client + OkHttp Engine Transport 和 `register_dev`、歌曲搜索、`privilege_lite`、`song_url` 构造已经完成。超时和 5xx 只对显式幂等读取执行最多两次有限重试，其他错误不自动重放。设备身份、会话端口、注册加解密、并发单飞初始化和 Android 加密持久化已经建立。
