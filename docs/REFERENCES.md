@@ -9,6 +9,7 @@
 - [酷狗同步歌词协议、解析与缓存](reference-audits/12-kugou-lyrics.md)
 - [播放器封面动态调色](reference-audits/13-player-artwork-palette.md)
 - [应用品牌与系统启动页](reference-audits/14-app-brand-and-splash.md)
+- [首页真实内容与缓存](reference-audits/15-home-content-and-cache.md)
 
 记录日期：2026-08-05。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
@@ -176,6 +177,8 @@
 播放器封面动态调色的依赖、线程、颜色修正、失败回退和切歌隔离见 [`reference-audits/13-player-artwork-palette.md`](reference-audits/13-player-artwork-palette.md)。后续实现固定 AndroidX Palette `1.0.0`（Apache-2.0），只消费 Coil 已解码图片，不新增封面请求；审计固定 Kreate `f02577e` 与 Metrolist `289ed45` 的具体播放器文件，只借鉴状态和降级策略，不复制 GPL-3.0 代码。当前切片只提交方案说明，尚未接入代码。
 
 应用正式名称、PC/Mobile 同源女孩耳机 Logo、Adaptive/round/monochrome 图标和系统 SplashScreen 边界见 [`reference-audits/14-app-brand-and-splash.md`](reference-audits/14-app-brand-and-splash.md)。系统启动基建固定 AndroidX Core SplashScreen `1.2.0`（Apache-2.0），不增加 Splash Activity、人工延时、网络等待或条件启动门禁；数据状态由所属页面承接。
+
+首页真实内容的三个首批 Endpoint、字段容错、Room 完整快照、身份分区、15 分钟刷新门槛、部分失败恢复和自动测试矩阵见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。协议固定 KuGouMusicApi `6efe84e`、Mobile API submodule `283f1e97` 及 PC/Mobile 消费层；排行榜与新歌继续归发现页，不复制 Mobile 的首页重复聚合。
 
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 

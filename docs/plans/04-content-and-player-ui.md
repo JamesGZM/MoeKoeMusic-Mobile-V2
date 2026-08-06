@@ -8,6 +8,8 @@
 
 当前执行顺序固定为首页真实闭环优先；“我的”与登录随后完成，存量全屏封面只先补真机验收。动态色、歌词与完整队列在用户链路之后实施，发现及其余内容详情最后实施。
 
+首页真实内容门禁见 [`../reference-audits/15-home-content-and-cache.md`](../reference-audits/15-home-content-and-cache.md)，状态已 Accepted。实现顺序固定为三个首页 Endpoint 与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、确认稿 Compose；前四个切片使用固定测试、迁移测试和自动截图/真机测试验收，不要求用户手动操作。排行榜与新歌不进入首页首批切片。
+
 ## 实现范围
 
 - 底部一级导航只有首页、发现、我的；搜索是从首页进入的独立子页面。

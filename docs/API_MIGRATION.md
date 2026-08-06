@@ -104,6 +104,8 @@ kugou-api/src/main/kotlin/.../
 - `artist_detail`
 - `artist_audios`
 
+首页首批实现只迁移 `yueku_banner`、`everyday_recommend` 与 `top_playlist`，具体请求、字段容错、身份分区和缓存边界见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。`rank_list`、`rank_audio` 与 `top_song` 虽被 Mobile 参考实现聚合到首页，但本项目的信息架构已将排行榜和新歌归入发现页，因此不进入首页首批协议切片。
+
 ### 登录与音乐库
 
 - `captcha_sent`
