@@ -3,9 +3,13 @@ package cn.james.music.feature.login
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -101,6 +105,53 @@ class LoginScreenAccessibilityTest {
                     ProgressBarRangeInfo.Indeterminate,
                 ),
             ).assertIsDisplayed()
+    }
+
+    @Test
+    fun loginModesExposeTabSelectionAndSwitchOnce() {
+        var selectedMode: LoginMode? = null
+        var modeChanges = 0
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                LoginScreen(
+                    state = LoginUiState(mode = LoginMode.MobileCode),
+                    onBack = {},
+                    onPhoneChange = {},
+                    onCodeChange = {},
+                    onModeChange = {
+                        selectedMode = it
+                        modeChanges += 1
+                    },
+                    onRefreshQrLogin = {},
+                    onSendCode = {},
+                    onSubmitMobileCode = {},
+                    onUsernameChange = {},
+                    onPasswordChange = {},
+                    onTogglePasswordVisibility = {},
+                    onSubmitPassword = {},
+                    onStartRiskVerification = {},
+                    onRetryTencentVerification = {},
+                    onRiskCodeChange = {},
+                    onVerifyRiskCode = {},
+                    onCancelRisk = {},
+                    onSelectAccount = {},
+                    onChooseOtherAccount = {},
+                )
+            }
+        }
+
+        val tabRole = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)
+        composeRule.onNodeWithText("验证码").assert(tabRole).assertIsSelected()
+        composeRule
+            .onNodeWithText("密码")
+            .assert(tabRole)
+            .assertIsNotSelected()
+            .performClick()
+        composeRule.onNodeWithText("扫码").assert(tabRole).assertIsNotSelected()
+        composeRule.runOnIdle {
+            assertEquals(LoginMode.Password, selectedMode)
+            assertEquals(1, modeChanges)
+        }
     }
 }
 

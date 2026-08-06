@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -63,6 +65,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -309,7 +312,10 @@ private fun LoginModeSelector(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(20.dp),
     ) {
-        Row(Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            Modifier.fillMaxWidth().padding(4.dp).selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             LoginModeItem(
                 label = stringResource(R.string.login_mode_code),
                 icon = { Icon(Icons.Filled.VerifiedUser, contentDescription = null) },
@@ -707,7 +713,13 @@ private fun LoginModeItem(
     enabled: Boolean = true,
 ) {
     Surface(
-        modifier = modifier.clickable(enabled = enabled && !selected, onClick = onClick),
+        modifier =
+            modifier.selectable(
+                selected = selected,
+                enabled = enabled,
+                role = Role.Tab,
+                onClick = { if (!selected) onClick() },
+            ),
         shape = RoundedCornerShape(16.dp),
         color = if (selected) MaterialTheme.colorScheme.surface else androidx.compose.ui.graphics.Color.Transparent,
         border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) else null,
