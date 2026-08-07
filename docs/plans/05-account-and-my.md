@@ -11,7 +11,7 @@
 - “我的”匿名与登录态已按 `04-my-anonymous.png`、`04-my-v4.png` 完成整页视觉结构：账户卡、品牌头像、签到/VIP、四项快捷入口、收藏与关注统计层级、创建歌单标题/列表/空态均保留；截图 fixture 提供确认稿示例数据，运行态仍只显示 Repository 的真实资料与明确空态，不把示例计数写入业务状态。
 - 匿名与登录态齿轮均已接入唯一 Settings destination，登录态资料区提供独立账号菜单，退出确认不再借用设置齿轮；My → Settings → 主题切换 → Back 已在指定 ELE-AL00 / API 29 真机通过。
 - 设置与应用偏好已通过 [`../reference-audits/18-settings-and-preferences.md`](../reference-audits/18-settings-and-preferences.md) 门禁；当前已完成主题持久化、应用级消费和基础页面，确认稿其余设置项的视觉先行补齐仍需作为独立修正切片处理，不能再以功能尚未接入为由从页面删除。
-- 用户主页与其余音乐库能力仍待后续纵向切片；“我的首页”视觉完成后，界面开发顺序进入通用播放组件，再到首页、发现页和播放页。
+- 用户主页已完成 [`20-user-profile-ui`](../reference-audits/20-user-profile-ui.md) 门禁与 [`USER_PROFILE_LAYOUT_SPEC.md`](../design/USER_PROFILE_LAYOUT_SPEC.md) 适配合同，下一切片按 `10-user-profile.png` 先交付独立纯 UI、导航与事件端口；关系统计、听歌概览、编辑资料和公开歌单业务仍按后续纵向切片接入。
 
 ## 实现范围
 

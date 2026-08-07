@@ -69,7 +69,7 @@
 | 播放歌词 | [`07-player-lyrics.png`](design/mockups/07-player-lyrics.png) | 与封面共享手势和播放控制 |
 | 播放队列 | [`08-player-queue.png`](design/mockups/08-player-queue.png) | 手机使用 Material 3 Bottom Sheet |
 | 设置 | [`09-settings.png`](design/mockups/09-settings.png) | 内容沿用分组式可滚动设置页；Toolbar 以 `10-user-profile` 为基准居中；长画布不压缩下方 Item |
-| 用户主页 | [`10-user-profile.png`](design/mockups/10-user-profile.png) | 与“我的”分离，不重复工具入口 |
+| 用户主页 | [`10-user-profile.png`](design/mockups/10-user-profile.png)、[`USER_PROFILE_LAYOUT_SPEC.md`](design/USER_PROFILE_LAYOUT_SPEC.md) | 与“我的”分离，不重复工具入口；视觉不等待资料扩展接口 |
 | Dialog | [`11-dialog-components.png`](design/mockups/11-dialog-components.png) | 统一形状、操作顺序和遮罩 |
 | 反馈组件 | [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png) | 自定义 Snackbar、受限 MoeToast |
 | 登录主状态 | [`13-login-phone-immersive.png`](design/mockups/13-login-phone-immersive.png) | 沉浸式顶部；无重复标题；三种登录方式共享表单结构 |

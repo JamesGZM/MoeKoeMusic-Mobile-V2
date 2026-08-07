@@ -6,6 +6,7 @@
 - [酷狗 HTTP 客户端选型](reference-audits/07-kugou-http-client.md)
 - [登录、会话与安全验证](reference-audits/09-login-session-and-risk.md)
 - [用户资料与“我的”会话态](reference-audits/10-user-profile-and-my-session.md)
+- [独立用户主页纯 UI 与 Feature 所有权](reference-audits/20-user-profile-ui.md)
 - [酷狗同步歌词协议、解析与缓存](reference-audits/12-kugou-lyrics.md)
 - [播放器封面动态调色](reference-audits/13-player-artwork-palette.md)
 - [应用品牌与系统启动页](reference-audits/14-app-brand-and-splash.md)
