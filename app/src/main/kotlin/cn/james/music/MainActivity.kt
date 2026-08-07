@@ -11,15 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import cn.james.music.core.designsystem.MoeKoeTheme
-import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.data.local.LocalImportGateway
@@ -32,6 +30,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var importGateway: Lazy<LocalImportGateway>
+
+    private val themeViewModel: AppThemeViewModel by viewModels()
 
     private var afterNotificationPermission: (() -> Unit)? = null
     private var afterMediaPermission: (() -> Unit)? = null
@@ -76,14 +76,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var themeMode by rememberSaveable { mutableStateOf(ThemeMode.System) }
+            val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
             MoeKoeTheme(themeMode = themeMode) {
                 MoeKoeApp(
                     onChooseFiles = { documentPicker.launch(arrayOf("audio/*")) },
                     onRequestDeviceScan = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,
                     onLaunchTencentCaptcha = ::launchTencentCaptcha,
-                    foundationContent = foundationContent(themeMode) { themeMode = it },
+                    foundationContent = foundationContent(themeMode, themeViewModel::updateTheme),
                 )
             }
         }
