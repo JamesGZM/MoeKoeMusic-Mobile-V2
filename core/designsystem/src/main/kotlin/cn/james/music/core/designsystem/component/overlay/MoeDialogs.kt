@@ -148,7 +148,7 @@ internal fun MoeDialogSurface(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth().widthIn(max = size.maximumWidth),
+        modifier = modifier.widthIn(max = size.maximumWidth).fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {

@@ -126,7 +126,7 @@ private fun PasswordForm(
         layout = layout,
         onClick = onSubmit,
         enabled = state.canSubmitPassword && !state.hasActiveRisk,
-        loading = state.passwordLoggingIn,
+        loading = state.passwordLoggingIn || state.hasActiveRisk,
     ) {
         LoginActionText(
             layout = layout,

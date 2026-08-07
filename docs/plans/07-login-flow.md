@@ -72,6 +72,8 @@
 
 2026-08-07 密码三态复验：用户确认 `19a` 默认、`19b` 提交和 `19c` 凭据错误统一采用 `y = 1192` 主按钮锚点，反馈出现不得推动主操作；三态固定边界最大偏差为 `2` 个设计单位，并通过等比真机容器的零滚动与锚点稳定测试。`19a` 的浅蓝 Filled 禁用态同时登记为全局 `MoeButton` 参考。证据见 [`login-password-states-2026-08-07.md`](../design/evidence/login-password-states-2026-08-07.md)。`19d` 风险 Dialog 与其余登录状态继续独立验收。
 
+2026-08-07 风险确认 Dialog 复验：`19d` 继续使用系统 `Dialog` 负责窗口居中与模态语义，业务层不增加系统栏或上下间距补偿；公共 Surface 的最大宽度约束恢复为有效的 `304dp`，归一化宽度为 `663.96 / 852`，底层密码主操作在覆盖期间保持加载态。证据见 [`login-risk-confirm-dialog-2026-08-07.md`](../design/evidence/login-risk-confirm-dialog-2026-08-07.md)。短信与腾讯风险状态继续独立验收。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`
