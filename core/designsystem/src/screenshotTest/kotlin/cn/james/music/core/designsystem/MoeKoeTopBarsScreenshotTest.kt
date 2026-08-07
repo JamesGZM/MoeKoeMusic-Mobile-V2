@@ -8,6 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,7 +28,7 @@ import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
-@Preview(name = "Top bars", widthDp = 390, heightDp = 320)
+@Preview(name = "Top bars", widthDp = 390, heightDp = 384)
 @Composable
 fun MoeKoeTopBarsScreenshot() {
     MoeKoeTheme(themeMode = ThemeMode.Light) {
@@ -49,6 +54,26 @@ fun MoeKoeTopBarsScreenshot() {
                 title = "设置",
                 navigationContentDescription = "返回",
                 onNavigateBack = {},
+            )
+            MoeStandardTopBar(
+                title = "选择歌曲",
+                navigationContentDescription = "关闭",
+                onNavigateBack = {},
+                navigationIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭",
+                        modifier = Modifier.size(24.dp),
+                    )
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "更多",
+                        )
+                    }
+                },
             )
         }
     }

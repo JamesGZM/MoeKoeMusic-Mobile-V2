@@ -19,7 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,9 +37,15 @@ fun MoeStandardTopBar(
     navigationContentDescription: String,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {
+        MoeNavigateBackIcon(
+            contentDescription = navigationContentDescription,
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+        )
+    },
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    TopAppBar(
+    CenterAlignedTopAppBar(
         title = {
             Text(
                 text = title,
@@ -53,10 +59,7 @@ fun MoeStandardTopBar(
                 onClick = onNavigateBack,
                 modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
             ) {
-                MoeNavigateBackIcon(
-                    contentDescription = navigationContentDescription,
-                    modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
-                )
+                navigationIcon()
             }
         },
         actions = actions,

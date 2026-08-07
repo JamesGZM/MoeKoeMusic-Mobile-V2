@@ -227,7 +227,7 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - Typography 已补齐 `24sp`、`18sp`、`titleSmall`、`bodySmall` 等层级。
 - Spacing 已补齐 `12dp`、`20dp` 和 `40dp`，并保留旧属性兼容现有页面。
 - Shapes 已增加 `36dp` Hero 语义，图标、触控、输入、Toolbar、MiniPlayer 和底部导航尺寸已建立 Token。
-- 已有标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton 实现，但现有标准 Toolbar 仍是 Material 默认起始对齐标题，且导航入口只支持返回；下一公共组件切片需按已确认 `15-toolbar-navigation.png` 增加调用方自定义导航图标能力并改为页面中心锚定标题。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
+- 标准 Toolbar 已按 `10-user-profile.png` 与 `15-toolbar-navigation.png` 改为页面中心锚定标题，并允许调用方替换返回/关闭等可见导航图标；公共组件继续统一点击事件、`48dp` 触控区、颜色和 Insets。沉浸式 Toolbar 与沉浸式 IconButton 保持 Hero/封面例外。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
 - Button、TextField、标准/沉浸式 Toolbar、标准 Dialog 外壳与双操作区已进入 `:core:designsystem`；标准 Toolbar 和 Dialog 已有多个真实页面消费者。Snackbar Host、Input Dialog、Bottom Sheet、MoeToast 和页面状态组件继续随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。
