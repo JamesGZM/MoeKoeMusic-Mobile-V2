@@ -8,7 +8,7 @@
 
 当前界面开发顺序按已确认稿固定为“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”；页面视觉先完整落地，对应业务能力再按纵向切片接入，不能因为功能尚未完成而删减已确认视觉结构。
 
-首页真实内容门禁见 [`../reference-audits/15-home-content-and-cache.md`](../reference-audits/15-home-content-and-cache.md)，状态已 Accepted。实现顺序固定为三个首页 Endpoint 与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、确认稿 Compose；前四个切片使用固定测试、迁移测试和自动截图/真机测试验收，不要求用户手动操作。排行榜与新歌不进入首页首批切片。
+首页真实内容门禁见 [`../reference-audits/15-home-content-and-cache.md`](../reference-audits/15-home-content-and-cache.md)，状态已 Accepted。实现顺序固定为三个首页 Endpoint 与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、确认稿 Compose；前四个切片使用固定测试、迁移测试和自动截图/真机测试验收，不要求用户手动操作。排行榜与新歌不进入首页首批切片。发现页视觉按 [`../design/DISCOVER_LAYOUT_SPEC.md`](../design/DISCOVER_LAYOUT_SPEC.md) 先完整落地，业务能力随后按纵向切片接入。
 
 ## 实现范围
 
@@ -49,9 +49,9 @@
 
 ## 当前剩余
 
-- 首页完成自动验证后进入发现页确认稿切片；播放页随后继续，设置页全量确认视觉另有已登记修正切片。
+- 发现页先完成确认稿 UI 与状态矩阵；播放页随后继续，设置页全量确认视觉另有已登记修正切片。
 - 播放器动态色、歌词页、完整队列，以及歌单/专辑/歌手/排行榜详情和对应完整状态矩阵。
-- 发现页最后实施，并复用首页已经稳定的数据与组件能力。
+- 发现页后续真实榜单、歌单与播放纵向切片复用首页已经稳定的数据与组件能力。
 - 队列拖拽、封面/歌词切换、AMOLED 内容页面与 `2.0×` 字体真机关键控制验收。
 - 真实在线封面缺失/失败占位视觉、TalkBack 顺序、预测返回和复杂队列设备测试。
 

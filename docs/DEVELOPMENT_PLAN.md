@@ -2,7 +2,7 @@
 
 状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 与阶段 5A/5B 进行中。更新日期：2026-08-07。
 
-本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。阶段 5 后续执行顺序固定为“品牌与启动基建 → 首页真实闭环 → 我的与登录用户链路 → 播放器完整链路 → 发现页”，不得因某个后续页面已有局部代码而越过前置切片。
+本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。阶段 5 当前界面执行顺序固定为“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”；前三项已经完成，发现页进入确认稿 UI 切片，页面视觉先完整落地，对应业务能力随后按纵向切片接入。
 
 ## 技术基线
 
@@ -46,7 +46,7 @@
 7. [`plans/06-release-readiness.md`](plans/06-release-readiness.md)
 8. [`plans/07-login-flow.md`](plans/07-login-flow.md)
 
-以上编号保留历史阶段文档索引，不代表当前实施先后。当前切片顺序固定为：品牌与启动基建、首页真实数据与 UI、“我的”与登录、播放器动态色/歌词/队列、发现与其余详情。存量播放器封面只允许先补真机验收和缺陷修正，不在首页与用户链路完成前继续扩展新页面。
+以上编号保留历史阶段文档索引，不代表当前实施先后。当前界面切片顺序以“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”为准；不能因为某个业务能力尚未接入而删减已经确认的页面结构，也不能为了视觉预览伪造协议结果。
 
 首页真实内容与缓存门禁已经通过，见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。首批接入每日推荐、推荐歌单和可选轮播，按协议与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、Compose 页面拆成原子切片；排行榜与新歌仍归发现页。协议、Room v5、Repository、ViewModel 与 Compose 五个原子切片已完成，缓存按匿名/用户身份分区自动切换，15 分钟内不重复自动刷新，部分或失败响应不会覆盖最后完整快照；页面覆盖首次加载、缓存刷新、部分结果、空内容、错误与身份切换，并已建立浅色、深色、`1.5×`、`2.0×` 字体截图基线。2026-08-06 自动真实测试确认每日推荐与推荐歌单当前可用；轮播返回 `31136`，恢复前不作为完整快照必需区块。
 
@@ -57,7 +57,7 @@
 | 页面 | 验收设计稿 | 关键约束 |
 | --- | --- | --- |
 | 首页 | [`01-home-material3-v2.png`](design/mockups/01-home-material3-v2.png)、[`HOME_LAYOUT_SPEC.md`](design/HOME_LAYOUT_SPEC.md) | 浅色蓝色体系；搜索从首页进入；应用壳固定、页面单一纵向滚动 |
-| 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶 |
+| 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶；布局契约见 [`DISCOVER_LAYOUT_SPEC.md`](design/DISCOVER_LAYOUT_SPEC.md) |
 | 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
 | 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
 | 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png) | Material 3 详情结构 |
