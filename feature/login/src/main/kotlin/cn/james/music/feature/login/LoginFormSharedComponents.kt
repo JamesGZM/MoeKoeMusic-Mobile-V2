@@ -27,6 +27,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -38,6 +39,8 @@ import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeButtonSize
 import cn.james.music.core.designsystem.component.input.MoeTextField
 import cn.james.music.core.designsystem.component.input.MoeTextFieldSize
+
+internal const val LOGIN_PRIMARY_BUTTON_TAG = "login_primary_button"
 
 @Composable
 internal fun LoginFormColumn(
@@ -110,7 +113,11 @@ internal fun LoginPrimaryButton(
         enabled = enabled,
         loading = loading,
         size = MoeButtonSize.Regular,
-        modifier = modifier.fillMaxWidth().height(layout.form.primaryButtonHeight),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(layout.form.primaryButtonHeight)
+                .testTag(LOGIN_PRIMARY_BUTTON_TAG),
         content = content,
     )
 }

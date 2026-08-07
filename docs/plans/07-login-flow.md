@@ -68,6 +68,8 @@
 
 2026-08-07 后续校准：页面内容改为保持 `852 × 1846` 等比设计画布，三键导航、短窗和大字体只缩短视口并在真实溢出时滚动，不再通过设备 `maxHeight` 压缩 Card。手机号/密码瞬时反馈统一为固定单行槽，新增手机号成功、手机号错误、验证码错误 Preview 与按钮锚点测试；QR 的五个状态拆分 typography role，倒计时时间段使用主蓝色，`20c` 文案、步骤文案和失败恢复文案按确认稿固定。返回视觉与 `48dp` 触控区分离，Tab 字号、Card 阴影及 Hero 裁切进入重新叠加校准。上述修改尚需新截图证据，不沿用旧基准图。
 
+2026-08-07 当前实现复验：手机号验证码默认、发送中、倒计时、已输入与提交中五态已基于公共 Button/TextField 接入后的渲染重新完成归一化叠加，固定边界最大偏差为 `1` 个设计单位；五态共用锚点且基准视口不暴露滚动动作。证据见 [`login-mobile-code-states-2026-08-07.md`](../design/evidence/login-mobile-code-states-2026-08-07.md)。密码、扫码、风险和多账号仍按各自确认稿逐状态验收，不据此标记登录视觉整体完成。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`

@@ -1,7 +1,7 @@
 # 登录手机号默认态设计符合度证据
 
 - 日期：2026-08-07
-- 状态：历史证据，已于公共 Button/TextField 迁移后失效；必须基于当前实现重新生成叠加证据
+- 状态：历史证据，已于公共 Button/TextField 迁移后失效；当前证据见 [`login-mobile-code-states-2026-08-07.md`](login-mobile-code-states-2026-08-07.md)
 - 设计期望：[`13-login-phone-immersive.png`](../mockups/13-login-phone-immersive.png)
 - Compose 状态：`LoginUiState()`，简体中文、Light、`fontScale = 1.0`
 - Preview 视口：`390 × 845dp`，渲染图 `1024 × 2218px`

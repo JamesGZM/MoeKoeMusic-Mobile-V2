@@ -234,6 +234,50 @@ class LoginScreenAccessibilityTest {
     }
 
     @Test
+    fun mobileCodeDesignStatesKeepFixedAnchorsAndZeroScrollRange() {
+        var state by mutableStateOf(LoginUiState())
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                Box(Modifier.size(width = 320.dp, height = 694.dp)) { TestLoginScreen(state) }
+            }
+        }
+
+        val initialCardBounds = composeRule.onNodeWithTag(LOGIN_CARD_TAG).getUnclippedBoundsInRoot()
+        val initialIndicatorBounds =
+            composeRule.onNodeWithTag(LOGIN_MODE_INDICATOR_TAG).getUnclippedBoundsInRoot()
+        val initialButtonBounds =
+            composeRule.onNodeWithTag(LOGIN_PRIMARY_BUTTON_TAG).getUnclippedBoundsInRoot()
+        val designStates =
+            listOf(
+                LoginUiState(phone = "13800138000", sendingCode = true),
+                LoginUiState(
+                    phone = "13800138000",
+                    countdownSeconds = 48,
+                    notice = LoginNotice.CodeSent,
+                ),
+                LoginUiState(phone = "13800138000", code = "123456"),
+                LoginUiState(phone = "13800138000", code = "123456", loggingIn = true),
+            )
+
+        designStates.forEach { nextState ->
+            composeRule.runOnIdle { state = nextState }
+            composeRule.onAllNodes(hasScrollAction()).assertCountEquals(0)
+            val cardBounds = composeRule.onNodeWithTag(LOGIN_CARD_TAG).getUnclippedBoundsInRoot()
+            val indicatorBounds =
+                composeRule.onNodeWithTag(LOGIN_MODE_INDICATOR_TAG).getUnclippedBoundsInRoot()
+            val buttonBounds =
+                composeRule.onNodeWithTag(LOGIN_PRIMARY_BUTTON_TAG).getUnclippedBoundsInRoot()
+
+            assertEquals(initialCardBounds.left.value, cardBounds.left.value, 0.5f)
+            assertEquals(initialCardBounds.top.value, cardBounds.top.value, 0.5f)
+            assertEquals(initialIndicatorBounds.left.value, indicatorBounds.left.value, 0.5f)
+            assertEquals(initialIndicatorBounds.top.value, indicatorBounds.top.value, 0.5f)
+            assertEquals(initialButtonBounds.left.value, buttonBounds.left.value, 0.5f)
+            assertEquals(initialButtonBounds.top.value, buttonBounds.top.value, 0.5f)
+        }
+    }
+
+    @Test
     fun mobileCodeCountdownIsVisibleWithoutChangingScreenMode() {
         composeRule.setContent {
             MoeKoeTheme(themeMode = ThemeMode.Light) {
