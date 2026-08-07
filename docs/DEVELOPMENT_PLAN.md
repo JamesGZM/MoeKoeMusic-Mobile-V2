@@ -63,7 +63,7 @@
 | 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
 | 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
 | 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png) | Material 3 详情结构 |
-| 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png) | 参考 Kreate 的沉浸氛围，不照搬其品牌元素 |
+| 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png)、[`PLAYER_LAYOUT_SPEC.md`](design/PLAYER_LAYOUT_SPEC.md) | 参考 Kreate 的沉浸氛围；完整保留核心控制与次级动作 |
 | 播放歌词 | [`07-player-lyrics.png`](design/mockups/07-player-lyrics.png) | 与封面共享手势和播放控制 |
 | 播放队列 | [`08-player-queue.png`](design/mockups/08-player-queue.png) | 手机使用 Material 3 Bottom Sheet |
 | 设置 | [`09-settings.png`](design/mockups/09-settings.png) | 内容沿用分组式可滚动设置页；Toolbar 以 `10-user-profile` 为基准居中；长画布不压缩下方 Item |
