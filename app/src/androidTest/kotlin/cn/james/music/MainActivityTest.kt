@@ -269,6 +269,10 @@ class MainActivityTest {
 
         composeRule.onNodeWithText("主题模式").performClick()
         composeRule.onNodeWithText("跟随系统").performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("关于 MoeKoe Air"))
+        composeRule.onNodeWithText("关于 MoeKoe Air").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("MoeKoe Air 是开源的 Android 原生音乐客户端，遵循 GPL-2.0-only 许可证。").assertIsDisplayed()
+        composeRule.onNodeWithText("完成").performClick()
         composeRule.runOnUiThread {
             composeRule.activity.onBackPressedDispatcher.onBackPressed()
         }

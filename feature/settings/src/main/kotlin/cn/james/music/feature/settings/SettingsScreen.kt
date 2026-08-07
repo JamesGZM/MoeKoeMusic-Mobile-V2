@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +24,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Brightness4
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Colorize
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,10 +55,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
@@ -94,26 +111,118 @@ internal fun SettingsScreen(
         Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.TopCenter) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().widthIn(max = 720.dp),
-                contentPadding = PaddingValues(MoeKoeTheme.spacing.space16),
-                verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space16),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
                     SettingsGroup(title = stringResource(R.string.settings_appearance)) {
                         SettingsItem(
-                            icon = Icons.Default.Brightness4,
-                            iconColor = MaterialTheme.colorScheme.primary,
+                            icon = Icons.Default.Colorize,
+                            iconColor = MaterialTheme.colorScheme.secondary,
                             title = stringResource(R.string.settings_theme_mode),
                             value = state.theme.displayName(),
                             loading = state.savingTheme != null,
                             onClick = { showThemeDialog = true },
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.Palette,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = stringResource(R.string.settings_theme_color),
+                            value = stringResource(R.string.settings_theme_color_sky),
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.AutoAwesome,
+                            iconColor = MaterialTheme.colorScheme.tertiary,
+                            title = stringResource(R.string.settings_dynamic_color),
+                            checked = true,
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.DarkMode,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            title = stringResource(R.string.settings_amoled_mode),
+                            checked = state.theme == AppThemePreference.Amoled,
+                        )
+                    }
+                }
+                item {
+                    SettingsGroup(title = stringResource(R.string.settings_playback_quality)) {
+                        SettingsItem(
+                            icon = Icons.Default.GraphicEq,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = stringResource(R.string.settings_default_quality),
+                            value = stringResource(R.string.settings_quality_standard),
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.SkipNext,
+                            iconColor = MaterialTheme.colorScheme.tertiary,
+                            title = stringResource(R.string.settings_skip_failed),
+                            checked = true,
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.Waves,
+                            iconColor = MaterialTheme.colorScheme.secondary,
+                            title = stringResource(R.string.settings_fade),
+                            value = stringResource(R.string.settings_disabled),
+                        )
+                    }
+                }
+                item {
+                    SettingsGroup(title = stringResource(R.string.settings_lyrics)) {
+                        SettingsItem(
+                            icon = Icons.Default.ChatBubbleOutline,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = stringResource(R.string.settings_lyrics_display),
+                            value = stringResource(R.string.settings_lyrics_line_by_line),
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.Translate,
+                            iconColor = MaterialTheme.colorScheme.tertiary,
+                            title = stringResource(R.string.settings_translation),
+                            checked = true,
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.TextFields,
+                            iconColor = MaterialTheme.colorScheme.secondary,
+                            title = stringResource(R.string.settings_lyrics_font_size),
+                            value = stringResource(R.string.settings_standard),
+                        )
+                    }
+                }
+                item {
+                    SettingsGroup(title = stringResource(R.string.settings_storage)) {
+                        SettingsItem(
+                            icon = Icons.Default.FolderOpen,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = stringResource(R.string.settings_cache_limit),
+                            value = stringResource(R.string.settings_cache_limit_value),
+                        )
+                        SettingsDivider()
+                        SettingsItem(
+                            icon = Icons.Default.DeleteOutline,
+                            iconColor = MaterialTheme.colorScheme.tertiary,
+                            title = stringResource(R.string.settings_clear_cache),
                         )
                     }
                 }
                 item {
                     SettingsGroup(title = stringResource(R.string.settings_other)) {
                         SettingsItem(
+                            icon = Icons.Default.Language,
+                            iconColor = MaterialTheme.colorScheme.secondary,
+                            title = stringResource(R.string.settings_language),
+                            value = stringResource(R.string.settings_language_zh_cn),
+                        )
+                        SettingsDivider()
+                        SettingsItem(
                             icon = Icons.Default.Info,
-                            iconColor = MaterialTheme.colorScheme.tertiary,
+                            iconColor = MaterialTheme.colorScheme.primary,
                             title = stringResource(R.string.settings_about),
                             value = null,
                             loading = false,
@@ -144,18 +253,18 @@ internal fun SettingsScreen(
 @Composable
 private fun SettingsGroup(
     title: String,
-    content: @Composable () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
     ) {
         Column {
             Text(
                 text = title,
-                modifier = Modifier.padding(start = 20.dp, top = 18.dp, end = 20.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 14.dp, top = 12.dp, end = 14.dp, bottom = 4.dp),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -169,34 +278,42 @@ private fun SettingsItem(
     icon: ImageVector,
     iconColor: Color,
     title: String,
-    value: String?,
-    loading: Boolean,
-    onClick: () -> Unit,
+    value: String? = null,
+    loading: Boolean = false,
+    checked: Boolean? = null,
+    onClick: (() -> Unit)? = null,
 ) {
+    val interactionModifier = if (onClick != null) Modifier.clickable(enabled = !loading, onClick = onClick) else Modifier
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 76.dp)
-                .clickable(enabled = !loading, onClick = onClick)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .heightIn(min = 48.dp)
+                .then(interactionModifier)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(42.dp).background(iconColor.copy(alpha = 0.10f), CircleShape),
+            modifier = Modifier.size(30.dp).background(iconColor.copy(alpha = 0.10f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
+            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
         }
-        Spacer(Modifier.width(MoeKoeTheme.spacing.space16))
+        Spacer(Modifier.width(14.dp))
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
         )
         if (loading) {
             CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+        } else if (checked != null) {
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                modifier = Modifier.graphicsLayer(scaleX = 0.8f, scaleY = 0.8f),
+            )
         } else {
             value?.let {
                 Text(
@@ -204,6 +321,9 @@ private fun SettingsItem(
                     modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.End,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             Icon(
@@ -214,6 +334,14 @@ private fun SettingsItem(
             )
         }
     }
+}
+
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 14.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f),
+    )
 }
 
 @Composable

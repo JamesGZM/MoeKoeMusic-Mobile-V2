@@ -33,6 +33,11 @@ fun SettingsLargeText15Screenshot() = SettingsScreenshotContent(ThemeMode.Light,
 @Composable
 fun SettingsLargeText20Screenshot() = SettingsScreenshotContent(ThemeMode.Light, AppThemePreference.System)
 
+@PreviewTest
+@Preview(name = "LongContent", widthDp = 390, heightDp = 1040)
+@Composable
+fun SettingsLongContentScreenshot() = SettingsScreenshotContent(ThemeMode.Light, AppThemePreference.System)
+
 @Composable
 private fun SettingsScreenshotContent(
     themeMode: ThemeMode,
