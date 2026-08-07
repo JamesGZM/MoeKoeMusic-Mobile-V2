@@ -104,6 +104,7 @@ private fun MyScreenshotContent(
                 onLogin = {},
                 onLocalMusic = {},
                 onSettings = {},
+                onProfile = {},
                 onRequestLogout = {},
                 onDismissLogout = {},
                 onConfirmLogout = {},

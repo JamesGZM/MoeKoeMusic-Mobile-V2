@@ -37,5 +37,6 @@ include(
     ":feature:login",
     ":feature:player",
     ":feature:playlist",
+    ":feature:profile",
     ":feature:settings",
 )

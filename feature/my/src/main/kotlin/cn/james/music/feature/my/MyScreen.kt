@@ -86,6 +86,7 @@ internal fun MyScreen(
     onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
     onSettings: () -> Unit,
+    onProfile: () -> Unit,
     onRequestLogout: () -> Unit,
     onDismissLogout: () -> Unit,
     onConfirmLogout: () -> Unit,
@@ -109,6 +110,7 @@ internal fun MyScreen(
                     onLogin = onLogin,
                     onRetry = onRefresh,
                     onSettings = onSettings,
+                    onProfile = onProfile,
                     onRequestLogout = onRequestLogout,
                 )
             }
@@ -143,6 +145,7 @@ private fun AccountSection(
     onLogin: () -> Unit,
     onRetry: () -> Unit,
     onSettings: () -> Unit,
+    onProfile: () -> Unit,
     onRequestLogout: () -> Unit,
 ) {
     when (account) {
@@ -154,6 +157,7 @@ private fun AccountSection(
                 profile = account.profile,
                 loggingOut = loggingOut,
                 onSettings = onSettings,
+                onProfile = onProfile,
                 onRequestLogout = onRequestLogout,
             )
     }
@@ -164,6 +168,7 @@ private fun AuthenticatedAccountCard(
     profile: MyProfileUi,
     loggingOut: Boolean,
     onSettings: () -> Unit,
+    onProfile: () -> Unit,
     onRequestLogout: () -> Unit,
 ) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
@@ -182,7 +187,7 @@ private fun AuthenticatedAccountCard(
                 Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
                 Box(Modifier.weight(1f)) {
                     Column(
-                        Modifier.fillMaxWidth().clickable(enabled = !loggingOut) { accountMenuExpanded = true },
+                        Modifier.fillMaxWidth().clickable(enabled = !loggingOut, onClick = onProfile),
                         verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small)) {
@@ -215,7 +220,7 @@ private fun AuthenticatedAccountCard(
                         onRequestLogout = onRequestLogout,
                     )
                 }
-                Box(Modifier.size(width = 48.dp, height = 76.dp)) {
+                Box(Modifier.size(width = 48.dp, height = 76.dp).clickable(enabled = !loggingOut) { accountMenuExpanded = true }) {
                     SettingsButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopCenter))
                     if (loggingOut) {
                         CircularProgressIndicator(Modifier.align(Alignment.BottomCenter).size(22.dp), strokeWidth = 2.dp)

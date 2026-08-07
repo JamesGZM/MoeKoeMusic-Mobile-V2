@@ -1,0 +1,27 @@
+<resources>
+    <string name="profile_title">个人主页</string>
+    <string name="profile_back">返回我的</string>
+    <string name="profile_share">分享个人主页</string>
+    <string name="profile_more">更多个人主页操作</string>
+    <string name="profile_avatar">用户头像</string>
+    <string name="profile_following">关注</string>
+    <string name="profile_followers">粉丝</string>
+    <string name="profile_friends">好友</string>
+    <string name="profile_edit">编辑资料</string>
+    <string name="profile_listening_overview">听歌概览</string>
+    <string name="profile_level">等级</string>
+    <string name="profile_listening_duration">听歌时长</string>
+    <string name="profile_music_age">乐龄</string>
+    <string name="profile_created_playlists">创建的歌单</string>
+    <string name="profile_view_all">查看全部</string>
+    <string name="profile_open_playlist">打开%1$s</string>
+    <string name="profile_playlist_more">%1$s的更多操作</string>
+    <string name="profile_loading">正在加载个人主页</string>
+    <string name="profile_empty_title">还没有创建公开歌单</string>
+    <string name="profile_empty_message">创建的公开歌单会显示在这里</string>
+    <string name="profile_error_title">个人主页暂时不可用</string>
+    <string name="profile_error_message">加载资料时遇到问题，请稍后重试</string>
+    <string name="profile_offline_title">当前处于离线状态</string>
+    <string name="profile_offline_message">连接网络后即可重新加载个人主页</string>
+    <string name="profile_retry">重试</string>
+</resources>

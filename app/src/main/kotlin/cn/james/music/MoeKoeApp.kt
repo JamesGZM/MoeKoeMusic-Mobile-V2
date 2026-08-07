@@ -48,6 +48,8 @@ import cn.james.music.feature.player.PlayerUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.playlist.PlaylistDetailDestination
 import cn.james.music.feature.playlist.playlistDetailDestination
+import cn.james.music.feature.profile.UserProfileDestination
+import cn.james.music.feature.profile.userProfileDestination
 import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
 import cn.james.music.feature.settings.SettingsDestination
@@ -185,6 +187,7 @@ fun MoeKoeApp(
                     onLogin = { navController.navigate(LoginDestination) },
                     onLocalMusic = { navController.navigate(LocalMusicDestination) },
                     onSettings = { navController.navigate(SettingsDestination) },
+                    onProfile = { navController.navigate(UserProfileDestination) },
                     onFoundationLab = { navController.navigateToFoundation() },
                     showFoundationLab = foundationContent != null,
                 )
@@ -213,6 +216,7 @@ fun MoeKoeApp(
                     onOpenQueue = { queueVisible = true },
                 )
                 playlistDetailDestination(onBack = navController::popBackStack)
+                userProfileDestination(onBack = navController::popBackStack)
                 foundationContent?.let { addFoundationDestination(it) }
             }
         }

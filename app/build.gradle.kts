@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.feature.login)
     implementation(projects.feature.player)
     implementation(projects.feature.playlist)
+    implementation(projects.feature.profile)
     implementation(projects.feature.settings)
     debugImplementation(projects.feature.foundation)
     implementation(projects.data)

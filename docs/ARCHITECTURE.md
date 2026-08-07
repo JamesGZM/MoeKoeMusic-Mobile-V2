@@ -50,6 +50,7 @@ Repository
 :feature:login
 :feature:player
 :feature:playlist
+:feature:profile
 ```
 
 ### `:app`
@@ -112,6 +113,7 @@ Repository
 - `:feature:settings` 拥有设置 Destination、Route、Screen、ViewModel 和测试，只依赖 `:core:model` 的应用偏好端口与 `:core:designsystem`；`:feature:my` 只上抛设置导航事件，`:app` 注册唯一目的地并以独立 app-level ViewModel 消费全局主题。设置页不直接访问 DataStore，也不显示没有真实消费者的假开关。
 - `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 传入的播放状态与事件，不依赖 `:playback`、Service、数据库或网络。歌词协议、领域映射和成功缓存位于 `:kugou-api`、`:data` 与 `:core:database`；后续只通过 `LyricsRepository` 和页面 ViewModel 接入，歌词现有主态与补充状态均已确认。
 - `:feature:playlist` 拥有歌单详情目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；详情可由首页、发现或“我的”复用，任何来源 Feature 都不依赖它。首个视觉切片不依赖 Repository、`:playback` 或网络，真实歌单纵向切片后续在本 Feature 内补 ViewModel。
+- `:feature:profile` 拥有用户主页目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；“我的”只上抛已认证用户的资料页事件，由 `:app` 完成跨 Feature 导航。首个视觉切片不读取 `UserProfileRepository`，设计示例计数不进入领域层或持久化。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
 - 出现跨 Feature API、多 App 复用或可替换实现需求时，再按 ADR-0004 拆为 `api/impl`。
@@ -132,6 +134,7 @@ Repository
 :feature:my ───────► UserProfileRepository + AuthRepository + :core:designsystem
 :feature:player ───► :core:model + :core:designsystem
 :feature:playlist ─► :core:designsystem
+:feature:profile ──► :core:designsystem
 
 :data ────────────► :kugou-api
 :data ────────────► :core:database
