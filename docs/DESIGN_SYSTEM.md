@@ -1,18 +1,20 @@
 # MoeKoe Air Design System
 
-状态：第一版视觉方向已确认，Compose Token 与首批组件校准进行中。确认日期：2026-08-05；公共组件准入审计日期：2026-08-07。
+状态：第一版视觉方向已确认；Toolbar 与 `09`、`14` 至 `18` 的修订候选稿待确认。确认日期：2026-08-05；Toolbar 规范修订日期：2026-08-07。
 
 本文是颜色语义、交互状态、无障碍下限和通用组件行为的真值。已确认页面设计图是该页面结构、坐标、视觉尺寸比例、间距、圆角、层级和裁切的真值；页面专属几何必须按页面适配契约测量和映射，不能用通用 Token 或实现者经验覆盖。设计稿中的自动生成文字、日期和业务数据仍不是真值。
 
 公共组件的当前清单见 [`UI_COMPONENT_CATALOG.md`](UI_COMPONENT_CATALOG.md)，准入、所有权与迁移依据见 [`reference-audits/17-design-system-components.md`](reference-audits/17-design-system-components.md)。
 
-视觉参考：
+当前已确认的标准 Toolbar 视觉基准为 [`10-user-profile.png`](design/mockups/10-user-profile.png)。旧 `09`、`14` 至 `18` 暂停作为实现基线，修订候选稿见 [`design-system-v2`](design/mockups/candidates/design-system-v2/README.md)；用户确认前不得用候选稿反向修改 Compose。
 
-- [`14-design-foundations.png`](design/mockups/14-design-foundations.png)
-- [`15-toolbar-navigation.png`](design/mockups/15-toolbar-navigation.png)
-- [`16-actions-inputs.png`](design/mockups/16-actions-inputs.png)
-- [`17-music-content-components.png`](design/mockups/17-music-content-components.png)
-- [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png)
+修订候选视觉参考：
+
+- [`14-design-foundations-v2.png`](design/mockups/candidates/design-system-v2/14-design-foundations-v2.png)
+- [`15-toolbar-navigation-v2.png`](design/mockups/candidates/design-system-v2/15-toolbar-navigation-v2.png)
+- [`16-actions-inputs-v2.png`](design/mockups/candidates/design-system-v2/16-actions-inputs-v2.png)
+- [`17-music-content-components-v2.png`](design/mockups/candidates/design-system-v2/17-music-content-components-v2.png)
+- [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)
 
 ## 设计原则
 
@@ -152,21 +154,24 @@
 ### 层级
 
 - 常规列表和页面容器以分隔线和色调差建立层级，默认无阴影。
-- Toolbar、Dropdown 和 Snackbar 只使用轻量阴影；Dialog 与 Bottom Sheet 主要依靠遮罩分层。
+- 标准 Toolbar 与页面使用同一 `surface`，默认无卡片外框、圆角容器或整体阴影；滚动后最多增加底部分隔线。
+- Dropdown 和 Snackbar 只使用轻量阴影；Dialog 与 Bottom Sheet 主要依靠遮罩分层。
 - 禁止在业务页面自定义任意阴影参数；最终 Elevation Token 在 Compose 截图和真机校准时固化。
 
 ## Toolbar 与导航
 
 ### Toolbar 变体
 
-1. 沉浸式：内容绘制到状态栏后方，无独立标题行；返回按钮悬浮在安全区。登录、播放器和 Hero 详情优先使用。
-2. 标准：高度 `64dp`，不含系统状态栏；水平边距 `16dp`，标题使用 `titleLarge`，尾部最多两个主要操作。
-3. 滚动折叠：展开时透明且不重复 Hero 标题；折叠后变为实体 Surface，显示标题和轻分隔线。
-4. 搜索：返回按钮加 `56dp` 高搜索框；搜索是子页面，不进入底部导航。
-5. 多选：关闭、已选数量、全选和删除；只有删除使用 Error 色。
-6. 内容 Tab：直接位于页面顶部或 Toolbar 下方，不再增加重复页面标题。
+1. 标准：以 `10-user-profile.png` 为基准。高度 `64dp`，不含系统状态栏；水平内容边距 `16dp`；标题使用单行 `titleLarge`，相对完整页面宽度几何居中，而不是跟随左侧内容起排。左侧与尾部操作均为 `24dp` 图标置于至少 `48dp` 语义触控区，不显示圆形底板、卡片外框或 Toolbar 整体阴影。
+2. 滚动标准态：保持标准态几何与居中标题；内容滚动后切换为实体 `surface`，最多增加一条轻量底部分隔线，不改变图标容器、标题位置或 Toolbar 高度。
+3. 搜索：左侧导航操作加 `56dp` 高搜索框；搜索属于子页面，不进入底部导航，也不叠加第二个页面标题。
+4. 多选：左侧关闭，中间显示已选数量，尾部只保留当前流程需要的少量操作；只有删除等破坏性操作使用 Error 色。
+5. 沉浸式例外：仅用于登录 Hero、播放器封面和其他确有复杂图片背景的页面。内容可绘制到状态栏后方，单个操作允许使用半透明圆形 Surface 保证对比度；该圆形外观不得回流到设置、资料、安全验证等标准页面。
+6. 内容 Tab：直接位于页面顶部或标准 Toolbar 下方，不再增加重复页面标题。
 
-默认启用 edge-to-edge。透明 Toolbar 必须根据背景对比度选择前景色；复杂背景优先使用半透明圆形按钮，不给整个顶部增加磨砂层。
+标准 Toolbar 使用对称槽位保证标题真正居中：无尾部操作时仍保留与左侧等宽的布局占位；存在一至两个尾部操作时，标题继续以页面中心为锚点并在与操作区冲突前省略。导航区必须支持调用方提供语义图标与点击事件，至少覆盖返回和关闭；共享组件负责尺寸、触控、颜色和无障碍，Feature 不得复制 Toolbar 绘制逻辑。
+
+默认启用 edge-to-edge，系统状态栏 Insets 由页面/Toolbar 统一处理且不计入 `64dp` 内容高度。透明 Toolbar 必须根据背景对比度选择前景色；复杂背景只给独立操作增加必要的对比 Surface，不给整个顶部增加磨砂层。
 
 ### 底部结构
 
@@ -199,7 +204,7 @@
 - 不可在同一页面中用风险、确认或提示卡片替换用户正在操作的主表单。登录额外风险验证属于临时阻断确认：原密码表单保持可辨识但不可操作，叠加遮罩与 Dialog；Dialog 关闭后恢复原草稿和焦点语义。只有确认后的独立验证流程可以成为新页面或隔离 Activity。
 - 覆盖层状态设计图统一采用“原页面画布 → 规范遮罩 → 独立 Dialog 或 Bottom Sheet 前景层”的确定性合成方式；不得重新生成遮罩后的底层页面，底层文案、输入草稿、控件尺寸与坐标必须保持不变。
 - Bottom Sheet 必须贴住手机视口底部，占满可用宽度，仅顶部使用 `28dp` 圆角，并处理底部安全区；使用遮罩与统一轻量顶缘投影分层，默认 `24dp` 水平内边距、一个 `48dp` Filled 主操作和一个 TextButton 取消，不堆叠两个同等级全宽按钮。
-- 手机普通确认 Dialog 在 `390dp` 登录参考宽度上为 `304dp`，六位验证码等结构化输入 Dialog 为 `320dp`；它们分别对应约 `664` 与 `699` 个登录设计单位，Compact 窗口按页面统一系数缩放，不写成脱离设计画布的固定运行宽度。参考画布的单侧边距约为 `43dp` 与 `35dp`。高度由内容决定；`fontScale = 1.0` 时字号、验证码格和操作文案按设计比例，系统大字体时只做可访问性增高/换行。Dialog 默认相对完整可用视口水平、垂直居中，不得相对底部表单或剩余内容区居中。遮罩约为 32% 黑色。双操作区在参考画布使用两个视觉高度 `48dp`、间距 `12dp` 的按钮，随页面统一比例映射且语义触控区始终不小于 `48dp`：左侧取消为低强调 Tonal 容器，右侧主操作为 Filled 容器；不得再把取消画成与主按钮错位的裸文字。禁用态保留可辨识的中性灰容器，不得通过整体降透明度让按钮与 Dialog 表面融为一体。
+- 手机普通确认 Dialog 在 `390dp` 登录参考宽度上为 `304dp`，六位验证码等结构化输入 Dialog 为 `320dp`；它们分别对应约 `664` 与 `699` 个登录设计单位，Compact 窗口按页面统一系数缩放，不写成脱离设计画布的固定运行宽度。参考画布的单侧边距约为 `43dp` 与 `35dp`。高度由内容决定；`fontScale = 1.0` 时字号、验证码格和操作文案按设计比例，系统大字体时只做可访问性增高/换行。Dialog 使用系统 `Dialog` 的完整可用视口居中行为，不增加业务自定义纵向偏移，也不根据顶部/底部剩余间距重新计算位置。遮罩约为 32% 黑色。双操作区在参考画布使用两个视觉高度 `48dp`、间距 `12dp` 的按钮，随页面统一比例映射且语义触控区始终不小于 `48dp`：左侧取消为低强调 Tonal 容器，右侧主操作为 Filled 容器；不得再把取消画成与主按钮错位的裸文字。Filled 禁用态遵循全局约 `35%` 主色容器与约 `82%` `onPrimary` 内容规则，不回退成与白色表面融合的中性灰块。
 - Dialog 前景使用 `surface` 背景，标题沿用 `titleMedium` 尺寸并提升为 Bold；启用的 Tonal 取消按钮使用 `primaryContainer` 容器与 `primary` 文案，加载锁定时才回落为中性灰禁用态。Filled 确认按钮继续遵循全局启用、加载和禁用规则。
 - Snackbar 左右边距 `16dp`，最多两行和一个操作，位于 MiniPlayer 上方。
 - DropdownMenu 必须锚定触发控件；音质、排序等多项单选优先使用 Bottom Sheet。
@@ -215,7 +220,7 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - Typography 已补齐 `24sp`、`18sp`、`titleSmall`、`bodySmall` 等层级。
 - Spacing 已补齐 `12dp`、`20dp` 和 `40dp`，并保留旧属性兼容现有页面。
 - Shapes 已增加 `36dp` Hero 语义，图标、触控、输入、Toolbar、MiniPlayer 和底部导航尺寸已建立 Token。
-- 已建立标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton；搜索、折叠和多选 Toolbar 在对应页面接入时继续完成。
+- 已有标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton 实现，但现有标准 Toolbar 仍是 Material 默认起始对齐标题，且导航入口只支持返回；在 `design-system-v2` 候选稿确认前不扩散使用，确认后需增加调用方自定义导航图标能力并改为页面中心锚定标题。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
 - Button、TextField、标准/沉浸式 Toolbar、标准 Dialog 外壳与双操作区已进入 `:core:designsystem`；标准 Toolbar 和 Dialog 已有多个真实页面消费者。Snackbar Host、Input Dialog、Bottom Sheet、MoeToast 和页面状态组件继续随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。

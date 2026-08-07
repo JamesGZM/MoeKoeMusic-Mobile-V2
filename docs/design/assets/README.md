@@ -18,7 +18,7 @@
 ## `icons/navigation-back.svg`
 
 - 状态：已确认设计的通用导航图标母版。
-- 来源：`13-login-phone-immersive.png` 与 `15-toolbar-navigation.png` 中一致的无横杆圆端 Chevron。
+- 来源：`13-login-phone-immersive.png` 与已确认的 `10-user-profile.png` 中一致的无横杆圆端 Chevron；旧 `15-toolbar-navigation.png` 不再作为 Toolbar 形态依据。
 - 语义：返回上一级导航；不是登录业务图标。
 - Android：由 `:core:designsystem` 的 `ic_moe_navigation_back.xml` 提供 VectorDrawable，并通过 `MoeNavigateBackIcon` 使用。
 - 约束：图形自动随 RTL 镜像；页面或 Toolbar 分别决定视觉尺寸、底板、位置和最小 `48dp` 触控区域，不复制或修改路径。

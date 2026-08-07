@@ -6,7 +6,7 @@
 
 - [`11-dialog-components.png`](design/mockups/11-dialog-components.png)
 - [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png)
-- [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png)
+- [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)（待确认；数值与行为仍以本文为准）
 
 ## 反馈方式选择
 
@@ -51,13 +51,13 @@
 - 登录参考画布宽度为 `390dp` 时，普通确认型视觉宽度为 `304dp`，六位验证码等结构化输入型为 `320dp`，单侧边距分别约为 `43dp` 与 `35dp`。它们对应页面设计坐标，Compact 窗口必须随登录页统一比例映射，不能作为与画布无关的固定运行尺寸。大字体下允许内容增高和换行，不固定高度；系统字体倍率属于可访问性适配，不改变基准 `1.0×` 设计比例。
 - 登录 Dialog 的具体坐标、缩放、遮罩与符合度误差遵循 [`design/LOGIN_LAYOUT_SPEC.md`](design/LOGIN_LAYOUT_SPEC.md)。其他页面若已有确认稿，以各自页面适配契约为准，不能直接套用登录画布比例。
 - 默认 Dialog 必须相对完整可用视口水平、垂直居中；不得以页面内容区、底部表单、键盘上方剩余区域或触发控件作为视觉居中基准。只有 Bottom Sheet 可以贴底呈现。
-- 容器使用 `surfaceContainerHigh`，圆角 `28.dp`，遮罩使用约 32% 黑色；不使用玻璃模糊和厚重阴影。
+- 容器使用 `surface`，浅色主题即 `#FFFFFF`，圆角 `28.dp`，遮罩使用约 32% 黑色；不使用灰色卡片底、玻璃模糊和厚重阴影。
 - 最小屏幕边距 `32.dp`，内容内边距 `24.dp`，标题与正文间距 `16.dp`，正文与操作区间距 `24.dp`。
 - 标题使用 `titleMedium`（`18sp / 26sp`），正文采用 `14sp / 20sp`，按钮标签不小于 `14sp`；不得为了填充更宽容器而放大排版层级。
 - 双操作区固定为一行：两个按钮均为 `48.dp` 高、底边和文字基线对齐，中间使用 `12.dp` 间距；默认等分可用宽度，只有文案长度明显不对称时才按内容调整，但不得造成视觉错位或状态切换跳动。
 - 取消操作在左，使用低强调 `primaryContainer` Tonal 背景与 `primary` 文案；主要操作在右，使用 Filled 主色背景。取消不得只保留裸文字，也不得与主操作使用同等级 Filled 强调。危险操作只将右侧最终确认按钮切换为 `error` 语义色。
 - 默认、校验中和错误状态必须保留相同操作槽位与尺寸；提交中可禁用两个按钮，但不得让按钮消失、换位或改变 Dialog 宽度。
-- 禁用按钮使用可辨识的中性灰容器（视觉约等于 `onSurface` 以 12% 合成到 Surface）和约 38% 强度的内容色；只降低强调，不移除背景、形状或文字。禁止对整个按钮统一降低透明度至接近白色。
+- Filled 主按钮禁用时沿用全局登录确认样式：`primary` 约 35% 强度的浅蓝容器与 `onPrimary` 约 82% 强度的内容色；不得改成中性灰，也不得对整个按钮统一降低透明度至接近白色。Tonal、Outlined、Text 与 Destructive 使用各自语义的禁用状态，不借用 Filled 配色。
 - 图标只辅助表达语义，不替代标题和正文。颜色不能成为区分成功、警告和错误的唯一方式。
 
 ### 组件类型

@@ -13,7 +13,7 @@
 - `AuthState.Authenticated` 目前只有稳定 `userId`；昵称、头像、签名、听歌时长和 VIP 状态不能从登录响应或设计稿推断。
 - `:feature:my` 当前是静态页面，尚未持有账户 UI 状态，也没有资料 Repository、刷新或退出确认。
 - `AuthRepository.logout()` 已能原子清除 token、userid 与登录 Cookie，同时保留 GUID、MID 和 dfid；“我的”只需调用稳定领域接口，不能直接操作会话存储。
-- 已确认设计稿 [`../design/mockups/04-my-v4.png`](../design/mockups/04-my-v4.png) 是已登录主态的唯一视觉基线；[`../design/mockups/18-mobile-states-overlays.png`](../design/mockups/18-mobile-states-overlays.png) 约束加载、错误与覆盖层；未登录入口进入已确认的 [`../design/mockups/13-login-phone-immersive.png`](../design/mockups/13-login-phone-immersive.png)。匿名候选图见 [`../design/mockups/candidates/my-anonymous-v3/README.md`](../design/mockups/candidates/my-anonymous-v3/README.md)，确认前不具备实现基线资格。
+- 已确认设计稿 [`../design/mockups/04-my-v4.png`](../design/mockups/04-my-v4.png) 是已登录主态的唯一视觉基线；加载、错误与覆盖层由 [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md#页面状态与覆盖层) 和 [`../UI_COMPONENTS.md`](../UI_COMPONENTS.md) 约束，`18` 修订图板待确认；未登录入口进入已确认的 [`../design/mockups/13-login-phone-immersive.png`](../design/mockups/13-login-phone-immersive.png)。匿名候选图见 [`../design/mockups/candidates/my-anonymous-v3/README.md`](../design/mockups/candidates/my-anonymous-v3/README.md)，确认前不具备实现基线资格。
 - 现有设计已覆盖本切片，不重新生图。以后新增会话失效等未覆盖布局时，必须先依 `AGENTS.md` 使用 `frontend-design` 在 MoeKoe Air 体系内补静态设计图并确认，之后才能制作交互原型或 Compose 页面。
 
 ## 功能与状态规格
@@ -31,11 +31,11 @@
 | 状态 | 页面行为 | 恢复入口 | 设计依据 |
 | --- | --- | --- | --- |
 | 匿名 | 顶部按未登录候选基座呈现；本地音乐与应用级设置可直接进入；签到、VIP、我喜欢、最近播放、云盘、收藏、关注、歌单和用户主页等账号资产保持正常入口形态 | 点击任一账号资产进入唯一 `loginGraph` | `04-my-v4.png`、`candidates/my-anonymous-v3`、`13-login-phone-immersive.png` |
-| 首次加载 | 用户卡片骨架，非账号本地入口可用 | 自动完成或进入错误 | `18-mobile-states-overlays.png` |
+| 首次加载 | 用户卡片骨架，非账号本地入口可用 | 自动完成或进入错误 | `DESIGN_SYSTEM.md` 页面状态规范 |
 | 已登录 | 昵称、头像、可用资料与 VIP 摘要使用真实响应 | 下拉刷新、进入用户主页 | `04-my-v4.png` |
 | VIP 部分失败 | 保留资料卡，不伪造 VIP；显示弱提示或省略徽标 | 下拉刷新 | `04-my-v4.png`、`12-feedback-components-v2.png` |
-| 资料失败/离线 | 若已有资料则保留并显示可恢复反馈；无缓存时显示内联错误 | “重试”或下拉刷新 | `18-mobile-states-overlays.png`、`12-feedback-components-v2.png` |
-| 会话不可用 | 不用网络/协议错误猜测退出；只有会话初始化失败或未来 Endpoint 明确映射的认证失效才展示重新登录提示 | 用户确认后退出并进入登录 | `18-mobile-states-overlays.png`、`11-dialog-components.png` |
+| 资料失败/离线 | 若已有资料则保留并显示可恢复反馈；无缓存时显示内联错误 | “重试”或下拉刷新 | `DESIGN_SYSTEM.md`、`12-feedback-components-v2.png` |
+| 会话不可用 | 不用网络/协议错误猜测退出；只有会话初始化失败或未来 Endpoint 明确映射的认证失效才展示重新登录提示 | 用户确认后退出并进入登录 | `UI_COMPONENTS.md`、`11-dialog-components.png` |
 | 退出中 | 确认 Dialog 关闭后锁定重复退出操作 | 等待原子会话写入 | `11-dialog-components.png` |
 | 退出失败 | 保留已登录 UI 和会话，不提前导航 | `MoeSnackbar` 重试 | `12-feedback-components-v2.png` |
 

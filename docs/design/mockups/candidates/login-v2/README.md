@@ -7,13 +7,13 @@
 - 登录页面结构、Hero、密度与比例：[`13-login-phone-immersive.png`](../../13-login-phone-immersive.png)。它是必须直接复用的像素基座，不是仅供模型自由发挥的风格参考。
 - 画布到 Android 窗口的唯一映射、系统边界、大字体和验收误差遵循 [`LOGIN_LAYOUT_SPEC.md`](../../../LOGIN_LAYOUT_SPEC.md)。所有 `852 × 1846` 状态稿共享同一设计坐标；组件不得因设备分辨率独立修改尺寸。
 - Dialog：[`11-dialog-components.png`](../../11-dialog-components.png) 与 [`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md)。
-- 操作、输入与按钮层级：[`16-actions-inputs.png`](../../16-actions-inputs.png)。
-- 页面状态、Dialog 与 Bottom Sheet：[`18-mobile-states-overlays.png`](../../18-mobile-states-overlays.png)。
+- 操作、输入与按钮层级：[`DESIGN_SYSTEM.md`](../../../../DESIGN_SYSTEM.md#操作与输入)；`16` 修订候选待确认。
+- 页面状态、Dialog 与 Bottom Sheet：[`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md)；`18` 修订候选待确认。
 - “我的”切换账号背景：[`04-my-v4.png`](../../04-my-v4.png)。
 
 所有确认稿均为独立的 `852 × 1846` 完整手机画布，不使用一张横向总览图承载多个状态。自动生成的示例账号、二维码和服务内容仅表达视觉，不是协议或正式数据。
 
-Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视觉宽度为 `304dp`（约 `664` 设计单位），六位验证码结构化输入型为 `320dp`（约 `699` 设计单位）；Compact 窗口随页面统一比例映射。两者均保留原排版密度、参考视觉高度 `48dp` 的操作区、参考 `28dp` 圆角与 32% 遮罩，不采用 `18-mobile-states-overlays.png` 约 `350dp` 的图板示例宽度。双操作区在参考画布使用 `12dp` 间距的等高按钮，左侧取消使用低强调 Tonal 背景，右侧主操作使用 Filled 背景；默认与提交状态保持同一槽位，错误态按确认稿增加单行反馈并保持操作可恢复。禁用态保留清晰的中性灰容器，不与白色 Dialog 表面融合。`22d` Bottom Sheet 已确认符合规范，本轮不改动。
+Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视觉宽度为 `304dp`（约 `664` 设计单位），六位验证码结构化输入型为 `320dp`（约 `699` 设计单位）；Compact 窗口随页面统一比例映射。两者均保留原排版密度、参考视觉高度 `48dp` 的操作区、参考 `28dp` 圆角与 32% 遮罩，不采用旧 `18-mobile-states-overlays.png` 约 `350dp` 的图板示例宽度。双操作区在参考画布使用 `12dp` 间距的等高按钮，左侧取消使用低强调 Tonal 背景，右侧主操作使用 Filled 背景；默认与提交状态保持同一槽位，错误态按确认稿增加单行反馈并保持操作可恢复。Filled 禁用态使用全局约 `35%` 主色容器与约 `82%` `onPrimary` 内容，不改成中性灰。`22d` Bottom Sheet 已确认符合规范，本轮不改动。
 
 2026-08-07 人工复核补充：Dialog 继续由系统窗口负责居中，不增加顶部、底部或系统栏偏移；Surface 使用白色，标题加粗。确认按钮沿用已确认的全局 Filled 状态，取消按钮按本组设计图使用浅蓝 Tonal 背景与蓝色文字。短信输入型使用紧凑间距，错误态保留原验证码并以红色描边和内联文案恢复。
 
@@ -25,7 +25,7 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 | `19d`、`21a–c`、`21e` | 对应 `19` 密码页原状态 | 统一遮罩与独立居中 Dialog；底层页面像素不得变化 |
 | `21d` | 隔离安全验证 Activity | Activity 自身加载与失败恢复区域；这是明确例外，不复用登录卡片 |
 | `22a–c` | `13-login-phone-immersive.png` 的 Hero 与页面容器 | 登录完成后的账号选择内容；容器边界和页面密度不得变化 |
-| `22d` | `04-my-v4.png` 完整画布 | 统一遮罩与符合 `18-mobile-states-overlays.png` 的独立 Bottom Sheet |
+| `22d` | `04-my-v4.png` 完整画布 | 统一遮罩与符合 `UI_COMPONENTS.md` 的独立贴底 Bottom Sheet |
 
 重建或补图时必须先复制固定基座，再对允许变化区域做局部设计或确定性合成；禁止为每个状态重新生成整张页面。
 

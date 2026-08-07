@@ -1,6 +1,6 @@
 # MoeKoe Mobile V2 UI Mockups
 
-本目录保存移动端视觉稿。当前仓库内已有设计图均已确认；后续只有新增且尚未确认的图片才标记为候选。所有图片的准确实现仍以 Compose 设计令牌、组件规范和无障碍要求为准。
+本目录保存移动端视觉稿。除下文明确暂停的图片外，现有正式图片均已确认；新增或修订且尚未确认的图片放在 `candidates/`。所有图片的准确实现仍以 Compose 设计令牌、组件规范和无障碍要求为准。
 
 ## 基准
 
@@ -19,16 +19,16 @@
 6. [`06-player-cover.png`](06-player-cover.png)：Kreate 启发的封面播放器。
 7. [`07-player-lyrics.png`](07-player-lyrics.png)：逐字歌词、翻译和音译展示基准。
 8. [`08-player-queue.png`](08-player-queue.png)：播放队列 Bottom Sheet。
-9. [`09-settings.png`](09-settings.png)：主题、播放、歌词和存储设置。
+9. [`09-settings.png`](09-settings.png)：旧 Toolbar 版本，已暂停实现基线资格；修订稿见 [`design-system-v2`](candidates/design-system-v2/README.md)。
 10. [`10-user-profile.png`](10-user-profile.png)：独立用户主页、社交统计、听歌概览和公开创建歌单。
 11. [`11-dialog-components.png`](11-dialog-components.png)：确认、提示、危险操作和文本输入 Dialog。
 12. [`12-feedback-components-v2.png`](12-feedback-components-v2.png)：品牌化 MoeSnackbar、应用内 MoeToast 与系统 Toast 边界。
 13. [`13-login-phone-immersive.png`](13-login-phone-immersive.png)：沉浸式手机号验证码登录主状态；密码、扫码和安全验证沿用同一视觉结构。
-14. [`14-design-foundations.png`](14-design-foundations.png)：颜色、主题、排版、间距、圆角、图标与触控区域视觉总览。
-15. [`15-toolbar-navigation.png`](15-toolbar-navigation.png)：沉浸式、标准、折叠、搜索和多选 Toolbar，以及 Tab、MiniPlayer 和底部导航。
-16. [`16-actions-inputs.png`](16-actions-inputs.png)：按钮、IconButton、分段控件、Chip、输入框、选择控件和进度组件。
-17. [`17-music-content-components.png`](17-music-content-components.png)：Section Header、歌曲行、封面内容、用户资产、徽标、MiniPlayer 和队列行。
-18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：手机视口中的页面状态、权限与账号门槛、Bottom Sheet、Dialog、反馈和临时表面。
+14. [`14-design-foundations.png`](14-design-foundations.png)：旧版基础图板，已暂停实现基线资格；修订稿见 [`design-system-v2`](candidates/design-system-v2/README.md)。
+15. [`15-toolbar-navigation.png`](15-toolbar-navigation.png)：旧版 Toolbar 图板，已暂停实现基线资格；标准 Toolbar 当前以 [`10-user-profile.png`](10-user-profile.png) 为已确认基准。
+16. [`16-actions-inputs.png`](16-actions-inputs.png)：旧版操作图板，未包含已确认的 Filled 禁用态，已暂停实现基线资格。
+17. [`17-music-content-components.png`](17-music-content-components.png)：旧版音乐组件图板，修订稿待确认；现有已落地组件行为不因此回退。
+18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：旧版覆盖层图板，未包含最新 Dialog 决策，已暂停实现基线资格。
 19. [`19-login-password-states.png`](19-login-password-states.png)：旧版横向状态总览，仅保留设计演进记录。
 20. [`20-login-qr-states.png`](20-login-qr-states.png)：旧版横向状态总览，仅保留设计演进记录。
 21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：旧版横向状态总览，仅保留设计演进记录。
@@ -53,7 +53,7 @@
 5. 只有滚动吸附、转场、手势、响应式重排或复杂跨状态交互仍存在静态图无法回答的问题时，才基于已确认设计图制作最小原型；原型不能先于设计图、不能替代设计确认，也不能改变视觉尺寸。
 6. 若制作原型，将验证结论和组件行为同步到文档后再实现对应交互；没有原型需求时直接按确认稿、适配契约和 Design System 落地。
 
-上述候选流程只适用于未来新增且当前不存在的设计图；本目录现有图片已经确认，可直接按既定阶段顺序实现。
+`09` 与 `14` 至 `18` 因 Toolbar、按钮禁用态和 Dialog 决策变化，于 2026-08-07 暂停实现基线资格。修订候选稿位于 [`candidates/design-system-v2`](candidates/design-system-v2/README.md)，用户确认后才能替换正式文件并驱动公共组件改造；其他已确认图片继续按既定阶段顺序实现。
 
 ## 使用方式
 

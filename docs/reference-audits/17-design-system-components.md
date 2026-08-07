@@ -53,7 +53,7 @@
 | --- | --- | --- | --- |
 | Button | 登录、搜索、本地音乐、我的、播放器及 Showcase 均有主要/次要操作 | 公共 | Filled、Tonal、Outlined、Text、Destructive；48/56dp；loading 不改变几何 |
 | TextField | 登录、搜索、本地导入与 Dialog 输入 | 公共 | 标准与 Compact 尺寸；leading/trailing、password、error、disabled；校验留给 Feature |
-| Toolbar | 搜索、本地音乐、设置、资料、歌单详情、播放器与登录 | 公共组合组件 | 仅为确认存在的标准、沉浸、搜索、多选语义提供独立 API；不做万能 Toolbar |
+| Toolbar | 搜索、本地音乐、设置、资料、歌单详情、播放器与登录 | 公共组合组件 | 标准态以 `10-user-profile` 为基准：页面中心标题、无可见容器的图标操作、可替换导航语义；仅为确认存在的标准、沉浸、搜索、多选语义提供独立 API，不做万能 Toolbar |
 | Navigation back icon | `13` 登录主稿与 `15` Toolbar 图板使用相同的无横杆圆端 Chevron；方向性和 RTL 行为必须全局一致 | 公共图形 Token | SVG 母版与 VectorDrawable 归 `:core:designsystem`；页面保留各自底板、尺寸和锚点 |
 | Alert/Input Dialog | 退出、删除、登录风控、文本输入 | 公共模态外壳 | 标准标题/正文/操作和输入型结构；复杂内容使用受控内容 Slot |
 | Bottom Sheet | 队列、排序/音质、多项选择 | 公共模态外壳 | 遮罩、顶部圆角、Insets、拖拽/返回与操作区 |
@@ -62,7 +62,7 @@
 | PageState | 加载、空、离线、持续错误 | 公共 | 语义图标、文案和可选重试；页面决定数据状态 |
 | Music content | 首页、搜索、本地音乐、歌单、播放器队列 | 保留公共 | 继续使用现有已验证组件，后续只整理包路径 |
 
-Toolbar 采用多个窄入口，而不是把返回、搜索、折叠、多选和沉浸状态塞进一个布尔参数集合。是否新增某个 Toolbar 变体，仍需第二个消费者或明确的全局交互约束。
+Toolbar 采用多个窄入口，而不是把返回、搜索、折叠、多选和沉浸状态塞进一个布尔参数集合。标准入口必须允许调用方提供返回或关闭等导航图标及事件，但不开放任意颜色、圆角和 Padding；共享实现负责 `64dp` 高度、对称槽位、页面中心标题、`48dp` 触控区、Insets 和无障碍。是否新增其他 Toolbar 变体，仍需第二个消费者或明确的全局交互约束。
 
 ## 明确保留在 Feature 的内容
 

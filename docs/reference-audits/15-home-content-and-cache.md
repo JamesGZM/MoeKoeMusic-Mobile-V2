@@ -104,11 +104,11 @@ KugouHomeRepository (:data)
 
 | 状态 | 页面语义 | 已确认基线 |
 | --- | --- | --- |
-| 正常内容 | 搜索入口、Hero/轮播、三个高层入口、每日推荐、推荐歌单；MiniPlayer 与底部导航仍归应用壳 | `01-home-material3-v2.png`、`17-music-content-components.png` |
-| 首次加载 | 无缓存时显示页面内骨架，不阻断应用壳 | `18-mobile-states-overlays.png` 的加载态，复用首页完整页面基座 |
-| 空数据 | 请求成功但没有可展示歌曲/歌单时给出可重试空态 | `18-mobile-states-overlays.png` 的空状态 |
-| 首次错误/离线无缓存 | 全页可恢复错误，提供重试；不宣称网络状态一定可用 | `18-mobile-states-overlays.png` 的可恢复错误与离线无缓存态 |
-| 离线或刷新失败且有缓存 | 保留完整内容，使用一条非阻断 `MoeSnackbar`；不回到 Loading | `18-mobile-states-overlays.png` 的离线有缓存态、`12-feedback-components-v2.png` |
+| 正常内容 | 搜索入口、Hero/轮播、三个高层入口、每日推荐、推荐歌单；MiniPlayer 与底部导航仍归应用壳 | `01-home-material3-v2.png`、既有音乐组件行为证据；`17` 修订图板待确认 |
+| 首次加载 | 无缓存时显示页面内骨架，不阻断应用壳 | `DESIGN_SYSTEM.md` 的页面状态规范，复用首页完整页面基座 |
+| 空数据 | 请求成功但没有可展示歌曲/歌单时给出可重试空态 | `DESIGN_SYSTEM.md` 的空状态规范 |
+| 首次错误/离线无缓存 | 全页可恢复错误，提供重试；不宣称网络状态一定可用 | `DESIGN_SYSTEM.md` 的可恢复错误与离线规范 |
+| 离线或刷新失败且有缓存 | 保留完整内容，使用一条非阻断 `MoeSnackbar`；不回到 Loading | `DESIGN_SYSTEM.md`、`12-feedback-components-v2.png` |
 | 部分结果 | 无旧快照时只显示有效区块并提供弱反馈；不得使用假数据补齐 | `01-home-material3-v2.png` 页面基座 + `12-feedback-components-v2.png` 反馈层 |
 | 刷新/恢复 | 下拉刷新或自动刷新只更新 `isRefreshing`；成功原位替换，取消静默保留现状 | `01-home-material3-v2.png` 页面基座 |
 
