@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discover_tab_featured">精选</string>
+    <string name="discover_tab_playlists">歌单</string>
+    <string name="discover_tab_new_songs">新歌</string>
+    <string name="discover_tab_albums">新碟</string>
+    <string name="discover_tab_ranking">排行</string>
+    <string name="discover_weekly_title">本周新声</string>
+    <string name="discover_weekly_subtitle">发现正在流行的好音乐</string>
+    <string name="discover_listen_now">立即收听</string>
+    <string name="discover_hot_ranking">热门排行榜</string>
+    <string name="discover_category_playlists">分类歌单</string>
+    <string name="discover_more">更多</string>
+    <string name="discover_play_all">播放全部</string>
+    <string name="discover_empty_title">暂时没有发现内容</string>
+    <string name="discover_empty_message">稍后回来看看新的音乐推荐</string>
+    <string name="discover_error_title">发现内容加载失败</string>
+    <string name="discover_error_message">请检查网络后再试</string>
+</resources>

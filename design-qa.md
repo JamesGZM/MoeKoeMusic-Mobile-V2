@@ -64,6 +64,30 @@ final result: passed
 
 ---
 
+# 发现页设计 QA
+
+- Source visual truth: `docs/design/mockups/02-discover-v2.png`
+- Layout contract: `docs/design/DISCOVER_LAYOUT_SPEC.md`
+- Implementation screenshot: `feature/discover/src/screenshotTestDebug/reference/cn/james/music/feature/discover/DiscoverScreenshotTestKt/DiscoverContentLightScreenshot_ContentLight_ce54aba0_0.png`
+- Evidence: `docs/design/evidence/discover-content-2026-08-08.md` 及同目录 side-by-side / overlay / diff。
+- Viewport: Compose Preview `390 × 843dp`；实现截图 `1024 × 2213px`。确认稿内容区 `853 × 1555px` 按宽度归一化到 `1024 × 1867px` 后比较，应用壳 MiniPlayer / NavigationBar 独立验收。
+
+## Findings
+
+没有剩余 P0 / P1 / P2。
+
+- 已恢复五段顶部分段导航、本周新声 Hero、热门排行榜三列卡、分类胶囊和三列歌单封面；不再使用“仍在规划阶段”占位页。
+- 正常态的 Hero、排行榜与分类区锚点和纵向密度已用同输入并排、叠加与差异图复核。
+- Light、Dark、AMOLED、Loading、Empty、Error、`1.5×`、`2.0×` 共 8 个状态基线覆盖；大字体时排行榜重排为纵向列表，操作和文本不裁切。
+- Hero、榜单与分类图片使用独立高分辨率位图；页面复用主题语义色和应用壳 MiniPlayer，不复制播放组件。
+- ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过，覆盖发现页内容、纵向滚动、一级导航返回和既有 MiniPlayer 行为；未创建或启动模拟器。
+- 当前预览内容只存在于发现 UI 层，不伪装协议、缓存、详情路由或播放业务已经完成。
+- P3: 原创 ImageGen 人物与确认稿示例人物不同，Material 图标存在轻微笔画差异；槽位、构图、裁切、层级与色彩语义一致。
+
+final result: passed
+
+---
+
 # 通用 MiniPlayer 设计 QA
 
 - Source visual truth: `docs/design/mockups/17-music-content-components.png`，并以 `01-home-material3-v2.png`、`04-my-v4.png` 的底部应用壳复核。

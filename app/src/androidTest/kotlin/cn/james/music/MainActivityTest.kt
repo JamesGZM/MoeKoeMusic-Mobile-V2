@@ -72,8 +72,14 @@ class MainActivityTest {
         }
 
         composeRule.onNodeWithContentDescription("上一首").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("播放").assertIsDisplayed()
-        listOf("上一首", "播放", "下一首", "播放队列").forEach { description ->
+        val toggleDescription =
+            if (composeRule.onAllNodesWithContentDescription("播放").fetchSemanticsNodes().isNotEmpty()) {
+                "播放"
+            } else {
+                "暂停"
+            }
+        composeRule.onNodeWithContentDescription(toggleDescription).assertIsDisplayed()
+        listOf("上一首", toggleDescription, "下一首", "播放队列").forEach { description ->
             val bounds = composeRule.onNodeWithContentDescription(description).getUnclippedBoundsInRoot()
             assertTrue("$description 的触控区域宽度不能小于 48dp", bounds.right.value - bounds.left.value >= 48f)
             assertTrue("$description 的触控区域高度不能小于 48dp", bounds.bottom.value - bounds.top.value >= 48f)
@@ -105,7 +111,10 @@ class MainActivityTest {
     @Test
     fun topLevelTabsDoNotBuildAChronologicalBackStack() {
         composeRule.onNodeWithText("发现", useUnmergedTree = true).performClick()
-        composeRule.onNodeWithText("排行榜、歌单和电台仍在规划阶段").assertIsDisplayed()
+        composeRule.onNodeWithText("本周新声").assertIsDisplayed()
+        composeRule.onNodeWithText("热门排行榜").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("discover-content").performScrollToNode(hasText("分类歌单"))
+        composeRule.onNodeWithText("分类歌单").assertIsDisplayed()
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForMyContent()
 
