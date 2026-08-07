@@ -59,7 +59,7 @@
 | 首页 | [`01-home-material3-v2.png`](design/mockups/01-home-material3-v2.png) | 浅色蓝色体系；搜索从首页进入 |
 | 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶 |
 | 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
-| 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png) | 用户卡片、签到、VIP、收藏与关注入口完整 |
+| 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
 | 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png) | Material 3 详情结构 |
 | 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png) | 参考 Kreate 的沉浸氛围，不照搬其品牌元素 |
 | 播放歌词 | [`07-player-lyrics.png`](design/mockups/07-player-lyrics.png) | 与封面共享手势和播放控制 |

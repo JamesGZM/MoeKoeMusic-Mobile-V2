@@ -127,7 +127,7 @@
 - 首页：`01-home-material3-v2.png`。
 - 发现：`02-discover-v2.png`。
 - 搜索：`03-search-results-v2.png`。
-- 我的：`04-my-v4.png`。
+- 我的：已登录使用 `04-my-v4.png`，匿名使用 `04-my-anonymous.png`。
 - 歌单详情、播放封面、歌词、队列、设置、用户主页：对应 `05` 至 `10` 文件。
 - Dialog：`11-dialog-components.png`。
 - 反馈组件：`12-feedback-components-v2.png`。

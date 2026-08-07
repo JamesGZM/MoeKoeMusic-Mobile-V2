@@ -8,7 +8,7 @@
 - 画布到 Android 窗口的唯一映射、系统边界、大字体和验收误差遵循 [`LOGIN_LAYOUT_SPEC.md`](../../../LOGIN_LAYOUT_SPEC.md)。所有 `852 × 1846` 状态稿共享同一设计坐标；组件不得因设备分辨率独立修改尺寸。
 - Dialog：[`11-dialog-components.png`](../../11-dialog-components.png) 与 [`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md)。
 - 操作、输入与按钮层级：[`DESIGN_SYSTEM.md`](../../../../DESIGN_SYSTEM.md#操作与输入)；`16` 修订候选待确认。
-- 页面状态、Dialog 与 Bottom Sheet：[`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md)；`18` 修订候选待确认。
+- 页面状态、Dialog 与 Bottom Sheet：[`UI_COMPONENTS.md`](../../../../UI_COMPONENTS.md) 与已确认 `18-mobile-states-overlays.png`。
 - “我的”切换账号背景：[`04-my-v4.png`](../../04-my-v4.png)。
 
 所有确认稿均为独立的 `852 × 1846` 完整手机画布，不使用一张横向总览图承载多个状态。自动生成的示例账号、二维码和服务内容仅表达视觉，不是协议或正式数据。
