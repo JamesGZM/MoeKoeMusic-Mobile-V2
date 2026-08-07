@@ -112,7 +112,7 @@ interface SearchRepository {
 - 已保留上游 MIT NOTICE 与完整许可证。
 - 播放源不再用 `null` 抹平失败：无版权、VIP、离线、超时、连接、风控、登录要求、服务、协议、会话初始化和无效来源均映射为稳定的 `PlaybackSourceError`；首次 `playNow` 在入队前完成解析，失败会同步返回类型化拒绝。
 - Media3 遇到酷狗在线源的 HTTP/网络 IO 错误时，会对当前歌曲显式重新解析地址一次；同一错误链再次失败不会继续刷新，本地源和解码错误不会触发网络解析。队列中已存在的同歌曲也会替换为新解析 URI，短期地址仍不写入 Room。
-- `:core:designsystem` 已按确认稿 `12-feedback-components-v2.png` 与 `UI_COMPONENTS.md` 实现 `MoeSnackbar` 的成功、信息、错误和警告状态；旧 `18-mobile-states-overlays.png` 已暂停实现基线资格，但不撤销该行为证据。App 根层在 MiniPlayer 上方显示单条播放反馈，可恢复错误提供一个“重试”动作，4 秒后按事件 id 安全收起。
+- `:core:designsystem` 已按确认稿 `12-feedback-components-v2.png` 与 `UI_COMPONENTS.md` 实现 `MoeSnackbar` 的成功、信息、错误和警告状态；修订后的 `18-mobile-states-overlays.png` 已于 2026-08-07 替换正式基线，且不撤销既有行为证据。App 根层在 MiniPlayer 上方显示单条播放反馈，可恢复错误提供一个“重试”动作，4 秒后按事件 id 安全收起。
 - `KugouPlaybackSourceResolverTest`、`PlaybackAddressRefreshPolicyTest` 和 `AppPlaybackViewModelTest` 覆盖类型映射、一次刷新、非网络错误豁免、重试与旧反馈隔离；`MoeSnackbarScreenshotTest` 已生成并通过 390dp 浅色截图基准。
 - 2026-08-05 在 Huawei ELE-AL00 / Android 10（API 29）安装最新 Debug 包，真实搜索 `Linkin Park` 后播放 `Numb`：MiniPlayer 显示“暂停”，系统媒体会话为 Playing、`error=null`，位置从约 2.9 秒增长到约 12.0 秒，证明预解析未破坏在线播放闭环。
 - 同一设备完整执行 `MainActivityTest`，6/6 通过且无跳过，覆盖根层反馈接入后的首页、搜索返回栈、我的、本地音乐、登录、密码登录和 QR 登录导航回归。

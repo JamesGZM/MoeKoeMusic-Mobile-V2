@@ -19,16 +19,16 @@
 6. [`06-player-cover.png`](06-player-cover.png)：Kreate 启发的封面播放器。
 7. [`07-player-lyrics.png`](07-player-lyrics.png)：逐字歌词、翻译和音译展示基准。
 8. [`08-player-queue.png`](08-player-queue.png)：播放队列 Bottom Sheet。
-9. [`09-settings.png`](09-settings.png)：旧 Toolbar 版本，已暂停实现基线资格；修订稿见 [`design-system-v2`](candidates/design-system-v2/README.md)。
+9. [`09-settings.png`](09-settings.png)：已确认的分组式可滚动设置页，使用标准 Toolbar 与等高设置 Item。
 10. [`10-user-profile.png`](10-user-profile.png)：独立用户主页、社交统计、听歌概览和公开创建歌单。
 11. [`11-dialog-components.png`](11-dialog-components.png)：确认、提示、危险操作和文本输入 Dialog。
 12. [`12-feedback-components-v2.png`](12-feedback-components-v2.png)：品牌化 MoeSnackbar、应用内 MoeToast 与系统 Toast 边界。
 13. [`13-login-phone-immersive.png`](13-login-phone-immersive.png)：沉浸式手机号验证码登录主状态；密码、扫码和安全验证沿用同一视觉结构。
-14. [`14-design-foundations.png`](14-design-foundations.png)：旧版基础图板，已暂停实现基线资格；修订稿见 [`design-system-v2`](candidates/design-system-v2/README.md)。
-15. [`15-toolbar-navigation.png`](15-toolbar-navigation.png)：旧版 Toolbar 图板，已暂停实现基线资格；标准 Toolbar 当前以 [`10-user-profile.png`](10-user-profile.png) 为已确认基准。
-16. [`16-actions-inputs.png`](16-actions-inputs.png)：旧版操作图板，未包含已确认的 Filled 禁用态，已暂停实现基线资格。
-17. [`17-music-content-components.png`](17-music-content-components.png)：旧版音乐组件图板，修订稿待确认；现有已落地组件行为不因此回退。
-18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：旧版覆盖层图板，未包含最新 Dialog 决策，已暂停实现基线资格。
+14. [`14-design-foundations.png`](14-design-foundations.png)：已确认的颜色、排版、间距、形状与层级图板。
+15. [`15-toolbar-navigation.png`](15-toolbar-navigation.png)：已确认的 Toolbar 与导航图板；标准态同时以 [`10-user-profile.png`](10-user-profile.png) 校准。
+16. [`16-actions-inputs.png`](16-actions-inputs.png)：已确认的操作与输入图板，包含登录输入图标和 Filled 禁用态。
+17. [`17-music-content-components.png`](17-music-content-components.png)：已确认的音乐内容组件图板；现有已落地组件行为继续有效。
+18. [`18-mobile-states-overlays.png`](18-mobile-states-overlays.png)：已确认的页面状态与覆盖层图板；Dialog 以登录页完成实现为视觉母版。
 19. [`19-login-password-states.png`](19-login-password-states.png)：旧版横向状态总览，仅保留设计演进记录。
 20. [`20-login-qr-states.png`](20-login-qr-states.png)：旧版横向状态总览，仅保留设计演进记录。
 21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：旧版横向状态总览，仅保留设计演进记录。
@@ -53,7 +53,7 @@
 5. 只有滚动吸附、转场、手势、响应式重排或复杂跨状态交互仍存在静态图无法回答的问题时，才基于已确认设计图制作最小原型；原型不能先于设计图、不能替代设计确认，也不能改变视觉尺寸。
 6. 若制作原型，将验证结论和组件行为同步到文档后再实现对应交互；没有原型需求时直接按确认稿、适配契约和 Design System 落地。
 
-`09` 与 `14` 至 `18` 因 Toolbar、按钮禁用态和 Dialog 决策变化，于 2026-08-07 暂停实现基线资格。修订候选稿位于 [`candidates/design-system-v2`](candidates/design-system-v2/README.md)，用户确认后才能替换正式文件并驱动公共组件改造；其他已确认图片继续按既定阶段顺序实现。
+`09` 与 `14` 至 `18` 曾因 Toolbar、按钮禁用态和 Dialog 决策变化暂停实现资格；修订稿已于 2026-08-07 获得用户确认并替换正式文件。对应 [`candidates/design-system-v2`](candidates/design-system-v2/README.md) 仅保留确认过程与反馈记录，公共组件改造以正式文件为准。
 
 ## 使用方式
 

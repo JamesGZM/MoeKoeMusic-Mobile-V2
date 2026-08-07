@@ -1,20 +1,19 @@
 # MoeKoe Air Design System
 
-状态：第一版视觉方向已确认；Toolbar 与 `09`、`14` 至 `18` 的修订候选稿待确认。确认日期：2026-08-05；Toolbar 规范修订日期：2026-08-07。
+状态：第一版视觉方向，以及 `09`、`14` 至 `18` 的修订稿均已确认。初次确认日期：2026-08-05；本轮修订确认日期：2026-08-07。
 
 本文是颜色语义、交互状态、无障碍下限和通用组件行为的真值。已确认页面设计图是该页面结构、坐标、视觉尺寸比例、间距、圆角、层级和裁切的真值；页面专属几何必须按页面适配契约测量和映射，不能用通用 Token 或实现者经验覆盖。设计稿中的自动生成文字、日期和业务数据仍不是真值。
 
 公共组件的当前清单见 [`UI_COMPONENT_CATALOG.md`](UI_COMPONENT_CATALOG.md)，准入、所有权与迁移依据见 [`reference-audits/17-design-system-components.md`](reference-audits/17-design-system-components.md)。
 
-当前已确认的标准 Toolbar 视觉基准为 [`10-user-profile.png`](design/mockups/10-user-profile.png)。旧 `09`、`14` 至 `18` 暂停作为实现基线，修订候选稿见 [`design-system-v2`](design/mockups/candidates/design-system-v2/README.md)；用户确认前不得用候选稿反向修改 Compose。
+当前已确认的标准 Toolbar 视觉基准为 [`10-user-profile.png`](design/mockups/10-user-profile.png)，设置与通用组件正式基线为 `09`、`14` 至 `18`：
 
-修订候选视觉参考：
-
-- [`14-design-foundations-v2.png`](design/mockups/candidates/design-system-v2/14-design-foundations-v2.png)
-- [`15-toolbar-navigation-v2.png`](design/mockups/candidates/design-system-v2/15-toolbar-navigation-v2.png)
-- [`16-actions-inputs-v2.png`](design/mockups/candidates/design-system-v2/16-actions-inputs-v2.png)
-- [`17-music-content-components-v2.png`](design/mockups/candidates/design-system-v2/17-music-content-components-v2.png)
-- [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)
+- [`09-settings.png`](design/mockups/09-settings.png)
+- [`14-design-foundations.png`](design/mockups/14-design-foundations.png)
+- [`15-toolbar-navigation.png`](design/mockups/15-toolbar-navigation.png)
+- [`16-actions-inputs.png`](design/mockups/16-actions-inputs.png)
+- [`17-music-content-components.png`](design/mockups/17-music-content-components.png)
+- [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png)
 
 ## 设计原则
 
@@ -176,7 +175,7 @@
 
 `10-user-profile.png` 是标准 Toolbar 的坐标与视觉母版：设计图保留顶部系统安全区留白，但不自行绘制时间、信号、Wi-Fi 或电池图形；运行时系统栏仍由 Android 绘制。无尾部操作的设置页沿用同一标题基线、左侧 Chevron 锚点和内容起点，只把尾部操作替换为对称空槽。返回图形必须使用共享 `MoeNavigateBackIcon` 的无横杆圆端 Chevron，不得换成带水平箭杆的 Material ArrowBack。
 
-设置页候选稿采用固定宽度、内容驱动高度的完整展开画布：宽度用于建立横向设计坐标，高度随全部设置分组自然增长，用来表达页面可纵向滚动，不代表某台设备的固定视口。不得为了把全部内容塞进一屏而压缩下方分组或单个 Item。运行时标准 Toolbar 处理自身 Insets，设置内容由一个纵向滚动容器承载；短视口只改变可见范围，不改变 Item 密度。
+设置页正式设计稿采用固定宽度、内容驱动高度的完整展开画布：宽度用于建立横向设计坐标，高度随全部设置分组自然增长，用来表达页面可纵向滚动，不代表某台设备的固定视口。不得为了把全部内容塞进一屏而压缩下方分组或单个 Item。运行时标准 Toolbar 处理自身 Insets，设置内容由一个纵向滚动容器承载；短视口只改变可见范围，不改变 Item 密度。
 
 ### 底部结构
 
@@ -228,7 +227,7 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - Typography 已补齐 `24sp`、`18sp`、`titleSmall`、`bodySmall` 等层级。
 - Spacing 已补齐 `12dp`、`20dp` 和 `40dp`，并保留旧属性兼容现有页面。
 - Shapes 已增加 `36dp` Hero 语义，图标、触控、输入、Toolbar、MiniPlayer 和底部导航尺寸已建立 Token。
-- 已有标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton 实现，但现有标准 Toolbar 仍是 Material 默认起始对齐标题，且导航入口只支持返回；在 `design-system-v2` 候选稿确认前不扩散使用，确认后需增加调用方自定义导航图标能力并改为页面中心锚定标题。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
+- 已有标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton 实现，但现有标准 Toolbar 仍是 Material 默认起始对齐标题，且导航入口只支持返回；下一公共组件切片需按已确认 `15-toolbar-navigation.png` 增加调用方自定义导航图标能力并改为页面中心锚定标题。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
 - Button、TextField、标准/沉浸式 Toolbar、标准 Dialog 外壳与双操作区已进入 `:core:designsystem`；标准 Toolbar 和 Dialog 已有多个真实页面消费者。Snackbar Host、Input Dialog、Bottom Sheet、MoeToast 和页面状态组件继续随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。

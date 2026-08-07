@@ -1,6 +1,6 @@
 # Design System V2 候选稿
 
-状态：待用户确认，不具备 Compose 实现基线资格。
+状态：已于 2026-08-07 获得用户确认并晋级正式基线；本目录只保留确认过程记录。
 
 本组候选稿用于校准设置页与 Design System 图板。标准 Toolbar 统一以
 [`10-user-profile.png`](../../10-user-profile.png) 为视觉基准：标题相对完整页面居中，
@@ -15,8 +15,8 @@
 - `17-music-content-components-v2.png`
 - `18-mobile-states-overlays-v2.png`
 
-确认前不得覆盖现有正式图片；确认后在一个独立提交中替换正式基线、更新页面映射，
-再开始公共 Toolbar API 与页面消费者的 Compose 改造。
+本目录中的六张确认版本已经分别替换 `docs/design/mockups/09-settings.png` 与
+`14-design-foundations.png` 至 `18-mobile-states-overlays.png`；Compose 实现只引用正式路径。
 
 ## 2026-08-07 反馈修订
 

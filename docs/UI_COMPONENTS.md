@@ -6,7 +6,7 @@
 
 - [`11-dialog-components.png`](design/mockups/11-dialog-components.png)
 - [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png)
-- [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)（待确认；数值与行为仍以本文为准）
+- [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png)（已确认；数值与行为仍以本文为准）
 - [`19d-password-risk-dialog.png`](design/mockups/candidates/login-v2/19d-password-risk-dialog.png)（已确认的普通确认型视觉母版）
 - [`21a-risk-sms-default.png`](design/mockups/candidates/login-v2/21a-risk-sms-default.png)（已确认的结构化输入型视觉母版）
 
