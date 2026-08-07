@@ -88,6 +88,29 @@ final result: passed
 
 ---
 
+# 全屏播放器封面页设计 QA
+
+- Source visual truth: `docs/design/mockups/06-player-cover.png`
+- Layout contract: `docs/design/PLAYER_LAYOUT_SPEC.md`
+- Implementation screenshot: `feature/player/src/screenshotTestDebug/reference/cn/james/music/feature/player/PlayerScreenshotTestKt/PlayerCoverScreenshot_Cover_fbd8d4e9_0.png`
+- Evidence: `docs/design/evidence/player-cover-2026-08-08.md` 及同目录 side-by-side / overlay / diff。
+- Viewport: Compose Preview `390 × 844dp`；实现截图 `1024 × 2216px`，确认稿 `853 × 1844px` 按完整页面归一化比较。
+
+## Findings
+
+没有剩余 P0 / P1 / P2。
+
+- 补齐右上更多、分页点、品质徽标、收藏、下载、加入歌单、分享和独立队列动作；核心播放端口保持原接线。
+- 方形封面、顶部三节点、信息区、进度、五项核心控制和四项次级动作的边界与纵向节奏已同输入复核。
+- 播放、暂停、缓冲、连接中、未知时长、封面失败、空播放项、`1.5×`、`2.0×` 共 9 个状态基线覆盖；大字体允许滚动且不裁切核心控制。
+- ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过；未创建或启动模拟器。
+- 下载、加歌单、分享、收藏和更多只保留视觉语义，不以假反馈伪装功能完成。
+- P3: 原创 ImageGen 封面与确认稿示例图不同；当前使用静态深色调色回退，后续真实封面动态色仍按既有审计接入；Material 图标存在轻微笔画差异。
+
+final result: passed
+
+---
+
 # 通用 MiniPlayer 设计 QA
 
 - Source visual truth: `docs/design/mockups/17-music-content-components.png`，并以 `01-home-material3-v2.png`、`04-my-v4.png` 的底部应用壳复核。

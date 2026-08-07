@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,12 +24,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
@@ -57,13 +63,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -97,6 +103,11 @@ fun PlayerScreen(
     onNext: () -> Unit,
     onChangeMode: () -> Unit,
     onOpenQueue: () -> Unit,
+    onMore: () -> Unit = {},
+    onFavorite: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onAddToPlaylist: () -> Unit = {},
+    onShare: () -> Unit = {},
     modifier: Modifier = Modifier,
     artworkContent: (@Composable (PlaybackItem) -> Unit)? = null,
 ) {
@@ -123,6 +134,11 @@ fun PlayerScreen(
                         onNext = onNext,
                         onChangeMode = onChangeMode,
                         onOpenQueue = onOpenQueue,
+                        onMore = onMore,
+                        onFavorite = onFavorite,
+                        onDownload = onDownload,
+                        onAddToPlaylist = onAddToPlaylist,
+                        onShare = onShare,
                         artworkContent = artworkContent,
                     )
                 }
@@ -143,24 +159,31 @@ private fun PlayerContent(
     onNext: () -> Unit,
     onChangeMode: () -> Unit,
     onOpenQueue: () -> Unit,
+    onMore: () -> Unit,
+    onFavorite: () -> Unit,
+    onDownload: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onShare: () -> Unit,
     artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(25.dp)
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(top = topInset)
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .verticalScroll(rememberScrollState()),
     ) {
-        PlayerTopBar(onBack = onBack)
-        Spacer(Modifier.height(MoeKoeTheme.spacing.large))
+        PlayerTopBar(onBack = onBack, onMore = onMore)
+        Spacer(Modifier.height(20.dp))
         PlayerArtwork(
             item = item,
             artworkContent = artworkContent,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(Modifier.height(MoeKoeTheme.spacing.extraLarge))
+        PlayerPageIndicator()
+        Spacer(Modifier.height(15.dp))
         PlayerControls(
             state = state,
             progress = progress,
@@ -171,13 +194,20 @@ private fun PlayerContent(
             onNext = onNext,
             onChangeMode = onChangeMode,
             onOpenQueue = onOpenQueue,
+            onFavorite = onFavorite,
+            onDownload = onDownload,
+            onAddToPlaylist = onAddToPlaylist,
+            onShare = onShare,
         )
-        Spacer(Modifier.height(MoeKoeTheme.spacing.large))
+        Spacer(Modifier.height(12.dp))
     }
 }
 
 @Composable
-private fun PlayerTopBar(onBack: () -> Unit) {
+private fun PlayerTopBar(
+    onBack: () -> Unit,
+    onMore: () -> Unit,
+) {
     Row(
         modifier =
             Modifier
@@ -197,7 +227,26 @@ private fun PlayerTopBar(onBack: () -> Unit) {
             fontWeight = FontWeight.SemiBold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
-        Spacer(Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget))
+        IconButton(onClick = onMore, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+            Icon(Icons.Default.MoreVert, stringResource(R.string.player_more))
+        }
+    }
+}
+
+@Composable
+private fun PlayerPageIndicator() {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(36.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(8.dp).background(PlayerAccent, CircleShape))
+        Spacer(Modifier.size(8.dp))
+        Box(
+            Modifier
+                .size(7.dp)
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f), CircleShape),
+        )
     }
 }
 
@@ -218,7 +267,7 @@ private fun PlayerArtwork(
         modifier = modifier.padding(horizontal = MoeKoeTheme.spacing.extraLarge),
         contentAlignment = Alignment.TopCenter,
     ) {
-        val artworkSize = maxWidth.coerceAtMost(326.dp)
+        val artworkSize = maxWidth.coerceAtMost(333.dp)
         Box(
             modifier =
                 Modifier
@@ -231,7 +280,7 @@ private fun PlayerArtwork(
             Icon(
                 imageVector = Icons.Default.MusicNote,
                 contentDescription = null,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(68.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             )
             AsyncImage(
@@ -256,23 +305,40 @@ private fun PlayerControls(
     onNext: () -> Unit,
     onChangeMode: () -> Unit,
     onOpenQueue: () -> Unit,
+    onFavorite: () -> Unit,
+    onDownload: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onShare: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = MoeKoeTheme.spacing.large)) {
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = item.artist,
-            modifier = Modifier.padding(top = MoeKoeTheme.spacing.small),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.title,
+                    fontSize = 20.sp,
+                    lineHeight = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = item.artist,
+                    modifier = Modifier.padding(top = 3.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                PlayerQualityBadge()
+            }
+            IconButton(onClick = onFavorite, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+                Icon(
+                    imageVector = Icons.Default.FavoriteBorder,
+                    contentDescription = stringResource(R.string.player_favorite),
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        }
         PlayerProgress(
             progress = progress,
             itemId = item.id,
@@ -284,7 +350,7 @@ private fun PlayerControls(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PlayerModeButton(state.mode, state.controlsEnabled, onChangeMode)
+            PlayerIconButton(Icons.Default.Shuffle, R.string.player_mode_shuffle, state.controlsEnabled, onChangeMode)
             PlayerIconButton(Icons.Default.SkipPrevious, R.string.player_previous, state.controlsEnabled, onPrevious)
             Surface(
                 onClick = onTogglePlayback,
@@ -293,7 +359,7 @@ private fun PlayerControls(
                 shape = CircleShape,
                 color =
                     if (state.controlsEnabled) {
-                        MaterialTheme.colorScheme.primary
+                        PlayerAccent
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHighest
                     },
@@ -315,15 +381,75 @@ private fun PlayerControls(
                         Icon(
                             imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = stringResource(if (state.isPlaying) R.string.player_pause else R.string.player_play),
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                 }
             }
             PlayerIconButton(Icons.Default.SkipNext, R.string.player_next, state.controlsEnabled, onNext)
-            PlayerIconButton(Icons.AutoMirrored.Filled.QueueMusic, R.string.player_queue, state.controlsEnabled, onOpenQueue)
+            PlayerModeButton(state.mode, state.controlsEnabled, onChangeMode)
         }
-        Spacer(Modifier.height(MoeKoeTheme.spacing.small))
+        PlayerSecondaryActions(
+            onDownload = onDownload,
+            onAddToPlaylist = onAddToPlaylist,
+            onShare = onShare,
+            onOpenQueue = onOpenQueue,
+        )
+    }
+}
+
+@Composable
+private fun PlayerQualityBadge() {
+    Surface(
+        modifier = Modifier.padding(top = 4.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = PlayerSecondaryContainer,
+        contentColor = PlayerSecondaryContent,
+    ) {
+        Text(
+            text = stringResource(R.string.player_quality_standard),
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 1.dp),
+            fontSize = 10.sp,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun PlayerSecondaryActions(
+    onDownload: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onShare: () -> Unit,
+    onOpenQueue: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(76.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PlayerSecondaryAction(Icons.Default.Download, R.string.player_download, onDownload)
+        PlayerSecondaryAction(Icons.AutoMirrored.Filled.PlaylistAdd, R.string.player_add_to_playlist, onAddToPlaylist)
+        PlayerSecondaryAction(Icons.Default.Share, R.string.player_share, onShare)
+        PlayerSecondaryAction(Icons.AutoMirrored.Filled.QueueMusic, R.string.player_queue, onOpenQueue)
+    }
+}
+
+@Composable
+private fun PlayerSecondaryAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: Int,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+        shape = CircleShape,
+        color = PlayerSecondaryContainer,
+        contentColor = PlayerSecondaryContent,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, stringResource(label), modifier = Modifier.size(24.dp))
+        }
     }
 }
 
@@ -339,7 +465,7 @@ private fun PlayerProgress(
     val current = progress.value
     val duration = current.durationMs.coerceAtLeast(0)
     val shownPosition = (draggedPosition ?: current.positionMs).coerceIn(0, duration)
-    val activeColor = MaterialTheme.colorScheme.primary
+    val activeColor = PlayerAccent
     val inactiveColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)
     Slider(
         value = shownPosition.toFloat(),
@@ -350,7 +476,7 @@ private fun PlayerProgress(
         },
         valueRange = 0f..duration.coerceAtLeast(1).toFloat(),
         enabled = enabled && duration > 0,
-        modifier = Modifier.fillMaxWidth().padding(top = MoeKoeTheme.spacing.medium),
+        modifier = Modifier.fillMaxWidth(),
         thumb = {
             Box(
                 Modifier
@@ -409,9 +535,8 @@ private fun PlayerModeButton(
 ) {
     val icon =
         when (mode) {
-            PlaybackMode.Sequential, PlaybackMode.RepeatAll -> Icons.Default.Repeat
+            PlaybackMode.Sequential, PlaybackMode.RepeatAll, PlaybackMode.Shuffle -> Icons.Default.Repeat
             PlaybackMode.RepeatOne -> Icons.Default.RepeatOne
-            PlaybackMode.Shuffle -> Icons.Default.Shuffle
         }
     val label =
         when (mode) {
@@ -483,18 +608,16 @@ private fun PlayerEmptyState(onBack: () -> Unit) {
 
 @Composable
 private fun playerBackground(): Brush {
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
-    val background = MaterialTheme.colorScheme.background
     return Brush.radialGradient(
         colorStops =
             arrayOf(
-                0f to lerp(background, tertiary, 0.28f),
-                0.45f to lerp(background, primary, 0.14f),
-                1f to background,
+                0f to Color(0xFF5A294F),
+                0.38f to Color(0xFF24213A),
+                0.72f to Color(0xFF111A2D),
+                1f to Color(0xFF07101F),
             ),
-        center = Offset(180f, 220f),
-        radius = 1_100f,
+        center = Offset(520f, 210f),
+        radius = 1_150f,
     )
 }
 
@@ -504,3 +627,7 @@ internal fun formatPlayerTime(millis: Long): String {
     val seconds = totalSeconds % 60
     return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
+
+private val PlayerAccent = Color(0xFF9488FF)
+private val PlayerSecondaryContainer = Color(0xFF252A43)
+private val PlayerSecondaryContent = Color(0xFFC3BCFF)

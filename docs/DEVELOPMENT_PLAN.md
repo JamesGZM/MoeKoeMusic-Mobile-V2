@@ -92,7 +92,7 @@
 
 `:core:designsystem` 已完成 Primary、Typography、Spacing、Shapes、Dimensions、TopBar、`MoeSnackbar` 和第一批音乐内容组件校准；Section Header、封面、徽标、歌曲行、MiniPlayer 与队列行已接入搜索、本地音乐和应用播放壳，并通过浅色、深色、`1.5×` 字体截图及 API 29 真机回归。按钮、输入、通用 Bottom Sheet、MoeToast 和页面状态组件仍需按 `DESIGN_SYSTEM.md` 与确认设计稿继续实现。无版权、VIP、网络、会话与协议错误已接入根层类型化 Snackbar，播放地址失效最多刷新一次；真实 CDN 过期与稀有服务错误样本仍需在后续兼容性验收中补证。
 
-全屏播放器首个封面切片已按 `06-player-cover.png` 接入独立 `:feature:player`：MiniPlayer 进入后隐藏一级导航与自身，退出恢复来源页面；封面失败、未知时长、暂停、缓冲、控制器未连接、空播放项和 `1.5×`/`2.0×` 字体均有截图基准。该切片不提前实现歌词、收藏、下载或分享；播放命令、返回优先级和小可用高度溢出滚动仍需按真机清单手动验收。
+全屏播放器封面页已按 [`PLAYER_LAYOUT_SPEC.md`](design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成视觉复刻：MiniPlayer 进入后隐藏一级导航与自身，退出恢复来源页面；更多、分页点、品质、收藏、下载、加歌单、分享、队列及完整核心控制均保留确认稿结构。播放、暂停、缓冲、连接中、未知时长、封面失败、空播放项和 `1.5×`/`2.0×` 共 9 组截图、设计对照证据与指定真机 App 回归已通过；未接入次级动作只保留视觉语义，不伪装业务完成。
 
 本地音乐列表、设备扫描、多选导入、外部打开进度、批量结果及异常状态已建立基础 Compose 实现，并沿用现有 Material 3 token。本地音乐空状态、内容状态和 `1.5×` 字体导入状态已建立稳定截图基准；API 26、29、32、33、36 当前代码设备矩阵已通过。五种目标格式、损坏输入、重复内容、部分成功、取消清理和中断遗留 `.partial` 恢复已通过真实 ContentResolver、WorkManager 与 Room 管线测试，阶段 3 退出条件已满足。
 
