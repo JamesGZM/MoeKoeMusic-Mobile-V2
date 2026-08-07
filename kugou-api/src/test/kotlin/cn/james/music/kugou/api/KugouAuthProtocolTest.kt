@@ -33,6 +33,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -44,6 +45,16 @@ class KugouAuthProtocolTest {
         )
     private val requestFactory = KugouRequestFactory(clock = EpochSecondsProvider { FIXTURE_TIME_SECONDS })
     private val context = KugouRequestContext(mid = "fixture-mid", dfid = "fixture-dfid")
+
+    @Test
+    fun authCipherRejectsNonHexadecimalCiphertext() {
+        val error =
+            assertThrows(IllegalArgumentException::class.java) {
+                KugouAuthCrypto.decryptJson("00xz", FIXTURE_KEY)
+            }
+
+        assertEquals("Ciphertext must be hexadecimal", error.message)
+    }
 
     @Test
     fun mobileLoginRequestMatchesFixedNodeContract() {

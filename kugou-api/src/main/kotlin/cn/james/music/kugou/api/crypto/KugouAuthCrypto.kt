@@ -1,6 +1,5 @@
 package cn.james.music.kugou.api.crypto
 
-import java.util.HexFormat
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -21,7 +20,7 @@ internal object KugouAuthCrypto {
         validateTemporaryKey(temporaryKey)
         val ciphertext = cipher(Cipher.ENCRYPT_MODE, temporaryKey).doFinal(json.encodeToByteArray())
         return KugouAuthEncryptedPayload(
-            ciphertextHex = HEX.formatHex(ciphertext),
+            ciphertextHex = ciphertext.toLowerHex(),
             temporaryKey = temporaryKey,
         )
     }
@@ -32,15 +31,14 @@ internal object KugouAuthCrypto {
     ): String {
         validateTemporaryKey(temporaryKey)
         require(ciphertextHex.length % 2 == 0) { "Ciphertext must contain complete hex bytes" }
-        val ciphertext =
-            runCatching { HEX.parseHex(ciphertextHex) }
-                .getOrElse { throw IllegalArgumentException("Ciphertext must be hexadecimal", it) }
+        val ciphertext = ciphertextHex.hexToByteArray()
         return cipher(Cipher.DECRYPT_MODE, temporaryKey).doFinal(ciphertext).decodeToString()
     }
 
     fun encryptKeyEnvelope(json: String): String =
-        HEX
-            .formatHex(KugouRsa.encryptRawZeroPadded(json.encodeToByteArray(), STANDARD_AUTH_PUBLIC_KEY))
+        KugouRsa
+            .encryptRawZeroPadded(json.encodeToByteArray(), STANDARD_AUTH_PUBLIC_KEY)
+            .toLowerHex()
             .uppercase()
 
     private fun cipher(
@@ -60,7 +58,6 @@ internal object KugouAuthCrypto {
         }
     }
 
-    private val HEX = HexFormat.of()
     private const val TEMPORARY_KEY_LENGTH = 16
     private const val IV_BYTES = 16
 
@@ -70,3 +67,33 @@ internal object KugouAuthCrypto {
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDIAG7QOELSYoIJvTFJhMpe1s/gbjDJX51HBNnEl5HXqTW6lQ7LC8jr9fWZTwusknp+sVGzwd40MwP6U5yDE27M/X1+UR4tvOGOqp94TJtQ1EPnWGWXngpeIW5GxoQGao1rmYWAu6oi1z9XkChrsUdC6DJE5E221wf/4WLFxwAtRQIDAQAB
 -----END PUBLIC KEY-----"""
 }
+
+private fun ByteArray.toLowerHex(): String =
+    buildString(size * 2) {
+        for (byte in this@toLowerHex) {
+            val value = byte.toInt() and 0xff
+            append(HEX_DIGITS[value ushr 4])
+            append(HEX_DIGITS[value and 0x0f])
+        }
+    }
+
+private fun String.hexToByteArray(): ByteArray {
+    val bytes = ByteArray(length / 2)
+    for (index in bytes.indices) {
+        val high = digitToIntOrNull(index * 2)
+        val low = digitToIntOrNull(index * 2 + 1)
+        require(high != null && low != null) { "Ciphertext must be hexadecimal" }
+        bytes[index] = ((high shl 4) or low).toByte()
+    }
+    return bytes
+}
+
+private fun String.digitToIntOrNull(index: Int): Int? =
+    when (val character = this[index]) {
+        in '0'..'9' -> character - '0'
+        in 'a'..'f' -> character - 'a' + 10
+        in 'A'..'F' -> character - 'A' + 10
+        else -> null
+    }
+
+private const val HEX_DIGITS = "0123456789abcdef"
