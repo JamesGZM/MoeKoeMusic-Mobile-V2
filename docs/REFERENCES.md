@@ -183,6 +183,8 @@
 
 确认设计稿到 Android 当前窗口的统一比例映射、Insets/IME、大字体、宽屏保守派生，以及“设计符合度先于截图回归”的门禁见 [`reference-audits/16-ui-design-handoff-and-adaptation.md`](reference-audits/16-ui-design-handoff-and-adaptation.md)。审计固定 Now in Android `7d45eae4` 与 Compose Samples `84788c81` 的窗口适配和多尺寸测试文件；二者均为 Apache-2.0，只采用基于当前窗口和独立尺寸矩阵的原则，不复制页面布局，也不新增依赖。
 
+全部确认页面与组件板的公共组件准入、`:core:designsystem` 包职责、Toolbar 等组合组件的真实复用门槛，以及登录页面/公共组件所有权见 [`reference-audits/17-design-system-components.md`](reference-audits/17-design-system-components.md)。审计采用 Android 官方 Custom Design System、App Bar 与 Dialog 指南，并固定 Now in Android `7d45eae4` 和 Compose Samples `84788c81` 的组件目录作为 Apache-2.0 架构参考；不复制实现，也不新增依赖。
+
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 
 ## 许可证注意

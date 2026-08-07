@@ -11,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import cn.james.music.core.designsystem.component.MoeKoeImmersiveTopBar
-import cn.james.music.core.designsystem.component.MoeKoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeImmersiveTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -33,12 +33,12 @@ fun MoeKoeTopBarsScreenshot() {
                         .height(192.dp)
                         .background(MaterialTheme.colorScheme.primaryContainer),
             ) {
-                MoeKoeImmersiveTopBar(
+                MoeImmersiveTopBar(
                     navigationContentDescription = "返回",
                     onNavigateBack = {},
                 )
             }
-            MoeKoeStandardTopBar(
+            MoeStandardTopBar(
                 title = "设置",
                 navigationContentDescription = "返回",
                 onNavigateBack = {},

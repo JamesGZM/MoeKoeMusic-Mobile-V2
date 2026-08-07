@@ -38,6 +38,12 @@
 - 正式产品名已统一为 MoeKoe Air，并接入 PC/Mobile 同源女孩耳机 Logo 的 legacy、round、Adaptive、monochrome Launcher 资源与 AndroidX 系统 SplashScreen；系统 Splash 后直接进入应用壳，不再规划条件启动门禁。
 - 已通过格式检查、单元测试任务、Lint、截图验证、Debug APK 和测试 APK 编译。
 
+## Design System 第二阶段
+
+2026-08-07 完成全部已确认页面与组件板的公共组件准入审计。现有 `:core:designsystem` 继续作为唯一公共 UI 模块，按 `action`、`input`、`navigation`、`overlay`、`feedback`、`state` 与 `media` 职责组织；是否封装由跨页面语义复用或必须全局统一的行为约束决定，不按视觉块数量决定。
+
+实施顺序为 Button/TextField、Toolbar、Dialog/Snackbar Host，再随真实消费者补 Bottom Sheet、Toast 与 PageState。每个组件切片必须包含组件级状态矩阵和至少一个真实页面消费验证。详见 [`../reference-audits/17-design-system-components.md`](../reference-audits/17-design-system-components.md) 与 [`../UI_COMPONENT_CATALOG.md`](../UI_COMPONENT_CATALOG.md)。
+
 ## 兼容性说明
 
 - Hilt 计划版本 `2.57.1` 不支持 AGP 9，工程使用首个明确支持 AGP 9 的兼容线 `2.59.2`。

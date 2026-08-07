@@ -13,13 +13,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,10 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.model.online.SearchError
 import cn.james.music.core.model.online.Song
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SearchScreen(
     state: SearchUiState,
@@ -42,9 +40,10 @@ internal fun SearchScreen(
     onPlay: (Song) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("搜索") },
-            navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
+        MoeStandardTopBar(
+            title = "搜索",
+            navigationContentDescription = "返回",
+            onNavigateBack = onBack,
         )
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

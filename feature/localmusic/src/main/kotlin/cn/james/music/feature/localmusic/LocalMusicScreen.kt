@@ -15,14 +15,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.model.local.DeviceAudioCandidate
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalMusic
@@ -43,7 +42,6 @@ import cn.james.music.core.model.local.LocalMusicSort
 import coil3.compose.AsyncImage
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LocalMusicScreen(
     state: LocalMusicUiState,
@@ -72,9 +70,10 @@ internal fun LocalMusicScreen(
                 }
             }
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("本地音乐") },
-            navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
+        MoeStandardTopBar(
+            title = "本地音乐",
+            navigationContentDescription = "返回",
+            onNavigateBack = onBack,
         )
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -223,7 +222,6 @@ private fun formatDuration(durationMs: Long): String {
     return "${totalSeconds / 60}:$seconds"
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeviceScanScreen(
     candidates: List<DeviceAudioCandidate>,
@@ -233,9 +231,10 @@ internal fun DeviceScanScreen(
 ) {
     var selected by remember { mutableStateOf(setOf<Long>()) }
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("设备音乐") },
-            navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
+        MoeStandardTopBar(
+            title = "设备音乐",
+            navigationContentDescription = "返回",
+            onNavigateBack = onBack,
             actions = { TextButton(onClick = onRefresh) { Text("刷新") } },
         )
         if (candidates.isEmpty()) {

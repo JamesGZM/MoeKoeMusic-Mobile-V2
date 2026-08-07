@@ -1,8 +1,10 @@
 # MoeKoe Air Design System
 
-状态：第一版视觉方向已确认，Compose Token 与 TopBar 第一批校准已完成，其余通用组件继续按本文实现。确认日期：2026-08-05。
+状态：第一版视觉方向已确认，Compose Token 与首批组件校准进行中。确认日期：2026-08-05；公共组件准入审计日期：2026-08-07。
 
 本文是颜色语义、交互状态、无障碍下限和通用组件行为的真值。已确认页面设计图是该页面结构、坐标、视觉尺寸比例、间距、圆角、层级和裁切的真值；页面专属几何必须按页面适配契约测量和映射，不能用通用 Token 或实现者经验覆盖。设计稿中的自动生成文字、日期和业务数据仍不是真值。
+
+公共组件的当前清单见 [`UI_COMPONENT_CATALOG.md`](UI_COMPONENT_CATALOG.md)，准入、所有权与迁移依据见 [`reference-audits/17-design-system-components.md`](reference-audits/17-design-system-components.md)。
 
 视觉参考：
 
@@ -20,6 +22,8 @@
 - 歌曲和资产列表主要依靠排版、留白与分隔线建立层级，不将每一项包装成卡片。
 - 所有用户可见文案必须资源化；布局为后续国际化至少预留约 40% 的横向扩展空间。
 - 所有组件必须验证浅色、深色、AMOLED、`1.0×`、`1.5×` 和 `2.0×` 字体。
+- 公共组件按真实复用判断：至少两个页面具有相同语义、结构和交互，或存在必须全局统一的行为约束；视觉相似、代码相似和一次性页面组合都不是抽取理由。
+- `:core:designsystem` 按 `action`、`input`、`navigation`、`overlay`、`feedback`、`state` 和 `media` 职责组织；公共 API 不接收业务状态或页面布局规格。
 
 ## 页面设计稿与 Token 的关系
 
@@ -211,6 +215,6 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - 已建立标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton；搜索、折叠和多选 Toolbar 在对应页面接入时继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
-- 按钮、输入、通用 Bottom Sheet、MoeToast 和页面状态组件仍待实现；队列拖拽属于播放器后续切片。
+- Button、TextField、Dialog 与反馈 Host 已通过公共组件准入审计，等待按独立切片实现；Bottom Sheet、MoeToast 和页面状态组件随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。
 
 后续组件修正继续通过浅色、深色、AMOLED、大字体和截图测试验证。
