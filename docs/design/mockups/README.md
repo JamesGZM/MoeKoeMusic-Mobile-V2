@@ -18,7 +18,7 @@
    匿名主态使用 [`04-my-anonymous.png`](04-my-anonymous.png)，账号资产保持正常入口并统一进入登录页。
 5. [`05-playlist-detail.png`](05-playlist-detail.png)：歌单信息、播放操作和歌曲列表。
 6. [`06-player-cover.png`](06-player-cover.png)：Kreate 启发的封面播放器；实现契约见 [`../PLAYER_LAYOUT_SPEC.md`](../PLAYER_LAYOUT_SPEC.md)。
-7. [`07-player-lyrics.png`](07-player-lyrics.png)：逐字歌词、翻译和音译展示基准。
+7. [`07-player-lyrics.png`](07-player-lyrics.png)：逐字歌词、翻译和音译展示基准；实现契约见 [`../PLAYER_LYRICS_LAYOUT_SPEC.md`](../PLAYER_LYRICS_LAYOUT_SPEC.md)。
 8. [`08-player-queue.png`](08-player-queue.png)：播放队列 Bottom Sheet。
 9. [`09-settings.png`](09-settings.png)：已确认的分组式可滚动设置页，使用标准 Toolbar 与等高设置 Item。
 10. [`10-user-profile.png`](10-user-profile.png)：独立用户主页、社交统计、听歌概览和公开创建歌单。
