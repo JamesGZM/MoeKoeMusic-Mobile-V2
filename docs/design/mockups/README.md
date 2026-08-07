@@ -66,4 +66,5 @@
 - Dialog、Snackbar 与 Toast 的行为和尺寸以 [`UI_COMPONENTS.md`](../../UI_COMPONENTS.md) 为实现规范，图片只作为视觉参考。
 - 播放器封面页与歌词页共享当前歌曲封面派生的语义色板，并必须提供静态深色渐变回退；不要求低性能设备实时模糊。完整规则见 [`13-player-artwork-palette.md`](../../reference-audits/13-player-artwork-palette.md)。
 - 真正落地前需先通过确认稿归一化叠加，再验证约 `390 × 845dp`、短高度、大字体和不同窗口宽度；重新录制 Compose 截图不能代替设计符合度。
+- 首页的画布映射、应用壳边界、滚动和状态继承统一遵循 [`../HOME_LAYOUT_SPEC.md`](../HOME_LAYOUT_SPEC.md)。
 - 自动生成图中的示例账号、二维码、日期、响应文案与尺寸标注只用于视觉表达；实现必须使用虚构测试数据、字符串资源、固定协议审计和 Design System Token。

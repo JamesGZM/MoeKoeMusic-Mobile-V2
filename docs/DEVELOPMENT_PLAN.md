@@ -56,7 +56,7 @@
 
 | 页面 | 验收设计稿 | 关键约束 |
 | --- | --- | --- |
-| 首页 | [`01-home-material3-v2.png`](design/mockups/01-home-material3-v2.png) | 浅色蓝色体系；搜索从首页进入 |
+| 首页 | [`01-home-material3-v2.png`](design/mockups/01-home-material3-v2.png)、[`HOME_LAYOUT_SPEC.md`](design/HOME_LAYOUT_SPEC.md) | 浅色蓝色体系；搜索从首页进入；应用壳固定、页面单一纵向滚动 |
 | 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶 |
 | 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
 | 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
