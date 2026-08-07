@@ -120,7 +120,7 @@ KugouHomeRepository (:data)
 2. Room：已完成 v5 Entity/可观察 DAO、单行原子替换与删除、脱敏输出、导出 Schema、`4→5` 与完整 `1→5` 迁移测试；2026-08-06 在 ELE-AL00 / API 29 真机的 13 项数据库测试全部通过。损坏 payload 的识别与定向删除归 Repository 切片。
 3. Repository：已完成稳定领域模型与端口、版本化缓存 DTO、身份分区自动切换/刷新、cache-first、15 分钟刷新门槛、部分失败不落盘、single-flight、显式刷新与会话双代际隔离、取消传播和类型化问题；15 项定向 JVM 测试覆盖旧缓存首发、自动刷新问题、TTL 边界、损坏删除、会话恢复、`A→B→A` 竞态及可选轮播失败。
 4. Feature：已完成 ViewModel 首次/缓存/刷新/部分/空/错误/身份切换状态与显式刷新代际取消；9 项定向 JVM 测试覆盖首次会话失败顺序及账号切换与手动刷新并发，UI Model 不泄漏 DTO、Room 或播放器类型。
-5. Compose：已按确认稿替换临时首页并复用 Design System；7 组浅色、深色、加载、空、错误、`1.5×` 与 `2.0×` 字体截图基线通过，ELE-AL00 / API 29 的 7 项 `MainActivityTest` 与真实内容自动截图通过；真机诊断同时确认 Coil 3 网络 artifact 已补齐，Room 中的 HTTPS 封面可实际渲染。需要用户手动判断的轮播手势、列表滚动体验和真实歌曲点击播放留作最终人工复测门槛。
+5. Compose：已依据 [`../design/HOME_LAYOUT_SPEC.md`](../design/HOME_LAYOUT_SPEC.md) 和确认稿完成第二轮视觉复刻，恢复横向顶部工具区、Radio Hero、三快捷入口、每日推荐四行和推荐歌单四列；Light、Dark、AMOLED、加载、空、错误、缓存刷新弱提示、`1.5×` 与 `2.0×` 共 9 组截图基线及归一化设计对照已建立，指定 ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过。运行时仍只消费真实首页字段，设计示例徽标、副标题和本地封面只存在于截图 fixture；搜索、刷新与歌曲播放沿用既有事件，不扩充协议。
 
 首批自动命令按受影响范围逐步执行：
 

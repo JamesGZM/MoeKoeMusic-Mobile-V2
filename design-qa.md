@@ -41,6 +41,29 @@ final result: passed
 
 ---
 
+# 首页设计 QA
+
+- Source visual truth: `docs/design/mockups/01-home-material3-v2.png`
+- Layout contract: `docs/design/HOME_LAYOUT_SPEC.md`
+- Implementation screenshot: `feature/home/src/screenshotTestDebug/reference/cn/james/music/feature/home/HomeScreenshotTestKt/HomeContentLightScreenshot_ContentLight_389295c6_0.png`
+- Evidence: `docs/design/evidence/home-content-2026-08-08.md` 及同目录 side-by-side / overlay / diff。
+- Viewport: Compose Preview `390 × 844dp`；截图 `1024 × 2216px`。确认稿内容区 `852 × 1595px` 按宽度归一化到 `1024 × 1917px` 后比较，应用壳 MiniPlayer / NavigationBar 独立验收。
+
+## Findings
+
+没有剩余 P0 / P1 / P2。
+
+- 已恢复同一行品牌/搜索/头像、Radio Hero、三入口连续 Surface、每日推荐四行、品质/MV 视觉槽、更多操作锚点和四列歌单。
+- 正常态区段边界和纵向密度已用同输入并排与叠加复核；不再用简化 Banner、时长尾部或空白封面替代确认稿结构。
+- Light、Dark、AMOLED、Loading、Empty、Failure、RefreshProblem、`1.5×`、`2.0×` 共 9 个状态基线覆盖；大字体重排后关键文案和搜索入口可达且不裁切。
+- ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过，覆盖首页搜索返回、一级导航、MiniPlayer 控件与切歌；未创建模拟器。
+- 运行时只绑定真实首页数据；截图 fixture 的 HQ/MV、描述副标题和本地封面不进入协议或持久化模型。
+- P3: Material 图标与稿内定制线性图标存在轻微笔画差异；原创 ImageGen 插画与稿内示例人物不同，但槽位、构图、裁切和色彩语义一致。
+
+final result: passed
+
+---
+
 # 通用 MiniPlayer 设计 QA
 
 - Source visual truth: `docs/design/mockups/17-music-content-components.png`，并以 `01-home-material3-v2.png`、`04-my-v4.png` 的底部应用壳复核。

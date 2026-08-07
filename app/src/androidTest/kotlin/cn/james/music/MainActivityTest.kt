@@ -89,14 +89,17 @@ class MainActivityTest {
 
     @Test
     fun searchUsesSystemBackStackInsteadOfReturningToAHardcodedPage() {
-        composeRule.onNodeWithText("搜索音乐、歌手、歌单…").performClick()
+        val search = composeRule.onNodeWithText("搜索音乐、歌手、歌单…")
+        val searchBounds = search.getUnclippedBoundsInRoot()
+        assertTrue("首页搜索入口高度不能小于 48dp", searchBounds.bottom.value - searchBounds.top.value >= 48f)
+        search.performClick()
         composeRule.onNodeWithText("想听什么？").assertIsDisplayed()
 
         composeRule.runOnUiThread {
             composeRule.activity.onBackPressedDispatcher.onBackPressed()
         }
 
-        composeRule.onNodeWithText("轻松发现下一首喜欢的音乐").assertIsDisplayed()
+        composeRule.onNodeWithText("MoeKoe Radio").assertIsDisplayed()
     }
 
     @Test
@@ -110,7 +113,7 @@ class MainActivityTest {
             composeRule.activity.onBackPressedDispatcher.onBackPressed()
         }
 
-        composeRule.onNodeWithText("轻松发现下一首喜欢的音乐").assertIsDisplayed()
+        composeRule.onNodeWithText("MoeKoe Radio").assertIsDisplayed()
     }
 
     @Test

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_brand">MoeKoe Air</string>
+    <string name="home_search">搜索音乐、歌手、歌单…</string>
+    <string name="home_account_avatar_description">账号头像</string>
+    <string name="home_radio_title">MoeKoe Radio</string>
+    <string name="home_radio_subtitle">私人专属好歌推荐</string>
+    <string name="home_radio_supporting">为你精选符合口味的好音乐</string>
+    <string name="home_radio_play">立即播放</string>
+    <string name="home_quick_ranking">排行榜</string>
+    <string name="home_quick_ranking_supporting">发现好歌</string>
+    <string name="home_quick_daily">每日推荐</string>
+    <string name="home_quick_daily_supporting">专属推荐</string>
+    <string name="home_quick_playlists">推荐歌单</string>
+    <string name="home_quick_playlists_supporting">精选歌单</string>
+    <string name="home_daily_title">每日推荐</string>
+    <string name="home_playlist_title">推荐歌单</string>
+    <string name="home_more">更多</string>
+    <string name="home_artwork_description">%1$s 封面</string>
+    <string name="home_unknown_artist">未知艺术家</string>
+    <string name="home_loading">正在准备今日推荐</string>
+    <string name="home_empty_title">还没有推荐内容</string>
+    <string name="home_empty_message">稍后再来看看，或立即重试</string>
+    <string name="home_failure_title">首页暂时不可用</string>
+    <string name="home_retry">重试</string>
+    <string name="home_acknowledge">知道了</string>
+    <string name="home_play_count_plain">%1$d 次播放</string>
+    <string name="home_play_count_ten_thousand">%1$d 万次播放</string>
+    <string name="home_play_count_hundred_million">%1$d 亿次播放</string>
+    <string name="home_problem_session">音乐服务初始化失败，请重试</string>
+    <string name="home_problem_storage">本地内容读取失败，请重试</string>
+    <string name="home_problem_offline">当前没有网络连接，请联网后重试</string>
+    <string name="home_problem_timeout">刷新超时，请稍后重试</string>
+    <string name="home_problem_connection">无法连接音乐服务</string>
+    <string name="home_problem_unavailable">音乐服务暂时不可用</string>
+    <string name="home_problem_rejected">服务暂时拒绝了请求，请稍后重试</string>
+    <string name="home_problem_protocol">服务响应发生变化，请更新应用</string>
+    <string name="home_refresh_offline">当前没有网络连接，已保留上次内容</string>
+</resources>

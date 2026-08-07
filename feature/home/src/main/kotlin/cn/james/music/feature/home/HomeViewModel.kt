@@ -31,6 +31,9 @@ internal data class HomeSongUi(
     val durationMs: Long,
     val artworkUrl: String?,
     val note: String?,
+    val previewArtworkRes: Int? = null,
+    val previewBadge: String? = null,
+    val previewBadgeIsError: Boolean = false,
 )
 
 internal data class HomePlaylistUi(
@@ -38,6 +41,8 @@ internal data class HomePlaylistUi(
     val title: String,
     val artworkUrl: String?,
     val playCount: Long?,
+    val previewArtworkRes: Int? = null,
+    val previewSubtitle: String? = null,
 )
 
 internal data class HomeContentUi(
