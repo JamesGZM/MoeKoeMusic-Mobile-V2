@@ -146,6 +146,7 @@
 - 沉浸式返回按钮使用 `48dp` 触控区域和约 `40dp` 半透明圆形 Surface。
 - 优先使用 Compose Material Icons；只有 Material 图标无法表达品牌或专有业务语义时才设计 SVG 母版。
 - 返回、前进等方向性图标在 RTL 下镜像；播放、暂停和媒体跳转控制不镜像。
+- 已确认的返回图形是无横杆、圆端细线 Chevron，由 `docs/design/assets/icons/navigation-back.svg` 作为源母版、`:core:designsystem` 的 `MoeNavigateBackIcon` 作为唯一 Compose 入口。资源按产品与语义命名为 `ic_moe_navigation_back`，禁止按 `login`、`search` 等页面名复制；标准、沉浸式和 Hero 页面只调整外围按钮组合与图形尺寸，不能另画返回路径。VectorDrawable 使用自动 RTL 镜像，调用方不得再次手动翻转。
 
 ### 层级
 

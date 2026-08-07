@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -12,9 +13,14 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -77,6 +83,23 @@ class MainActivityTest {
 
         composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
         composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
+        val rootBottom = composeRule.onRoot().getUnclippedBoundsInRoot().bottom
+        val loginBottom = composeRule.onNodeWithTag("login_screen_root").getUnclippedBoundsInRoot().bottom
+        assertEquals("登录沉浸式画布不能被应用壳 BottomBar 或导航栏 Padding 截短", rootBottom, loginBottom)
+        val cardBottom = composeRule.onNodeWithTag("login_card").getUnclippedBoundsInRoot().bottom
+        var navigationBarInsetDp = 0f
+        composeRule.runOnUiThread {
+            val insetPx =
+                ViewCompat
+                    .getRootWindowInsets(composeRule.activity.window.decorView)
+                    ?.getInsets(WindowInsetsCompat.Type.navigationBars())
+                    ?.bottom ?: 0
+            navigationBarInsetDp = insetPx / composeRule.activity.resources.displayMetrics.density
+        }
+        assertTrue(
+            "登录卡片必须位于底部系统导航安全区上方",
+            rootBottom.value - cardBottom.value > navigationBarInsetDp,
+        )
 
         composeRule.runOnUiThread {
             composeRule.activity.onBackPressedDispatcher.onBackPressed()

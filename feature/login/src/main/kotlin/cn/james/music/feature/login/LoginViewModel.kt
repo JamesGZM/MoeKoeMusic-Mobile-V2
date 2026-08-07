@@ -17,6 +17,7 @@ import cn.james.music.core.model.auth.QrLoginSession
 import cn.james.music.core.model.auth.QrLoginStartResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -182,27 +183,14 @@ internal class LoginViewModel
         val effects: SharedFlow<LoginEffect> = mutableEffects.asSharedFlow()
         private var countdownJob: Job? = null
         private var qrLoginJob: Job? = null
+        private val noticesByMode = mutableMapOf<LoginMode, LoginNotice?>()
 
         fun switchMode(mode: LoginMode) {
             val current = mutableState.value
-            if (mode == current.mode || current.isBusy) return
-            countdownJob?.cancel()
-            qrLoginJob?.cancel()
-            mutableState.value =
-                when (mode) {
-                    LoginMode.MobileCode -> {
-                        LoginUiState(mode = mode, phone = current.phone)
-                    }
-
-                    LoginMode.Password -> {
-                        LoginUiState(mode = mode, phone = current.phone)
-                    }
-
-                    LoginMode.QrCode -> {
-                        LoginUiState(mode = mode, phone = current.phone, qrLogin = QrLoginUiState.Generating)
-                    }
-                }
-            if (mode == LoginMode.QrCode) startQrLogin()
+            if (mode == current.mode || current.isBusy || current.hasActiveRisk) return
+            noticesByMode[current.mode] = current.notice
+            mutableState.value = current.copy(mode = mode, notice = noticesByMode[mode])
+            if (mode == LoginMode.QrCode && current.qrLogin == null) startQrLogin()
         }
 
         fun refreshQrLogin() {
@@ -240,7 +228,7 @@ internal class LoginViewModel
 
         fun togglePasswordVisibility() {
             val current = mutableState.value
-            if (current.hasActiveRisk) return
+            if (current.isBusy || current.hasActiveRisk) return
             mutableState.value = current.copy(passwordVisible = !current.passwordVisible)
         }
 
@@ -604,16 +592,46 @@ internal class LoginViewModel
                                 mutableState.value.copy(
                                     qrLogin = QrLoginUiState.Waiting(start.session, QR_LIFETIME_SECONDS),
                                 )
-                            pollQrLogin(start.session)
+                            coroutineScope {
+                                val countdown = launch { tickQrCountdown(start.session) }
+                                try {
+                                    pollQrLogin(start.session)
+                                } finally {
+                                    countdown.cancel()
+                                }
+                            }
                         }
                     }
                 }
         }
 
+        private suspend fun tickQrCountdown(session: QrLoginSession) {
+            while (mutableState.value.qrLogin.belongsTo(session)) {
+                delay(QR_COUNTDOWN_INTERVAL_MS)
+                val current = mutableState.value.qrLogin
+                if (!current.belongsTo(session)) return
+                val remainingSeconds = (current.remainingSeconds() - 1).coerceAtLeast(0)
+                if (remainingSeconds == 0) {
+                    mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
+                    return
+                }
+                mutableState.value =
+                    mutableState.value.copy(
+                        qrLogin =
+                            when (current) {
+                                is QrLoginUiState.Scanned -> current.copy(remainingSeconds = remainingSeconds)
+                                is QrLoginUiState.Waiting -> current.copy(remainingSeconds = remainingSeconds)
+                                else -> return
+                            },
+                    )
+            }
+        }
+
         private suspend fun pollQrLogin(session: QrLoginSession) {
             var consecutiveFailures = 0
-            while (mutableState.value.mode == LoginMode.QrCode) {
+            while (mutableState.value.qrLogin.belongsTo(session)) {
                 delay(QR_POLL_INTERVAL_MS)
+                if (!mutableState.value.qrLogin.belongsTo(session)) return
                 when (val result = repository.checkQrLogin(session.key)) {
                     is QrLoginCheckResult.Failure -> {
                         consecutiveFailures += 1
@@ -626,36 +644,26 @@ internal class LoginViewModel
                     QrLoginCheckResult.Waiting -> {
                         consecutiveFailures = 0
                         val current = mutableState.value.qrLogin
-                        val remainingSeconds = current.remainingSecondsAfterPoll()
-                        if (remainingSeconds == 0) {
-                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
-                            return
-                        }
                         mutableState.value =
                             mutableState.value.copy(
                                 qrLogin =
                                     if (current is QrLoginUiState.Scanned) {
-                                        current.copy(remainingSeconds = remainingSeconds)
+                                        current
                                     } else {
-                                        QrLoginUiState.Waiting(session, remainingSeconds)
+                                        QrLoginUiState.Waiting(session, current.remainingSeconds())
                                     },
                             )
                     }
 
                     is QrLoginCheckResult.Scanned -> {
                         consecutiveFailures = 0
-                        val remainingSeconds = mutableState.value.qrLogin.remainingSecondsAfterPoll()
-                        if (remainingSeconds == 0) {
-                            mutableState.value = mutableState.value.copy(qrLogin = QrLoginUiState.Expired(session))
-                            return
-                        }
                         mutableState.value =
                             mutableState.value.copy(
                                 qrLogin =
                                     QrLoginUiState.Scanned(
                                         session = session,
                                         nickname = result.nickname,
-                                        remainingSeconds = remainingSeconds,
+                                        remainingSeconds = mutableState.value.qrLogin.remainingSeconds(),
                                     ),
                             )
                     }
@@ -683,13 +691,21 @@ internal class LoginViewModel
         }
     }
 
-private fun QrLoginUiState?.remainingSecondsAfterPoll(): Int =
+private fun QrLoginUiState?.remainingSeconds(): Int =
     when (this) {
         is QrLoginUiState.Waiting -> remainingSeconds
         is QrLoginUiState.Scanned -> remainingSeconds
         else -> QR_LIFETIME_SECONDS
-    }.minus(2).coerceAtLeast(0)
+    }
+
+private fun QrLoginUiState?.belongsTo(session: QrLoginSession): Boolean =
+    when (this) {
+        is QrLoginUiState.Waiting -> this.session.key == session.key
+        is QrLoginUiState.Scanned -> this.session.key == session.key
+        else -> false
+    }
 
 private const val QR_LIFETIME_SECONDS = 120
+private const val QR_COUNTDOWN_INTERVAL_MS = 1_000L
 private const val QR_POLL_INTERVAL_MS = 2_000L
 private const val MAX_QR_CHECK_FAILURES = 3

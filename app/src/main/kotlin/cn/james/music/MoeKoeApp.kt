@@ -95,15 +95,16 @@ fun MoeKoeApp(
     Scaffold(
         contentWindowInsets = if (isImmersiveLogin || isPlayer) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         bottomBar = {
-            Column(
-                modifier =
-                    if (showBottomNavigation) {
-                        Modifier
-                    } else {
-                        Modifier.navigationBarsPadding()
-                    },
-            ) {
-                state.currentItem?.takeUnless { isPlayer }?.let { item ->
+            if (!isImmersiveLogin) {
+                Column(
+                    modifier =
+                        if (showBottomNavigation) {
+                            Modifier
+                        } else {
+                            Modifier.navigationBarsPadding()
+                        },
+                ) {
+                    state.currentItem?.takeUnless { isPlayer }?.let { item ->
                     val currentProgress = progress.value
                     MoeKoeMiniPlayer(
                         item = item,
@@ -121,20 +122,21 @@ fun MoeKoeApp(
                         },
                     )
                 }
-                if (showBottomNavigation) {
-                    NavigationBar {
-                        appState.topLevelDestinations.forEach { destination ->
-                            NavigationBarItem(
-                                selected = appState.isInGraph(currentDestination, destination),
-                                onClick = { appState.navigateToTopLevel(destination) },
-                                icon = {
-                                    Icon(
-                                        imageVector = destination.icon,
-                                        contentDescription = null,
-                                    )
-                                },
-                                label = { Text(stringResource(destination.label)) },
-                            )
+                    if (showBottomNavigation) {
+                        NavigationBar {
+                            appState.topLevelDestinations.forEach { destination ->
+                                NavigationBarItem(
+                                    selected = appState.isInGraph(currentDestination, destination),
+                                    onClick = { appState.navigateToTopLevel(destination) },
+                                    icon = {
+                                        Icon(
+                                            imageVector = destination.icon,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    label = { Text(stringResource(destination.label)) },
+                                )
+                            }
                         }
                     }
                 }

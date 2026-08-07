@@ -1,5 +1,6 @@
 package cn.james.music.feature.login
 
+import androidx.lifecycle.viewModelScope
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthActionResult
 import cn.james.music.core.model.auth.AuthError
@@ -18,6 +19,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -160,23 +162,53 @@ class LoginViewModelTest {
         }
 
     @Test
-    fun switchingModesPreservesPhoneButClearsSensitiveModeInputs() =
+    fun switchingModesPreservesModeDraftsAndFeedbackWithoutLeakingNotices() =
         runTest(dispatcher) {
             viewModel.updatePhone(VALID_PHONE)
-            viewModel.updateCode("123456")
+            viewModel.updateCode("12")
+            viewModel.submitMobileCode()
 
             viewModel.switchMode(LoginMode.Password)
 
             assertEquals(VALID_PHONE, viewModel.state.value.phone)
-            assertEquals("", viewModel.state.value.code)
+            assertEquals("12", viewModel.state.value.code)
+            assertEquals(null, viewModel.state.value.notice)
             viewModel.updateUsername("fixture-account")
             viewModel.updatePassword("fixture-password")
+            viewModel.togglePasswordVisibility()
+            repository.passwordResults.add(PasswordLoginResult.Failure(AuthError.Rejected))
+            viewModel.submitPassword()
+            runCurrent()
 
             viewModel.switchMode(LoginMode.MobileCode)
 
             assertEquals(VALID_PHONE, viewModel.state.value.phone)
-            assertEquals("", viewModel.state.value.username)
-            assertEquals("", viewModel.state.value.password)
+            assertEquals("fixture-account", viewModel.state.value.username)
+            assertEquals("fixture-password", viewModel.state.value.password)
+            assertTrue(viewModel.state.value.passwordVisible)
+            assertEquals(LoginNotice.Validation(LoginValidationError.InvalidCode), viewModel.state.value.notice)
+
+            viewModel.switchMode(LoginMode.Password)
+
+            assertEquals(LoginNotice.PasswordRejected, viewModel.state.value.notice)
+        }
+
+    @Test
+    fun switchingModesPreservesMultipleAccountSelection() =
+        runTest(dispatcher) {
+            repository.loginResults.add(MobileCodeLoginResult.MultipleAccounts(ACCOUNTS))
+            viewModel.updatePhone(VALID_PHONE)
+            viewModel.updateCode("123456")
+            viewModel.submitMobileCode()
+            runCurrent()
+            viewModel.selectAccount("20002")
+
+            viewModel.switchMode(LoginMode.Password)
+            viewModel.switchMode(LoginMode.MobileCode)
+
+            assertEquals(ACCOUNTS, viewModel.state.value.accounts)
+            assertEquals("20002", viewModel.state.value.selectedUserId)
+            assertEquals("123456", viewModel.state.value.code)
         }
 
     @Test
@@ -327,9 +359,10 @@ class LoginViewModelTest {
         }
 
     @Test
-    fun qrModeCreatesSessionAndLeavingCancelsPolling() =
+    fun qrSessionAndCountdownContinueAcrossModeSwitchesWithoutRestarting() =
         runTest(dispatcher) {
             repository.qrStartResults.add(qrReady("first-key"))
+            repeat(60) { repository.qrCheckResults.add(QrLoginCheckResult.Waiting) }
 
             viewModel.switchMode(LoginMode.QrCode)
             runCurrent()
@@ -339,8 +372,57 @@ class LoginViewModelTest {
             advanceTimeBy(2_000)
             runCurrent()
 
+            assertEquals(listOf("first-key"), repository.qrCheckedKeys)
+            assertEquals(118, (viewModel.state.value.qrLogin as QrLoginUiState.Waiting).remainingSeconds)
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+
+            assertEquals(118, (viewModel.state.value.qrLogin as QrLoginUiState.Waiting).remainingSeconds)
+            assertEquals(1, repository.qrCreateCalls)
+            viewModel.viewModelScope.cancel()
+            runCurrent()
+        }
+
+    @Test
+    fun smsCountdownContinuesAcrossModeSwitches() =
+        runTest(dispatcher) {
+            viewModel.updatePhone(VALID_PHONE)
+            viewModel.sendCode()
+            runCurrent()
+
+            viewModel.switchMode(LoginMode.Password)
+            advanceTimeBy(2_000)
+            runCurrent()
+            viewModel.switchMode(LoginMode.MobileCode)
+
+            assertEquals(58, viewModel.state.value.countdownSeconds)
+        }
+
+    @Test
+    fun qrCountdownTicksEverySecondWhilePollingEveryTwoSeconds() =
+        runTest(dispatcher) {
+            repository.qrStartResults.add(qrReady("fixture-key"))
+            repeat(60) { repository.qrCheckResults.add(QrLoginCheckResult.Waiting) }
+
+            viewModel.switchMode(LoginMode.QrCode)
+            runCurrent()
+            assertEquals(120, (viewModel.state.value.qrLogin as QrLoginUiState.Waiting).remainingSeconds)
+
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(119, (viewModel.state.value.qrLogin as QrLoginUiState.Waiting).remainingSeconds)
             assertTrue(repository.qrCheckedKeys.isEmpty())
-            assertEquals(null, viewModel.state.value.qrLogin)
+
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(118, (viewModel.state.value.qrLogin as QrLoginUiState.Waiting).remainingSeconds)
+            assertEquals(listOf("fixture-key"), repository.qrCheckedKeys)
+
+            viewModel.switchMode(LoginMode.MobileCode)
+            runCurrent()
+            viewModel.viewModelScope.cancel()
+            runCurrent()
         }
 
     @Test
@@ -462,6 +544,7 @@ class LoginViewModelTest {
         val qrStartResults = ArrayDeque<QrLoginStartResult>()
         val qrCheckResults = ArrayDeque<QrLoginCheckResult>()
         val qrCheckedKeys = mutableListOf<String>()
+        var qrCreateCalls = 0
 
         override suspend fun currentState(): AuthState = AuthState.Anonymous
 
@@ -487,7 +570,10 @@ class LoginViewModelTest {
             return passwordResults.removeFirst()
         }
 
-        override suspend fun createQrLogin(): QrLoginStartResult = qrStartResults.removeFirst()
+        override suspend fun createQrLogin(): QrLoginStartResult {
+            qrCreateCalls += 1
+            return qrStartResults.removeFirst()
+        }
 
         override suspend fun checkQrLogin(key: String): QrLoginCheckResult {
             qrCheckedKeys += key

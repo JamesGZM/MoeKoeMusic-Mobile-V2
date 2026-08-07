@@ -54,6 +54,7 @@
 | Button | 登录、搜索、本地音乐、我的、播放器及 Showcase 均有主要/次要操作 | 公共 | Filled、Tonal、Outlined、Text、Destructive；48/56dp；loading 不改变几何 |
 | TextField | 登录、搜索、本地导入与 Dialog 输入 | 公共 | 标准与 Compact 尺寸；leading/trailing、password、error、disabled；校验留给 Feature |
 | Toolbar | 搜索、本地音乐、设置、资料、歌单详情、播放器与登录 | 公共组合组件 | 仅为确认存在的标准、沉浸、搜索、多选语义提供独立 API；不做万能 Toolbar |
+| Navigation back icon | `13` 登录主稿与 `15` Toolbar 图板使用相同的无横杆圆端 Chevron；方向性和 RTL 行为必须全局一致 | 公共图形 Token | SVG 母版与 VectorDrawable 归 `:core:designsystem`；页面保留各自底板、尺寸和锚点 |
 | Alert/Input Dialog | 退出、删除、登录风控、文本输入 | 公共模态外壳 | 标准标题/正文/操作和输入型结构；复杂内容使用受控内容 Slot |
 | Bottom Sheet | 队列、排序/音质、多项选择 | 公共模态外壳 | 遮罩、顶部圆角、Insets、拖拽/返回与操作区 |
 | Snackbar | 全局可恢复反馈和可选操作 | 公共 | Host、队列、去重、MiniPlayer 避让和最多两行 |

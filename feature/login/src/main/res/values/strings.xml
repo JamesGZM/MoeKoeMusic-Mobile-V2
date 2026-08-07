@@ -11,7 +11,8 @@
     <string name="login_phone_hint">请输入手机号</string>
     <string name="login_code_hint">请输入 6 位验证码</string>
     <string name="login_send_code">获取验证码</string>
-    <string name="login_resend_seconds">%1$d 秒</string>
+    <string name="login_sending_code">正在发送…</string>
+    <string name="login_resend_seconds">%1$d 秒后重发</string>
     <string name="login_submit">登录并继续</string>
     <string name="login_submitting">正在登录…</string>
     <string name="login_username_hint">请输入账号</string>
@@ -81,6 +82,8 @@
     <string name="login_qr_instruction_suffix"> 扫码</string>
     <string name="login_qr_generating">正在生成二维码</string>
     <string name="login_qr_expiry">二维码将在 %1$02d:%2$02d 后过期</string>
+    <string name="login_qr_expiry_prefix">二维码将在</string>
+    <string name="login_qr_expiry_suffix">后过期</string>
     <string name="login_qr_scanned_title">已扫码，请在手机上确认</string>
     <string name="login_qr_scanned_description">请在手机上完成登录确认</string>
     <string name="login_qr_scanned_user">%1$s，请在手机上确认登录</string>
@@ -92,6 +95,7 @@
     <string name="login_qr_expired_description">请刷新二维码后重新扫码</string>
     <string name="login_qr_refresh">刷新二维码</string>
     <string name="login_qr_failure_title">获取二维码失败</string>
+    <string name="login_qr_failure_description">请检查网络后重试</string>
     <string name="login_qr_retry">重新获取</string>
     <string name="login_qr_use_mobile">改用验证码</string>
 </resources>

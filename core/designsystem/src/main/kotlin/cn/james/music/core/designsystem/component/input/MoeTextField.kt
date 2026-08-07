@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -57,6 +58,7 @@ fun MoeTextField(
     leadingContent: (@Composable () -> Unit)? = null,
     prefix: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
+    textStyle: TextStyle? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -64,6 +66,7 @@ fun MoeTextField(
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
     val shape = size.shape
+    val resolvedTextStyle = textStyle ?: size.textStyle
     val borderColor =
         when {
             isError -> MaterialTheme.colorScheme.error
@@ -101,7 +104,7 @@ fun MoeTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = contentColor),
+            textStyle = resolvedTextStyle.copy(color = contentColor),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
@@ -129,7 +132,7 @@ fun MoeTextField(
                             Text(
                                 text = placeholder,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = resolvedTextStyle,
                                 maxLines = 1,
                             )
                         }
@@ -175,4 +178,12 @@ private val MoeTextFieldSize.shape: Shape
         when (this) {
             MoeTextFieldSize.Compact -> MaterialTheme.shapes.small
             MoeTextFieldSize.Default -> RoundedCornerShape(20.dp)
+        }
+
+private val MoeTextFieldSize.textStyle: TextStyle
+    @Composable
+    get() =
+        when (this) {
+            MoeTextFieldSize.Compact -> MaterialTheme.typography.bodyMedium
+            MoeTextFieldSize.Default -> MaterialTheme.typography.bodyLarge
         }

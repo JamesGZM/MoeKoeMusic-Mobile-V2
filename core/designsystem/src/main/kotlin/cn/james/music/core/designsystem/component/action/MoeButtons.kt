@@ -2,6 +2,7 @@ package cn.james.music.core.designsystem.component.action
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
@@ -42,6 +43,7 @@ fun MoeButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     size: MoeButtonSize = MoeButtonSize.Regular,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     Button(
@@ -64,6 +66,7 @@ fun MoeButton(
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
             ),
+        contentPadding = contentPadding,
     ) {
         MoeButtonContent(loading = loading, size = size, content = content)
     }

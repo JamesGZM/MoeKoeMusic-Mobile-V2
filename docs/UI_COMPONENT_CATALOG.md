@@ -16,6 +16,7 @@
 | 组件族 | 包 | 状态 | 已确认消费者/证据 | 下一步 |
 | --- | --- | --- | --- | --- |
 | Theme / Token | 根包 | Stable | 全部页面 | 保持语义化，禁止页面覆盖全局 Density |
+| Navigation back icon | `component.navigation` | Stable | 标准 Toolbar、沉浸式 Toolbar、登录 Hero | 统一 SVG/Vector 路径和 RTL；外围按钮组合归各 Toolbar/页面 |
 | Standard TopBar | `component.navigation` | Stable | 搜索、本地音乐、设备音乐及组件矩阵 | 保留旧包兼容入口，新增变体仍需复用证据 |
 | Immersive TopBar | `component.navigation` | Adopt | 登录、播放器、Hero 详情确认稿 | 页面接入时验证前景对比和 Insets |
 | Search / Selection TopBar | `component.navigation` | Adopt | 搜索、本地音乐多选 | 按各自语义建立窄 API |

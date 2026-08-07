@@ -14,3 +14,11 @@
 - 限制：不得从该位图反推布局尺寸、文案、图标或协议字段；页面结构仍以 `13` 号确认设计图和 `DESIGN_SYSTEM.md` 为准。
 
 最终生成提示要求重建无 UI、无文字的独立宽幅插画，保留确认设计的主体、风格、构图和色彩，并在左侧提供原生标题的视觉负空间。
+
+## `icons/navigation-back.svg`
+
+- 状态：已确认设计的通用导航图标母版。
+- 来源：`13-login-phone-immersive.png` 与 `15-toolbar-navigation.png` 中一致的无横杆圆端 Chevron。
+- 语义：返回上一级导航；不是登录业务图标。
+- Android：由 `:core:designsystem` 的 `ic_moe_navigation_back.xml` 提供 VectorDrawable，并通过 `MoeNavigateBackIcon` 使用。
+- 约束：图形自动随 RTL 镜像；页面或 Toolbar 分别决定视觉尺寸、底板、位置和最小 `48dp` 触控区域，不复制或修改路径。

@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,10 +53,9 @@ fun MoeStandardTopBar(
                 onClick = onNavigateBack,
                 modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                MoeNavigateBackIcon(
                     contentDescription = navigationContentDescription,
-                    modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
+                    modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
                 )
             }
         },
@@ -90,8 +87,7 @@ fun MoeImmersiveTopBar(
                 .padding(horizontal = MoeKoeTheme.spacing.space16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MoeImmersiveIconButton(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+        MoeImmersiveNavigateBackButton(
             contentDescription = navigationContentDescription,
             onClick = onNavigateBack,
             foregroundColor = foregroundColor,
@@ -111,6 +107,48 @@ fun MoeImmersiveIconButton(
     foregroundColor: Color = MaterialTheme.colorScheme.onSurface,
     containerColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
 ) {
+    MoeImmersiveIconButtonFrame(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = containerColor,
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = foregroundColor,
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
+        )
+    }
+}
+
+@Composable
+fun MoeImmersiveNavigateBackButton(
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    foregroundColor: Color = MaterialTheme.colorScheme.onSurface,
+    containerColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+) {
+    MoeImmersiveIconButtonFrame(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = containerColor,
+    ) {
+        MoeNavigateBackIcon(
+            contentDescription = contentDescription,
+            tint = foregroundColor,
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+        )
+    }
+}
+
+@Composable
+private fun MoeImmersiveIconButtonFrame(
+    onClick: () -> Unit,
+    modifier: Modifier,
+    containerColor: Color,
+    icon: @Composable () -> Unit,
+) {
     Box(
         modifier = modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
         contentAlignment = Alignment.Center,
@@ -126,12 +164,7 @@ fun MoeImmersiveIconButton(
             onClick = onClick,
             modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
         ) {
-            Icon(
-                imageVector = imageVector,
-                contentDescription = contentDescription,
-                tint = foregroundColor,
-                modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
-            )
+            icon()
         }
     }
 }

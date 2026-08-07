@@ -12,24 +12,59 @@ import cn.james.music.core.model.auth.QrLoginSession
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
-@Preview(name = "MobileCode", widthDp = 390, heightDp = 844)
+@Preview(name = "MobileCode", widthDp = 390, heightDp = 845)
 @Composable
 fun LoginMobileCodeScreenshot() {
-    LoginScreenshotContent(previewMobileCodeState)
+    LoginScreenshotContent(LoginUiState())
 }
 
 @PreviewTest
-@Preview(name = "MobileCodeDark", widthDp = 390, heightDp = 844)
+@Preview(name = "MobileCodeSending", widthDp = 390, heightDp = 845)
+@Composable
+fun LoginMobileCodeSendingScreenshot() {
+    LoginScreenshotContent(LoginUiState(phone = "13800138000", sendingCode = true))
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeCountdown", widthDp = 390, heightDp = 845)
+@Composable
+fun LoginMobileCodeCountdownScreenshot() {
+    LoginScreenshotContent(previewMobileCodeCountdownState)
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeInput", widthDp = 390, heightDp = 845)
+@Composable
+fun LoginMobileCodeInputScreenshot() {
+    LoginScreenshotContent(previewMobileCodeInputState)
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeSubmitting", widthDp = 390, heightDp = 845)
+@Composable
+fun LoginMobileCodeSubmittingScreenshot() {
+    LoginScreenshotContent(previewMobileCodeInputState.copy(loggingIn = true))
+}
+
+@PreviewTest
+@Preview(name = "MobileCodePhoneViewport", widthDp = 360, heightDp = 780)
+@Composable
+fun LoginMobileCodePhoneViewportScreenshot() {
+    LoginScreenshotContent(LoginUiState())
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeDark", widthDp = 390, heightDp = 845)
 @Composable
 fun LoginMobileCodeDarkScreenshot() {
-    LoginScreenshotContent(previewMobileCodeState, themeMode = ThemeMode.Dark)
+    LoginScreenshotContent(LoginUiState(), themeMode = ThemeMode.Dark)
 }
 
 @PreviewTest
-@Preview(name = "MobileCodeAmoled", widthDp = 390, heightDp = 844)
+@Preview(name = "MobileCodeAmoled", widthDp = 390, heightDp = 845)
 @Composable
 fun LoginMobileCodeAmoledScreenshot() {
-    LoginScreenshotContent(previewMobileCodeState, themeMode = ThemeMode.Amoled)
+    LoginScreenshotContent(LoginUiState(), themeMode = ThemeMode.Amoled)
 }
 
 @PreviewTest
@@ -105,7 +140,7 @@ fun LoginMultipleAccountsFailureLargestTextScreenshot() {
 }
 
 @PreviewTest
-@Preview(name = "MobileCodeLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Preview(name = "MobileCodeLargeText", widthDp = 390, heightDp = 845, fontScale = 1.5f)
 @Composable
 fun LoginMobileCodeLargeTextScreenshot() {
     LoginScreenshotContent(LoginUiState())
@@ -337,12 +372,18 @@ private fun LoginScreenshotContent(
     }
 }
 
-private val previewMobileCodeState =
+private val previewMobileCodeCountdownState =
     LoginUiState(
         phone = "13800138000",
         code = "123456",
         countdownSeconds = 48,
         notice = LoginNotice.CodeSent,
+    )
+
+private val previewMobileCodeInputState =
+    LoginUiState(
+        phone = "13800138000",
+        code = "123456",
     )
 
 private val previewAccounts =
