@@ -205,7 +205,6 @@ fun LoginRiskSmsScreenshot() {
             username = "miyu.song@moekoe.com",
             password = "fixture-password",
             risk = PasswordRiskUiState.Sms(previewChallenge),
-            riskCode = "28",
         ),
     )
 }
@@ -220,7 +219,7 @@ fun LoginRiskSmsSubmittingScreenshot() {
             username = "miyu.song@moekoe.com",
             password = "fixture-password",
             risk = PasswordRiskUiState.Sms(previewChallenge),
-            riskCode = "281946",
+            riskCode = "246810",
             verifyingRisk = true,
         ),
     )
@@ -236,7 +235,7 @@ fun LoginRiskSmsRejectedScreenshot() {
             username = "miyu.song@moekoe.com",
             password = "fixture-password",
             risk = PasswordRiskUiState.Sms(previewChallenge),
-            riskCode = "281946",
+            riskCode = "246810",
             notice = LoginNotice.RiskRejected,
         ),
     )

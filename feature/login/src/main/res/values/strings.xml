@@ -35,8 +35,7 @@
     <string name="login_risk_cancel">取消并返回</string>
     <string name="login_risk_cancel_short">取消</string>
     <string name="login_risk_sms_title">确认是你本人</string>
-    <string name="login_risk_sms_description">我们已向该账号绑定的手机号发送验证码</string>
-    <string name="login_risk_sms_expiry">验证码已发送，10 分钟内有效</string>
+    <string name="login_risk_sms_description">验证码已发送至账号绑定手机号，10 分钟内有效</string>
     <string name="login_risk_code_required">请输入收到的短信验证码</string>
     <string name="login_risk_verify_continue">验证并继续</string>
     <string name="login_risk_verifying">正在验证并继续登录…</string>

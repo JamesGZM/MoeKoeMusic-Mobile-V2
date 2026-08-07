@@ -74,6 +74,8 @@
 
 2026-08-07 风险确认 Dialog 复验：`19d` 继续使用系统 `Dialog` 负责窗口居中与模态语义，业务层不增加系统栏或上下间距补偿；公共 Surface 的最大宽度约束恢复为有效的 `304dp`，归一化宽度为 `663.96 / 852`，底层密码主操作在覆盖期间保持加载态。证据见 [`login-risk-confirm-dialog-2026-08-07.md`](../design/evidence/login-risk-confirm-dialog-2026-08-07.md)。短信与腾讯风险状态继续独立验收。
 
+2026-08-07 短信风险三态复验：`21a–c` 已统一白色 Dialog Surface、Bold 标题、紧凑输入型间距、验证码默认/提交/错误描边和恢复行为；确认按钮保留用户已确认的全局 Filled 状态，取消按钮按设计改为浅蓝 Tonal 背景与蓝色文字。协议未提供手机号，因此正式文案不硬编码设计示例。证据见 [`login-risk-sms-states-2026-08-07.md`](../design/evidence/login-risk-sms-states-2026-08-07.md)。腾讯验证 `21d–e` 继续独立验收。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`

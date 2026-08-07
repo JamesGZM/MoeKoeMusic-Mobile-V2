@@ -38,6 +38,7 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthError
+import cn.james.music.core.model.auth.AuthRiskChallenge
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -324,6 +325,28 @@ class LoginScreenAccessibilityTest {
             assertEquals(initialButtonBounds.left.value, buttonBounds.left.value, 0.5f)
             assertEquals(initialButtonBounds.top.value, buttonBounds.top.value, 0.5f)
         }
+    }
+
+    @Test
+    fun riskSmsErrorKeepsCodeAndRecoveryAction() {
+        var state by
+            mutableStateOf(
+                LoginUiState(
+                    mode = LoginMode.Password,
+                    username = "miyu.song@moekoe.com",
+                    password = "fixture-password",
+                    risk = PasswordRiskUiState.Sms(AuthRiskChallenge("fixture-event", null, null)),
+                    riskCode = "246810",
+                ),
+            )
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) { TestLoginScreen(state) }
+        }
+
+        composeRule.runOnIdle { state = state.copy(notice = LoginNotice.RiskRejected) }
+        composeRule.onNodeWithText("验证码错误或已过期，请重新输入").assertIsDisplayed()
+        composeRule.onNodeWithText("2").assertIsDisplayed()
+        composeRule.onNodeWithText("验证并继续").assertIsDisplayed()
     }
 
     @Test

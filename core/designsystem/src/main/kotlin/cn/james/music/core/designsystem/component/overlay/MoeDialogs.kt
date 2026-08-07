@@ -18,6 +18,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -150,7 +151,7 @@ internal fun MoeDialogSurface(
     Surface(
         modifier = modifier.widthIn(max = size.maximumWidth).fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier.padding(MoeKoeTheme.spacing.space24),
@@ -189,7 +190,11 @@ internal fun MoeAlertDialogContent(
             }
         }
     }
-    Text(text = title, style = MaterialTheme.typography.titleMedium)
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+    )
     Text(
         text = message,
         modifier = Modifier.padding(top = MoeKoeTheme.spacing.space16),

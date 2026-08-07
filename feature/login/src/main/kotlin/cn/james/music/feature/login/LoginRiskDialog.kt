@@ -26,7 +26,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.overlay.MoeDialog
 import cn.james.music.core.designsystem.component.overlay.MoeDialogActions
@@ -109,19 +110,16 @@ private fun RiskSmsDialogContent(
     RiskDialogLayout(
         title = stringResource(R.string.login_risk_sms_title),
         description = stringResource(R.string.login_risk_sms_description),
+        descriptionStyle = MaterialTheme.typography.bodySmall,
         notice = state.notice,
+        verticalSpacing = if (state.notice == LoginNotice.RiskRejected) 4.dp else 8.dp,
+        actionsTopPadding = 0.dp,
         content = {
             OtpCodeField(
                 value = state.riskCode,
                 onValueChange = onRiskCodeChange,
                 enabled = !state.verifyingRisk,
-            )
-            Text(
-                stringResource(R.string.login_risk_sms_expiry),
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
+                isError = state.notice == LoginNotice.RiskRejected,
             )
         },
         actions = {
@@ -169,21 +167,28 @@ private fun RiskDialogLayout(
     title: String,
     description: String,
     notice: LoginNotice?,
+    descriptionStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    verticalSpacing: Dp = 16.dp,
+    actionsTopPadding: Dp = 8.dp,
     content: @Composable () -> Unit = {},
     actions: @Composable () -> Unit,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(verticalSpacing),
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
         Text(
             description,
-            style = MaterialTheme.typography.bodyMedium,
+            style = descriptionStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         content()
-        LoginNoticeText(notice)
-        Box(Modifier.fillMaxWidth().padding(top = 8.dp)) { actions() }
+        LoginNoticeText(notice, style = MaterialTheme.typography.bodySmall)
+        Box(Modifier.fillMaxWidth().padding(top = actionsTopPadding)) { actions() }
     }
 }
 
@@ -210,12 +215,13 @@ private fun OtpCodeField(
     value: String,
     onValueChange: (String) -> Unit,
     enabled: Boolean,
+    isError: Boolean,
 ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth().height(56.dp),
+        modifier = Modifier.fillMaxWidth().height(48.dp),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
         textStyle = MaterialTheme.typography.titleLarge.copy(color = Color.Transparent),
@@ -229,7 +235,7 @@ private fun OtpCodeField(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     repeat(6) { index ->
-                        val focused = index == value.length.coerceAtMost(5)
+                        val focused = enabled && !isError && index == value.length.coerceAtMost(5)
                         Box(
                             modifier =
                                 Modifier
@@ -238,10 +244,10 @@ private fun OtpCodeField(
                                     .border(
                                         BorderStroke(
                                             if (focused) 2.dp else 1.dp,
-                                            if (focused) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.outlineVariant
+                                            when {
+                                                isError -> MaterialTheme.colorScheme.error
+                                                focused -> MaterialTheme.colorScheme.primary
+                                                else -> MaterialTheme.colorScheme.outlineVariant
                                             },
                                         ),
                                         RoundedCornerShape(12.dp),

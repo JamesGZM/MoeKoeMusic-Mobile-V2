@@ -88,6 +88,8 @@ fun MoeTonalButton(
         shape = size.shape,
         colors =
             ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary,
                 disabledContainerColor =
                     if (loading) {
                         MaterialTheme.colorScheme.primaryContainer
