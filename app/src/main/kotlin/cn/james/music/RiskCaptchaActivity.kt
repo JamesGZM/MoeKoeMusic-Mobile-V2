@@ -193,7 +193,7 @@ class RiskCaptchaActivity : ComponentActivity() {
 
         internal fun captchaHtml(appId: String): String {
             require(isValidAppId(appId)) { "Invalid captcha app id" }
-            return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN"><script src="$ALLOWED_ORIGIN/TCaptcha.js"></script></head><body><script>const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));});captcha.show();</script></body></html>"""
+            return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN"><script src="$ALLOWED_ORIGIN/TCaptcha.js"></script></head><body><script>const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));},{type:'',showHeader:false});captcha.show();</script></body></html>"""
         }
     }
 }
