@@ -215,6 +215,6 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - 已建立标准 Toolbar、沉浸式 Toolbar 和沉浸式 IconButton；搜索、折叠和多选 Toolbar 在对应页面接入时继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
-- Button、TextField、Dialog 与反馈 Host 已通过公共组件准入审计，等待按独立切片实现；Bottom Sheet、MoeToast 和页面状态组件随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。
+- Button、TextField、标准/沉浸式 Toolbar、标准 Dialog 外壳与双操作区已进入 `:core:designsystem`；标准 Toolbar 和 Dialog 已有多个真实页面消费者。Snackbar Host、Input Dialog、Bottom Sheet、MoeToast 和页面状态组件继续随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。
 
 后续组件修正继续通过浅色、深色、AMOLED、大字体和截图测试验证。

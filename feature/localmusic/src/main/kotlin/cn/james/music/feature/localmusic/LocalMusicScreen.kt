@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
 import cn.james.music.core.model.local.DeviceAudioCandidate
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalMusic
@@ -144,23 +144,17 @@ internal fun LocalMusicScreen(
         }
     }
     deleting?.let { music ->
-        AlertDialog(
+        MoeAlertDialog(
+            title = "删除本地音乐？",
+            message = "将删除 MoeKoe 保存的副本，不影响原始文件。",
+            confirmLabel = "删除",
+            dismissLabel = "取消",
             onDismissRequest = { deleting = null },
-            title = { Text("删除本地音乐？") },
-            text = { Text("将删除 MoeKoe 保存的副本，不影响原始文件。") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete(music.id)
-                        deleting = null
-                    },
-                ) {
-                    Text("删除")
-                }
+            onConfirm = {
+                onDelete(music.id)
+                deleting = null
             },
-            dismissButton = {
-                TextButton(onClick = { deleting = null }) { Text("取消") }
-            },
+            destructive = true,
         )
     }
 }

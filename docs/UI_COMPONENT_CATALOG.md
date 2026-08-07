@@ -16,12 +16,14 @@
 | 组件族 | 包 | 状态 | 已确认消费者/证据 | 下一步 |
 | --- | --- | --- | --- | --- |
 | Theme / Token | 根包 | Stable | 全部页面 | 保持语义化，禁止页面覆盖全局 Density |
-| Standard / Immersive TopBar | `component.navigation` | Adopt | 设置、资料、搜索、本地音乐、登录、播放器 | 整理包并保留兼容入口，补组件矩阵 |
+| Standard TopBar | `component.navigation` | Stable | 搜索、本地音乐、设备音乐及组件矩阵 | 保留旧包兼容入口，新增变体仍需复用证据 |
+| Immersive TopBar | `component.navigation` | Adopt | 登录、播放器、Hero 详情确认稿 | 页面接入时验证前景对比和 Insets |
 | Search / Selection TopBar | `component.navigation` | Adopt | 搜索、本地音乐多选 | 按各自语义建立窄 API |
 | Button | `component.action` | Adopt | 登录、搜索、本地音乐、我的、播放器 | 建立五类操作与 48/56dp 具名尺寸 |
 | IconButton | `component.action` | Adopt | Toolbar、播放器、卡片操作 | 统一 plain/tonal/immersive 语义 |
 | TextField | `component.input` | Adopt | 登录、搜索、导入、输入 Dialog | 建立 Default/Compact 与错误/密码状态 |
-| Alert/Input Dialog | `component.overlay` | Adopt | 退出、删除、登录风控、文本输入 | 先实现公共外壳，不承载业务状态机 |
+| Alert Dialog / Dialog shell | `component.overlay` | Stable | 退出、删除、登录风控及组件矩阵 | 保持业务状态机在 Feature |
+| Input Dialog | `component.overlay` | Candidate | 新建/重命名与登录结构化输入设计 | 首个正式文本输入消费者落地时实现 |
 | Bottom Sheet | `component.overlay` | Candidate | 队列、音质/排序选择 | 随首个正式页面切片实现 |
 | Snackbar Host | `component.feedback` | Adopt | 应用壳与可恢复操作反馈 | 增加队列、去重和 MiniPlayer 避让 |
 | Toast Host | `component.feedback` | Candidate | 仅低优先级无操作反馈 | 第二个明确消费者出现后实现 |

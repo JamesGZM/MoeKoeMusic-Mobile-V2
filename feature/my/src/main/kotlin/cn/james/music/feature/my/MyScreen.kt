@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -65,6 +64,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
 import cn.james.music.core.model.account.UserProfileError
 import cn.james.music.core.model.auth.AuthError
 
@@ -112,21 +112,14 @@ internal fun MyScreen(
     }
 
     if (state.showLogoutConfirmation) {
-        AlertDialog(
+        MoeAlertDialog(
+            title = stringResource(R.string.my_logout_title),
+            message = stringResource(R.string.my_logout_message),
+            confirmLabel = stringResource(R.string.my_logout_confirm),
+            dismissLabel = stringResource(R.string.my_cancel),
+            onConfirm = onConfirmLogout,
             onDismissRequest = onDismissLogout,
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
-            title = { Text(stringResource(R.string.my_logout_title)) },
-            text = { Text(stringResource(R.string.my_logout_message)) },
-            confirmButton = {
-                TextButton(onClick = onConfirmLogout) {
-                    Text(stringResource(R.string.my_logout_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissLogout) {
-                    Text(stringResource(R.string.my_cancel))
-                }
-            },
         )
     }
 }
