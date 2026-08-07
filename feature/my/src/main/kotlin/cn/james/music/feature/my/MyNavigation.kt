@@ -19,6 +19,7 @@ data object MyDestination
 fun NavGraphBuilder.myGraph(
     onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
+    onSettings: () -> Unit,
     onFoundationLab: () -> Unit,
     showFoundationLab: Boolean,
 ) {
@@ -27,6 +28,7 @@ fun NavGraphBuilder.myGraph(
             MyRoute(
                 onLogin = onLogin,
                 onLocalMusic = onLocalMusic,
+                onSettings = onSettings,
                 onFoundationLab = onFoundationLab,
                 showFoundationLab = showFoundationLab,
             )
@@ -38,6 +40,7 @@ fun NavGraphBuilder.myGraph(
 private fun MyRoute(
     onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
+    onSettings: () -> Unit,
     onFoundationLab: () -> Unit,
     showFoundationLab: Boolean,
     viewModel: MyViewModel = hiltViewModel(),
@@ -52,7 +55,8 @@ private fun MyRoute(
         onRefresh = viewModel::refresh,
         onLogin = onLogin,
         onLocalMusic = onLocalMusic,
-        onAccountSettings = viewModel::requestLogout,
+        onSettings = onSettings,
+        onRequestLogout = viewModel::requestLogout,
         onDismissLogout = viewModel::dismissLogout,
         onConfirmLogout = viewModel::confirmLogout,
         onFoundationLab = onFoundationLab,

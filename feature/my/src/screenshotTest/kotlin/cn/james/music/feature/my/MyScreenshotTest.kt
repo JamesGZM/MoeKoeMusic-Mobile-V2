@@ -23,6 +23,7 @@ fun MyAuthenticatedScreenshot() {
                         vipUnavailable = false,
                     ),
                 ),
+            library = designLibrary(),
         ),
     )
 }
@@ -67,9 +68,28 @@ fun MyAuthenticatedLargeTextScreenshot() {
                         vipUnavailable = true,
                     ),
                 ),
+            library = designLibrary(),
         ),
     )
 }
+
+private fun designLibrary() =
+    MyLibraryUi(
+        likedCount = "126 首",
+        recentCount = "78 首",
+        localCount = "54 首",
+        cloudSize = "2.4 GB",
+        savedPlaylistCount = "36 个",
+        savedAlbumCount = "28 张",
+        followedArtistCount = "19 位",
+        followedFriendCount = "12 位",
+        playlists =
+            listOf(
+                MyPlaylistUi("我喜欢", "126 首", MyPlaylistArtwork.Liked),
+                MyPlaylistUi("ACG 收藏", "82 首", MyPlaylistArtwork.Acg),
+                MyPlaylistUi("夜间电台", "45 首", MyPlaylistArtwork.NightRadio),
+            ),
+    )
 
 @Composable
 private fun MyScreenshotContent(
@@ -83,7 +103,8 @@ private fun MyScreenshotContent(
                 onRefresh = {},
                 onLogin = {},
                 onLocalMusic = {},
-                onAccountSettings = {},
+                onSettings = {},
+                onRequestLogout = {},
                 onDismissLogout = {},
                 onConfirmLogout = {},
                 onFoundationLab = {},

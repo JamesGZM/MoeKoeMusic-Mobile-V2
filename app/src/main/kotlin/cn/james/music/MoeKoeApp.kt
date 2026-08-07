@@ -178,6 +178,7 @@ fun MoeKoeApp(
                 myGraph(
                     onLogin = { navController.navigate(LoginDestination) },
                     onLocalMusic = { navController.navigate(LocalMusicDestination) },
+                    onSettings = { navController.navigate(SettingsDestination) },
                     onFoundationLab = { navController.navigateToFoundation() },
                     showFoundationLab = foundationContent != null,
                 )

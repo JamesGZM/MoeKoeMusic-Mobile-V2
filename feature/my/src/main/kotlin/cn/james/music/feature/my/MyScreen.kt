@@ -1,6 +1,7 @@
 package cn.james.music.feature.my
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.EventAvailable
@@ -32,6 +35,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -61,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,7 +85,8 @@ internal fun MyScreen(
     onRefresh: () -> Unit,
     onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
-    onAccountSettings: () -> Unit,
+    onSettings: () -> Unit,
+    onRequestLogout: () -> Unit,
     onDismissLogout: () -> Unit,
     onConfirmLogout: () -> Unit,
     onFoundationLab: () -> Unit,
@@ -93,7 +99,7 @@ internal fun MyScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = MoeKoeTheme.spacing.mediumLarge, vertical = MoeKoeTheme.spacing.medium),
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = MoeKoeTheme.spacing.mediumLarge),
             verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.mediumLarge),
         ) {
             item {
@@ -102,14 +108,15 @@ internal fun MyScreen(
                     loggingOut = state.loggingOut,
                     onLogin = onLogin,
                     onRetry = onRefresh,
-                    onAccountSettings = onAccountSettings,
+                    onSettings = onSettings,
+                    onRequestLogout = onRequestLogout,
                 )
             }
             state.refreshError?.let { error -> item { InlineFailure(error.profileMessage(), onRefresh) } }
-            state.logoutError?.let { error -> item { InlineFailure(error.logoutMessage(), onAccountSettings) } }
-            item { QuickEntries(state.account, onLogin, onLocalMusic) }
-            item { CollectionSection(state.account, onLogin) }
-            item { PlaylistPlaceholder(state.account, onLogin) }
+            state.logoutError?.let { error -> item { InlineFailure(error.logoutMessage(), onRequestLogout) } }
+            item { QuickEntries(state.account, state.library, onLogin, onLocalMusic) }
+            item { CollectionSection(state.account, state.library, onLogin) }
+            item { PlaylistSection(state.account, state.library.playlists, onLogin) }
             if (showFoundationLab) {
                 item { TextButton(onClick = onFoundationLab) { Text(stringResource(R.string.my_open_foundation_lab)) } }
             }
@@ -135,13 +142,20 @@ private fun AccountSection(
     loggingOut: Boolean,
     onLogin: () -> Unit,
     onRetry: () -> Unit,
-    onAccountSettings: () -> Unit,
+    onSettings: () -> Unit,
+    onRequestLogout: () -> Unit,
 ) {
     when (account) {
         MyAccountUiState.Loading -> LoadingAccountCard()
-        MyAccountUiState.Anonymous -> AnonymousAccountCard(onLogin)
+        MyAccountUiState.Anonymous -> AnonymousAccountCard(onLogin, onSettings)
         is MyAccountUiState.Failure -> FailureAccountCard(account.error.profileMessage(), onRetry)
-        is MyAccountUiState.Authenticated -> AuthenticatedAccountCard(account.profile, loggingOut, onAccountSettings)
+        is MyAccountUiState.Authenticated ->
+            AuthenticatedAccountCard(
+                profile = account.profile,
+                loggingOut = loggingOut,
+                onSettings = onSettings,
+                onRequestLogout = onRequestLogout,
+            )
     }
 }
 
@@ -149,7 +163,8 @@ private fun AccountSection(
 private fun AuthenticatedAccountCard(
     profile: MyProfileUi,
     loggingOut: Boolean,
-    onAccountSettings: () -> Unit,
+    onSettings: () -> Unit,
+    onRequestLogout: () -> Unit,
 ) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
     var accountMenuExpanded by rememberSaveable(profile.userId) { mutableStateOf(false) }
@@ -165,61 +180,73 @@ private fun AuthenticatedAccountCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfileAvatar(profile.avatarUrl, if (largeText) 64.dp else 76.dp)
                 Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small)) {
+                Box(Modifier.weight(1f)) {
+                    Column(
+                        Modifier.fillMaxWidth().clickable(enabled = !loggingOut) { accountMenuExpanded = true },
+                        verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small)) {
+                            Text(
+                                text = profile.nickname ?: stringResource(R.string.my_user_fallback, profile.userId),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            profile.vipLabel?.let { VipBadge(it) }
+                        }
                         Text(
-                            text = profile.nickname ?: stringResource(R.string.my_user_fallback, profile.userId),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        profile.vipLabel?.let { VipBadge(it) }
-                    }
-                    Text(
-                        text = stringResource(R.string.my_welcome_back),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    if (profile.vipUnavailable) {
-                        Text(
-                            text = stringResource(R.string.my_vip_unavailable),
+                            text = stringResource(R.string.my_welcome_back),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                         )
-                    }
-                }
-                Box {
-                    IconButton(onClick = { accountMenuExpanded = true }, enabled = !loggingOut) {
-                        if (loggingOut) {
-                            CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-                        } else {
-                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.my_account_settings))
+                        if (profile.vipUnavailable) {
+                            Text(
+                                text = stringResource(R.string.my_vip_unavailable),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
                         }
                     }
-                    DropdownMenu(
+                    AccountDropdownMenu(
                         expanded = accountMenuExpanded,
-                        onDismissRequest = { accountMenuExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.my_logout_action)) },
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
-                            onClick = {
-                                accountMenuExpanded = false
-                                onAccountSettings()
-                            },
+                        loggingOut = loggingOut,
+                        onDismiss = { accountMenuExpanded = false },
+                        onRequestLogout = onRequestLogout,
+                    )
+                }
+                Box(Modifier.size(width = 48.dp, height = 76.dp)) {
+                    SettingsButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopCenter))
+                    if (loggingOut) {
+                        CircularProgressIndicator(Modifier.align(Alignment.BottomCenter).size(22.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = stringResource(R.string.my_account_menu),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.BottomCenter),
                         )
                     }
                 }
             }
             Spacer(Modifier.height(MoeKoeTheme.spacing.mediumLarge))
             Row(horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
-                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
+                OutlinedButton(
+                    onClick = {},
+                    modifier = Modifier.weight(1f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
                     Icon(Icons.Default.EventAvailable, contentDescription = null)
                     Spacer(Modifier.width(MoeKoeTheme.spacing.small))
                     Text(stringResource(R.string.my_sign_in))
                 }
-                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
+                OutlinedButton(
+                    onClick = {},
+                    modifier = Modifier.weight(1f),
+                    border = BorderStroke(1.dp, MoeKoeTheme.extraColors.vipGold),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MoeKoeTheme.extraColors.vipGold),
+                ) {
                     Icon(Icons.Default.WorkspacePremium, contentDescription = null)
                     Spacer(Modifier.width(MoeKoeTheme.spacing.small))
                     Text(stringResource(R.string.my_claim_vip))
@@ -236,11 +263,11 @@ private fun ProfileAvatar(
 ) {
     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(size)) {
         if (url == null) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
+            Image(
+                painter = painterResource(R.drawable.my_authenticated_avatar),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                modifier = Modifier.padding(MoeKoeTheme.spacing.small),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
             )
         } else {
             AsyncImage(
@@ -273,7 +300,47 @@ private fun VipBadge(label: String) {
 }
 
 @Composable
-private fun AnonymousAccountCard(onLogin: () -> Unit) {
+private fun SettingsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp,
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.my_settings))
+        }
+    }
+}
+
+@Composable
+private fun AccountDropdownMenu(
+    expanded: Boolean,
+    loggingOut: Boolean,
+    onDismiss: () -> Unit,
+    onRequestLogout: () -> Unit,
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.my_logout_action)) },
+            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
+            enabled = !loggingOut,
+            onClick = {
+                onDismiss()
+                onRequestLogout()
+            },
+        )
+    }
+}
+
+@Composable
+private fun AnonymousAccountCard(
+    onLogin: () -> Unit,
+    onSettings: () -> Unit,
+) {
     val shape = RoundedCornerShape(28.dp)
     Surface(
         shape = shape,
@@ -281,28 +348,32 @@ private fun AnonymousAccountCard(onLogin: () -> Unit) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
     ) {
         Column(Modifier.fillMaxWidth().padding(MoeKoeTheme.spacing.mediumLarge)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onLogin),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(64.dp)) {
-                    Icon(
-                        Icons.Default.AccountCircle,
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f).clickable(onClick = onLogin),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.my_anonymous_avatar),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.58f),
-                        modifier = Modifier.padding(MoeKoeTheme.spacing.small),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(76.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), CircleShape),
+                    )
+                    Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4)) {
+                        Text(stringResource(R.string.my_login_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.my_login_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                Box(Modifier.size(width = 48.dp, height = 76.dp)) {
+                    SettingsButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopCenter))
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.my_login_action),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.BottomCenter),
                     )
                 }
-                Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4)) {
-                    Text(stringResource(R.string.my_login_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.my_login_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.my_login_action),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
             Spacer(Modifier.height(MoeKoeTheme.spacing.mediumLarge))
             Row(horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
@@ -383,6 +454,7 @@ private fun InlineFailure(
 @Composable
 private fun QuickEntries(
     account: MyAccountUiState,
+    library: MyLibraryUi,
     onLogin: () -> Unit,
     onLocalMusic: () -> Unit,
 ) {
@@ -396,12 +468,12 @@ private fun QuickEntries(
         if (largeText) {
             Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
                 Row(Modifier.fillMaxWidth()) {
-                    QuickEntry(Icons.Default.Favorite, R.string.my_liked, accountAction, Modifier.weight(1f))
-                    QuickEntry(Icons.Default.History, R.string.my_recent, accountAction, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.Favorite, R.string.my_liked, library.likedCount, accountAction, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.History, R.string.my_recent, library.recentCount, accountAction, Modifier.weight(1f))
                 }
                 Row(Modifier.fillMaxWidth()) {
-                    QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, onLocalMusic, Modifier.weight(1f))
-                    QuickEntry(Icons.Default.Cloud, R.string.my_cloud, accountAction, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, library.localCount, onLocalMusic, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.Cloud, R.string.my_cloud, library.cloudSize, accountAction, Modifier.weight(1f))
                 }
             }
         } else {
@@ -410,13 +482,13 @@ private fun QuickEntries(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                QuickEntry(Icons.Default.Favorite, R.string.my_liked, accountAction)
+                QuickEntry(Icons.Default.Favorite, R.string.my_liked, library.likedCount, accountAction)
                 EntryDivider()
-                QuickEntry(Icons.Default.History, R.string.my_recent, accountAction)
+                QuickEntry(Icons.Default.History, R.string.my_recent, library.recentCount, accountAction)
                 EntryDivider()
-                QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, onLocalMusic)
+                QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, library.localCount, onLocalMusic)
                 EntryDivider()
-                QuickEntry(Icons.Default.Cloud, R.string.my_cloud, accountAction)
+                QuickEntry(Icons.Default.Cloud, R.string.my_cloud, library.cloudSize, accountAction)
             }
         }
     }
@@ -426,6 +498,7 @@ private fun QuickEntries(
 private fun QuickEntry(
     icon: ImageVector,
     titleRes: Int,
+    supportingText: String?,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -446,12 +519,16 @@ private fun QuickEntry(
             )
         }
         Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1)
+        supportingText?.let {
+            Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
 @Composable
 private fun CollectionSection(
     account: MyAccountUiState,
+    library: MyLibraryUi,
     onLogin: () -> Unit,
 ) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
@@ -466,18 +543,19 @@ private fun CollectionSection(
             if (largeText) {
                 Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
                     Row(Modifier.fillMaxWidth()) {
-                        CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465), accountAction, Modifier.weight(1f))
-                        CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary, accountAction, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, library.savedPlaylistCount, Color(0xFFF14465), accountAction, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, library.savedAlbumCount, MaterialTheme.colorScheme.tertiary, accountAction, Modifier.weight(1f))
                     }
                     Row(Modifier.fillMaxWidth()) {
                         CollectionEntry(
                             Icons.Default.PersonSearch,
                             R.string.my_followed_artists,
+                            library.followedArtistCount,
                             MoeKoeTheme.extraColors.accentMint,
                             accountAction,
                             Modifier.weight(1f),
                         )
-                        CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error, accountAction, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, library.followedFriendCount, MaterialTheme.colorScheme.error, accountAction, Modifier.weight(1f))
                     }
                 }
             } else {
@@ -485,13 +563,13 @@ private fun CollectionSection(
                     modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465), accountAction)
+                    CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, library.savedPlaylistCount, Color(0xFFF14465), accountAction)
                     EntryDivider()
-                    CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary, accountAction)
+                    CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, library.savedAlbumCount, MaterialTheme.colorScheme.tertiary, accountAction)
                     EntryDivider()
-                    CollectionEntry(Icons.Default.PersonSearch, R.string.my_followed_artists, MoeKoeTheme.extraColors.accentMint, accountAction)
+                    CollectionEntry(Icons.Default.PersonSearch, R.string.my_followed_artists, library.followedArtistCount, MoeKoeTheme.extraColors.accentMint, accountAction)
                     EntryDivider()
-                    CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error, accountAction)
+                    CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, library.followedFriendCount, MaterialTheme.colorScheme.error, accountAction)
                 }
             }
         }
@@ -502,6 +580,7 @@ private fun CollectionSection(
 private fun CollectionEntry(
     icon: ImageVector,
     titleRes: Int,
+    supportingText: String?,
     tint: Color,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -519,29 +598,45 @@ private fun CollectionEntry(
             Icon(icon, contentDescription = null, tint = tint)
         }
         Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1)
+        supportingText?.let {
+            Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
 @Composable
-private fun PlaylistPlaceholder(
+private fun PlaylistSection(
     account: MyAccountUiState,
+    playlists: List<MyPlaylistUi>,
     onLogin: () -> Unit,
 ) {
     val anonymous = account is MyAccountUiState.Anonymous
-    val actionModifier = if (anonymous) Modifier.clickable(onClick = onLogin) else Modifier
     Column(verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
-        Text(stringResource(R.string.my_created_playlists), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Surface(
-            modifier = Modifier.fillMaxWidth().then(actionModifier),
-            shape = RoundedCornerShape(24.dp),
-            color = if (anonymous) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainer,
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.large),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.my_created_playlists),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            if (!anonymous) {
+                TextButton(onClick = {}) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Text(stringResource(R.string.my_create_playlist))
+                }
+            }
+        }
+        if (anonymous) {
+            Surface(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onLogin),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface,
             ) {
-                if (anonymous) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.large),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact),
+                ) {
                     Box(
                         modifier =
                             Modifier
@@ -556,16 +651,59 @@ private fun PlaylistPlaceholder(
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
                         )
                     }
+                    Text(
+                        text = stringResource(R.string.my_playlists_login),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
                 }
+            }
+        } else if (playlists.isEmpty()) {
+            Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
                 Text(
-                    text = stringResource(if (anonymous) R.string.my_playlists_login else R.string.my_playlists_pending),
+                    text = stringResource(R.string.my_playlists_empty),
+                    modifier = Modifier.fillMaxWidth().padding(MoeKoeTheme.spacing.large),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }
+        } else {
+            playlists.forEach { playlist ->
+                PlaylistRow(playlist)
+            }
         }
     }
 }
+
+@Composable
+private fun PlaylistRow(playlist: MyPlaylistUi) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            painter = painterResource(playlist.artwork.drawableRes()),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)),
+        )
+        Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4)) {
+            Text(playlist.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+            Text(playlist.supportingText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        IconButton(onClick = {}) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.my_playlist_menu, playlist.title))
+        }
+    }
+}
+
+private fun MyPlaylistArtwork.drawableRes(): Int =
+    when (this) {
+        MyPlaylistArtwork.Liked -> R.drawable.my_playlist_liked
+        MyPlaylistArtwork.Acg -> R.drawable.my_playlist_acg
+        MyPlaylistArtwork.NightRadio -> R.drawable.my_playlist_night_radio
+    }
 
 @Composable
 private fun EntryDivider() {

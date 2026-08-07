@@ -3,7 +3,8 @@
     <string name="my_welcome_back">欢迎回来，今天也要听好音乐</string>
     <string name="my_vip_unavailable">VIP 状态暂时无法刷新</string>
     <string name="my_avatar">用户头像</string>
-    <string name="my_account_settings">账号设置</string>
+    <string name="my_settings">设置</string>
+    <string name="my_account_menu">账号菜单</string>
     <string name="my_logout_action">退出账号</string>
     <string name="my_sign_in">签到</string>
     <string name="my_claim_vip">领取 VIP</string>
@@ -25,8 +26,10 @@
     <string name="my_followed_artists">关注歌手</string>
     <string name="my_followed_friends">关注好友</string>
     <string name="my_created_playlists">创建的歌单</string>
-    <string name="my_playlists_pending">歌单接口接入后将在这里显示真实内容</string>
+    <string name="my_create_playlist">新建</string>
+    <string name="my_playlists_empty">还没有创建歌单</string>
     <string name="my_playlists_login">登录后同步你的歌单</string>
+    <string name="my_playlist_menu">%1$s 的更多操作</string>
     <string name="my_logout_title">退出当前账号？</string>
     <string name="my_logout_message">本地音乐、播放队列和应用设置会保留，账号收藏与权益将停止同步。</string>
     <string name="my_logout_confirm">退出账号</string>

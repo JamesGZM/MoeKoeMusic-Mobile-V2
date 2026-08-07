@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -116,6 +117,28 @@ class MainActivityTest {
 
         composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
         composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
+    }
+
+    @Test
+    fun anonymousSettingsChangesThemeAndReturnsToMy() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForAnonymousMyState()
+        composeRule.onNodeWithContentDescription("设置").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("设置").assertIsDisplayed()
+        composeRule.onNodeWithText("主题模式").performClick()
+        composeRule.onNodeWithText("选择主题模式").assertIsDisplayed()
+        composeRule.onNodeWithText("深色").performClick()
+        composeRule.onNodeWithText("深色").assertIsDisplayed()
+
+        composeRule.onNodeWithText("主题模式").performClick()
+        composeRule.onNodeWithText("跟随系统").performClick()
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed()
     }
 
     @Test

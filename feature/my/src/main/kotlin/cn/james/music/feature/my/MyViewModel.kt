@@ -26,6 +26,30 @@ internal data class MyProfileUi(
     val vipUnavailable: Boolean,
 )
 
+internal data class MyLibraryUi(
+    val likedCount: String? = null,
+    val recentCount: String? = null,
+    val localCount: String? = null,
+    val cloudSize: String? = null,
+    val savedPlaylistCount: String? = null,
+    val savedAlbumCount: String? = null,
+    val followedArtistCount: String? = null,
+    val followedFriendCount: String? = null,
+    val playlists: List<MyPlaylistUi> = emptyList(),
+)
+
+internal data class MyPlaylistUi(
+    val title: String,
+    val supportingText: String,
+    val artwork: MyPlaylistArtwork,
+)
+
+internal enum class MyPlaylistArtwork {
+    Liked,
+    Acg,
+    NightRadio,
+}
+
 internal sealed interface MyAccountUiState {
     data object Loading : MyAccountUiState
 
@@ -42,6 +66,7 @@ internal sealed interface MyAccountUiState {
 
 internal data class MyUiState(
     val account: MyAccountUiState = MyAccountUiState.Loading,
+    val library: MyLibraryUi = MyLibraryUi(),
     val refreshing: Boolean = false,
     val refreshError: UserProfileError? = null,
     val showLogoutConfirmation: Boolean = false,
