@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=853, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>MoeKoe Air · 我的 · 未登录候选稿 v2</title>
+  <style>
+    :root {
+      --primary: #1677f2;
+      --primary-deep: #0968df;
+      --primary-soft: #edf5ff;
+      --surface: #fffefa;
+      --surface-soft: #f7faff;
+      --outline: #dce3ec;
+      --text: #191b20;
+      --muted: #747b87;
+      --disabled: #a2a8b2;
+      --gold: #b67616;
+      --gold-soft: #fff8e8;
+      --pink: #ef4667;
+      --purple: #6b51e8;
+      --mint: #08b897;
+      --red: #ee525c;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 853px;
+      height: 1844px;
+      overflow: hidden;
+      background: var(--surface);
+      color: var(--text);
+      font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body {
+      position: relative;
+      background:
+        radial-gradient(circle at 15% 9%, rgba(22,119,242,.035), transparent 25%),
+        linear-gradient(180deg, #fffefa 0%, #ffffff 56%, #fcfdff 100%);
+    }
+
+    svg { display: block; }
+    button { font: inherit; }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      padding: 65px 30px 0;
+    }
+
+    .account-card {
+      position: relative;
+      width: 793px;
+      height: 366px;
+      border: 1.5px solid #cfe0f4;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 86% 15%, rgba(255,255,255,.98) 0 9%, transparent 26%),
+        linear-gradient(118deg, #f2f7ff 0%, #fbfdff 50%, #f5f9ff 100%);
+      box-shadow: 0 18px 44px rgba(27,91,165,.055), inset 0 1px 0 rgba(255,255,255,.95);
+      overflow: hidden;
+    }
+
+    .account-card::after {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      right: -78px;
+      top: -105px;
+      border-radius: 50%;
+      border: 42px solid rgba(22,119,242,.028);
+    }
+
+    .identity {
+      position: absolute;
+      left: 38px;
+      top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 27px;
+      z-index: 1;
+    }
+
+    .avatar {
+      position: relative;
+      width: 154px;
+      height: 154px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #e4f1ff, #fbfdff);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #b9d7fa, 0 12px 28px rgba(22,119,242,.12);
+    }
+
+    .avatar::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #2087ff, #0a69e9);
+    }
+
+    .avatar svg { position: relative; z-index: 1; }
+
+    .identity-copy { padding-top: 3px; }
+
+    .identity-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 13px;
+    }
+
+    .identity-title h1 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1.18;
+      font-weight: 660;
+      letter-spacing: -.7px;
+    }
+
+    .login-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 42px;
+      padding: 0 17px;
+      border-radius: 22px;
+      background: var(--primary);
+      color: white;
+      font-size: 21px;
+      font-weight: 590;
+      box-shadow: 0 6px 16px rgba(22,119,242,.17);
+    }
+
+    .identity-copy p {
+      margin: 0;
+      color: #6b7480;
+      font-size: 24px;
+      line-height: 1.45;
+      letter-spacing: .1px;
+    }
+
+    .settings {
+      position: absolute;
+      top: 28px;
+      right: 22px;
+      width: 76px;
+      height: 76px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      color: #31343a;
+      background: rgba(255,255,255,.93);
+      box-shadow: 0 6px 16px rgba(37,52,70,.13);
+      z-index: 2;
+    }
+
+    .benefits {
+      position: absolute;
+      left: 38px;
+      right: 38px;
+      bottom: 36px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      z-index: 1;
+    }
+
+    .benefit {
+      height: 79px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      border-radius: 22px;
+      font-size: 27px;
+      font-weight: 570;
+      background: rgba(255,255,255,.55);
+    }
+
+    .benefit.checkin {
+      color: #3478ca;
+      border: 1.5px solid #a9cdf9;
+      background: rgba(237,245,255,.84);
+    }
+
+    .benefit.vip {
+      color: #9a671c;
+      border: 1.5px solid #f1c76d;
+      background: rgba(255,248,232,.86);
+    }
+
+    .benefit small {
+      font-size: 17px;
+      font-weight: 520;
+      opacity: .67;
+      margin-left: -6px;
+    }
+
+    .quick-card {
+      position: absolute;
+      left: 30px;
+      top: 455px;
+      width: 793px;
+      height: 247px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      border: 1.5px solid #e2e6ec;
+      border-radius: 30px;
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 14px 34px rgba(37,51,71,.035);
+    }
+
+    .asset {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .asset-icon {
+      width: 88px;
+      height: 88px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #eef5ff;
+      color: var(--primary);
+      margin-bottom: 17px;
+    }
+
+    .asset.muted .asset-icon {
+      background: #f1f4f8;
+      color: #87909c;
+    }
+
+    .asset strong {
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 560;
+      white-space: nowrap;
+    }
+
+    .asset span {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .section-title {
+      position: absolute;
+      left: 42px;
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 620;
+      letter-spacing: -.2px;
+    }
+
+    .collection-title { top: 744px; }
+    .playlist-title { top: 1068px; }
+
+    .collection-card {
+      position: absolute;
+      left: 33px;
+      top: 795px;
+      width: 787px;
+      height: 228px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      border: 1.5px solid #e2e6ec;
+      border-radius: 28px;
+      background: rgba(255,255,255,.91);
+      box-shadow: 0 12px 30px rgba(37,51,71,.03);
+    }
+
+    .collection-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .collection-item:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 14px;
+      height: 151px;
+      width: 1px;
+      background: #e4e7ec;
+    }
+
+    .square-icon {
+      width: 91px;
+      height: 91px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      margin-bottom: 16px;
+    }
+
+    .pink { color: var(--pink); background: #fff0f4; }
+    .purple { color: var(--purple); background: #f2efff; }
+    .mint { color: var(--mint); background: #eafaf6; }
+    .red { color: var(--red); background: #fff0f0; }
+
+    .collection-item strong {
+      font-size: 23px;
+      line-height: 1.2;
+      font-weight: 560;
+      white-space: nowrap;
+    }
+
+    .collection-item span {
+      margin-top: 10px;
+      color: #7b828d;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
+    .playlist-empty {
+      position: absolute;
+      left: 34px;
+      top: 1123px;
+      width: 785px;
+      height: 218px;
+      display: flex;
+      align-items: center;
+      padding: 0 44px;
+      border-radius: 28px;
+      border: 1.5px solid #e2e8f0;
+      background:
+        radial-gradient(circle at 12% 50%, rgba(22,119,242,.08), transparent 27%),
+        linear-gradient(105deg, #f8fbff, #fff);
+      overflow: hidden;
+    }
+
+    .empty-mark {
+      position: relative;
+      flex: 0 0 112px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      border-radius: 28px;
+      color: var(--primary);
+      background: linear-gradient(145deg, #e7f2ff, #f5f9ff);
+      box-shadow: inset 0 0 0 1px rgba(22,119,242,.08);
+    }
+
+    .empty-mark::after {
+      content: "";
+      position: absolute;
+      width: 27px;
+      height: 27px;
+      right: 7px;
+      bottom: 7px;
+      border-radius: 50%;
+      border: 6px solid #f4f9ff;
+      background: var(--primary);
+    }
+
+    .empty-copy { margin-left: 30px; }
+
+    .empty-copy strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 27px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    .empty-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .empty-login {
+      margin-left: auto;
+      height: 52px;
+      padding: 0 22px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 27px;
+      border: 1.5px solid #9ec9ff;
+      color: var(--primary-deep);
+      background: #f1f7ff;
+      font-size: 20px;
+      font-weight: 580;
+      white-space: nowrap;
+    }
+
+    .mini-player {
+      position: absolute;
+      left: 31px;
+      top: 1562px;
+      width: 791px;
+      height: 133px;
+      border: 1.5px solid #dfe3e9;
+      border-radius: 24px;
+      background: rgba(249,250,252,.96);
+      box-shadow: 0 10px 30px rgba(35,48,68,.06);
+      overflow: hidden;
+    }
+
+    .cover {
+      position: absolute;
+      left: 16px;
+      top: 14px;
+      width: 86px;
+      height: 86px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 66% 29%, #fff 0 8%, transparent 9%),
+        radial-gradient(circle at 61% 43%, #f8d8c8 0 17%, transparent 18%),
+        linear-gradient(145deg, transparent 0 42%, rgba(255,255,255,.72) 43% 49%, transparent 50%),
+        linear-gradient(145deg, #e6c4ae 0%, #9cc7ed 47%, #edf5ff 100%);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+    }
+
+    .track-copy {
+      position: absolute;
+      left: 126px;
+      top: 22px;
+      width: 340px;
+    }
+
+    .track-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      font-size: 21px;
+      line-height: 1.25;
+      font-weight: 560;
+    }
+
+    .quality {
+      padding: 2px 8px 3px;
+      border: 1.5px solid var(--primary);
+      border-radius: 8px;
+      color: var(--primary);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .artist {
+      margin-top: 10px;
+      color: #767b84;
+      font-size: 18px;
+    }
+
+    .player-controls {
+      position: absolute;
+      right: 22px;
+      top: 31px;
+      display: flex;
+      align-items: center;
+      gap: 29px;
+    }
+
+    .play {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--primary);
+      box-shadow: 0 7px 18px rgba(22,119,242,.19);
+    }
+
+    .progress {
+      position: absolute;
+      left: 66px;
+      right: 77px;
+      bottom: 17px;
+      height: 3px;
+      background: #dfe3e8;
+    }
+
+    .progress::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 38%;
+      height: 3px;
+      background: var(--primary);
+    }
+
+    .time {
+      position: absolute;
+      bottom: 8px;
+      color: #747b85;
+      font-size: 14px;
+    }
+    .time.start { left: 18px; }
+    .time.end { right: 22px; }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 853px;
+      height: 139px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1.5px solid #e1e5ea;
+      background: rgba(251,252,254,.98);
+    }
+
+    .nav-item {
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #71757c;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .nav-item.selected { color: var(--primary); font-weight: 560; }
+
+    .nav-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="page" aria-label="MoeKoe Air 我的页面未登录设计稿">
+    <section class="account-card" aria-label="未登录账号卡片">
+      <div class="identity">
+        <div class="avatar" aria-hidden="true">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="29" r="15" fill="white"/>
+            <path d="M15 67c3-16 13-24 25-24s22 8 25 24" fill="white"/>
+          </svg>
+        </div>
+        <div class="identity-copy">
+          <div class="identity-title">
+            <h1>登录 MoeKoe Air</h1>
+            <span class="login-chip">立即登录</span>
+          </div>
+          <p>同步收藏、歌单与账号权益</p>
+        </div>
+      </div>
+      <button class="settings" aria-label="设置">
+        <svg width="38" height="38" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.1 5h7.8l1.5 5.1 4.2 2.4 5.1-1.3 3.9 6.8-3.7 3.8v4.8l3.7 3.7-3.9 6.8-5.1-1.3-4.2 2.4-1.5 5.1h-7.8l-1.5-5.1-4.2-2.4-5.1 1.3-3.9-6.8 3.7-3.7v-4.8L5.4 18l3.9-6.8 5.1 1.3 4.2-2.4L20.1 5Z"/>
+          <circle cx="24" cy="24" r="7"/>
+        </svg>
+      </button>
+      <div class="benefits">
+        <div class="benefit checkin">
+          <svg width="36" height="36" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7" y="10" width="34" height="31" rx="5"/><path d="M15 6v8M33 6v8M8 19h32M17 29l5 5 10-12"/>
+          </svg>
+          签到 <small>登录后可用</small>
+        </div>
+        <div class="benefit vip">
+          <svg width="37" height="37" viewBox="0 0 48 48" fill="currentColor">
+            <path d="M7 17.5 15 23l9-14 9 14 8-5.5-4 22h-26l-4-22Zm12 12 5 5 8-10-3-2.5-5.5 7-2-2-2.5 2.5Z"/>
+          </svg>
+          领取 VIP <small>登录后可用</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-card" aria-label="音乐资产快捷入口">
+      <div class="asset muted">
+        <div class="asset-icon"><svg width="53" height="53" viewBox="0 0 56 56" fill="currentColor"><path d="M28 48S7 36 7 20.5C7 12 17.5 7 28 17.4 38.5 7 49 12 49 20.5 49 36 28 48 28 48Z"/></svg></div>
+        <strong>我喜欢</strong><span>登录后同步</span>
+      </div>
+      <div class="asset muted">
+        <div class="asset-icon"><svg width="53" height="53" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17v-9m0 0H2m9 0C3 16 4 32 15 42s29 7 35-6 0-28-13-32c-9-3-18 1-23 8"/><path d="M28 14v16l10 7"/></svg></div>
+        <strong>最近播放</strong><span>登录后同步</span>
+      </div>
+      <div class="asset">
+        <div class="asset-icon"><svg width="54" height="54" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7v34h27V19H27V7H16Z"/><path d="M27 8v12h16M11 48h31"/><circle cx="22" cy="34" r="5" fill="currentColor" stroke="none"/><path d="M27 34V23"/></svg></div>
+        <strong>本地音乐</strong><span>可使用</span>
+      </div>
+      <div class="asset muted">
+        <div class="asset-icon"><svg width="55" height="55" viewBox="0 0 56 56" fill="currentColor"><path d="M16 45h26c8 0 12-6 12-12 0-7-6-12-13-12C38 12 31 8 23 10c-7 1-12 7-12 14-6 1-9 5-9 10 0 6 5 11 14 11Z"/></svg></div>
+        <strong>我的云盘</strong><span>登录后同步</span>
+      </div>
+    </section>
+
+    <h2 class="section-title collection-title">收藏与关注</h2>
+    <section class="collection-card" aria-label="收藏与关注">
+      <div class="collection-item"><div class="square-icon pink"><svg width="53" height="53" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M28 47S7 35 7 20.5C7 12 18 8 28 18c10-10 21-6 21 2.5C49 35 28 47 28 47Z"/></svg></div><strong>收藏歌单</strong><span>登录后查看</span></div>
+      <div class="collection-item"><div class="square-icon purple"><svg width="51" height="51" viewBox="0 0 56 56" fill="currentColor"><circle cx="28" cy="28" r="21"/><circle cx="28" cy="28" r="8" fill="#f2efff"/><circle cx="28" cy="28" r="3"/></svg></div><strong>收藏专辑</strong><span>登录后查看</span></div>
+      <div class="collection-item"><div class="square-icon mint"><svg width="55" height="55" viewBox="0 0 56 56" fill="currentColor"><circle cx="23" cy="18" r="10"/><path d="M4 47c1-14 8-20 19-20s18 6 19 20H4Z"/><path d="m44 23 3.1 6.3L54 30.4l-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2 1.2-6.8-5-4.9 6.9-1.1L44 23Z" stroke="#eafaf6" stroke-width="3"/></svg></div><strong>关注歌手</strong><span>登录后查看</span></div>
+      <div class="collection-item"><div class="square-icon red"><svg width="57" height="57" viewBox="0 0 56 56" fill="currentColor"><circle cx="20" cy="19" r="9"/><circle cx="39" cy="21" r="8"/><path d="M3 47c1-13 7-19 17-19s16 6 17 19H3ZM32 47c0-8-2-13-7-17 4-3 8-4 13-2 9 2 14 8 15 19H32Z"/></svg></div><strong>关注好友</strong><span>登录后查看</span></div>
+    </section>
+
+    <h2 class="section-title playlist-title">创建的歌单</h2>
+    <section class="playlist-empty" aria-label="未登录歌单空状态">
+      <div class="empty-mark" aria-hidden="true">
+        <svg width="62" height="62" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10v40h31V24H32V10H18Z"/><path d="M32 10v14h17"/><circle cx="27" cy="42" r="6" fill="currentColor" stroke="none"/><path d="M33 42V29"/></svg>
+      </div>
+      <div class="empty-copy"><strong>登录后同步你的歌单</strong><span>收藏、创建与跨设备进度都在这里</span></div>
+      <div class="empty-login">去登录</div>
+    </section>
+
+    <section class="mini-player" aria-label="迷你播放器">
+      <div class="cover"></div>
+      <div class="track-copy"><div class="track-title">コレカラ（从今以后）<span class="quality">标准</span></div><div class="artist">Machico</div></div>
+      <div class="player-controls">
+        <svg width="31" height="31" viewBox="0 0 36 36" fill="currentColor"><path d="M6 7h4v22H6zM29 7v22L12 18 29 7Z"/></svg>
+        <div class="play"><svg width="27" height="27" viewBox="0 0 30 30" fill="currentColor"><rect x="7" y="5" width="5" height="20" rx="2"/><rect x="18" y="5" width="5" height="20" rx="2"/></svg></div>
+        <svg width="31" height="31" viewBox="0 0 36 36" fill="currentColor"><path d="M30 7h-4v22h4zM7 7v22l17-11L7 7Z"/></svg>
+        <svg width="33" height="33" viewBox="0 0 36 36" fill="currentColor"><circle cx="5" cy="9" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="5" cy="27" r="2.2"/><rect x="11" y="7.2" width="20" height="3.6" rx="1.8"/><rect x="11" y="16.2" width="20" height="3.6" rx="1.8"/><rect x="11" y="25.2" width="20" height="3.6" rx="1.8"/></svg>
+      </div>
+      <span class="time start">1:24</span><div class="progress"></div><span class="time end">4:28</span>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="一级导航">
+    <div class="nav-item"><div class="nav-icon"><svg width="34" height="34" viewBox="0 0 40 40" fill="currentColor"><path d="m5 18 15-13 15 13v16H24V23h-8v11H5V18Z"/></svg></div><span>首页</span></div>
+    <div class="nav-item"><div class="nav-icon"><svg width="34" height="34" viewBox="0 0 40 40" fill="currentColor"><circle cx="20" cy="20" r="17" opacity=".3"/><path d="m25 10-4 12-12 7 7-12 9-7Zm-7 10a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg></div><span>发现</span></div>
+    <div class="nav-item selected"><div class="nav-icon"><svg width="35" height="35" viewBox="0 0 40 40" fill="currentColor"><circle cx="20" cy="11" r="8"/><path d="M5 37c1-12 6-17 15-17s14 5 15 17H5Z"/></svg></div><span>我的</span></div>
+  </nav>
+</body>
+</html>
