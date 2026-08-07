@@ -51,7 +51,7 @@
 
 ## 当前剩余
 
-- 播放器歌词状态与既有 Repository 接线完成后，按 `08-player-queue.png` 校准队列覆盖层；设置页全量确认视觉另有已登记修正切片。
+- 播放器队列已形成独立 [`PLAYER_QUEUE_LAYOUT_SPEC.md`](../design/PLAYER_QUEUE_LAYOUT_SPEC.md) 视觉合同，按 `08-player-queue.png` 校准系统 `ModalBottomSheet` 后再接歌词 Repository；设置页全量确认视觉另有已登记修正切片。
 - 播放器动态色、歌词逐行交互、完整队列，以及歌单/专辑/歌手/排行榜详情和对应完整状态矩阵。
 - 发现页后续真实榜单、歌单与播放纵向切片复用首页已经稳定的数据与组件能力。
 - 队列拖拽、封面/歌词切换、AMOLED 内容页面与 `2.0×` 字体真机关键控制验收。
