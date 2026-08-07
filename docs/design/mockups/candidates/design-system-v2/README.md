@@ -17,3 +17,11 @@
 
 确认前不得覆盖现有正式图片；确认后在一个独立提交中替换正式基线、更新页面映射，
 再开始公共 Toolbar API 与页面消费者的 Compose 改造。
+
+## 2026-08-07 反馈修订
+
+- `09-settings-v2.png` 的 Toolbar 重新以 `10-user-profile.png` 为坐标母版：保留顶部安全区留白，不绘制系统状态栏示意图；使用共享无横杆 Chevron、同一居中标题基线和内容起点。
+- `16-actions-inputs-v2.png` 的输入图标改以当前登录 Compose 确认实现为母版：Phone、VerifiedUser、AccountCircle、Lock 使用浅蓝圆角方形前导容器；密码可见性等尾部操作保持无可见底板和至少 `48dp` 语义触控区。
+- `18-mobile-states-overlays-v2.png` 的 Dialog 改以登录风险确认与短信验证为母版：系统居中、白色 Surface、Bold 标题、`304/320dp` 两类宽度、`12dp` 双按钮间距、Tonal 取消和 Filled 确认。
+
+本轮只修订候选图与规范文本，没有晋级正式基线，也没有修改 Compose。图板中的自动生成说明文字仍只作视觉辅助；组件数值与行为以 `DESIGN_SYSTEM.md`、`UI_COMPONENTS.md` 和已确认登录实现为准。

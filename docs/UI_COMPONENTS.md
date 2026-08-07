@@ -7,6 +7,8 @@
 - [`11-dialog-components.png`](design/mockups/11-dialog-components.png)
 - [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png)
 - [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)（待确认；数值与行为仍以本文为准）
+- [`19d-password-risk-dialog.png`](design/mockups/candidates/login-v2/19d-password-risk-dialog.png)（已确认的普通确认型视觉母版）
+- [`21a-risk-sms-default.png`](design/mockups/candidates/login-v2/21a-risk-sms-default.png)（已确认的结构化输入型视觉母版）
 
 ## 反馈方式选择
 
@@ -48,6 +50,7 @@
 
 ### 通用尺寸与外观
 
+- 全局 Dialog 优先复用登录页已经完成并通过符合度复核的 `MoeDialog` / `MoeAlertDialog` 外观；`11` 与 `18` 只补充类型和状态总览，不得覆盖登录母版的白色 Surface、标题字重、操作区和系统居中行为。
 - 登录参考画布宽度为 `390dp` 时，普通确认型视觉宽度为 `304dp`，六位验证码等结构化输入型为 `320dp`，单侧边距分别约为 `43dp` 与 `35dp`。它们对应页面设计坐标，Compact 窗口必须随登录页统一比例映射，不能作为与画布无关的固定运行尺寸。大字体下允许内容增高和换行，不固定高度；系统字体倍率属于可访问性适配，不改变基准 `1.0×` 设计比例。
 - 登录 Dialog 的具体坐标、缩放、遮罩与符合度误差遵循 [`design/LOGIN_LAYOUT_SPEC.md`](design/LOGIN_LAYOUT_SPEC.md)。其他页面若已有确认稿，以各自页面适配契约为准，不能直接套用登录画布比例。
 - 默认 Dialog 必须相对完整可用视口水平、垂直居中；不得以页面内容区、底部表单、键盘上方剩余区域或触发控件作为视觉居中基准。只有 Bottom Sheet 可以贴底呈现。
