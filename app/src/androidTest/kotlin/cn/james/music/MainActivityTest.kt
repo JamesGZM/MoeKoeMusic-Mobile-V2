@@ -2,10 +2,13 @@ package cn.james.music
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -18,6 +21,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -91,6 +97,19 @@ class MainActivityTest {
                 composeRule.onAllNodesWithText("Blue Bloom").fetchSemanticsNodes().isNotEmpty()
             }
         }
+
+        composeRule
+            .onNode(
+                hasClickAction() and hasAnyDescendant(hasText("标准")),
+                useUnmergedTree = true,
+            ).performSemanticsAction(SemanticsActions.OnClick)
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("正在播放").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("正在播放").assertIsDisplayed()
+        composeRule.onRoot().performTouchInput { swipeLeft() }
+        composeRule.onNodeWithText("正在加载歌词").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("歌词显示设置").assertIsDisplayed()
     }
 
     @Test

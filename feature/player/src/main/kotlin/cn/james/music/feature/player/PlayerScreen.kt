@@ -2,6 +2,7 @@ package cn.james.music.feature.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,7 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,18 +31,24 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,6 +77,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,6 +106,40 @@ data class PlayerProgressUiState(
     val durationMs: Long = 0,
 )
 
+enum class PlayerPage {
+    Cover,
+    Lyrics,
+}
+
+data class PlayerLyricLineUi(
+    val original: String,
+    val secondary: String? = null,
+    val highlightedCharacterCount: Int = 0,
+    val startTimeMs: Long = 0,
+)
+
+enum class PlayerLyricsTextSize {
+    Standard,
+    Large,
+    Largest,
+}
+
+sealed interface PlayerLyricsUiState {
+    data object Loading : PlayerLyricsUiState
+
+    data object Empty : PlayerLyricsUiState
+
+    data object Offline : PlayerLyricsUiState
+
+    data object Error : PlayerLyricsUiState
+
+    data class Content(
+        val lines: List<PlayerLyricLineUi>,
+        val activeLineIndex: Int,
+        val textSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
+    ) : PlayerLyricsUiState
+}
+
 @Composable
 fun PlayerScreen(
     state: PlayerUiState,
@@ -108,6 +156,11 @@ fun PlayerScreen(
     onDownload: () -> Unit = {},
     onAddToPlaylist: () -> Unit = {},
     onShare: () -> Unit = {},
+    lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    initialPage: PlayerPage = PlayerPage.Cover,
+    onLyricsSettings: () -> Unit = {},
+    onRetryLyrics: () -> Unit = {},
+    onLyricClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
     artworkContent: (@Composable (PlaybackItem) -> Unit)? = null,
 ) {
@@ -115,11 +168,9 @@ fun PlayerScreen(
         val item = state.item
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             Box(
-                modifier =
-                    modifier
-                        .fillMaxSize()
-                        .background(playerBackground()),
+                modifier = modifier.fillMaxSize(),
             ) {
+                PlayerBackdrop()
                 if (item == null) {
                     PlayerEmptyState(onBack = onBack)
                 } else {
@@ -139,6 +190,11 @@ fun PlayerScreen(
                         onDownload = onDownload,
                         onAddToPlaylist = onAddToPlaylist,
                         onShare = onShare,
+                        lyricsState = lyricsState,
+                        initialPage = initialPage,
+                        onLyricsSettings = onLyricsSettings,
+                        onRetryLyrics = onRetryLyrics,
+                        onLyricClick = onLyricClick,
                         artworkContent = artworkContent,
                     )
                 }
@@ -164,25 +220,92 @@ private fun PlayerContent(
     onDownload: () -> Unit,
     onAddToPlaylist: () -> Unit,
     onShare: () -> Unit,
+    lyricsState: PlayerLyricsUiState,
+    initialPage: PlayerPage,
+    onLyricsSettings: () -> Unit,
+    onRetryLyrics: () -> Unit,
+    onLyricClick: (Long) -> Unit,
     artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(25.dp)
+    val pagerState = rememberPagerState(initialPage = initialPage.ordinal, pageCount = { PlayerPage.entries.size })
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(top = topInset)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .verticalScroll(rememberScrollState()),
+                .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         PlayerTopBar(onBack = onBack, onMore = onMore)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            verticalAlignment = Alignment.Top,
+        ) { page ->
+            when (PlayerPage.entries[page]) {
+                PlayerPage.Cover ->
+                    PlayerCoverPage(
+                        state = state,
+                        progress = progress,
+                        item = item,
+                        activePage = page,
+                        onTogglePlayback = onTogglePlayback,
+                        onSeek = onSeek,
+                        onPrevious = onPrevious,
+                        onNext = onNext,
+                        onChangeMode = onChangeMode,
+                        onOpenQueue = onOpenQueue,
+                        onFavorite = onFavorite,
+                        onDownload = onDownload,
+                        onAddToPlaylist = onAddToPlaylist,
+                        onShare = onShare,
+                        artworkContent = artworkContent,
+                    )
+
+                PlayerPage.Lyrics ->
+                    PlayerLyricsPage(
+                        state = state,
+                        progress = progress,
+                        item = item,
+                        lyricsState = lyricsState,
+                        activePage = page,
+                        onTogglePlayback = onTogglePlayback,
+                        onSeek = onSeek,
+                        onPrevious = onPrevious,
+                        onNext = onNext,
+                        onChangeMode = onChangeMode,
+                        onFavorite = onFavorite,
+                        onLyricsSettings = onLyricsSettings,
+                        onRetryLyrics = onRetryLyrics,
+                        onLyricClick = onLyricClick,
+                    )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerCoverPage(
+    state: PlayerUiState,
+    progress: State<PlayerProgressUiState>,
+    item: PlaybackItem,
+    activePage: Int,
+    onTogglePlayback: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onChangeMode: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onFavorite: () -> Unit,
+    onDownload: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onShare: () -> Unit,
+    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
+) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Spacer(Modifier.height(20.dp))
-        PlayerArtwork(
-            item = item,
-            artworkContent = artworkContent,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        PlayerPageIndicator()
+        PlayerArtwork(item = item, artworkContent = artworkContent, modifier = Modifier.fillMaxWidth())
+        PlayerPageIndicator(activePage = activePage)
         Spacer(Modifier.height(15.dp))
         PlayerControls(
             state = state,
@@ -198,10 +321,283 @@ private fun PlayerContent(
             onDownload = onDownload,
             onAddToPlaylist = onAddToPlaylist,
             onShare = onShare,
+            showSecondaryActions = true,
+            compactLayout = false,
         )
         Spacer(Modifier.height(12.dp))
     }
 }
+
+@Composable
+private fun PlayerLyricsPage(
+    state: PlayerUiState,
+    progress: State<PlayerProgressUiState>,
+    item: PlaybackItem,
+    lyricsState: PlayerLyricsUiState,
+    activePage: Int,
+    onTogglePlayback: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onChangeMode: () -> Unit,
+    onFavorite: () -> Unit,
+    onLyricsSettings: () -> Unit,
+    onRetryLyrics: () -> Unit,
+    onLyricClick: (Long) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LyricsViewport(
+                state = lyricsState,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 30.dp),
+                onRetry = onRetryLyrics,
+                onLyricClick = onLyricClick,
+            )
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 12.dp, end = 12.dp)
+                        .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                        .clickable(onClick = onLyricsSettings),
+                contentAlignment = Alignment.Center,
+            ) {
+                Surface(
+                    modifier = Modifier.size(35.dp),
+                    shape = CircleShape,
+                    color = PlayerSecondaryContainer.copy(alpha = 0.9f),
+                    contentColor = PlayerAccent,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = stringResource(R.string.player_lyrics_settings),
+                            modifier = Modifier.size(19.dp),
+                    )
+                    }
+                }
+            }
+        }
+        PlayerPageIndicator(activePage = activePage)
+        PlayerControls(
+            state = state,
+            progress = progress,
+            item = item,
+            onTogglePlayback = onTogglePlayback,
+            onSeek = onSeek,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onChangeMode = onChangeMode,
+            onOpenQueue = {},
+            onFavorite = onFavorite,
+            onDownload = {},
+            onAddToPlaylist = {},
+            onShare = {},
+            showSecondaryActions = false,
+            compactLayout = true,
+        )
+        Spacer(Modifier.height(48.dp))
+    }
+}
+
+@Composable
+private fun LyricsViewport(
+    state: PlayerLyricsUiState,
+    onRetry: () -> Unit,
+    onLyricClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        when (state) {
+            PlayerLyricsUiState.Loading -> LyricsLoadingState()
+            PlayerLyricsUiState.Empty ->
+                LyricsMessageState(
+                    icon = Icons.Default.MusicOff,
+                    title = stringResource(R.string.player_lyrics_empty_title),
+                    message = stringResource(R.string.player_lyrics_empty_message),
+                    onRetry = onRetry,
+                )
+
+            PlayerLyricsUiState.Offline ->
+                LyricsMessageState(
+                    icon = Icons.Default.CloudOff,
+                    title = stringResource(R.string.player_lyrics_offline_title),
+                    message = stringResource(R.string.player_lyrics_offline_message),
+                    onRetry = onRetry,
+                )
+
+            PlayerLyricsUiState.Error ->
+                LyricsMessageState(
+                    icon = Icons.Default.ErrorOutline,
+                    title = stringResource(R.string.player_lyrics_error_title),
+                    message = stringResource(R.string.player_lyrics_error_message),
+                    onRetry = onRetry,
+                )
+
+            is PlayerLyricsUiState.Content -> LyricsContent(state, onLyricClick)
+        }
+    }
+}
+
+@Composable
+private fun LyricsLoadingState() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(32.dp),
+            color = PlayerAccent,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+            strokeWidth = 3.dp,
+        )
+        Text(
+            text = stringResource(R.string.player_lyrics_loading_title),
+            modifier = Modifier.padding(top = 20.dp),
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(R.string.player_lyrics_loading_message),
+            modifier = Modifier.padding(top = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun LyricsMessageState(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            modifier = Modifier.size(52.dp),
+            shape = CircleShape,
+            color = PlayerSecondaryContainer.copy(alpha = 0.92f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, PlayerSecondaryContent.copy(alpha = 0.18f)),
+            contentColor = PlayerSecondaryContent,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp))
+            }
+        }
+        Text(
+            text = title,
+            modifier = Modifier.padding(top = 16.dp),
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = message,
+            modifier = Modifier.padding(top = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = onRetry,
+            modifier = Modifier.padding(top = 18.dp).height(48.dp).widthIn(min = 112.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = PlayerAccent,
+                    contentColor = Color(0xFF141329),
+                ),
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(R.string.player_lyrics_retry), fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun LyricsContent(
+    state: PlayerLyricsUiState.Content,
+    onLyricClick: (Long) -> Unit,
+) {
+    val textSizes = lyricsTextSizes(state.textSize)
+    Column(
+        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        state.lines.forEachIndexed { index, line ->
+            val isActive = index == state.activeLineIndex
+            val original =
+                if (isActive && line.highlightedCharacterCount > 0) {
+                    val split = (line.original.length - line.highlightedCharacterCount).coerceIn(0, line.original.length)
+                    buildAnnotatedString {
+                        append(line.original.substring(0, split))
+                        withStyle(SpanStyle(color = PlayerAccent)) {
+                            append(line.original.substring(split))
+                        }
+                    }
+                } else {
+                    buildAnnotatedString { append(line.original) }
+                }
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (isActive) textSizes.activeBottomPadding else textSizes.bottomPadding)
+                        .clickable { onLyricClick(line.startTimeMs) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = original,
+                    color =
+                        if (isActive) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.48f)
+                        },
+                    fontSize = if (isActive) textSizes.activeFontSize else textSizes.fontSize,
+                    lineHeight = if (isActive) textSizes.activeLineHeight else textSizes.lineHeight,
+                    fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                )
+                line.secondary?.let { secondary ->
+                    Text(
+                        text = secondary,
+                        modifier = Modifier.padding(top = textSizes.secondaryTopPadding),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isActive) 0.78f else 0.42f),
+                        fontSize = textSizes.secondaryFontSize,
+                        lineHeight = textSizes.secondaryLineHeight,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class LyricsTextSizes(
+    val fontSize: androidx.compose.ui.unit.TextUnit,
+    val lineHeight: androidx.compose.ui.unit.TextUnit,
+    val activeFontSize: androidx.compose.ui.unit.TextUnit,
+    val activeLineHeight: androidx.compose.ui.unit.TextUnit,
+    val secondaryFontSize: androidx.compose.ui.unit.TextUnit,
+    val secondaryLineHeight: androidx.compose.ui.unit.TextUnit,
+    val secondaryTopPadding: androidx.compose.ui.unit.Dp,
+    val bottomPadding: androidx.compose.ui.unit.Dp,
+    val activeBottomPadding: androidx.compose.ui.unit.Dp,
+)
+
+private fun lyricsTextSizes(size: PlayerLyricsTextSize): LyricsTextSizes =
+    when (size) {
+        PlayerLyricsTextSize.Standard -> LyricsTextSizes(15.sp, 22.sp, 20.sp, 27.sp, 12.sp, 18.sp, 4.dp, 20.dp, 24.dp)
+        PlayerLyricsTextSize.Large -> LyricsTextSizes(19.sp, 27.sp, 25.sp, 32.sp, 15.sp, 22.sp, 5.dp, 26.dp, 29.dp)
+        PlayerLyricsTextSize.Largest -> LyricsTextSizes(22.sp, 30.sp, 28.sp, 37.sp, 18.sp, 26.sp, 6.dp, 31.dp, 34.dp)
+    }
 
 @Composable
 private fun PlayerTopBar(
@@ -223,7 +619,8 @@ private fun PlayerTopBar(
             text = stringResource(R.string.player_title),
             modifier = Modifier.weight(1f),
             color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleSmall,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
@@ -234,19 +631,23 @@ private fun PlayerTopBar(
 }
 
 @Composable
-private fun PlayerPageIndicator() {
+private fun PlayerPageIndicator(activePage: Int) {
     Row(
         modifier = Modifier.fillMaxWidth().height(36.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(8.dp).background(PlayerAccent, CircleShape))
-        Spacer(Modifier.size(8.dp))
-        Box(
-            Modifier
-                .size(7.dp)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f), CircleShape),
-        )
+        repeat(PlayerPage.entries.size) { page ->
+            if (page > 0) Spacer(Modifier.size(8.dp))
+            Box(
+                Modifier
+                    .size(if (page == activePage) 8.dp else 7.dp)
+                    .background(
+                        if (page == activePage) PlayerAccent else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f),
+                        CircleShape,
+                    ),
+            )
+        }
     }
 }
 
@@ -309,14 +710,21 @@ private fun PlayerControls(
     onDownload: () -> Unit,
     onAddToPlaylist: () -> Unit,
     onShare: () -> Unit,
+    showSecondaryActions: Boolean,
+    compactLayout: Boolean,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = MoeKoeTheme.spacing.large)) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (compactLayout) 26.dp else MoeKoeTheme.spacing.large),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
-                    fontSize = 20.sp,
-                    lineHeight = 25.sp,
+                    fontSize = if (compactLayout) 18.sp else 20.sp,
+                    lineHeight = if (compactLayout) 22.sp else 25.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -324,12 +732,12 @@ private fun PlayerControls(
                 Text(
                     text = item.artist,
                     modifier = Modifier.padding(top = 3.dp),
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = if (compactLayout) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                PlayerQualityBadge()
+                PlayerQualityBadge(compact = compactLayout)
             }
             IconButton(onClick = onFavorite, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
                 Icon(
@@ -344,9 +752,10 @@ private fun PlayerControls(
             itemId = item.id,
             enabled = state.controlsEnabled,
             onSeek = onSeek,
+            compact = compactLayout,
         )
         Row(
-            modifier = Modifier.fillMaxWidth().height(88.dp),
+            modifier = Modifier.fillMaxWidth().height(if (compactLayout) 76.dp else 88.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -355,7 +764,7 @@ private fun PlayerControls(
             Surface(
                 onClick = onTogglePlayback,
                 enabled = state.controlsEnabled,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(if (compactLayout) 68.dp else 72.dp),
                 shape = CircleShape,
                 color =
                     if (state.controlsEnabled) {
@@ -389,19 +798,21 @@ private fun PlayerControls(
             PlayerIconButton(Icons.Default.SkipNext, R.string.player_next, state.controlsEnabled, onNext)
             PlayerModeButton(state.mode, state.controlsEnabled, onChangeMode)
         }
-        PlayerSecondaryActions(
-            onDownload = onDownload,
-            onAddToPlaylist = onAddToPlaylist,
-            onShare = onShare,
-            onOpenQueue = onOpenQueue,
-        )
+        if (showSecondaryActions) {
+            PlayerSecondaryActions(
+                onDownload = onDownload,
+                onAddToPlaylist = onAddToPlaylist,
+                onShare = onShare,
+                onOpenQueue = onOpenQueue,
+            )
+        }
     }
 }
 
 @Composable
-private fun PlayerQualityBadge() {
+private fun PlayerQualityBadge(compact: Boolean) {
     Surface(
-        modifier = Modifier.padding(top = 4.dp),
+        modifier = Modifier.padding(top = if (compact) 2.dp else 4.dp),
         shape = RoundedCornerShape(10.dp),
         color = PlayerSecondaryContainer,
         contentColor = PlayerSecondaryContent,
@@ -460,6 +871,7 @@ private fun PlayerProgress(
     itemId: String,
     enabled: Boolean,
     onSeek: (Long) -> Unit,
+    compact: Boolean,
 ) {
     var draggedPosition by remember(itemId) { mutableStateOf<Long?>(null) }
     val current = progress.value
@@ -476,7 +888,7 @@ private fun PlayerProgress(
         },
         valueRange = 0f..duration.coerceAtLeast(1).toFloat(),
         enabled = enabled && duration > 0,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().then(if (compact) Modifier.height(34.dp) else Modifier),
         thumb = {
             Box(
                 Modifier
@@ -607,18 +1019,50 @@ private fun PlayerEmptyState(onBack: () -> Unit) {
 }
 
 @Composable
-private fun playerBackground(): Brush {
-    return Brush.radialGradient(
-        colorStops =
-            arrayOf(
-                0f to Color(0xFF5A294F),
-                0.38f to Color(0xFF24213A),
-                0.72f to Color(0xFF111A2D),
-                1f to Color(0xFF07101F),
-            ),
-        center = Offset(520f, 210f),
-        radius = 1_150f,
-    )
+private fun PlayerBackdrop() {
+    Canvas(Modifier.fillMaxSize()) {
+        drawRect(Color(0xFF07101F))
+        drawRect(
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(Color(0x8C6A2C5C), Color.Transparent),
+                    center = Offset(size.width * 0.48f, size.height * 0.06f),
+                    radius = size.height * 0.31f,
+                ),
+        )
+        drawRect(
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(Color(0xC06A2058), Color.Transparent),
+                    center = Offset(-size.width * 0.08f, size.height * 0.34f),
+                    radius = size.height * 0.42f,
+                ),
+        )
+        drawRect(
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(Color(0x7A173B69), Color.Transparent),
+                    center = Offset(size.width * 1.04f, size.height * 0.22f),
+                    radius = size.height * 0.42f,
+                ),
+        )
+        drawRect(
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(Color(0x66552A58), Color.Transparent),
+                    center = Offset(size.width * 0.82f, size.height * 0.52f),
+                    radius = size.height * 0.34f,
+                ),
+        )
+        drawRect(
+            brush =
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color(0x26030A16), Color(0xB307101F)),
+                    startY = size.height * 0.36f,
+                    endY = size.height,
+                ),
+        )
+    }
 }
 
 internal fun formatPlayerTime(millis: Long): String {
