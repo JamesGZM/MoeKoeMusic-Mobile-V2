@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,6 +40,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -234,44 +238,62 @@ fun MoeMiniPlayer(
     artist: String,
     isPlaying: Boolean,
     progress: Float,
+    positionLabel: String,
+    durationLabel: String,
+    badgeLabel: String?,
     playContentDescription: String,
     pauseContentDescription: String,
+    previousContentDescription: String,
+    nextContentDescription: String,
     queueContentDescription: String,
     onTogglePlayback: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
     onOpenQueue: () -> Unit,
     artwork: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     onOpenPlayer: (() -> Unit)? = null,
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column {
+        Column(modifier = Modifier.padding(horizontal = MoeKoeTheme.spacing.small, vertical = MoeKoeTheme.spacing.space4)) {
             Row(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .heightIn(min = MoeKoeTheme.dimensions.miniPlayerHeight)
+                        .heightIn(min = 56.dp)
                         .then(
                             if (onOpenPlayer == null) {
                                 Modifier
                             } else {
                                 Modifier.clickable(onClick = onOpenPlayer)
                             },
-                        ).padding(horizontal = MoeKoeTheme.spacing.compact, vertical = MoeKoeTheme.spacing.small),
+                        ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                MoeArtwork(size = 52.dp, content = artwork)
-                Column(modifier = Modifier.weight(1f).padding(horizontal = MoeKoeTheme.spacing.compact)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                MoeArtwork(size = 48.dp, content = artwork)
+                Column(modifier = Modifier.weight(1f).padding(start = MoeKoeTheme.spacing.compact, end = MoeKoeTheme.spacing.small)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = title,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        badgeLabel?.let { label ->
+                            MoeMediaBadge(
+                                text = label,
+                                modifier = Modifier.padding(start = MoeKoeTheme.spacing.space4),
+                            )
+                        }
+                    }
                     Text(
                         text = artist,
                         style = MaterialTheme.typography.bodyMedium,
@@ -280,36 +302,89 @@ fun MoeMiniPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                MiniPlayerIconButton(
+                    icon = Icons.Default.SkipPrevious,
+                    contentDescription = previousContentDescription,
+                    onClick = onPrevious,
+                )
                 IconButton(
                     onClick = onTogglePlayback,
-                    modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
+                    modifier =
+                        Modifier
+                            .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                            .semantics {
+                                contentDescription = if (isPlaying) pauseContentDescription else playContentDescription
+                            },
                 ) {
-                    Icon(
-                        imageVector = if (isPlaying) MoePauseIcon else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) pauseContentDescription else playContentDescription,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(MoeKoeTheme.dimensions.iconLarge),
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isPlaying) MoePauseIcon else Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
+                            )
+                        }
+                    }
                 }
-                IconButton(
+                MiniPlayerIconButton(
+                    icon = Icons.Default.SkipNext,
+                    contentDescription = nextContentDescription,
+                    onClick = onNext,
+                )
+                MiniPlayerIconButton(
+                    icon = Icons.AutoMirrored.Filled.QueueMusic,
+                    contentDescription = queueContentDescription,
                     onClick = onOpenQueue,
-                    modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = queueContentDescription,
-                        modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
-                    )
-                }
+                )
             }
-            LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().height(2.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MiniPlayerTime(positionLabel)
+                LinearProgressIndicator(
+                    progress = { progress.coerceIn(0f, 1f) },
+                    modifier = Modifier.weight(1f).padding(horizontal = MoeKoeTheme.spacing.small).height(2.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                )
+                MiniPlayerTime(durationLabel)
+            }
         }
     }
+}
+
+@Composable
+private fun MiniPlayerIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier =
+            Modifier
+                .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                .semantics { this.contentDescription = contentDescription },
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
+        )
+    }
+}
+
+@Composable
+private fun MiniPlayerTime(label: String) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+    )
 }
 
 @Composable

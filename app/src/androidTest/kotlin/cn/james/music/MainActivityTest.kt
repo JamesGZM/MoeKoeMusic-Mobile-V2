@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -48,6 +49,42 @@ class MainActivityTest {
         composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("打开播放工程实验台"))
         composeRule.onNodeWithText("打开播放工程实验台").performClick()
         composeRule.onNodeWithText("MoeKoe Music").assertIsDisplayed()
+    }
+
+    @Test
+    fun miniPlayerExposesConfirmedControlsAndSkipsTracks() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForMyContent()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("打开播放工程实验台"))
+        composeRule.onNodeWithText("打开播放工程实验台").performClick()
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("播放内核工程实验台"))
+        val loadedDemo = composeRule.onAllNodesWithTag("load-demo-queue").fetchSemanticsNodes().isNotEmpty()
+        if (loadedDemo) {
+            composeRule.onNodeWithTag("load-demo-queue").performClick()
+            composeRule.waitUntil(5_000) {
+                composeRule.onAllNodesWithText("Skyline Signal").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+
+        composeRule.runOnUiThread {
+            composeRule.activity.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeRule.onNodeWithContentDescription("上一首").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("播放").assertIsDisplayed()
+        listOf("上一首", "播放", "下一首", "播放队列").forEach { description ->
+            val bounds = composeRule.onNodeWithContentDescription(description).getUnclippedBoundsInRoot()
+            assertTrue("$description 的触控区域宽度不能小于 48dp", bounds.right.value - bounds.left.value >= 48f)
+            assertTrue("$description 的触控区域高度不能小于 48dp", bounds.bottom.value - bounds.top.value >= 48f)
+        }
+        composeRule.onNodeWithContentDescription("下一首").assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription("播放队列").assertIsDisplayed()
+        if (loadedDemo) {
+            composeRule.waitUntil(5_000) {
+                composeRule.onAllNodesWithText("Blue Bloom").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
     }
 
     @Test

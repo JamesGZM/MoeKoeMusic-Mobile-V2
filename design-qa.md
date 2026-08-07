@@ -36,6 +36,26 @@
 ## Follow-up polish
 
 - P3: Material Icons 与源图中的定制线性图标存在轻微笔画差异；当前属于同一图标语义和一致的 Material 图标族，不阻塞本页面交付。
-- P3: MiniPlayer 与底部导航的源图符合度由下一“通用播放组件”切片处理。
+
+final result: passed
+
+---
+
+# 通用 MiniPlayer 设计 QA
+
+- Source visual truth: `docs/design/mockups/17-music-content-components.png`，并以 `01-home-material3-v2.png`、`04-my-v4.png` 的底部应用壳复核。
+- Implementation screenshots: `MoeMiniPlayerLightScreenshot`、`MoeMiniPlayerDarkScreenshot`、`MoeMiniPlayerLargeTextScreenshot`。
+- Viewport: 聚焦组件 Preview 使用 `390 × 104dp`，大字体使用 `390 × 120dp / 1.5×`；组件在同宽内容区按 Compose 逻辑尺寸比较，不直接把图板像素当作 dp。
+
+## Comparison evidence
+
+确认稿与三张聚焦截图已在同一比较输入中打开。实现保留封面、标题/歌手/质量徽标、上一首、主色圆形播放暂停、下一首、队列和带起止时间的独立进度区；浅色、深色与大字体结构一致，关键控制没有消失或重叠。ELE-AL00 / API 29 真机测试进一步断言四项操作的语义区域均不小于 `48dp`，并完成下一首切换。
+
+## Findings
+
+没有剩余 P0 / P1 / P2。
+
+- P3: Material `QueueMusic`、`SkipPrevious`、`SkipNext` 与图板生成图标存在轻微笔画差异，但语义、视觉中心和方向一致。
+- P3: `1.5×` 时长曲名按单行省略以固定四项播放控制；这是组件板“关键控制不消失”约束下的可访问性取舍。
 
 final result: passed

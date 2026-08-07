@@ -118,7 +118,11 @@ fun MoeKoeApp(
                             } else {
                                 0f
                             },
+                        positionMs = currentProgress.positionMs,
+                        durationMs = currentProgress.durationMs,
                         onToggle = viewModel::togglePlayback,
+                        onPrevious = viewModel::skipPrevious,
+                        onNext = viewModel::skipNext,
                         onQueue = { queueVisible = true },
                         onOpenPlayer = {
                             navController.navigate(PlayerDestination) { launchSingleTop = true }

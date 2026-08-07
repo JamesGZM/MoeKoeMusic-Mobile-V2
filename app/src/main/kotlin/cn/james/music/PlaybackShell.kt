@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeMiniPlayer
@@ -29,7 +30,11 @@ internal fun MoeKoeMiniPlayer(
     item: PlaybackItem,
     isPlaying: Boolean,
     progress: Float,
+    positionMs: Long,
+    durationMs: Long,
     onToggle: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
     onQueue: () -> Unit,
     onOpenPlayer: () -> Unit,
 ) {
@@ -38,14 +43,28 @@ internal fun MoeKoeMiniPlayer(
         artist = item.artist,
         isPlaying = isPlaying,
         progress = progress,
-        playContentDescription = "播放",
-        pauseContentDescription = "暂停",
-        queueContentDescription = "播放队列",
+        positionLabel = formatMiniPlayerTime(positionMs),
+        durationLabel = formatMiniPlayerTime(durationMs),
+        badgeLabel = stringResource(R.string.mini_player_quality_standard),
+        playContentDescription = stringResource(R.string.mini_player_play),
+        pauseContentDescription = stringResource(R.string.mini_player_pause),
+        previousContentDescription = stringResource(R.string.mini_player_previous),
+        nextContentDescription = stringResource(R.string.mini_player_next),
+        queueContentDescription = stringResource(R.string.mini_player_queue),
         onTogglePlayback = onToggle,
+        onPrevious = onPrevious,
+        onNext = onNext,
         onOpenQueue = onQueue,
         onOpenPlayer = onOpenPlayer,
         artwork = { PlaybackArtworkImage(item) },
     )
+}
+
+internal fun formatMiniPlayerTime(millis: Long): String {
+    val totalSeconds = millis.coerceAtLeast(0) / 1_000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

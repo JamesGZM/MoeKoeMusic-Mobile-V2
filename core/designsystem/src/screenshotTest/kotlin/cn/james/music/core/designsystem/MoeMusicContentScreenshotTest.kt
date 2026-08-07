@@ -44,6 +44,27 @@ fun MoeMusicContentLargeTextScreenshot() {
     MusicContentPreview(themeMode = ThemeMode.Light)
 }
 
+@PreviewTest
+@Preview(name = "MiniPlayerLight", widthDp = 390, heightDp = 104)
+@Composable
+fun MoeMiniPlayerLightScreenshot() {
+    MiniPlayerPreview(themeMode = ThemeMode.Light)
+}
+
+@PreviewTest
+@Preview(name = "MiniPlayerDark", widthDp = 390, heightDp = 104)
+@Composable
+fun MoeMiniPlayerDarkScreenshot() {
+    MiniPlayerPreview(themeMode = ThemeMode.Dark)
+}
+
+@PreviewTest
+@Preview(name = "MiniPlayerLargeText", widthDp = 390, heightDp = 120, fontScale = 1.5f)
+@Composable
+fun MoeMiniPlayerLargeTextScreenshot() {
+    MiniPlayerPreview(themeMode = ThemeMode.Light)
+}
+
 @Composable
 private fun MusicContentPreview(themeMode: ThemeMode) {
     MoeKoeTheme(themeMode = themeMode) {
@@ -93,10 +114,17 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
                 artist = "Machico",
                 isPlaying = true,
                 progress = 0.38f,
+                positionLabel = "1:24",
+                durationLabel = "4:28",
+                badgeLabel = "标准",
                 playContentDescription = "播放",
                 pauseContentDescription = "暂停",
+                previousContentDescription = "上一首",
+                nextContentDescription = "下一首",
                 queueContentDescription = "播放队列",
                 onTogglePlayback = {},
+                onPrevious = {},
+                onNext = {},
                 onOpenQueue = {},
                 artwork = artwork(0),
             )
@@ -113,6 +141,41 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
             )
         }
     }
+}
+
+@Composable
+private fun MiniPlayerPreview(themeMode: ThemeMode) {
+    MoeKoeTheme(themeMode = themeMode) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            PreviewMiniPlayer()
+        }
+    }
+}
+
+@Composable
+private fun PreviewMiniPlayer() {
+    MoeMiniPlayer(
+        title = "コレカラ（从今以后）",
+        artist = "Machico",
+        isPlaying = true,
+        progress = 0.38f,
+        positionLabel = "1:24",
+        durationLabel = "4:28",
+        badgeLabel = "标准",
+        playContentDescription = "播放",
+        pauseContentDescription = "暂停",
+        previousContentDescription = "上一首",
+        nextContentDescription = "下一首",
+        queueContentDescription = "播放队列",
+        onTogglePlayback = {},
+        onPrevious = {},
+        onNext = {},
+        onOpenQueue = {},
+        artwork = artwork(0),
+    )
 }
 
 private fun artwork(index: Int): @Composable BoxScope.() -> Unit = {
