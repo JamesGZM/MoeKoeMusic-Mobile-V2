@@ -79,7 +79,7 @@ class MainActivityTest {
     fun loginIsAnIndependentPageReachedFromMy() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForAnonymousMyState()
-        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
         composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
@@ -109,10 +109,20 @@ class MainActivityTest {
     }
 
     @Test
+    fun anonymousAccountAssetRequiresLogin() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForAnonymousMyState()
+        composeRule.onNodeWithText("我喜欢").assertIsDisplayed().performClick()
+
+        composeRule.onNodeWithText("手机号登录").assertIsDisplayed()
+        composeRule.onNodeWithText("登录并继续").assertIsDisplayed()
+    }
+
+    @Test
     fun passwordLoginIsReachableWithoutSubmittingCredentials() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForAnonymousMyState()
-        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("密码", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("密码登录").assertIsDisplayed()
@@ -132,7 +142,7 @@ class MainActivityTest {
     fun qrLoginIsReachableAndLeavingStopsShowingQrState() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForAnonymousMyState()
-        composeRule.onNodeWithText("登录").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("登录 MoeKoe Air").assertIsDisplayed().performClick()
 
         composeRule.onNodeWithText("扫码", useUnmergedTree = true).performClick()
         composeRule.waitUntil(15_000) {

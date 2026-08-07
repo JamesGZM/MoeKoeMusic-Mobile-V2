@@ -1,5 +1,6 @@
 package cn.james.music.feature.my
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,10 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Album
@@ -33,6 +36,7 @@ import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -44,6 +48,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -102,9 +107,9 @@ internal fun MyScreen(
             }
             state.refreshError?.let { error -> item { InlineFailure(error.profileMessage(), onRefresh) } }
             state.logoutError?.let { error -> item { InlineFailure(error.logoutMessage(), onAccountSettings) } }
-            item { QuickEntries(onLocalMusic) }
-            item { CollectionSection() }
-            item { PlaylistPlaceholder(state.account is MyAccountUiState.Authenticated) }
+            item { QuickEntries(state.account, onLogin, onLocalMusic) }
+            item { CollectionSection(state.account, onLogin) }
+            item { PlaylistPlaceholder(state.account, onLogin) }
             if (showFoundationLab) {
                 item { TextButton(onClick = onFoundationLab) { Text(stringResource(R.string.my_open_foundation_lab)) } }
             }
@@ -269,25 +274,59 @@ private fun VipBadge(label: String) {
 
 @Composable
 private fun AnonymousAccountCard(onLogin: () -> Unit) {
-    Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)) {
+    val shape = RoundedCornerShape(28.dp)
+    Surface(
+        shape = shape,
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+    ) {
         Column(Modifier.fillMaxWidth().padding(MoeKoeTheme.spacing.mediumLarge)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(68.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onLogin),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(64.dp)) {
                     Icon(
                         Icons.Default.AccountCircle,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.58f),
                         modifier = Modifier.padding(MoeKoeTheme.spacing.small),
                     )
                 }
                 Spacer(Modifier.width(MoeKoeTheme.spacing.medium))
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space4)) {
                     Text(stringResource(R.string.my_login_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(stringResource(R.string.my_login_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.my_login_action),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Spacer(Modifier.height(MoeKoeTheme.spacing.medium))
-            Button(onClick = onLogin, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.my_login_action)) }
+            Spacer(Modifier.height(MoeKoeTheme.spacing.mediumLarge))
+            Row(horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
+                OutlinedButton(
+                    onClick = onLogin,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Icon(Icons.Default.EventAvailable, contentDescription = null)
+                    Spacer(Modifier.width(MoeKoeTheme.spacing.small))
+                    Text(stringResource(R.string.my_sign_in))
+                }
+                OutlinedButton(
+                    onClick = onLogin,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    border = BorderStroke(1.dp, MoeKoeTheme.extraColors.vipGold),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MoeKoeTheme.extraColors.vipGold),
+                ) {
+                    Icon(Icons.Default.WorkspacePremium, contentDescription = null)
+                    Spacer(Modifier.width(MoeKoeTheme.spacing.small))
+                    Text(stringResource(R.string.my_claim_vip))
+                }
+            }
         }
     }
 }
@@ -342,29 +381,42 @@ private fun InlineFailure(
 }
 
 @Composable
-private fun QuickEntries(onLocalMusic: () -> Unit) {
+private fun QuickEntries(
+    account: MyAccountUiState,
+    onLogin: () -> Unit,
+    onLocalMusic: () -> Unit,
+) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
-    Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface) {
+    val accountAction = if (account is MyAccountUiState.Anonymous) onLogin else null
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
         if (largeText) {
             Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
                 Row(Modifier.fillMaxWidth()) {
-                    QuickEntry(Icons.Default.Favorite, R.string.my_liked, false, null, Modifier.weight(1f))
-                    QuickEntry(Icons.Default.History, R.string.my_recent, false, null, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.Favorite, R.string.my_liked, accountAction, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.History, R.string.my_recent, accountAction, Modifier.weight(1f))
                 }
                 Row(Modifier.fillMaxWidth()) {
-                    QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, true, onLocalMusic, Modifier.weight(1f))
-                    QuickEntry(Icons.Default.Cloud, R.string.my_cloud, false, null, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, onLocalMusic, Modifier.weight(1f))
+                    QuickEntry(Icons.Default.Cloud, R.string.my_cloud, accountAction, Modifier.weight(1f))
                 }
             }
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                QuickEntry(Icons.Default.Favorite, R.string.my_liked, false, null)
-                QuickEntry(Icons.Default.History, R.string.my_recent, false, null)
-                QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, true, onLocalMusic)
-                QuickEntry(Icons.Default.Cloud, R.string.my_cloud, false, null)
+                QuickEntry(Icons.Default.Favorite, R.string.my_liked, accountAction)
+                EntryDivider()
+                QuickEntry(Icons.Default.History, R.string.my_recent, accountAction)
+                EntryDivider()
+                QuickEntry(Icons.Default.LibraryMusic, R.string.my_local_music, onLocalMusic)
+                EntryDivider()
+                QuickEntry(Icons.Default.Cloud, R.string.my_cloud, accountAction)
             }
         }
     }
@@ -374,13 +426,12 @@ private fun QuickEntries(onLocalMusic: () -> Unit) {
 private fun QuickEntry(
     icon: ImageVector,
     titleRes: Int,
-    enabled: Boolean,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val actionModifier = if (enabled && onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+    val actionModifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
     Column(
-        modifier = modifier.then(actionModifier).width(74.dp).padding(vertical = MoeKoeTheme.spacing.small),
+        modifier = modifier.then(actionModifier).widthIn(min = 72.dp).padding(vertical = MoeKoeTheme.spacing.small),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small),
     ) {
@@ -390,39 +441,43 @@ private fun QuickEntry(
         ) {
             Icon(
                 icon,
-                contentDescription = if (enabled) stringResource(titleRes) else null,
-                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                contentDescription = stringResource(titleRes),
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
         Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1)
-        Text(
-            if (enabled) stringResource(R.string.my_available) else stringResource(R.string.my_pending),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
 @Composable
-private fun CollectionSection() {
+private fun CollectionSection(
+    account: MyAccountUiState,
+    onLogin: () -> Unit,
+) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
+    val accountAction = if (account is MyAccountUiState.Anonymous) onLogin else null
     Column(verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
         Text(stringResource(R.string.my_collection_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        ) {
             if (largeText) {
                 Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
                     Row(Modifier.fillMaxWidth()) {
-                        CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465), Modifier.weight(1f))
-                        CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465), accountAction, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary, accountAction, Modifier.weight(1f))
                     }
                     Row(Modifier.fillMaxWidth()) {
                         CollectionEntry(
                             Icons.Default.PersonSearch,
                             R.string.my_followed_artists,
                             MoeKoeTheme.extraColors.accentMint,
+                            accountAction,
                             Modifier.weight(1f),
                         )
-                        CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                        CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error, accountAction, Modifier.weight(1f))
                     }
                 }
             } else {
@@ -430,10 +485,13 @@ private fun CollectionSection() {
                     modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465))
-                    CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary)
-                    CollectionEntry(Icons.Default.PersonSearch, R.string.my_followed_artists, MoeKoeTheme.extraColors.accentMint)
-                    CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error)
+                    CollectionEntry(Icons.Default.FavoriteBorder, R.string.my_saved_playlists, Color(0xFFF14465), accountAction)
+                    EntryDivider()
+                    CollectionEntry(Icons.Default.Album, R.string.my_saved_albums, MaterialTheme.colorScheme.tertiary, accountAction)
+                    EntryDivider()
+                    CollectionEntry(Icons.Default.PersonSearch, R.string.my_followed_artists, MoeKoeTheme.extraColors.accentMint, accountAction)
+                    EntryDivider()
+                    CollectionEntry(Icons.Default.Group, R.string.my_followed_friends, MaterialTheme.colorScheme.error, accountAction)
                 }
             }
         }
@@ -445,10 +503,12 @@ private fun CollectionEntry(
     icon: ImageVector,
     titleRes: Int,
     tint: Color,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val actionModifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
     Column(
-        modifier = modifier.width(74.dp).padding(vertical = MoeKoeTheme.spacing.small),
+        modifier = modifier.then(actionModifier).widthIn(min = 72.dp).padding(vertical = MoeKoeTheme.spacing.small),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small),
     ) {
@@ -459,23 +519,60 @@ private fun CollectionEntry(
             Icon(icon, contentDescription = null, tint = tint)
         }
         Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1)
-        Text(stringResource(R.string.my_pending), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-private fun PlaylistPlaceholder(authenticated: Boolean) {
+private fun PlaylistPlaceholder(
+    account: MyAccountUiState,
+    onLogin: () -> Unit,
+) {
+    val anonymous = account is MyAccountUiState.Anonymous
+    val actionModifier = if (anonymous) Modifier.clickable(onClick = onLogin) else Modifier
     Column(verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact)) {
         Text(stringResource(R.string.my_created_playlists), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-            Text(
-                text = stringResource(if (authenticated) R.string.my_playlists_pending else R.string.my_playlists_login),
-                modifier = Modifier.fillMaxWidth().padding(MoeKoeTheme.spacing.large),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+        Surface(
+            modifier = Modifier.fillMaxWidth().then(actionModifier),
+            shape = RoundedCornerShape(24.dp),
+            color = if (anonymous) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.large),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.compact),
+            ) {
+                if (anonymous) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Default.LibraryMusic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(if (anonymous) R.string.my_playlists_login else R.string.my_playlists_pending),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun EntryDivider() {
+    VerticalDivider(
+        modifier = Modifier.height(76.dp),
+        color = MaterialTheme.colorScheme.outlineVariant,
+    )
 }
 
 @Composable

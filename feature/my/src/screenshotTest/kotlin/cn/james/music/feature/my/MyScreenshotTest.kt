@@ -35,6 +35,23 @@ fun MyAnonymousScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "AnonymousDark", widthDp = 390, heightDp = 844)
+@Composable
+fun MyAnonymousDarkScreenshot() {
+    MyScreenshotContent(
+        state = MyUiState(account = MyAccountUiState.Anonymous),
+        themeMode = ThemeMode.Dark,
+    )
+}
+
+@PreviewTest
+@Preview(name = "AnonymousLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
+@Composable
+fun MyAnonymousLargeTextScreenshot() {
+    MyScreenshotContent(MyUiState(account = MyAccountUiState.Anonymous))
+}
+
+@PreviewTest
 @Preview(name = "AuthenticatedLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
 fun MyAuthenticatedLargeTextScreenshot() {
@@ -55,8 +72,11 @@ fun MyAuthenticatedLargeTextScreenshot() {
 }
 
 @Composable
-private fun MyScreenshotContent(state: MyUiState) {
-    MoeKoeTheme(themeMode = ThemeMode.Light) {
+private fun MyScreenshotContent(
+    state: MyUiState,
+    themeMode: ThemeMode = ThemeMode.Light,
+) {
+    MoeKoeTheme(themeMode = themeMode) {
         Surface {
             MyScreen(
                 state = state,
