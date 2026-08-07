@@ -1,0 +1,24 @@
+<resources>
+    <string name="playlist_detail_back">返回</string>
+    <string name="playlist_detail_search">搜索歌单歌曲</string>
+    <string name="playlist_detail_more">更多歌单操作</string>
+    <string name="playlist_detail_vip">VIP</string>
+    <string name="playlist_detail_statistics">%1$d 首 · %2$s</string>
+    <string name="playlist_detail_play_all">播放全部</string>
+    <string name="playlist_detail_shuffle">随机播放</string>
+    <string name="playlist_detail_favorite">收藏</string>
+    <string name="playlist_detail_download">下载</string>
+    <string name="playlist_detail_actions_more">更多</string>
+    <string name="playlist_detail_songs">歌曲</string>
+    <string name="playlist_detail_sort">默认排序</string>
+    <string name="playlist_detail_track_more">更多歌曲操作：%1$s</string>
+    <string name="playlist_detail_current">正在播放</string>
+    <string name="playlist_detail_loading">正在加载歌单</string>
+    <string name="playlist_detail_empty_title">歌单还是空的</string>
+    <string name="playlist_detail_empty_message">这里暂时没有可播放的歌曲。</string>
+    <string name="playlist_detail_error_title">歌单加载失败</string>
+    <string name="playlist_detail_error_message">暂时无法读取歌单，请稍后重试。</string>
+    <string name="playlist_detail_offline_title">当前处于离线状态</string>
+    <string name="playlist_detail_offline_message">连接网络后再试，已有内容不会被清除。</string>
+    <string name="playlist_detail_retry">重试</string>
+</resources>

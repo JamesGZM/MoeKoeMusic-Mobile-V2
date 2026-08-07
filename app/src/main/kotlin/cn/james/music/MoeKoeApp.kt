@@ -46,6 +46,8 @@ import cn.james.music.feature.player.PlayerDestination
 import cn.james.music.feature.player.PlayerProgressUiState
 import cn.james.music.feature.player.PlayerUiState
 import cn.james.music.feature.player.playerDestination
+import cn.james.music.feature.playlist.PlaylistDetailDestination
+import cn.james.music.feature.playlist.playlistDetailDestination
 import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
 import cn.james.music.feature.settings.SettingsDestination
@@ -178,7 +180,7 @@ fun MoeKoeApp(
                     onSearch = { navController.navigate(SearchDestination) },
                     onPlay = viewModel::play,
                 )
-                discoverGraph()
+                discoverGraph(onPlaylist = { navController.navigate(PlaylistDetailDestination) })
                 myGraph(
                     onLogin = { navController.navigate(LoginDestination) },
                     onLocalMusic = { navController.navigate(LocalMusicDestination) },
@@ -210,6 +212,7 @@ fun MoeKoeApp(
                     onChangeMode = viewModel::cycleMode,
                     onOpenQueue = { queueVisible = true },
                 )
+                playlistDetailDestination(onBack = navController::popBackStack)
                 foundationContent?.let { addFoundationDestination(it) }
             }
         }

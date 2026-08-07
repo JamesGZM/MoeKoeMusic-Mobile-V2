@@ -57,8 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-internal fun DiscoverScreen() {
-    DiscoverScreen(state = DiscoverUiState.Content(discoverDesignPreview))
+internal fun DiscoverScreen(onPlaylist: () -> Unit = {}) {
+    DiscoverScreen(state = DiscoverUiState.Content(discoverDesignPreview), onPlaylist = onPlaylist)
 }
 
 @Composable
@@ -66,6 +66,7 @@ internal fun DiscoverScreen(
     state: DiscoverUiState,
     onHeroPlay: () -> Unit = {},
     onRankingPlay: (Int) -> Unit = {},
+    onPlaylist: () -> Unit = {},
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedCategory by remember { mutableIntStateOf(0) }
@@ -98,6 +99,7 @@ internal fun DiscoverScreen(
                             onCategorySelected = { selectedCategory = it },
                             onHeroPlay = onHeroPlay,
                             onRankingPlay = onRankingPlay,
+                            onPlaylist = onPlaylist,
                         )
                 }
             }
@@ -166,6 +168,7 @@ private fun DiscoverContent(
     onCategorySelected: (Int) -> Unit,
     onHeroPlay: () -> Unit,
     onRankingPlay: (Int) -> Unit,
+    onPlaylist: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().semantics { contentDescription = "discover-content" },
@@ -184,7 +187,7 @@ private fun DiscoverContent(
                 onSelected = onCategorySelected,
             )
             Spacer(Modifier.height(7.dp))
-            CategoryArtworkGrid(content.categoryArtworkRes)
+            CategoryArtworkGrid(content.categoryArtworkRes, onPlaylist)
         }
     }
 }
@@ -487,7 +490,10 @@ private fun CategoryChips(
 }
 
 @Composable
-private fun CategoryArtworkGrid(@DrawableRes artwork: List<Int>) {
+private fun CategoryArtworkGrid(
+    @DrawableRes artwork: List<Int>,
+    onPlaylist: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -495,8 +501,13 @@ private fun CategoryArtworkGrid(@DrawableRes artwork: List<Int>) {
         artwork.take(3).forEach { res ->
             Image(
                 painter = painterResource(res),
-                contentDescription = null,
-                modifier = Modifier.weight(1f).aspectRatio(1.18f).clip(RoundedCornerShape(12.dp)),
+                contentDescription = stringResource(R.string.discover_open_playlist),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .aspectRatio(1.18f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onPlaylist),
                 contentScale = ContentScale.Crop,
             )
         }

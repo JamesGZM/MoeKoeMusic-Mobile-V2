@@ -11,8 +11,8 @@ data object DiscoverGraph
 @Serializable
 data object DiscoverDestination
 
-fun NavGraphBuilder.discoverGraph() {
+fun NavGraphBuilder.discoverGraph(onPlaylist: () -> Unit) {
     navigation<DiscoverGraph>(startDestination = DiscoverDestination) {
-        composable<DiscoverDestination> { DiscoverScreen() }
+        composable<DiscoverDestination> { DiscoverScreen(onPlaylist = onPlaylist) }
     }
 }

@@ -177,6 +177,42 @@ class MainActivityTest {
     }
 
     @Test
+    fun playlistDetailIsAChildPageAndReturnsToDiscover() {
+        composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
+        waitForMyContent()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("打开播放工程实验台"))
+        composeRule.onNodeWithText("打开播放工程实验台").performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("播放内核工程实验台"))
+        if (composeRule.onAllNodesWithTag("load-demo-queue").fetchSemanticsNodes().isNotEmpty()) {
+            composeRule.onNodeWithTag("load-demo-queue").performClick()
+            composeRule.waitUntil(5_000) {
+                composeRule.onAllNodesWithText("Skyline Signal").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        pressBack()
+        composeRule.onNodeWithText("发现", useUnmergedTree = true).performClick()
+        composeRule
+            .onNodeWithContentDescription("discover-content")
+            .performScrollToNode(hasContentDescription("打开歌单详情"))
+        composeRule.onAllNodesWithContentDescription("打开歌单详情")[0].assertIsDisplayed().performClick()
+
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithTag("playlist_detail_content").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag("playlist_detail_content").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("播放队列").assertIsDisplayed()
+        composeRule.onAllNodesWithText("首页", useUnmergedTree = true).assertCountEquals(0)
+        composeRule.onAllNodesWithText("发现", useUnmergedTree = true).assertCountEquals(0)
+        composeRule.onAllNodesWithText("我的", useUnmergedTree = true).assertCountEquals(0)
+        saveDeviceScreenshot(PLAYLIST_DETAIL_DEVICE_SCREENSHOT)
+
+        pressBack()
+
+        composeRule.onNodeWithText("分类歌单").assertIsDisplayed()
+        composeRule.onNodeWithText("发现", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
     fun loginIsAnIndependentPageReachedFromMy() {
         composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
         waitForAnonymousMyState()
@@ -314,5 +350,6 @@ class MainActivityTest {
         const val QR_DEVICE_SCREENSHOT = "qr-device.png"
         const val QUEUE_DEVICE_SCREENSHOT = "player-queue-device.png"
         const val PLAYER_QUEUE_DEVICE_SCREENSHOT = "player-queue-fullscreen-device.png"
+        const val PLAYLIST_DETAIL_DEVICE_SCREENSHOT = "playlist-detail-device.png"
     }
 }

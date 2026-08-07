@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="discover_open_playlist">打开歌单详情</string>
     <string name="discover_tab_featured">精选</string>
     <string name="discover_tab_playlists">歌单</string>
     <string name="discover_tab_new_songs">新歌</string>
