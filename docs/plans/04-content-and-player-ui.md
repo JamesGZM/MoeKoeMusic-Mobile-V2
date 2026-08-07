@@ -1,6 +1,6 @@
 # 阶段 5A：内容与播放器 UI
 
-状态：进行中。音乐内容组件、搜索/本地列表、MiniPlayer、基础队列与全屏封面页首个切片已经完成；歌词页和其余内容详情仍待实现。
+状态：进行中。音乐内容组件、搜索/本地列表、MiniPlayer、全屏封面/歌词和队列纯 UI 已完成；动态色、歌词业务和其余内容详情仍待实现。
 
 ## 目标
 
@@ -25,7 +25,7 @@
 
 `:core:designsystem` 的 Primary、Typography、Spacing、Shapes、Toolbar 和音乐内容组件已经完成第一批校准；后续页面必须继续消费这些 Token 和组件，不得在业务页面用局部常量绕过校准。
 
-## 当前结果（2026-08-06）
+## 当前结果（2026-08-08）
 
 - `:core:designsystem` 已实现 Section Header、封面容器、媒体徽标、歌曲行、MiniPlayer 和队列行，并建立浅色、深色与 `1.5×` 字体截图基准。
 - Search 与 LocalMusic 已移除各自的重复歌曲行布局，统一使用 `MoeSongRow`；在线封面和 App 专属目录本地封面继续由 Coil 3 加载。
@@ -46,13 +46,13 @@
 - Home ViewModel 已完成领域模型到 UI Model 的隔离、首次/缓存/刷新/部分/空/错误状态、弱提示消耗、显式刷新代际取消和身份分区切换；9 项 JVM 测试覆盖首次会话失败顺序及账号切换与手动刷新并发。
 - 首页 Compose 已按 [`HOME_LAYOUT_SPEC.md`](../design/HOME_LAYOUT_SPEC.md) 和 `01-home-material3-v2.png` 完整恢复横向顶部工具区、Radio Hero、三快捷入口、每日推荐四行与四列推荐歌单；真实推荐/歌单、搜索、下拉刷新、播放事件和缓存弱提示继续复用既有链路。Light、Dark、AMOLED、加载、空、错误、缓存刷新弱提示、`1.5×`、`2.0×` 共 9 组截图基线及归一化对照证据已建立；指定 ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过。设计示例徽标和副标题只进入截图 fixture，不扩充协议或伪造运行时能力。
 - 发现页已按 [`DISCOVER_LAYOUT_SPEC.md`](../design/DISCOVER_LAYOUT_SPEC.md) 和 `02-discover-v2.png` 完整恢复五段 Tab、本周新声 Hero、三列热门榜单、分类胶囊与三列封面；当前内容是 UI 层设计预览，不声明榜单、详情或播放业务已接入。Light、Dark、AMOLED、加载、空、错误、`1.5×`、`2.0×` 共 8 组截图基线和归一化设计对照证据已建立，大字体排行榜按纵向行重排；指定 ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过。
+- 播放队列已按 [`PLAYER_QUEUE_LAYOUT_SPEC.md`](../design/PLAYER_QUEUE_LAYOUT_SPEC.md) 和 `08-player-queue.png` 完成纯 UI 复刻：系统 `ModalBottomSheet` 内恢复标题、真实数量、播放模式、清空、来源、当前项、六行密度和关闭提示；标准、空队列、`1.5×` 共 3 组截图及归一化对照证据通过。指定 ELE-AL00 / API 29 已从 MiniPlayer 与全屏播放器分别打开真实调试队列并验证系统返回；拖拽仅表达确认稿视觉，不伪装重排业务已完成。
 - 歌词 Repository 已完成仅支持酷狗来源的缓存优先读取、损坏缓存删除后单次回源、同 Hash 并发单飞、旧请求取消透传和成功解析后缓存；匿名歌词客户端不再接受账号请求上下文，JVM 行为测试与 App Hilt 装配已通过。
 - `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页必须共享当前歌曲封面派生的语义色板。动态取色已经完成独立 [`13-player-artwork-palette`](../reference-audits/13-player-artwork-palette.md) 审计，允许先实现调色基础与现有封面页接入。
 
 ## 当前剩余
 
-- 播放器队列已形成独立 [`PLAYER_QUEUE_LAYOUT_SPEC.md`](../design/PLAYER_QUEUE_LAYOUT_SPEC.md) 视觉合同，按 `08-player-queue.png` 校准系统 `ModalBottomSheet` 后再接歌词 Repository；设置页全量确认视觉另有已登记修正切片。
-- 播放器动态色、歌词逐行交互、完整队列，以及歌单/专辑/歌手/排行榜详情和对应完整状态矩阵。
+- 播放器动态色、歌词逐行交互、队列重排业务，以及歌单/专辑/歌手/排行榜详情和对应完整状态矩阵。
 - 发现页后续真实榜单、歌单与播放纵向切片复用首页已经稳定的数据与组件能力。
 - 队列拖拽、封面/歌词切换、AMOLED 内容页面与 `2.0×` 字体真机关键控制验收。
 - 真实在线封面缺失/失败占位视觉、TalkBack 顺序、预测返回和复杂队列设备测试。

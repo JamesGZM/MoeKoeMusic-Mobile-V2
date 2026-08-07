@@ -231,10 +231,12 @@ fun MoeKoeApp(
     if (queueVisible) {
         MoeKoeQueueSheet(
             state = state,
+            currentDurationMs = progress.value.durationMs,
             onDismiss = { queueVisible = false },
             onPlayAt = viewModel::playAt,
             onRemove = viewModel::removeAt,
             onClear = viewModel::clearQueue,
+            onChangeMode = viewModel::cycleMode,
         )
     }
 }

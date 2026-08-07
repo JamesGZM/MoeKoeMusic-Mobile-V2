@@ -1,14 +1,25 @@
 package cn.james.music.feature.player
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
 import cn.james.music.core.model.playback.PlaybackSource
@@ -85,6 +96,29 @@ fun PlayerEmptyScreenshot() {
         onChangeMode = {},
         onOpenQueue = {},
     )
+}
+
+@PreviewTest
+@Preview(name = "Queue", widthDp = 390, heightDp = 470)
+@Composable
+fun PlayerQueueScreenshot() {
+    PlayerQueueScreenshotContent(queueScreenshotState())
+}
+
+@PreviewTest
+@Preview(name = "QueueEmpty", widthDp = 390, heightDp = 470)
+@Composable
+fun PlayerQueueEmptyScreenshot() {
+    PlayerQueueScreenshotContent(
+        PlayerQueueUiState(items = emptyList(), currentIndex = -1, mode = PlaybackMode.RepeatAll),
+    )
+}
+
+@PreviewTest
+@Preview(name = "QueueLargeText", widthDp = 390, heightDp = 560, fontScale = 1.5f)
+@Composable
+fun PlayerQueueLargeTextScreenshot() {
+    PlayerQueueScreenshotContent(queueScreenshotState(), sheetHeight = 533.dp)
 }
 
 @PreviewTest
@@ -265,5 +299,64 @@ private fun PlayerScreenshotArtwork() {
         contentDescription = null,
         modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.Crop,
+    )
+}
+
+@Composable
+private fun PlayerQueueScreenshotContent(
+    state: PlayerQueueUiState,
+    sheetHeight: androidx.compose.ui.unit.Dp = 470.dp,
+) {
+    MoeKoeTheme(themeMode = ThemeMode.Dark) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color(0xFF080D18)),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            PlayerQueueSheetContent(
+                state = state,
+                onDismiss = {},
+                onPlayAt = {},
+                onRemove = {},
+                onClear = {},
+                onChangeMode = {},
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(sheetHeight)
+                        .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
+                artworkContent = { PlayerScreenshotArtwork() },
+            )
+        }
+    }
+}
+
+private fun queueScreenshotState(): PlayerQueueUiState {
+    val visibleSongs =
+        listOf(
+            Triple("コレカラ（从今以后）", "Machico", "3:04"),
+            Triple("キライ…でも好き", "HoneyWorks", "4:12"),
+            Triple("Cream Soda", "内田真礼", "3:45"),
+            Triple("フェイスレス", "ReoNa", "4:07"),
+            Triple("unlasting", "LiSA", "5:18"),
+            Triple("IGNITE", "蓝井エイル", "3:37"),
+        )
+    val songs = visibleSongs + visibleSongs
+    return PlayerQueueUiState(
+        items =
+            songs.mapIndexed { index, (title, artist, duration) ->
+                PlayerQueueItemUi(
+                    item =
+                        PlaybackItem(
+                            id = "queue-$index",
+                            title = title,
+                            artist = artist,
+                            source = PlaybackSource.FoundationDemo,
+                        ),
+                    durationLabel = duration,
+                )
+            },
+        currentIndex = 0,
+        mode = PlaybackMode.RepeatAll,
+        sourceLabel = "ACG 收藏",
     )
 }

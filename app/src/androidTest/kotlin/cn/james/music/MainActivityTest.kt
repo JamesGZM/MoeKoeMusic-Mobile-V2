@@ -1,7 +1,6 @@
 package cn.james.music
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
@@ -9,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -26,7 +26,9 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -98,6 +100,23 @@ class MainActivityTest {
             }
         }
 
+        composeRule.onNodeWithContentDescription("播放队列").performClick()
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("播放队列").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("播放队列").assertIsDisplayed()
+        assertTrue(
+            "队列必须展示当前播放模式",
+            listOf("顺序播放", "列表循环", "单曲循环", "随机播放").any { label ->
+                composeRule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty()
+            },
+        )
+        saveDeviceScreenshot(QUEUE_DEVICE_SCREENSHOT)
+        composeRule.onNodeWithText("滑动关闭").performClick()
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("播放队列").fetchSemanticsNodes().isEmpty()
+        }
+
         composeRule
             .onNode(
                 hasClickAction() and hasAnyDescendant(hasText("标准")),
@@ -107,6 +126,19 @@ class MainActivityTest {
             composeRule.onAllNodesWithText("正在播放").fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithText("正在播放").assertIsDisplayed()
+        composeRule
+            .onNode(
+                hasClickAction() and hasAnyDescendant(hasContentDescription("播放队列")),
+                useUnmergedTree = true,
+            ).performSemanticsAction(SemanticsActions.OnClick)
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("播放队列").fetchSemanticsNodes().isNotEmpty()
+        }
+        saveDeviceScreenshot(PLAYER_QUEUE_DEVICE_SCREENSHOT)
+        pressBack()
+        composeRule.waitUntil(5_000) {
+            composeRule.onAllNodesWithText("播放队列").fetchSemanticsNodes().isEmpty()
+        }
         composeRule.onRoot().performTouchInput { swipeLeft() }
         composeRule.onNodeWithText("正在加载歌词").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("歌词显示设置").assertIsDisplayed()
@@ -267,19 +299,20 @@ class MainActivityTest {
         }
     }
 
-    private fun saveDeviceScreenshot() {
+    private fun saveDeviceScreenshot(fileName: String = QR_DEVICE_SCREENSHOT) {
         composeRule.waitForIdle()
-        composeRule.runOnUiThread {
-            val root = composeRule.activity.window.decorView.rootView
-            val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
-            root.draw(Canvas(bitmap))
-            File(requireNotNull(composeRule.activity.getExternalFilesDir(null)), QR_DEVICE_SCREENSHOT).outputStream().use { output ->
-                check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))
-            }
+        val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        val target = File(requireNotNull(composeRule.activity.getExternalFilesDir(null)), fileName)
+        val pending = File(target.parentFile, "$fileName.pending")
+        pending.outputStream().use { output ->
+            check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))
         }
+        check(pending.renameTo(target))
     }
 
     private companion object {
         const val QR_DEVICE_SCREENSHOT = "qr-device.png"
+        const val QUEUE_DEVICE_SCREENSHOT = "player-queue-device.png"
+        const val PLAYER_QUEUE_DEVICE_SCREENSHOT = "player-queue-fullscreen-device.png"
     }
 }
