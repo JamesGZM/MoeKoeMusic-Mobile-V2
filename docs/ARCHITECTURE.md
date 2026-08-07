@@ -108,6 +108,7 @@ Repository
 - 当前模块为 `home`、`discover`、`my`、`search`、`localmusic`、`login`、`player` 与仅 Debug 可达的 `foundation`。
 - `:feature:login` 按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 拥有表单、倒计时、多账号选择、导航入口和测试；`:app` 只组合导航和平台安全配置，不持有认证 UI 状态。
 - `:feature:my` 消费 `UserProfileRepository` 与 `AuthRepository`，拥有匿名、加载、已认证、部分失败和完整失败状态，并在页面恢复时刷新资料；退出必须经过确认且仅在会话清除成功后切换匿名态。匿名用户点击账号资产时，Feature 只上抛具名导航事件，由 `:app` 复用唯一登录目的地；Screen、ViewModel 和 Repository 不通过禁用文案或字符串判断模拟权限，也不在进入登录前发起受认证资产请求。本地音乐与应用级设置不经过该门禁。
+- `:feature:settings` 拥有设置 Destination、Route、Screen、ViewModel 和测试，只依赖 `:core:model` 的应用偏好端口与 `:core:designsystem`；`:feature:my` 只上抛设置导航事件，`:app` 注册唯一目的地并以独立 app-level ViewModel 消费全局主题。设置页不直接访问 DataStore，也不显示没有真实消费者的假开关。
 - `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 传入的播放状态与事件，不依赖 `:playback`、Service、数据库或网络。歌词协议、领域映射和成功缓存位于 `:kugou-api`、`:data` 与 `:core:database`；后续只通过 `LyricsRepository` 和页面 ViewModel 接入，歌词现有主态与补充状态均已确认。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
 - Feature 不依赖 App，也不直接依赖其他 Feature 的实现。
@@ -214,7 +215,7 @@ ExoPlayer + MediaSession
 - WorkManager 的输入只保存 `batchId`；URI、逐项状态和进度归 Room 所有，全局唯一工作链保证复制串行执行。
 - 酷狗歌词缓存只保存 `kugou:<lowercase hash>`、已解包 KRC、parser 版本和更新时间；候选 id/accesskey、失败与 `NotFound` 不持久化。缓存损坏由 `:data` 删除后最多回源一次，`:playback` 与 Service 不读取歌词表。
 - `:core:database` 拥有 Schema 与 Migration；`:data` 负责文件事务、映射和导入编排。
-- 设置使用 DataStore；酷狗敏感会话由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
+- 非敏感应用设置由 `:data` 使用独立 Preferences DataStore，并通过 `:core:model` 的 `AppSettingsRepository` 暴露；读取失败回退安全默认值且保留类型化问题，写入失败不覆盖最后持久值。酷狗敏感会话继续由 `:data` 使用 Android Keystore AES-256-GCM 加密后写入另一独立 DataStore。`:kugou-api` 只依赖 `KugouSessionStore` 端口，不依赖 Android Framework。
 - 会话密文损坏、Keystore key 缺失或 GCM 校验失败时清除密文与旧 key，重新进入匿名注册；不把不可解密状态降级为明文存储。
 - 登录成功响应由 `:kugou-api` 类型化解码，`:data` 在认证互斥区内合并并一次写入加密会话；存储完成前 UI 不进入已登录。退出只清除 token、userid 和登录 Cookie，保留匿名设备身份与 dfid。
 - 密码风险挑战在协议层保留 `ssa-code`，`sid/edt` 仅透传真实响应字段并允许缺失；禁止将固定 Node 层生成的鼠标轨迹或 WebGL 模拟迁入原生客户端。验证写操作与原密码重试由 Feature 显式串行驱动，不进入全局重试器。
