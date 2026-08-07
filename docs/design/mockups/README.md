@@ -13,7 +13,7 @@
 
 1. [`01-home-material3-v2.png`](01-home-material3-v2.png)：首页、搜索入口、三栏底部导航与 MiniPlayer 基准。
 2. [`02-discover-v2.png`](02-discover-v2.png)：分类 Tab 直接置顶的发现页、排行榜和分类歌单；实现契约见 [`../DISCOVER_LAYOUT_SPEC.md`](../DISCOVER_LAYOUT_SPEC.md)。
-3. [`03-search-results-v2.png`](03-search-results-v2.png)：从首页进入、不显示一级底部导航的独立搜索结果页。
+3. [`03-search-results-v2.png`](03-search-results-v2.png)：从首页进入、不显示一级底部导航的独立搜索结果页；实现契约见 [`../SEARCH_LAYOUT_SPEC.md`](../SEARCH_LAYOUT_SPEC.md)。
 4. [`04-my-v4.png`](04-my-v4.png)：个人资料、签到、领取 VIP、完整收藏与关注入口、创建歌单、云盘和本地音乐入口。
    匿名主态使用 [`04-my-anonymous.png`](04-my-anonymous.png)，账号资产保持正常入口并统一进入登录页。
 5. [`05-playlist-detail.png`](05-playlist-detail.png)：歌单信息、播放操作和歌曲列表；实现契约见 [`../PLAYLIST_DETAIL_LAYOUT_SPEC.md`](../PLAYLIST_DETAIL_LAYOUT_SPEC.md)。

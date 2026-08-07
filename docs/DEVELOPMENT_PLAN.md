@@ -66,7 +66,7 @@
 | --- | --- | --- |
 | 首页 | [`01-home-material3-v2.png`](design/mockups/01-home-material3-v2.png)、[`HOME_LAYOUT_SPEC.md`](design/HOME_LAYOUT_SPEC.md) | 浅色蓝色体系；搜索从首页进入；应用壳固定、页面单一纵向滚动 |
 | 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶；布局契约见 [`DISCOVER_LAYOUT_SPEC.md`](design/DISCOVER_LAYOUT_SPEC.md) |
-| 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
+| 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png)、[`SEARCH_LAYOUT_SPEC.md`](design/SEARCH_LAYOUT_SPEC.md) | 独立子页面；真实歌曲搜索保留，其他结果类型先交付 UI Model，不伪造生产数据 |
 | 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
 | 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png)、[`PLAYLIST_DETAIL_LAYOUT_SPEC.md`](design/PLAYLIST_DETAIL_LAYOUT_SPEC.md) | Material 3 详情结构；子页面保留 MiniPlayer，不显示一级底栏 |
 | 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png)、[`PLAYER_LAYOUT_SPEC.md`](design/PLAYER_LAYOUT_SPEC.md) | 参考 Kreate 的沉浸氛围；完整保留核心控制与次级动作 |
