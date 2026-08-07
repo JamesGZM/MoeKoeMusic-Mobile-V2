@@ -12,6 +12,7 @@
 - [首页真实内容与缓存](reference-audits/15-home-content-and-cache.md)
 - [UI 设计交付、屏幕适配与视觉验收](reference-audits/16-ui-design-handoff-and-adaptation.md)
 - [设置与应用偏好](reference-audits/18-settings-and-preferences.md)
+- [歌单详情纯 UI 与 Feature 所有权](reference-audits/19-playlist-detail-ui.md)
 
 记录日期：2026-08-07。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
@@ -187,6 +188,8 @@
 全部确认页面与组件板的公共组件准入、`:core:designsystem` 包职责、Toolbar 等组合组件的真实复用门槛，以及登录页面/公共组件所有权见 [`reference-audits/17-design-system-components.md`](reference-audits/17-design-system-components.md)。审计采用 Android 官方 Custom Design System、App Bar 与 Dialog 指南，并固定 Now in Android `7d45eae4` 和 Compose Samples `84788c81` 的组件目录作为 Apache-2.0 架构参考；不复制实现，也不新增依赖。
 
 设置与应用偏好的 DataStore 所有权、主题即时/持久生效、独立 Feature 导航、失败恢复和确认稿渐进交付边界见 [`reference-audits/18-settings-and-preferences.md`](reference-audits/18-settings-and-preferences.md)。审计固定 Now in Android `7d45eae4` 的 DataStore/Settings 链路与 Metrolist `289ed45` 的音乐设置分组源码；后者为 GPL-3.0，只学习状态和布局策略，不复制代码。首批不新增依赖，只实现有真实消费者的主题与关于分组。
+
+歌单详情确认稿的纯 UI 范围、独立 `:feature:playlist` 所有权、类型安全子页面导航、应用壳 MiniPlayer 边界和事件端口见 [`reference-audits/19-playlist-detail-ui.md`](reference-audits/19-playlist-detail-ui.md)。审计复用 Now in Android `7d45eae4` 与 Compose Samples `84788c81` 的 Apache-2.0 模块和 UI 分层原则，不复制页面实现、不新增依赖，也不把设计示例数据写入业务层。
 
 阶段 4 的真实服务补审还固定了 SPlayer-Next `75b4301c`、UnblockNeteaseMusic/server `39e21bfb` 和 kugou-music-api Go `950cbf0b`。前两者仅用于验证匿名搜索 Endpoint 的公开实践，因 AGPL-3.0/LGPL-3.0 不复制代码；Go 项目为 MIT，用来交叉复现 `/v3/search/song` 当前返回 `152` 的行为。最终匿名路径由本项目以最小 HTTPS 请求独立实现并通过真实服务测试。
 

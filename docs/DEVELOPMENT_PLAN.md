@@ -1,8 +1,8 @@
 # 开发计划
 
-状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 与阶段 5A/5B 进行中。更新日期：2026-08-07。
+状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 与阶段 5A/5B 进行中。更新日期：2026-08-08。
 
-本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。阶段 5 当前界面执行顺序固定为“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”；前三项已经完成，发现页进入确认稿 UI 切片，页面视觉先完整落地，对应业务能力随后按纵向切片接入。
+本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。阶段 5 固定的“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”确认稿 UI 顺序已经完成，现按内容闭环继续实现歌单详情；页面视觉先完整落地，对应业务能力随后按纵向切片接入。
 
 ## 技术基线
 
@@ -62,7 +62,7 @@
 | 发现 | [`02-discover-v2.png`](design/mockups/02-discover-v2.png) | 不显示重复标题行；分类 Tab 置顶；布局契约见 [`DISCOVER_LAYOUT_SPEC.md`](design/DISCOVER_LAYOUT_SPEC.md) |
 | 搜索 | [`03-search-results-v2.png`](design/mockups/03-search-results-v2.png) | 独立子页面，不属于底部导航 |
 | 我的 | [`04-my-v4.png`](design/mockups/04-my-v4.png)、[`04-my-anonymous.png`](design/mockups/04-my-anonymous.png) | 已登录与匿名主态；账号资产统一门禁，匿名态不展示假计数或重复提示 |
-| 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png) | Material 3 详情结构 |
+| 歌单详情 | [`05-playlist-detail.png`](design/mockups/05-playlist-detail.png)、[`PLAYLIST_DETAIL_LAYOUT_SPEC.md`](design/PLAYLIST_DETAIL_LAYOUT_SPEC.md) | Material 3 详情结构；子页面保留 MiniPlayer，不显示一级底栏 |
 | 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png)、[`PLAYER_LAYOUT_SPEC.md`](design/PLAYER_LAYOUT_SPEC.md) | 参考 Kreate 的沉浸氛围；完整保留核心控制与次级动作 |
 | 播放歌词 | [`07-player-lyrics.png`](design/mockups/07-player-lyrics.png) | 与封面共享手势和播放控制 |
 | 播放队列 | [`08-player-queue.png`](design/mockups/08-player-queue.png) | 手机使用 Material 3 Bottom Sheet |

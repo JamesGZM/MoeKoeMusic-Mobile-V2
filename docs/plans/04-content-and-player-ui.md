@@ -47,6 +47,7 @@
 - 首页 Compose 已按 [`HOME_LAYOUT_SPEC.md`](../design/HOME_LAYOUT_SPEC.md) 和 `01-home-material3-v2.png` 完整恢复横向顶部工具区、Radio Hero、三快捷入口、每日推荐四行与四列推荐歌单；真实推荐/歌单、搜索、下拉刷新、播放事件和缓存弱提示继续复用既有链路。Light、Dark、AMOLED、加载、空、错误、缓存刷新弱提示、`1.5×`、`2.0×` 共 9 组截图基线及归一化对照证据已建立；指定 ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过。设计示例徽标和副标题只进入截图 fixture，不扩充协议或伪造运行时能力。
 - 发现页已按 [`DISCOVER_LAYOUT_SPEC.md`](../design/DISCOVER_LAYOUT_SPEC.md) 和 `02-discover-v2.png` 完整恢复五段 Tab、本周新声 Hero、三列热门榜单、分类胶囊与三列封面；当前内容是 UI 层设计预览，不声明榜单、详情或播放业务已接入。Light、Dark、AMOLED、加载、空、错误、`1.5×`、`2.0×` 共 8 组截图基线和归一化设计对照证据已建立，大字体排行榜按纵向行重排；指定 ELE-AL00 / API 29 的 App instrumentation 回归 24/24 通过。
 - 播放队列已按 [`PLAYER_QUEUE_LAYOUT_SPEC.md`](../design/PLAYER_QUEUE_LAYOUT_SPEC.md) 和 `08-player-queue.png` 完成纯 UI 复刻：系统 `ModalBottomSheet` 内恢复标题、真实数量、播放模式、清空、来源、当前项、六行密度和关闭提示；标准、空队列、`1.5×` 共 3 组截图及归一化对照证据通过。指定 ELE-AL00 / API 29 已从 MiniPlayer 与全屏播放器分别打开真实调试队列并验证系统返回；拖拽仅表达确认稿视觉，不伪装重排业务已完成。
+- 歌单详情已经完成 [`19-playlist-detail-ui`](../reference-audits/19-playlist-detail-ui.md) 门禁与 [`PLAYLIST_DETAIL_LAYOUT_SPEC.md`](../design/PLAYLIST_DETAIL_LAYOUT_SPEC.md) 适配合同；独立 `:feature:playlist` 只承载确认稿纯 UI、类型安全子页面导航与事件端口，真实协议、收藏、下载、排序和播放行为继续拆分为后续纵向切片。
 - 歌词 Repository 已完成仅支持酷狗来源的缓存优先读取、损坏缓存删除后单次回源、同 Hash 并发单飞、旧请求取消透传和成功解析后缓存；匿名歌词客户端不再接受账号请求上下文，JVM 行为测试与 App Hilt 装配已通过。
 - `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页必须共享当前歌曲封面派生的语义色板。动态取色已经完成独立 [`13-player-artwork-palette`](../reference-audits/13-player-artwork-palette.md) 审计，允许先实现调色基础与现有封面页接入。
 

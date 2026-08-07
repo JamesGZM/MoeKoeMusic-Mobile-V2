@@ -16,7 +16,7 @@
 3. [`03-search-results-v2.png`](03-search-results-v2.png)：从首页进入、不显示一级底部导航的独立搜索结果页。
 4. [`04-my-v4.png`](04-my-v4.png)：个人资料、签到、领取 VIP、完整收藏与关注入口、创建歌单、云盘和本地音乐入口。
    匿名主态使用 [`04-my-anonymous.png`](04-my-anonymous.png)，账号资产保持正常入口并统一进入登录页。
-5. [`05-playlist-detail.png`](05-playlist-detail.png)：歌单信息、播放操作和歌曲列表。
+5. [`05-playlist-detail.png`](05-playlist-detail.png)：歌单信息、播放操作和歌曲列表；实现契约见 [`../PLAYLIST_DETAIL_LAYOUT_SPEC.md`](../PLAYLIST_DETAIL_LAYOUT_SPEC.md)。
 6. [`06-player-cover.png`](06-player-cover.png)：Kreate 启发的封面播放器；实现契约见 [`../PLAYER_LAYOUT_SPEC.md`](../PLAYER_LAYOUT_SPEC.md)。
 7. [`07-player-lyrics.png`](07-player-lyrics.png)：逐字歌词、翻译和音译展示基准；实现契约见 [`../PLAYER_LYRICS_LAYOUT_SPEC.md`](../PLAYER_LYRICS_LAYOUT_SPEC.md)。
 8. [`08-player-queue.png`](08-player-queue.png)：播放队列 Bottom Sheet；实现契约见 [`../PLAYER_QUEUE_LAYOUT_SPEC.md`](../PLAYER_QUEUE_LAYOUT_SPEC.md)。
