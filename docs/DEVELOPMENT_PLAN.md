@@ -64,14 +64,14 @@
 | 播放封面 | [`06-player-cover.png`](design/mockups/06-player-cover.png) | 参考 Kreate 的沉浸氛围，不照搬其品牌元素 |
 | 播放歌词 | [`07-player-lyrics.png`](design/mockups/07-player-lyrics.png) | 与封面共享手势和播放控制 |
 | 播放队列 | [`08-player-queue.png`](design/mockups/08-player-queue.png) | 手机使用 Material 3 Bottom Sheet |
-| 设置 | [`design-system-v2/09-settings-v2.png`](design/mockups/candidates/design-system-v2/09-settings-v2.png)（待确认） | 内容沿用分组式设置页；Toolbar 以 `10-user-profile` 为基准居中 |
+| 设置 | [`design-system-v2/09-settings-v2.png`](design/mockups/candidates/design-system-v2/09-settings-v2.png)（待确认） | 内容沿用分组式可滚动设置页；Toolbar 以 `10-user-profile` 为基准居中；长画布不压缩下方 Item |
 | 用户主页 | [`10-user-profile.png`](design/mockups/10-user-profile.png) | 与“我的”分离，不重复工具入口 |
 | Dialog | [`11-dialog-components.png`](design/mockups/11-dialog-components.png) | 统一形状、操作顺序和遮罩 |
 | 反馈组件 | [`12-feedback-components-v2.png`](design/mockups/12-feedback-components-v2.png) | 自定义 Snackbar、受限 MoeToast |
 | 登录主状态 | [`13-login-phone-immersive.png`](design/mockups/13-login-phone-immersive.png) | 沉浸式顶部；无重复标题；三种登录方式共享表单结构 |
 | 基础 Token | [`14-design-foundations-v2.png`](design/mockups/candidates/design-system-v2/14-design-foundations-v2.png)（待确认） | 数值仍以 `DESIGN_SYSTEM.md` 为准 |
 | Toolbar 与导航 | [`15-toolbar-navigation-v2.png`](design/mockups/candidates/design-system-v2/15-toolbar-navigation-v2.png)（待确认） | 标准态页面中心标题、可替换导航图标；沉浸式仅作 Hero/封面例外 |
-| 操作与输入 | [`16-actions-inputs-v2.png`](design/mockups/candidates/design-system-v2/16-actions-inputs-v2.png)（待确认） | Material Icons 优先；Filled 禁用态与登录确认稿一致 |
+| 操作与输入 | [`16-actions-inputs-v2.png`](design/mockups/candidates/design-system-v2/16-actions-inputs-v2.png)（待确认） | Material Icons 优先；Filled 禁用态与登录确认稿一致；输入图标可见方形背景不填满输入框高度 |
 | 音乐内容组件 | [`17-music-content-components-v2.png`](design/mockups/candidates/design-system-v2/17-music-content-components-v2.png)（待确认） | 保持紧凑列表与连续 MiniPlayer，不将所有内容卡片化 |
 | 页面状态与覆盖层 | [`18-mobile-states-overlays-v2.png`](design/mockups/candidates/design-system-v2/18-mobile-states-overlays-v2.png)（待确认） | 系统居中白色 Dialog、Tonal 取消与贴底 Bottom Sheet |
 | 密码登录与风控 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#19--密码登录) | 凭据错误内联，风险确认使用居中 Dialog |
