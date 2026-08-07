@@ -85,7 +85,7 @@
 
 1. 领域端口、`:data` Preferences DataStore、错误与 Repository JVM 测试。已完成。
 2. app-level 主题消费，替换 `MainActivity` 临时状态，验证重建恢复。已完成。
-3. `:feature:settings` 主题/关于页面、截图和导航目的地。
+3. `:feature:settings` 主题/关于页面、截图和导航目的地。已完成。
 4. “我的”匿名/登录态齿轮接入 Settings，退出动作改为明确账号菜单入口。
 5. 后续播放、歌词、缓存能力分别在真实消费者完成时增加对应设置 Item。
 

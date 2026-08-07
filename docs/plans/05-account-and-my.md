@@ -8,9 +8,9 @@
 
 - 手机验证码、多账号、账号密码、扫码和风控验证的协议、状态机与功能 UI 已形成可运行切片；现有 Compose 仍需按已确认独立单状态图返工，真实扫码 `2→4`、会话恢复和主动风控兼容验收尚未完成，因此登录阶段仍不能标记完成。
 - 登录后资料、VIP 摘要、页面恢复刷新、部分失败降级和确认退出已经贯通 `:kugou-api`、`:data` 与 `:feature:my`，并使用真实会话和服务结果。
-- “我的”顶部账户卡片、匿名态、加载/错误状态、响应式布局和本地音乐入口已经形成可运行实现；匿名 Compose 已按正式稿完成首轮校准，签到、VIP、云盘、历史、收藏、关注和歌单等账号资产统一进入现有登录页，不显示重复门禁文案、假计数或假列表，本地音乐保持直达。设置入口将在真实 Settings destination 落地时接入，不以无响应图标占位。
-- 设置与应用偏好已通过 [`../reference-audits/18-settings-and-preferences.md`](../reference-audits/18-settings-and-preferences.md) 门禁；下一切片按“领域/DataStore → app 主题消费 → Settings 页面 → My 齿轮接线”落地，首批只显示并持久化有真实消费者的主题模式与关于信息。
-- 应用偏好领域端口、独立 Preferences DataStore、安全默认值、类型化读写失败与 Repository JVM 测试已经完成；`MainActivity` 与 Debug Foundation 已改为消费同一持久主题来源，下一原子切片建立 `:feature:settings` 页面与目的地。
+- “我的”顶部账户卡片、匿名态、加载/错误状态、响应式布局和本地音乐入口已经形成可运行实现；匿名 Compose 已按正式稿完成首轮校准，签到、VIP、云盘、历史、收藏、关注和歌单等账号资产统一进入现有登录页，不显示重复门禁文案、假计数或假列表，本地音乐保持直达。下一原子切片把匿名与登录态齿轮接入已落地的 Settings destination，不以无响应图标占位。
+- 设置与应用偏好已通过 [`../reference-audits/18-settings-and-preferences.md`](../reference-audits/18-settings-and-preferences.md) 门禁；领域/DataStore、app 主题消费及 `:feature:settings` 主题/关于页面和导航目的地已经完成，首批只显示并持久化有真实消费者的主题模式与关于信息。
+- 设置页已覆盖浅色、深色、纯黑和 `1.5×/2.0×` 字体截图基线；下一切片接通 My 齿轮、返回栈和明确的退出账号动作后，再在指定真机完成端到端验收。
 - 用户主页与其余音乐库能力仍待后续审计、设计核对和纵向切片，阶段 5B 尚未完成。
 
 ## 实现范围

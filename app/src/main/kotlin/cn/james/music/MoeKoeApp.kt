@@ -48,6 +48,8 @@ import cn.james.music.feature.player.PlayerUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
+import cn.james.music.feature.settings.SettingsDestination
+import cn.james.music.feature.settings.settingsDestination
 import cn.james.music.playback.PlaybackConnectionState
 import cn.james.music.playback.PlaybackStatus
 import kotlinx.coroutines.delay
@@ -69,6 +71,7 @@ fun MoeKoeApp(
     val currentDestination = appState.navController.currentBackStackEntryAsState().value?.destination
     var queueVisible by rememberSaveable { mutableStateOf(false) }
     val isPlayer = currentDestination?.hasRoute<PlayerDestination>() == true
+    val isSettings = currentDestination?.hasRoute<SettingsDestination>() == true
     val showBottomNavigation = !isPlayer && appState.isTopLevel(currentDestination)
     val isImmersiveLogin = currentDestination?.hasRoute<LoginDestination>() == true
     val playerUiState =
@@ -104,7 +107,7 @@ fun MoeKoeApp(
                             Modifier.navigationBarsPadding()
                         },
                 ) {
-                    state.currentItem?.takeUnless { isPlayer }?.let { item ->
+                    state.currentItem?.takeUnless { isPlayer || isSettings }?.let { item ->
                     val currentProgress = progress.value
                     MoeKoeMiniPlayer(
                         item = item,
@@ -179,6 +182,7 @@ fun MoeKoeApp(
                     showFoundationLab = foundationContent != null,
                 )
                 searchDestination(onBack = navController::popBackStack, onPlay = viewModel::play)
+                settingsDestination(onBack = navController::popBackStack)
                 loginDestination(
                     onBack = navController::popBackStack,
                     onLoggedIn = navController::popBackStack,

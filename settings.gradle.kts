@@ -36,4 +36,5 @@ include(
     ":feature:foundation",
     ":feature:login",
     ":feature:player",
+    ":feature:settings",
 )

@@ -1,0 +1,20 @@
+<resources>
+    <string name="settings_title">设置</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_theme_mode">主题模式</string>
+    <string name="settings_other">其他</string>
+    <string name="settings_about">关于 MoeKoe Air</string>
+    <string name="settings_choose_theme">选择主题模式</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_theme_amoled">纯黑</string>
+    <string name="settings_cancel">取消</string>
+    <string name="settings_done">完成</string>
+    <string name="settings_about_message">MoeKoe Air 是开源的 Android 原生音乐客户端，遵循 GPL-2.0-only 许可证。</string>
+    <string name="settings_read_failed">设置暂时无法读取，已使用安全默认值</string>
+    <string name="settings_write_failed">主题保存失败，仍保持上次设置</string>
+    <string name="settings_retry">重试</string>
+    <string name="settings_dismiss">知道了</string>
+</resources>
