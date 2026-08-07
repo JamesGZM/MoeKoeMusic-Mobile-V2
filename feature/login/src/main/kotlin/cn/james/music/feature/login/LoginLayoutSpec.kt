@@ -141,7 +141,7 @@ internal class LoginFormMetrics(
     val mobileNoticeToButton = layout.dp(8f)
     val passwordNoticeTop = layout.dp(18f)
     val passwordNoticeHeight = layout.dp(42f)
-    val passwordNoticeToButton = layout.dp(32f)
+    val passwordNoticeToButton = layout.dp(31f)
     val primaryButtonHeight = layout.dp(112f)
     val buttonToFooter = layout.dp(44f)
 

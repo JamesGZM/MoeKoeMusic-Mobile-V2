@@ -70,6 +70,8 @@
 
 2026-08-07 当前实现复验：手机号验证码默认、发送中、倒计时、已输入与提交中五态已基于公共 Button/TextField 接入后的渲染重新完成归一化叠加，固定边界最大偏差为 `1` 个设计单位；五态共用锚点且基准视口不暴露滚动动作。证据见 [`login-mobile-code-states-2026-08-07.md`](../design/evidence/login-mobile-code-states-2026-08-07.md)。密码、扫码、风险和多账号仍按各自确认稿逐状态验收，不据此标记登录视觉整体完成。
 
+2026-08-07 密码三态复验：用户确认 `19a` 默认、`19b` 提交和 `19c` 凭据错误统一采用 `y = 1192` 主按钮锚点，反馈出现不得推动主操作；三态固定边界最大偏差为 `2` 个设计单位，并通过等比真机容器的零滚动与锚点稳定测试。`19a` 的浅蓝 Filled 禁用态同时登记为全局 `MoeButton` 参考。证据见 [`login-password-states-2026-08-07.md`](../design/evidence/login-password-states-2026-08-07.md)。`19d` 风险 Dialog 与其余登录状态继续独立验收。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`

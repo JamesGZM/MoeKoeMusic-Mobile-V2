@@ -57,13 +57,13 @@ fun MoeButton(
                     if (loading) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.surfaceContainerHighest
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
                     },
                 disabledContentColor =
                     if (loading) {
                         MaterialTheme.colorScheme.onPrimary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f)
                     },
             ),
         contentPadding = contentPadding,

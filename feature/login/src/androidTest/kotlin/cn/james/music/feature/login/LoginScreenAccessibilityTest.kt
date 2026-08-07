@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -208,6 +209,54 @@ class LoginScreenAccessibilityTest {
     }
 
     @Test
+    fun passwordDesignStatesKeepFixedAnchorsAndZeroScrollRange() {
+        var state by mutableStateOf(LoginUiState(mode = LoginMode.Password))
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                Box(Modifier.size(width = 320.dp, height = 694.dp)) { TestLoginScreen(state) }
+            }
+        }
+
+        val initialCardBounds = composeRule.onNodeWithTag(LOGIN_CARD_TAG).getUnclippedBoundsInRoot()
+        val initialIndicatorBounds =
+            composeRule.onNodeWithTag(LOGIN_MODE_INDICATOR_TAG).getUnclippedBoundsInRoot()
+        val initialButtonBounds =
+            composeRule.onNodeWithTag(LOGIN_PRIMARY_BUTTON_TAG).getUnclippedBoundsInRoot()
+        val designStates =
+            listOf(
+                LoginUiState(
+                    mode = LoginMode.Password,
+                    username = "miyu.song@moekoe.com",
+                    password = "fixture-password",
+                    passwordLoggingIn = true,
+                ),
+                LoginUiState(
+                    mode = LoginMode.Password,
+                    username = "miyu.song@moekoe.com",
+                    password = "fixture-password",
+                    notice = LoginNotice.PasswordRejected,
+                ),
+            )
+
+        designStates.forEach { nextState ->
+            composeRule.runOnIdle { state = nextState }
+            composeRule.onNodeWithTag(LOGIN_SCROLL_CONTAINER_TAG).assert(hasNoScrollAction)
+            val cardBounds = composeRule.onNodeWithTag(LOGIN_CARD_TAG).getUnclippedBoundsInRoot()
+            val indicatorBounds =
+                composeRule.onNodeWithTag(LOGIN_MODE_INDICATOR_TAG).getUnclippedBoundsInRoot()
+            val buttonBounds =
+                composeRule.onNodeWithTag(LOGIN_PRIMARY_BUTTON_TAG).getUnclippedBoundsInRoot()
+
+            assertEquals(initialCardBounds.left.value, cardBounds.left.value, 0.5f)
+            assertEquals(initialCardBounds.top.value, cardBounds.top.value, 0.5f)
+            assertEquals(initialIndicatorBounds.left.value, indicatorBounds.left.value, 0.5f)
+            assertEquals(initialIndicatorBounds.top.value, indicatorBounds.top.value, 0.5f)
+            assertEquals(initialButtonBounds.left.value, buttonBounds.left.value, 0.5f)
+            assertEquals(initialButtonBounds.top.value, buttonBounds.top.value, 0.5f)
+        }
+    }
+
+    @Test
     fun mobileFeedbackStatesKeepPrimaryActionAnchored() {
         var state by
             mutableStateOf(
@@ -261,7 +310,7 @@ class LoginScreenAccessibilityTest {
 
         designStates.forEach { nextState ->
             composeRule.runOnIdle { state = nextState }
-            composeRule.onAllNodes(hasScrollAction()).assertCountEquals(0)
+            composeRule.onNodeWithTag(LOGIN_SCROLL_CONTAINER_TAG).assert(hasNoScrollAction)
             val cardBounds = composeRule.onNodeWithTag(LOGIN_CARD_TAG).getUnclippedBoundsInRoot()
             val indicatorBounds =
                 composeRule.onNodeWithTag(LOGIN_MODE_INDICATOR_TAG).getUnclippedBoundsInRoot()
@@ -511,6 +560,11 @@ private val expiredAccountState =
         selectedUserId = "10000002",
         notice = LoginNotice.Failure(AuthError.Rejected),
     )
+
+private val hasNoScrollAction =
+    SemanticsMatcher("does not expose a page scroll action") { node ->
+        !node.config.contains(SemanticsActions.ScrollBy)
+    }
 
 @Composable
 private fun TestLoginScreen(

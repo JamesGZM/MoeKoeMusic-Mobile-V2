@@ -29,6 +29,8 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 
 ## 19 · 密码登录
 
+2026-08-07 人工确认：默认、提交和凭据错误三态统一采用 `y = 1192` 的主按钮顶部锚点，反馈槽始终保留，状态切换不得推动主操作。`19a`、`19b` 已同步下移主操作及其后的协议/安全页脚；`19c` 保持原锚点。
+
 - [`19a-password-default.png`](19a-password-default.png)：默认态。
 - [`19b-password-submitting.png`](19b-password-submitting.png)：提交中，字段与操作锁定。
 - [`19c-password-rejected.png`](19c-password-rejected.png)：凭据错误内联显示。
