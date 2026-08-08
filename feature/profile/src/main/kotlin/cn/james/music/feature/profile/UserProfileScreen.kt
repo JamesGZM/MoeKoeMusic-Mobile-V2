@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 
 @Composable
 internal fun UserProfileScreen(
@@ -88,12 +89,17 @@ internal fun UserProfileScreen(
                 navigationContentDescription = stringResource(R.string.profile_back),
                 onNavigateBack = onBack,
                 actions = {
-                    IconButton(onClick = onShare) {
-                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.profile_share))
-                    }
-                    IconButton(onClick = onMore) {
-                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.profile_more))
-                    }
+                    MoeStandardTopBarAction(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = stringResource(R.string.profile_share),
+                        onClick = onShare,
+                        horizontalVisualOffset = 8.dp,
+                    )
+                    MoeStandardTopBarAction(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.profile_more),
+                        onClick = onMore,
+                    )
                 },
             )
         },
@@ -194,7 +200,7 @@ private fun ProfileHero(
 ) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 10.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),

@@ -110,8 +110,8 @@
 | --- | --- | --- | --- |
 | `headlineLarge` | `28sp / 36sp` | SemiBold | 页面主标题、登录主标题 |
 | `headlineMedium` | `24sp / 32sp` | SemiBold | 模块主标题 |
-| `titleLarge` | `22sp / 28sp` | SemiBold | 标准 Toolbar 标题、重要区块 |
-| `titleMedium` | `18sp / 26sp` | SemiBold | 卡片标题、Dialog 标题 |
+| `titleLarge` | `22sp / 28sp` | SemiBold | 重要区块 |
+| `titleMedium` | `18sp / 26sp` | SemiBold | 卡片和 Dialog 标题 |
 | `titleSmall` | `16sp / 24sp` | SemiBold | 歌曲标题、主要列表标题 |
 | `bodyLarge` | `16sp / 24sp` | Regular | 输入内容、重要正文 |
 | `bodyMedium` | `14sp / 22sp` | Regular | 正文、歌手和说明文字 |
@@ -162,7 +162,7 @@
 
 ### Toolbar 变体
 
-1. 标准：以 `10-user-profile.png` 为基准。高度 `64dp`，不含系统状态栏；水平内容边距 `16dp`；标题使用单行 `titleLarge`，相对完整页面宽度几何居中，而不是跟随左侧内容起排。左侧与尾部操作均为 `24dp` 图标置于至少 `48dp` 语义触控区，不显示圆形底板、卡片外框或 Toolbar 整体阴影。
+1. 标准：以 `10-user-profile.png` 为坐标母版。高度 `64dp`，不含系统状态栏；水平内容边距 `16dp`；标题使用单行 `15sp / 22sp` SemiBold，相对完整页面宽度几何居中，并以视觉字框而非 Material 默认基线做 `-4dp` 光学校正。共享 Chevron 使用 `16dp` 可见画布与 `-2dp` 光学校正；尾部 Material 操作使用 `20dp` 可见图形与 `-3dp` 光学校正。双尾部操作的前一个可见图形向尾端校正 `8dp`，但两个 `48dp` 触控区仍保持原位且不重叠。全部操作不显示圆形底板、卡片外框或 Toolbar 整体阴影。
 2. 滚动标准态：保持标准态几何与居中标题；内容滚动后切换为实体 `surface`，最多增加一条轻量底部分隔线，不改变图标容器、标题位置或 Toolbar 高度。
 3. 搜索：使用独立 `56dp` Toolbar，内部搜索框视觉高度 `40dp`、圆角约 `20dp`；左侧导航与右侧语音操作各占至少 `48dp` 触控区。搜索、清除图标使用独立紧凑槽位，图标背景不得填满输入框高度。搜索属于子页面，不进入底部导航，也不叠加第二个页面标题。
 4. 多选：左侧关闭，中间显示已选数量，尾部只保留当前流程需要的少量操作；只有删除等破坏性操作使用 Error 色。

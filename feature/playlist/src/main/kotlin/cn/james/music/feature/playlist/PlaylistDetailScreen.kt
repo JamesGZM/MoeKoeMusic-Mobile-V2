@@ -67,6 +67,7 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 
 @Composable
 internal fun PlaylistDetailScreen(
@@ -93,18 +94,17 @@ internal fun PlaylistDetailScreen(
                 navigationContentDescription = stringResource(R.string.playlist_detail_back),
                 onNavigateBack = onBack,
                 actions = {
-                    IconButton(onClick = onSearch) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = stringResource(R.string.playlist_detail_search),
-                        )
-                    }
-                    IconButton(onClick = onMore) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.playlist_detail_more),
-                        )
-                    }
+                    MoeStandardTopBarAction(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.playlist_detail_search),
+                        onClick = onSearch,
+                        horizontalVisualOffset = 8.dp,
+                    )
+                    MoeStandardTopBarAction(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.playlist_detail_more),
+                        onClick = onMore,
+                    )
                 },
             )
         },

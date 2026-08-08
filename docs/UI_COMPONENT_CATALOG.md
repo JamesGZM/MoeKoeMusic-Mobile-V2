@@ -17,7 +17,7 @@
 | --- | --- | --- | --- | --- |
 | Theme / Token | 根包 | Stable | 全部页面 | 保持语义化，禁止页面覆盖全局 Density |
 | Navigation back icon | `component.navigation` | Stable | 标准 Toolbar、沉浸式 Toolbar、登录 Hero | 统一 SVG/Vector 路径和 RTL；外围按钮组合归各 Toolbar/页面 |
-| Standard TopBar | `component.navigation` | Stable | `10-user-profile`、`15-toolbar-navigation`、搜索和本地音乐 | 页面中心锚定标题；调用方只替换返回/关闭等可见导航图标，公共组件持有点击、`48dp` 触控区、颜色和 Insets |
+| Standard TopBar | `component.navigation` | Stable | `10-user-profile`、`15-toolbar-navigation`、设置、歌单详情和本地音乐 | 页面中心锚定 `15sp / 22sp` 标题；共享 Chevron 使用 `16dp` 画布，尾部图标通过 `MoeStandardTopBarAction` 固定 `20dp` 图形，并允许双操作前项做 `8dp` 视觉校正而不移动 `48dp` 触控区；公共组件统一持有光学校正、颜色和 Insets |
 | Immersive TopBar | `component.navigation` | Adopt | 登录、播放器、Hero 详情确认稿 | 页面接入时验证前景对比和 Insets |
 | Search / Selection TopBar | `component.navigation` | Adopt | 搜索、本地音乐多选 | 按各自语义建立窄 API |
 | Button | `component.action` | Adopt | 登录、搜索、本地音乐、我的、播放器 | 建立五类操作与 48/56dp 具名尺寸 |
