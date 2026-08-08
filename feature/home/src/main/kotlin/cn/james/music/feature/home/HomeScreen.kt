@@ -131,6 +131,7 @@ private fun HomeContent(
             }
         }
         if (content.playlists.isNotEmpty()) {
+            item { Spacer(Modifier.height(12.dp)) }
             item { HomeSectionHeader(stringResource(R.string.home_playlist_title)) }
             item { HomePlaylistGrid(content.playlists.take(4)) }
         }
@@ -264,7 +265,7 @@ private fun HomeRadioHero() {
                 ),
         )
         Column(
-            modifier = Modifier.fillMaxHeight().fillMaxWidth(copyWidth).padding(start = 16.dp, top = 5.dp, bottom = 14.dp),
+            modifier = Modifier.fillMaxHeight().fillMaxWidth(copyWidth).padding(start = 14.dp, top = 5.dp, bottom = 14.dp),
         ) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)) {
                 Icon(
@@ -277,7 +278,7 @@ private fun HomeRadioHero() {
             Text(
                 text = stringResource(R.string.home_radio_title),
                 modifier = Modifier.padding(top = 8.dp),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 26.sp),
                 fontWeight = FontWeight.Bold,
                 color = textColor,
                 maxLines = if (largeText) 2 else 1,
@@ -285,7 +286,7 @@ private fun HomeRadioHero() {
             )
             Text(
                 text = stringResource(R.string.home_radio_subtitle),
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, lineHeight = 20.sp),
                 fontWeight = FontWeight.Medium,
                 color = supportingColor,
                 maxLines = if (largeText) 2 else 1,
@@ -293,7 +294,7 @@ private fun HomeRadioHero() {
             )
             Text(
                 text = stringResource(R.string.home_radio_supporting),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, lineHeight = 16.sp),
                 color = supportingColor,
                 maxLines = if (largeText) 2 else 1,
                 overflow = TextOverflow.Ellipsis,
@@ -306,7 +307,7 @@ private fun HomeRadioHero() {
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
                     Row(
-                        modifier = Modifier.heightIn(min = 44.dp).padding(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.heightIn(min = 44.dp).padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
@@ -391,14 +392,14 @@ private fun QuickEntry(
             QuickEntryIcon(icon, iconColor, containerColor)
             Text(
                 title,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
             )
             Text(
                 supporting,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 14.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
@@ -408,10 +409,10 @@ private fun QuickEntry(
         Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
             QuickEntryIcon(icon, iconColor, containerColor)
             Column(Modifier.padding(start = 7.dp)) {
-                Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1)
+                Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1)
                 Text(
                     supporting,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 14.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
@@ -440,18 +441,18 @@ private fun QuickDivider() {
 @Composable
 private fun HomeSectionHeader(title: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp).padding(start = 14.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 32.dp).padding(start = 14.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier
-                .size(width = 4.dp, height = 24.dp)
+                .size(width = 4.dp, height = 20.dp)
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp)),
         )
         Text(
             text = title,
             modifier = Modifier.weight(1f).padding(start = 8.dp),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp, lineHeight = 20.sp),
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
         )
@@ -475,11 +476,11 @@ private fun HomeRecommendationRow(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 52.dp)
+                    .heightIn(min = 48.dp)
                     .clickable { onPlay(song) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MoeArtwork(size = 46.dp) {
+            MoeArtwork(size = 36.dp) {
                 HomeArtwork(
                     title = song.title,
                     artworkUrl = song.artworkUrl,
@@ -492,14 +493,14 @@ private fun HomeRecommendationRow(
             ) {
                 Text(
                     text = song.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = song.artistName.ifBlank { stringResource(R.string.home_unknown_artist) },
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -519,7 +520,7 @@ private fun HomeRecommendationRow(
             }
         }
         HorizontalDivider(
-            modifier = Modifier.padding(start = 56.dp),
+            modifier = Modifier.padding(start = 46.dp),
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
         )
     }
@@ -548,12 +549,12 @@ private fun HomePlaylistCard(
             title = playlist.title,
             artworkUrl = playlist.artworkUrl,
             previewArtworkRes = playlist.previewArtworkRes,
-            modifier = Modifier.fillMaxWidth().height(84.dp).clip(RoundedCornerShape(11.dp)),
+            modifier = Modifier.fillMaxWidth().height(88.dp).clip(RoundedCornerShape(11.dp)),
         )
         Text(
             playlist.title,
             modifier = Modifier.padding(top = 5.dp),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -563,7 +564,7 @@ private fun HomePlaylistCard(
         subtitle?.let {
             Text(
                 it,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 14.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

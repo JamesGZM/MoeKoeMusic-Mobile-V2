@@ -44,6 +44,8 @@ runtimeSize = designSize × s
 
 首页 Compose 只拥有 MiniPlayer 上方的内容区域。MiniPlayer 和 NavigationBar 固定在 `Scaffold.bottomBar`，不得进入首页滚动列表；首页截图基线与应用壳连续关系必须分别用 feature 截图和 app 集成截图证明。
 
+标准 `390dp`、`1.0×` 状态下，每日推荐使用 `48dp` 紧凑行与 `36dp` 封面；Section Header 视觉高度从 `32dp` 起，推荐区结束后保留 `12dp` 分组留白再进入推荐歌单；四列歌单封面高度为 `88dp`。这些尺寸只约束标准态视觉槽位，点击语义仍不得小于 `48dp`，大字体继续按内容自然增高。
+
 ## 滚动、Insets 与状态
 
 - 首页是单一纵向内容流，只允许最外层 `LazyColumn` 成为滚动所有者；Hero、快捷入口、歌曲区和歌单区不得嵌套纵向滚动。
