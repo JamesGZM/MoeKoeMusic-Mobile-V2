@@ -46,6 +46,8 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 - [`20d-qr-expired.png`](20d-qr-expired.png)：已过期。
 - [`20e-qr-failure.png`](20e-qr-failure.png)：获取失败与恢复操作。
 
+`20a–e` 已完成统一设计坐标下的五态归一化复验，证据见 [`login-qr-states-2026-08-08.md`](../../../evidence/login-qr-states-2026-08-08.md)。终止态按钮继续使用用户已确认的全局按钮风格。
+
 ## 21 · 风险验证
 
 - [`21a-risk-sms-default.png`](21a-risk-sms-default.png)：密码页上的短信验证输入 Dialog。

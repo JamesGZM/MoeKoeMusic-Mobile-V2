@@ -17,8 +17,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.SignalWifiConnectedNoInternet4
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -167,7 +168,7 @@ internal fun QrExpiredContent(
             border = BorderStroke(layout.dp(2f), MaterialTheme.colorScheme.outlineVariant),
         ) {
             Box(contentAlignment = Alignment.TopCenter) {
-                Box(Modifier.alpha(0.12f)) { QrCodeImage(layout, loginUrl) }
+                Box(Modifier.alpha(0.12f)) { QrCodeImage(layout, loginUrl, showCenterBadge = false) }
                 Icon(
                     Icons.Outlined.ErrorOutline,
                     contentDescription = null,
@@ -210,11 +211,18 @@ internal fun QrFailureContent(
             contentColor = MaterialTheme.colorScheme.error,
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    Icons.Outlined.SignalWifiConnectedNoInternet4,
-                    contentDescription = null,
-                    modifier = Modifier.size(layout.qr.terminalIconSize),
-                )
+                Box(Modifier.size(layout.qr.terminalIconSize)) {
+                    Icon(
+                        Icons.Outlined.Wifi,
+                        contentDescription = null,
+                        modifier = Modifier.align(Alignment.Center).size(layout.dp(72f)),
+                    )
+                    Icon(
+                        Icons.Filled.Error,
+                        contentDescription = null,
+                        modifier = Modifier.align(Alignment.BottomEnd).size(layout.dp(30f)),
+                    )
+                }
             }
         }
         Spacer(Modifier.height(layout.qr.terminalTextGap))

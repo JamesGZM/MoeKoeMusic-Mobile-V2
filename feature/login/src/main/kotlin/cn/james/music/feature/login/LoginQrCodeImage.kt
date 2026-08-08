@@ -31,6 +31,7 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 internal fun QrCodeImage(
     layout: LoginLayoutSpec,
     loginUrl: String,
+    showCenterBadge: Boolean = true,
 ) {
     val bitmap = remember(loginUrl) { createQrBitmap(loginUrl) }
     Box(
@@ -49,18 +50,20 @@ internal fun QrCodeImage(
             contentDescription = stringResource(R.string.login_qr_code_description),
             modifier = Modifier.size(layout.qr.codeImageSize),
         )
-        Surface(
-            modifier = Modifier.size(layout.qr.codeBadgeSize),
-            shape = RoundedCornerShape(layout.qr.codeBadgeRadius),
-            color = MaterialTheme.colorScheme.primary,
-            border = BorderStroke(layout.dp(5f), Color.White),
-        ) {
-            Icon(
-                Icons.Filled.MusicNote,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(layout.dp(16f)).size(layout.qr.codeBadgeIconSize),
-            )
+        if (showCenterBadge) {
+            Surface(
+                modifier = Modifier.size(layout.qr.codeBadgeSize),
+                shape = RoundedCornerShape(layout.qr.codeBadgeRadius),
+                color = MaterialTheme.colorScheme.primary,
+                border = BorderStroke(layout.dp(5f), Color.White),
+            ) {
+                Icon(
+                    Icons.Filled.MusicNote,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(layout.dp(16f)).size(layout.qr.codeBadgeIconSize),
+                )
+            }
         }
     }
 }

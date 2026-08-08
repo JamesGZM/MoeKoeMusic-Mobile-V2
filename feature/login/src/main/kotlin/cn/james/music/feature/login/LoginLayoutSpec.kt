@@ -48,7 +48,7 @@ internal class LoginQrMetrics(
     val instructionToState = layout.dp(32f)
     val standardStateHeight = layout.dp(438f)
     val expiredStateHeight = layout.dp(576f)
-    val failureStateHeight = layout.dp(470f)
+    val failureStateHeight = layout.dp(496f)
     val standardStateToSteps = layout.dp(40f)
     val terminalStateToSteps = layout.dp(30f)
 

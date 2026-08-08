@@ -78,6 +78,8 @@
 
 2026-08-08 腾讯风险加载页复验：`21d` 使用公共 `MoeStandardTopBar` 及其自定义导航内容能力承载圆形关闭按钮，加载区和安全页脚按确认稿固定纵向锚点；WebView 去除默认边距并保持透明，加载完成后覆盖宿主占位。证据见 [`login-tencent-loading-2026-08-08.md`](../design/evidence/login-tencent-loading-2026-08-08.md)。`21e` 继续独立验收。
 
+2026-08-08 扫码五态复验：`20a–e` 已在同一设计坐标下完成生成、待扫码、已扫码、过期和失败五态并排复核；修正扫码步骤图标、过期二维码中心徽标、失败网络图标与终止态纵向锚点，终止态按钮保持用户确认的全局 `MoeButton` 风格。证据见 [`login-qr-states-2026-08-08.md`](../design/evidence/login-qr-states-2026-08-08.md)。真实扫码状态 `2→4` 与服务轮询仍属于后续功能验收，不阻塞本视觉切片。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`
