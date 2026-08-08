@@ -91,5 +91,17 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
                 changedFilesFile.set(target.layout.projectDirectory.file(path))
             }
         }
+        target.tasks.register("verifySkillGovernance", VerifySkillGovernanceTask::class.java) {
+            group = "verification"
+            description = "校验 skill incident、隔离 eval 和人工批准边界。"
+            repositoryRoot.set(target.layout.projectDirectory)
+            incidentFiles.from(target.fileTree("docs/quality/incidents") { include("*.properties") })
+            evalFiles.from(target.fileTree(".agents/evals") { include("*.properties") })
+        }
+        target.tasks.register("checkAgentUpstreamUpdates", CheckAgentUpstreamUpdatesTask::class.java) {
+            group = "help"
+            description = "只读检查已固定 Android/Compose skill 上游是否出现新 HEAD。"
+            lockFile.set(target.layout.projectDirectory.file(".agents/upstreams/agent-skills.properties"))
+        }
     }
 }

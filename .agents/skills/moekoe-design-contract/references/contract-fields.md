@@ -10,15 +10,18 @@
 
 ## 渲染入口
 
-- `screenshot.testId`、`screenshot.source`、`screenshot.golden`
+- `screenshot.testId`、`screenshot.source`、`screenshot.golden`、`screenshot.goldenSha256`
 - `screenshot.rendered`、`viewport.widthDp`、`viewport.heightDp`
 - `locale`、`theme`、`fontScale`
+- 强制 contract 另有 `probe.testId`、`probe.source`、`probe.golden`、`probe.goldenSha256`、`probe.rendered`。
 
 ## 对比规则
 
 - `design.crop` 与 `render.crop`：`x,y,width,height`；省略时使用完整图片。
-- `anchor.<name>`：`x,y,tolerance`；坐标使用设计单位。
-- `mask.<name>`：`x,y,width,height,reason`；原因不能为空。
+- `anchor.<name>`：`x,y,tolerance,r,g,b`；坐标使用设计单位，RGB 是 probe 的独占色标。
+- `mask.<name>`：`x,y,width,height;reason`；原因不能为空。
+- `drift.anchors`：按纵向顺序列出需要计算累计漂移的锚点。
+- `pixel.deltaThreshold`、`pixel.meanError.max`、`pixel.changedRatio.max`：归一化像素指标阈值。
 - `tolerance.fixed` 与 `tolerance.cumulativeY`：设计单位阈值。
 
 ## 历史债务
@@ -26,3 +29,4 @@
 - `debt.status=active|none`
 - active 时必须有 `debt.reason`、`debt.owner`、`debt.expiresAt` 和逗号分隔的 `debt.scopePaths`。
 - 新增状态不得设置 active；范围被修改或到期后验证必须失败。
+- active contract 首次登记可以与债务范围同提交；后续修改 contract 不能重新获得该豁免。

@@ -148,6 +148,8 @@ Repository
 
 禁止反向依赖：数据层不能依赖 feature，播放器不能依赖具体 UI，API 模块不能依赖 Android 页面。
 
+根项目的 `verifyArchitecture` 根据集中 allowlist 校验 Gradle project dependency 和生产源码 import；新增边界例外必须先完成 Accepted 审计并更新策略测试，不能靠排除源码或只改文档绕过。
+
 ## UI 状态模型
 
 每个页面使用不可变状态：

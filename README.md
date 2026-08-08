@@ -29,13 +29,25 @@ MoeKoeMusic Mobile V2 是 MoeKoeMusic 的 Android 原生实现，计划使用 Ko
 
 ```bash
 ./gradlew spotlessCheck
+./gradlew :build-logic:test verifyArchitecture verifyUiContracts verifySkillGovernance
 ./gradlew testDebugUnitTest
 ./gradlew lintDebug
-./gradlew --no-configuration-cache validateDebugScreenshotTest
+./gradlew --no-configuration-cache validateDebugScreenshotTest verifyUiFidelity verifyUiGoldenChange
 ./gradlew assembleDebug
 ```
 
 截图插件当前为实验版，其任务暂不兼容 Configuration Cache，因此只对截图命令局部关闭缓存。Debug APK 输出到 `app/build/outputs/apk/debug/`。
+
+Compose 页面开发使用单 contract 快循环，不需要每次运行全部截图：
+
+```bash
+./gradlew verifyUiContracts
+./gradlew verifyUiFidelity \
+  -Pmoekoe.uiContract=login.mobile-code.default \
+  --no-configuration-cache
+```
+
+该命令只触发 contract 所属模块的截图任务，并在 `build/reports/ui-evidence/<contract-id>/` 生成归一化设计稿、当前渲染、并排图、叠加图、差异图和结构化指标。更新 screenshot reference 前必须再运行 `verifyUiGoldenChange`；reference 回归通过不能替代设计符合度。
 
 本地音乐格式 fixture 使用仓库脚本生成 440Hz 合成音调。五个 Debug 测试资产随仓库提交，Release APK 不包含这些资产，也不使用第三方音乐：
 
