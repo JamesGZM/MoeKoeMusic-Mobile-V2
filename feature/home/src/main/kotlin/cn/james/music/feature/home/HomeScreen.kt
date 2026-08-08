@@ -64,6 +64,7 @@ import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeArtwork
 import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.core.designsystem.component.MoeSongRow
 
 @Composable
 internal fun HomeScreen(
@@ -127,7 +128,7 @@ private fun HomeContent(
         if (content.recommendations.isNotEmpty()) {
             item { HomeSectionHeader(stringResource(R.string.home_daily_title)) }
             items(content.recommendations.take(4), key = HomeSongUi::id) { song ->
-                HomeRecommendationRow(song = song, onPlay = onPlay)
+                HomeSongRow(song = song, onPlay = onPlay)
             }
         }
         if (content.playlists.isNotEmpty()) {
@@ -467,58 +468,46 @@ private fun HomeSectionHeader(title: String) {
 }
 
 @Composable
-private fun HomeRecommendationRow(
+private fun HomeSongRow(
     song: HomeSongUi,
     onPlay: (HomeSongUi) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp)) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .clickable { onPlay(song) },
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MoeArtwork(size = 36.dp) {
+        MoeSongRow(
+            title = song.title,
+            subtitle = song.artistName.ifBlank { stringResource(R.string.home_unknown_artist) },
+            onClick = { onPlay(song) },
+            minimumHeight = 48.dp,
+            largeTextMinimumHeight = 48.dp,
+            artworkSize = 36.dp,
+            verticalContentPadding = 0.dp,
+            textHorizontalPadding = 10.dp,
+            titleStyle = MaterialTheme.typography.labelLarge,
+            subtitleStyle = MaterialTheme.typography.labelSmall,
+            largeTextTitleMaxLines = 1,
+            inlineTitleContent = false,
+            artwork = {
                 HomeArtwork(
                     title = song.title,
                     artworkUrl = song.artworkUrl,
                     previewArtworkRes = song.previewArtworkRes,
                 )
-            }
-            Column(
-                modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = song.artistName.ifBlank { stringResource(R.string.home_unknown_artist) },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            song.previewBadge?.let { badge ->
-                MoeMediaBadge(
-                    text = badge,
-                    tone = if (song.previewBadgeIsError) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
-                )
-            }
-            Box(
-                modifier = Modifier.size(48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(22.dp))
-            }
-        }
+            },
+            trailing = {
+                song.previewBadge?.let { badge ->
+                    MoeMediaBadge(
+                        text = badge,
+                        tone = if (song.previewBadgeIsError) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
+                    )
+                }
+                Box(
+                    modifier = Modifier.size(48.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(22.dp))
+                }
+            },
+        )
         HorizontalDivider(
             modifier = Modifier.padding(start = 46.dp),
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),

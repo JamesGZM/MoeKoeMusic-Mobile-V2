@@ -47,4 +47,20 @@ class ArchitecturePolicyTest {
         assertTrue(violations.any { it.contains("Room") })
         assertTrue(violations.any { it.contains("网络传输") })
     }
+
+    @Test
+    fun `歌曲型页面适配器必须委托唯一母组件`() {
+        val root = createTempDirectory("moekoe-song-item-").toFile()
+        val valid = File(root, "feature/search/src/main/kotlin/SearchScreen.kt")
+        val invalid = File(root, "feature/playlist/src/main/kotlin/PlaylistScreen.kt")
+        valid.parentFile.mkdirs()
+        invalid.parentFile.mkdirs()
+        valid.writeText("fun SearchSongRow() { MoeSongRow(title = \"fixture\") }")
+        invalid.writeText("fun PlaylistTrackRow() { Row { } }")
+
+        val violations = ArchitecturePolicy.validateSongItems(root, listOf(valid, invalid))
+
+        assertEquals(1, violations.size)
+        assertTrue(violations.single().contains("PlaylistTrackRow"))
+    }
 }

@@ -25,7 +25,8 @@ abstract class VerifyArchitectureTask : DefaultTask() {
     fun verify() {
         val edgeViolations = ArchitecturePolicy.validateEdges(projectEdges.get())
         val importViolations = ArchitecturePolicy.validateImports(repositoryRoot.get().asFile, sourceFiles.files)
-        val violations = edgeViolations.map { "非法模块依赖：$it" } + importViolations
+        val songItemViolations = ArchitecturePolicy.validateSongItems(repositoryRoot.get().asFile, sourceFiles.files)
+        val violations = edgeViolations.map { "非法模块依赖：$it" } + importViolations + songItemViolations
         if (violations.isNotEmpty()) {
             throw GradleException("架构门禁失败：\n${violations.joinToString("\n") { "- $it" }}")
         }

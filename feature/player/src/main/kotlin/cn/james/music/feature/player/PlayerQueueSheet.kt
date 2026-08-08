@@ -33,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
@@ -326,75 +328,79 @@ private fun QueueItem(
     onRemove: () -> Unit,
     artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
-    Row(
+    MoeSongRow(
+        title = queueItem.item.title,
+        subtitle = queueItem.item.artist,
+        metadata = queueItem.durationLabel,
+        onClick = onClick,
+        minimumHeight = if (isCurrent) 58.dp else 56.dp,
+        largeTextMinimumHeight = if (isCurrent) 58.dp else 56.dp,
+        fixedHeight = if (isCurrent) 58.dp else 56.dp,
+        artworkSize = 44.dp,
+        artworkShape = RoundedCornerShape(7.dp),
+        decorateArtwork = false,
+        contentStartPadding = 9.dp,
+        contentEndPadding = 0.dp,
+        verticalContentPadding = 0.dp,
+        textStartPadding = if (isCurrent) 9.dp else 15.dp,
+        textEndPadding = 8.dp,
+        metadataEndPadding = 0.dp,
+        metadataInSubtitleOnLargeText = false,
+        isPlaying = isCurrent,
+        showPlayingIndicator = false,
+        highlightTitleWhenPlaying = false,
+        shape = RoundedCornerShape(8.dp),
+        containerColor = if (isCurrent) QueueCurrentContainer else Color.Transparent,
+        titleColor = QueueOnSurface,
+        subtitleColor = QueueOnSurfaceVariant,
+        metadataColor = QueueOnSurfaceVariant,
+        playingColor = QueueAccent,
+        titleStyle = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 19.sp),
+        subtitleStyle = LocalTextStyle.current.copy(fontSize = 12.sp, lineHeight = 16.sp),
+        metadataStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+        titleFontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
+        inlineTitleContent = false,
         modifier =
             Modifier
                 .padding(horizontal = 12.dp)
-                .fillMaxWidth()
-                .height(if (isCurrent) 58.dp else 56.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (isCurrent) QueueCurrentContainer else Color.Transparent)
-                .clickable(onClick = onClick)
-                .padding(start = 9.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        QueueArtwork(queueItem.item, artworkContent)
-        if (isCurrent) {
+                .fillMaxWidth(),
+        artwork = { QueueArtwork(queueItem.item, artworkContent) },
+        artworkTrailing = {
+            if (isCurrent) {
+                Icon(
+                    Icons.Default.Equalizer,
+                    contentDescription = stringResource(R.string.player_queue_current),
+                    modifier = Modifier.padding(start = 9.dp).size(24.dp),
+                    tint = QueueAccent,
+                )
+            }
+        },
+        trailing = {
             Icon(
-                Icons.Default.Equalizer,
-                contentDescription = stringResource(R.string.player_queue_current),
-                modifier = Modifier.padding(start = 9.dp).size(24.dp),
-                tint = QueueAccent,
+                Icons.Default.DragIndicator,
+                contentDescription = stringResource(R.string.player_queue_reorder_unavailable),
+                modifier = Modifier.padding(start = 9.dp).size(22.dp),
+                tint = QueueOnSurfaceVariant,
             )
-        }
-        Column(
-            modifier = Modifier.weight(1f).padding(start = if (isCurrent) 9.dp else 15.dp, end = 8.dp),
-        ) {
-            Text(
-                text = queueItem.item.title,
-                color = QueueOnSurface,
-                fontSize = 14.sp,
-                lineHeight = 19.sp,
-                fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = queueItem.item.artist,
-                color = QueueOnSurfaceVariant,
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        queueItem.durationLabel?.let {
-            Text(it, color = QueueOnSurfaceVariant, fontSize = 12.sp)
-        }
-        Icon(
-            Icons.Default.DragIndicator,
-            contentDescription = stringResource(R.string.player_queue_reorder_unavailable),
-            modifier = Modifier.padding(start = 9.dp).size(22.dp),
-            tint = QueueOnSurfaceVariant,
-        )
-        IconButton(onClick = onRemove, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
-            Surface(
-                modifier = Modifier.size(30.dp),
-                shape = CircleShape,
-                color = Color.Transparent,
-                border = BorderStroke(1.dp, QueueOutline),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = stringResource(R.string.player_queue_remove, queueItem.item.title),
-                        modifier = Modifier.size(18.dp),
-                        tint = QueueOnSurfaceVariant,
-                    )
+            IconButton(onClick = onRemove, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+                Surface(
+                    modifier = Modifier.size(30.dp),
+                    shape = CircleShape,
+                    color = Color.Transparent,
+                    border = BorderStroke(1.dp, QueueOutline),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.player_queue_remove, queueItem.item.title),
+                            modifier = Modifier.size(18.dp),
+                            tint = QueueOnSurfaceVariant,
+                        )
+                    }
                 }
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -410,7 +416,7 @@ private fun QueueArtwork(
             null -> null
         }
     Box(
-        modifier = Modifier.size(44.dp).clip(RoundedCornerShape(7.dp)).background(QueueArtworkPlaceholder),
+        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(7.dp)).background(QueueArtworkPlaceholder),
         contentAlignment = Alignment.Center,
     ) {
         Icon(Icons.Default.MusicNote, contentDescription = null, tint = QueueOnSurfaceVariant)

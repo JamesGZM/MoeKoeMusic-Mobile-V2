@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
@@ -35,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -147,91 +148,162 @@ fun MoeMediaBadge(
 fun MoeSongRow(
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     artwork: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     minimumHeight: Dp = 72.dp,
+    largeTextMinimumHeight: Dp = 96.dp,
+    fixedHeight: Dp? = null,
+    artworkSize: Dp = 52.dp,
+    artworkShape: Shape = MaterialTheme.shapes.small,
+    decorateArtwork: Boolean = true,
+    horizontalContentPadding: Dp = 0.dp,
+    contentStartPadding: Dp = horizontalContentPadding,
+    contentEndPadding: Dp = horizontalContentPadding,
     verticalContentPadding: Dp = MoeKoeTheme.spacing.small,
+    textHorizontalPadding: Dp = MoeKoeTheme.spacing.compact,
+    textStartPadding: Dp = textHorizontalPadding,
+    textEndPadding: Dp = textHorizontalPadding,
+    subtitleTopPadding: Dp = 0.dp,
     metadata: String? = null,
+    metadataStartPadding: Dp = 0.dp,
+    metadataEndPadding: Dp = MoeKoeTheme.spacing.small,
+    metadataInSubtitleOnLargeText: Boolean = true,
     enabled: Boolean = true,
     isPlaying: Boolean = false,
+    showPlayingIndicator: Boolean = true,
+    highlightTitleWhenPlaying: Boolean = true,
+    shape: Shape = RectangleShape,
+    containerColor: Color = Color.Transparent,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface,
+    subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    metadataColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    playingColor: Color = MaterialTheme.colorScheme.primary,
+    titleStyle: TextStyle = MaterialTheme.typography.titleSmall,
+    subtitleStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    metadataStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    titleFontWeight: FontWeight = FontWeight.Medium,
+    titleMaxLines: Int = 1,
+    largeTextTitleMaxLines: Int = 2,
+    inlineTitleContent: Boolean = true,
+    leading: @Composable RowScope.() -> Unit = {},
+    artworkTrailing: @Composable RowScope.() -> Unit = {},
     titleLeading: @Composable RowScope.() -> Unit = {},
     badges: @Composable RowScope.() -> Unit = {},
+    contentTrailing: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
-    val titleLines = if (largeText) 2 else 1
+    val titleLines = if (largeText) largeTextTitleMaxLines else titleMaxLines
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = if (largeText) 96.dp else minimumHeight)
-                .clickable(enabled = enabled, onClick = onClick)
+                .then(
+                    fixedHeight?.let(Modifier::height)
+                        ?: Modifier.heightIn(min = if (largeText) largeTextMinimumHeight else minimumHeight),
+                )
+                .clip(shape)
+                .background(containerColor)
+                .then(
+                    if (onClick == null) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(enabled = enabled, onClick = onClick)
+                    },
+                )
                 .alpha(if (enabled) 1f else DISABLED_CONTENT_ALPHA)
-                .padding(vertical = verticalContentPadding),
+                .padding(start = contentStartPadding, end = contentEndPadding, top = verticalContentPadding, bottom = verticalContentPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (isPlaying) {
+        if (isPlaying && showPlayingIndicator) {
             Box(
                 modifier = Modifier.padding(end = MoeKoeTheme.spacing.small).size(4.dp, 32.dp),
             ) {
-                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp)))
+                Box(Modifier.fillMaxSize().background(playingColor, RoundedCornerShape(2.dp)))
             }
         }
-        MoeArtwork(content = artwork)
+        leading()
+        if (decorateArtwork) {
+            MoeArtwork(size = artworkSize, shape = artworkShape, content = artwork)
+        } else {
+            Box(modifier = Modifier.size(artworkSize), contentAlignment = Alignment.Center, content = artwork)
+        }
+        artworkTrailing()
         Column(
-            modifier = Modifier.weight(1f).padding(horizontal = MoeKoeTheme.spacing.compact),
+            modifier = Modifier.weight(1f).padding(start = textStartPadding, end = textEndPadding),
             verticalArrangement = Arrangement.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                titleLeading()
+            if (inlineTitleContent) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    titleLeading()
+                    Text(
+                        text = title,
+                        modifier = Modifier.weight(1f),
+                        style = titleStyle,
+                        fontWeight = titleFontWeight,
+                        color = if (isPlaying && highlightTitleWhenPlaying) playingColor else titleColor,
+                        maxLines = titleLines,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Row(
+                        modifier = Modifier.padding(start = MoeKoeTheme.spacing.small),
+                        horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.extraSmall),
+                        verticalAlignment = Alignment.CenterVertically,
+                        content = badges,
+                    )
+                }
+            } else {
                 Text(
                     text = title,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    style = titleStyle,
+                    fontWeight = titleFontWeight,
+                    color = if (isPlaying && highlightTitleWhenPlaying) playingColor else titleColor,
                     maxLines = titleLines,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Row(
-                    modifier = Modifier.padding(start = MoeKoeTheme.spacing.small),
-                    horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.extraSmall),
-                    verticalAlignment = Alignment.CenterVertically,
-                    content = badges,
-                )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = subtitle,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (largeText) {
+            if (largeText && metadataInSubtitleOnLargeText) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = subtitle,
+                        modifier = Modifier.weight(1f).padding(top = subtitleTopPadding),
+                        style = subtitleStyle,
+                        color = subtitleColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                     metadata?.let { text ->
                         Text(
                             text = text,
                             modifier = Modifier.padding(start = MoeKoeTheme.spacing.small),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = metadataStyle,
+                            color = metadataColor,
                             maxLines = 1,
                         )
                     }
                 }
+            } else {
+                Text(
+                    text = subtitle,
+                    modifier = Modifier.padding(top = subtitleTopPadding),
+                    style = subtitleStyle,
+                    color = subtitleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
-        if (!largeText) {
+        contentTrailing()
+        if (!largeText || !metadataInSubtitleOnLargeText) {
             metadata?.let { text ->
-            Text(
-                text = text,
-                modifier = Modifier.padding(end = MoeKoeTheme.spacing.small),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
+                Text(
+                    text = text,
+                    modifier = Modifier.padding(start = metadataStartPadding, end = metadataEndPadding),
+                    style = metadataStyle,
+                    color = metadataColor,
+                    maxLines = 1,
+                )
             }
         }
         trailing()
@@ -434,72 +506,6 @@ private fun MiniPlayerTime(label: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
     )
-}
-
-@Composable
-fun MoeQueueRow(
-    positionLabel: String,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit,
-    removeContentDescription: String,
-    onRemove: () -> Unit,
-    artwork: @Composable BoxScope.() -> Unit,
-    modifier: Modifier = Modifier,
-    metadata: String? = null,
-    isPlaying: Boolean = false,
-) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .clickable(onClick = onClick)
-                .padding(vertical = MoeKoeTheme.spacing.extraSmall),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = positionLabel,
-                color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
-        MoeArtwork(size = 44.dp, content = artwork)
-        Column(modifier = Modifier.weight(1f).padding(horizontal = MoeKoeTheme.spacing.compact)) {
-            Text(
-                text = title,
-                color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = subtitle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        metadata?.let { text ->
-            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        IconButton(
-            onClick = onRemove,
-            modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = removeContentDescription,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
-            )
-        }
-    }
 }
 
 private data class BadgeColors(

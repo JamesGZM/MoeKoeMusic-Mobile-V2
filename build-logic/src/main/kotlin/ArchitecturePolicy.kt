@@ -23,6 +23,37 @@ internal object ArchitecturePolicy {
             }
         }
 
+    fun validateSongItems(
+        rootDir: File,
+        sourceFiles: Iterable<File>,
+    ): List<String> =
+        sourceFiles.flatMap { file ->
+            val relative = file.relativeTo(rootDir).invariantSeparatorsPath
+            val source = file.readText()
+            SONG_ITEM_FUNCTION
+                .findAll(source)
+                .mapNotNull { match ->
+                    val name = match.groupValues[1]
+                    when {
+                        name == "MoeSongRow" && relative != SONG_ITEM_OWNER -> {
+                            "$relative: $name 只能由 :core:designsystem 定义"
+                        }
+
+                        name == "MoeSongRow" -> {
+                            null
+                        }
+
+                        extractFunctionBody(source, match.range.last + 1)?.contains("MoeSongRow(") != true -> {
+                            "$relative: $name 必须委托唯一歌曲母组件 MoeSongRow"
+                        }
+
+                        else -> {
+                            null
+                        }
+                    }
+                }.toList()
+        }
+
     private fun isAllowed(
         source: String,
         target: String,
@@ -123,6 +154,30 @@ internal object ArchitecturePolicy {
         return null
     }
 
+    private fun extractFunctionBody(
+        source: String,
+        fromIndex: Int,
+    ): String? {
+        val opening = source.indexOf('{', fromIndex).takeIf { it >= 0 } ?: return null
+        var depth = 0
+        for (index in opening until source.length) {
+            when (source[index]) {
+                '{' -> {
+                    depth += 1
+                }
+
+                '}' -> {
+                    depth -= 1
+                    if (depth == 0) return source.substring(opening, index + 1)
+                }
+            }
+        }
+        return null
+    }
+
     private val IMPORT = Regex("import\\s+([A-Za-z0-9_.*]+)")
     private val FEATURE_IMPORT = Regex("^cn\\.james\\.music\\.feature\\.([^.]+)\\.")
+    private val SONG_ITEM_FUNCTION = Regex("fun\\s+([A-Za-z0-9_]*(?:Song|Track|Queue|Music)[A-Za-z0-9_]*(?:Row|Item))\\s*\\(")
+    private const val SONG_ITEM_OWNER =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeMusicContent.kt"
 }

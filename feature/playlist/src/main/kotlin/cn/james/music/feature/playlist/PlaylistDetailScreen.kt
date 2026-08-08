@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
+import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 
@@ -485,83 +486,83 @@ private fun PlaylistTrackRow(
     onClick: () -> Unit,
     onMore: () -> Unit,
 ) {
-    val largeText = LocalDensity.current.fontScale >= 1.3f
-    Row(
+    MoeSongRow(
+        title = song.title,
+        subtitle = song.artist,
+        metadata = song.durationLabel,
+        onClick = onClick,
+        minimumHeight = if (isCurrent) 58.dp else 57.dp,
+        largeTextMinimumHeight = 88.dp,
+        artworkSize = 44.dp,
+        artworkShape = RoundedCornerShape(8.dp),
+        decorateArtwork = false,
+        contentStartPadding = 4.dp,
+        contentEndPadding = 0.dp,
+        verticalContentPadding = 0.dp,
+        textHorizontalPadding = 12.dp,
+        subtitleTopPadding = 2.dp,
+        metadataStartPadding = 8.dp,
+        metadataEndPadding = 0.dp,
+        metadataInSubtitleOnLargeText = false,
+        isPlaying = isCurrent,
+        showPlayingIndicator = false,
+        highlightTitleWhenPlaying = false,
+        shape = RoundedCornerShape(12.dp),
+        containerColor = if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f) else Color.Transparent,
+        titleStyle = MaterialTheme.typography.titleSmall,
+        subtitleStyle = MaterialTheme.typography.bodySmall,
+        metadataStyle = MaterialTheme.typography.bodySmall,
+        titleFontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
+        inlineTitleContent = false,
         modifier =
             Modifier
                 .padding(horizontal = 8.dp)
-                .fillMaxWidth()
-                .heightIn(min = if (largeText) 88.dp else if (isCurrent) 58.dp else 57.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f) else Color.Transparent)
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(start = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (isCurrent) {
-            Box(
-                Modifier
-                    .width(3.dp)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.primary),
-            )
-        } else {
-            Spacer(Modifier.width(3.dp))
-        }
-        Text(
-            text = "${index + 1}",
-            modifier = Modifier.width(30.dp),
-            color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-        )
-        Image(
-            painter = painterResource(song.artworkRes),
-            contentDescription = null,
-            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop,
-        )
-        Column(
-            modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.Center,
-        ) {
+                .fillMaxWidth(),
+        leading = {
+            if (isCurrent) {
+                Box(
+                    Modifier
+                        .width(3.dp)
+                        .height(30.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+            } else {
+                Spacer(Modifier.width(3.dp))
+            }
             Text(
-                text = song.title,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = if (largeText) 2 else 1,
-                overflow = TextOverflow.Ellipsis,
+                text = "${index + 1}",
+                modifier = Modifier.width(30.dp),
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
             )
-            Text(
-                text = song.artist,
-                modifier = Modifier.padding(top = 2.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        },
+        artwork = {
+            Image(
+                painter = painterResource(song.artworkRes),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
             )
-        }
-        song.badge?.let { badge ->
-            MoeMediaBadge(
-                text = if (badge == PlaylistTrackBadgeUi.HighQuality) "HQ" else "MV",
-                tone = if (badge == PlaylistTrackBadgeUi.HighQuality) MoeMediaBadgeTone.Primary else MoeMediaBadgeTone.Error,
-            )
-        }
-        Text(
-            text = song.durationLabel,
-            modifier = Modifier.padding(start = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-        IconButton(onClick = onMore, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
-            Icon(
-                Icons.Default.MoreVert,
-                contentDescription = stringResource(R.string.playlist_detail_track_more, song.title),
-            )
-        }
-    }
+        },
+        contentTrailing = {
+            song.badge?.let { badge ->
+                MoeMediaBadge(
+                    text = if (badge == PlaylistTrackBadgeUi.HighQuality) "HQ" else "MV",
+                    tone = if (badge == PlaylistTrackBadgeUi.HighQuality) MoeMediaBadgeTone.Primary else MoeMediaBadgeTone.Error,
+                )
+            }
+        },
+        trailing = {
+            IconButton(onClick = onMore, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.playlist_detail_track_more, song.title),
+                )
+            }
+        },
+    )
 }
 
 @Composable

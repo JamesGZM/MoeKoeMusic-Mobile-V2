@@ -2,16 +2,23 @@ package cn.james.music.core.designsystem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.Image
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
@@ -21,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeMiniPlayer
-import cn.james.music.core.designsystem.component.MoeQueueRow
 import cn.james.music.core.designsystem.component.MoeSectionHeader
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.test.R as ScreenshotTestR
@@ -132,16 +138,44 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
                 onOpenQueue = {},
                 artwork = artwork(0),
             )
-            MoeQueueRow(
-                positionLabel = "♪",
+            MoeSongRow(
                 title = "コレカラ（从今以后）",
                 subtitle = "Machico",
                 metadata = "3:04",
                 isPlaying = true,
                 onClick = {},
-                removeContentDescription = "从队列移除",
-                onRemove = {},
+                minimumHeight = 64.dp,
+                largeTextMinimumHeight = 64.dp,
+                artworkSize = 44.dp,
+                verticalContentPadding = MoeKoeTheme.spacing.extraSmall,
+                showPlayingIndicator = false,
+                metadataEndPadding = 0.dp,
+                metadataInSubtitleOnLargeText = false,
+                largeTextTitleMaxLines = 1,
+                inlineTitleContent = false,
                 artwork = artwork(0),
+                leading = {
+                    Box(
+                        modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "♪",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                },
+                trailing = {
+                    IconButton(onClick = {}, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "从队列移除",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(MoeKoeTheme.dimensions.iconStandard),
+                        )
+                    }
+                },
             )
         }
     }
