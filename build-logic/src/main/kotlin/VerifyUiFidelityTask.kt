@@ -54,10 +54,17 @@ abstract class VerifyUiFidelityTask : DefaultTask() {
                 } else {
                     val expectedStatus = if (contract.properties.getProperty("debt.status") == "active") "APPROVED_DEBT" else "PASS"
                     if (result.getProperty("status") != expectedStatus) {
+                        val failedRegions =
+                            result
+                                .stringPropertyNames()
+                                .filter { it.startsWith("region.") && it.endsWith(".passed") && result.getProperty(it) == "false" }
+                                .map { it.removePrefix("region.").removeSuffix(".passed") }
+                                .sorted()
                         failures +=
                             "${contract.id}: status=${result.getProperty("status")}, expected=$expectedStatus, mean=${result.getProperty(
                                 "meanError",
-                            )}, changed=${result.getProperty("changedRatio")}, drift=${result.getProperty("cumulativeDrift")}"
+                            )}, changed=${result.getProperty("changedRatio")}, drift=${result.getProperty("cumulativeDrift")}, " +
+                            "failedRegions=${failedRegions.ifEmpty { listOf("none") }.joinToString()}"
                     } else if (expectedStatus == "PASS") {
                         passedCount++
                     } else {

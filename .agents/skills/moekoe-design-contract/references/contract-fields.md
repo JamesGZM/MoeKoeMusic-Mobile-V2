@@ -22,6 +22,7 @@
 - `anchor.<name>`：`x,y,tolerance,r,g,b`；坐标使用设计单位，RGB 是 probe 的独占色标。
 - `mask.<name>`：`x,y,width,height;reason`；原因不能为空。
 - `dynamic.<name>`：`x,y,width,height;type;reason`，type 只能是 `text`、`input`、`component-state`、`system` 或 `derived-artwork`；仅豁免内容像素，不豁免结构锚点。
+- `region.<name>`：`x,y,width,height;meanErrorMax;changedRatioMax`；坐标使用 design crop 空间，阈值必须位于 `[0,1]`。关键标题、操作区或局部排版需要独立于全页指标验收时登记；region 与全页指标必须同时通过，且不得与 `mask.*` 或 `dynamic.*` 相交。
 - `drift.anchors`：按纵向顺序列出需要计算累计漂移的锚点。
 - `pixel.deltaThreshold`、`pixel.meanError.max`、`pixel.changedRatio.max`：归一化像素指标阈值。
 - `tolerance.fixed` 与 `tolerance.cumulativeY`：设计单位阈值。

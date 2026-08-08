@@ -1,4 +1,5 @@
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.awt.Color
@@ -76,11 +77,100 @@ class ImageComparatorTest {
         assertEquals("false", output.getProperty("passed"))
     }
 
+    @Test
+    fun `active 债务不能绕过局部区域失败`() {
+        val root = createTempDirectory("moekoe-image-debt-region-").toFile()
+        writeImage(File(root, "design.png"), Color.WHITE)
+        writeImage(File(root, "rendered.png"), Color.WHITE).also { image ->
+            image.setRGB(1, 1, Color.BLACK.rgb)
+            ImageIO.write(image, "png", File(root, "rendered.png"))
+        }
+        val properties =
+            baseProperties("0,0,10,10").apply {
+                setProperty("debt.status", "active")
+                setProperty("debt.baseline.meanError", "1")
+                setProperty("debt.baseline.changedRatio", "1")
+                setProperty("debt.baseline.cumulativeDrift", "0")
+                setProperty("region.title", "0,0,2,2;0;0")
+            }
+        File(root, "sample.properties").writeText("id=sample\n")
+
+        val result = ImageComparator.generate(root, UiContract(File(root, "sample.properties"), "sample", properties), File(root, "output"))
+
+        assertFalse(result.regionResults.single().passed)
+        assertEquals(UiEvidenceStatus.FAIL, result.status)
+    }
+
+    @Test
+    fun `局部错误不能被全页平均值稀释`() {
+        val root = createTempDirectory("moekoe-image-region-").toFile()
+        writeImage(File(root, "design.png"), Color.WHITE, 100, 100)
+        writeImage(File(root, "rendered.png"), Color.WHITE, 100, 100).also { image ->
+            val graphics = image.createGraphics()
+            try {
+                graphics.color = Color.BLACK
+                graphics.fillRect(40, 40, 10, 10)
+            } finally {
+                graphics.dispose()
+            }
+            ImageIO.write(image, "png", File(root, "rendered.png"))
+        }
+        val properties = baseProperties("0,0,100,100").apply { setProperty("region.typography", "40,40,10,10;0.10;0.10") }
+        File(root, "sample.properties").writeText("id=sample\n")
+
+        val output = File(root, "output")
+        val result = ImageComparator.generate(root, UiContract(File(root, "sample.properties"), "sample", properties), output)
+
+        assertTrue(result.meanError <= 0.02)
+        assertTrue(result.changedRatio <= 0.02)
+        assertFalse(result.regionResults.single().passed)
+        assertEquals(UiEvidenceStatus.FAIL, result.status)
+        val evidence = Properties().apply { File(output, "result.properties").reader().use(::load) }
+        assertEquals("false", evidence.getProperty("region.typography.passed"))
+        assertTrue(File(output, "result.json").readText().contains("\"regions\""))
+    }
+
+    @Test
+    fun `局部通过不能覆盖全页失败`() {
+        val root = createTempDirectory("moekoe-image-global-failure-").toFile()
+        writeImage(File(root, "design.png"), Color.WHITE)
+        writeImage(File(root, "rendered.png"), Color.WHITE).also { image ->
+            image.setRGB(9, 9, Color.BLACK.rgb)
+            ImageIO.write(image, "png", File(root, "rendered.png"))
+        }
+        val properties =
+            baseProperties("0,0,10,10").apply {
+                setProperty("pixel.meanError.max", "0")
+                setProperty("pixel.changedRatio.max", "0")
+                setProperty("region.title", "0,0,2,2;0;0")
+            }
+        File(root, "sample.properties").writeText("id=sample\n")
+
+        val result = ImageComparator.generate(root, UiContract(File(root, "sample.properties"), "sample", properties), File(root, "output"))
+
+        assertTrue(result.regionResults.single().passed)
+        assertEquals(UiEvidenceStatus.FAIL, result.status)
+    }
+
+    private fun baseProperties(crop: String): Properties =
+        Properties().apply {
+            setProperty("design.path", "design.png")
+            setProperty("screenshot.rendered", "rendered.png")
+            setProperty("design.crop", crop)
+            setProperty("render.crop", crop)
+            setProperty("debt.status", "none")
+            setProperty("tolerance.cumulativeY", "0")
+            setProperty("pixel.meanError.max", "0.02")
+            setProperty("pixel.changedRatio.max", "0.02")
+        }
+
     private fun writeImage(
         file: File,
         color: Color,
+        width: Int = 10,
+        height: Int = 10,
     ): BufferedImage =
-        BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB).also { image ->
+        BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB).also { image ->
             val graphics = image.createGraphics()
             try {
                 graphics.color = color

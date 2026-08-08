@@ -18,10 +18,25 @@ internal data class AnchorResult(
     val tolerance: Double,
 )
 
+internal data class RegionResult(
+    val name: String,
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+    val meanError: Double,
+    val changedRatio: Double,
+    val meanErrorMax: Double,
+    val changedRatioMax: Double,
+) {
+    val passed: Boolean = meanError <= meanErrorMax && changedRatio <= changedRatioMax
+}
+
 internal data class UiEvidenceResult(
     val contractId: String,
     val meanError: Double,
     val changedRatio: Double,
+    val regionResults: List<RegionResult>,
     val anchorResults: List<AnchorResult>,
     val cumulativeDrift: Double,
     val status: UiEvidenceStatus,
@@ -57,6 +72,22 @@ internal object ImageComparator {
         val masks = parseMasks(properties)
         val deltaThreshold = properties.getProperty("pixel.deltaThreshold", "24").toInt()
         val (meanError, changedRatio) = metrics(designCrop, normalizedRendered, masks, deltaThreshold)
+        val regions = parseRegions(properties, designCrop, masks)
+        val regionResults =
+            regions.map { region ->
+                val (regionMeanError, regionChangedRatio) = metrics(designCrop, normalizedRendered, masks, deltaThreshold, region.rect)
+                RegionResult(
+                    name = region.name,
+                    x = region.rect.x,
+                    y = region.rect.y,
+                    width = region.rect.width,
+                    height = region.rect.height,
+                    meanError = regionMeanError,
+                    changedRatio = regionChangedRatio,
+                    meanErrorMax = region.meanErrorMax,
+                    changedRatioMax = region.changedRatioMax,
+                )
+            }
 
         outputDir.mkdirs()
         ImageIO.write(designCrop, "png", File(outputDir, "normalized-design.png"))
@@ -76,6 +107,7 @@ internal object ImageComparator {
         val meetsContractThresholds =
             meanError <= properties.getProperty("pixel.meanError.max").toDouble() &&
                 changedRatio <= properties.getProperty("pixel.changedRatio.max").toDouble() &&
+                regionResults.all(RegionResult::passed) &&
                 anchors.all { it.error <= it.tolerance } &&
                 cumulativeDrift <= properties.getProperty("tolerance.cumulativeY").toDouble()
         val sources =
@@ -93,6 +125,7 @@ internal object ImageComparator {
                         changedRatio,
                         cumulativeDrift,
                         anchors,
+                        regionResults,
                     )
                 ) {
                     UiEvidenceStatus.APPROVED_DEBT
@@ -104,7 +137,7 @@ internal object ImageComparator {
             } else {
                 UiEvidenceStatus.FAIL
             }
-        return UiEvidenceResult(contract.id, meanError, changedRatio, anchors, cumulativeDrift, status, sources).also {
+        return UiEvidenceResult(contract.id, meanError, changedRatio, regionResults, anchors, cumulativeDrift, status, sources).also {
             writeResult(outputDir, it)
         }
     }
@@ -114,7 +147,17 @@ internal object ImageComparator {
         val y: Int,
         val width: Int,
         val height: Int,
-    )
+    ) {
+        fun isWithin(
+            outerWidth: Int,
+            outerHeight: Int,
+        ): Boolean =
+            x >= 0 && y >= 0 && width > 0 && height > 0 && x <= outerWidth && y <= outerHeight && width <= outerWidth - x &&
+                height <= outerHeight - y
+
+        fun overlaps(other: Rect): Boolean =
+            x < other.x + other.width && x + width > other.x && y < other.y + other.height && y + height > other.y
+    }
 
     private data class Anchor(
         val name: String,
@@ -124,6 +167,13 @@ internal object ImageComparator {
         val red: Int,
         val green: Int,
         val blue: Int,
+    )
+
+    private data class Region(
+        val name: String,
+        val rect: Rect,
+        val meanErrorMax: Double,
+        val changedRatioMax: Double,
     )
 
     private fun readImage(
@@ -148,10 +198,12 @@ internal object ImageComparator {
         changedRatio: Double,
         cumulativeDrift: Double,
         anchors: List<AnchorResult>,
+        regions: List<RegionResult>,
     ): Boolean =
         meanError <= properties.getProperty("debt.baseline.meanError").toDouble() &&
             changedRatio <= properties.getProperty("debt.baseline.changedRatio").toDouble() &&
             cumulativeDrift <= properties.getProperty("debt.baseline.cumulativeDrift").toDouble() &&
+            regions.all(RegionResult::passed) &&
             anchors.all { anchor ->
                 anchor.error <= properties.getProperty("debt.baseline.anchor.${anchor.name}.error").toDouble()
             }
@@ -189,12 +241,14 @@ internal object ImageComparator {
         rendered: BufferedImage,
         masks: List<Rect>,
         deltaThreshold: Int,
+        area: Rect = Rect(0, 0, design.width, design.height),
     ): Pair<Double, Double> {
+        require(area.isWithin(design.width, design.height)) { "区域超出归一化设计 crop 边界" }
         var compared = 0L
         var changed = 0L
         var error = 0.0
-        for (y in 0 until design.height) {
-            for (x in 0 until design.width) {
+        for (y in area.y until area.y + area.height) {
+            for (x in area.x until area.x + area.width) {
                 if (masks.any { x >= it.x && x < it.x + it.width && y >= it.y && y < it.y + it.height }) continue
                 val left = Color(design.getRGB(x, y), true)
                 val right = Color(rendered.getRGB(x, y), true)
@@ -212,6 +266,31 @@ internal object ImageComparator {
         properties.stringPropertyNames().filter { it.startsWith("mask.") }.sorted().map { key ->
             parseRect(properties.getProperty(key).substringBefore(';'))
         }
+
+    private fun parseRegions(
+        properties: Properties,
+        design: BufferedImage,
+        masks: List<Rect>,
+    ): List<Region> {
+        val dynamicRects =
+            properties.stringPropertyNames().filter { it.startsWith("dynamic.") }.map { key ->
+                key to parseRect(properties.getProperty(key).substringBefore(';'))
+            }
+        return properties.stringPropertyNames().filter { it.startsWith("region.") }.sorted().map { key ->
+            val parts = properties.getProperty(key).split(';').map(String::trim)
+            require(parts.size == 3) { "$key 必须为 x,y,width,height;meanErrorMax;changedRatioMax" }
+            val rect = parseRect(parts[0])
+            require(rect.isWithin(design.width, design.height)) { "$key 超出归一化设计 crop 边界" }
+            masks.forEach { mask -> require(!rect.overlaps(mask)) { "$key 不得与 mask 相交" } }
+            dynamicRects.forEach { (dynamicKey, dynamicRect) ->
+                require(!rect.overlaps(dynamicRect)) { "$key 不得与 $dynamicKey 相交" }
+            }
+            val meanErrorMax = parts[1].toDouble()
+            val changedRatioMax = parts[2].toDouble()
+            require(meanErrorMax in 0.0..1.0 && changedRatioMax in 0.0..1.0) { "$key 阈值必须位于 [0,1]" }
+            Region(key.substringAfter("region."), rect, meanErrorMax, changedRatioMax)
+        }
+    }
 
     private fun parseAnchors(properties: Properties): List<Anchor> =
         properties.stringPropertyNames().filter { it.startsWith("anchor.") }.sorted().map { key ->
@@ -333,11 +412,20 @@ internal object ImageComparator {
                 setProperty("designSha256", result.sources.designSha256)
                 setProperty("renderedSha256", result.sources.renderedSha256)
                 result.sources.probeRenderedSha256?.let { setProperty("probeRenderedSha256", it) }
+                result.regionResults.forEach { region ->
+                    setProperty("region.${region.name}.meanError", region.meanError.toString())
+                    setProperty("region.${region.name}.changedRatio", region.changedRatio.toString())
+                    setProperty("region.${region.name}.passed", region.passed.toString())
+                }
                 result.anchorResults.forEach { anchor -> setProperty("anchor.${anchor.name}.error", anchor.error.toString()) }
             }.also { properties -> File(outputDir, "result.properties").writer().use { properties.store(it, null) } }
         val anchors =
             result.anchorResults.joinToString(",") { anchor ->
                 "{\"name\":\"${anchor.name}\",\"expected\":[${anchor.expectedX},${anchor.expectedY}],\"actual\":[${anchor.actualX},${anchor.actualY}],\"error\":${anchor.error},\"tolerance\":${anchor.tolerance}}"
+            }
+        val regions =
+            result.regionResults.joinToString(",") { region ->
+                "{\"name\":\"${region.name}\",\"bounds\":[${region.x},${region.y},${region.width},${region.height}],\"meanError\":${region.meanError},\"meanErrorMax\":${region.meanErrorMax},\"changedRatio\":${region.changedRatio},\"changedRatioMax\":${region.changedRatioMax},\"passed\":${region.passed}}"
             }
         val json =
             buildString {
@@ -348,7 +436,7 @@ internal object ImageComparator {
                 append(",\"designSha256\":\"${result.sources.designSha256}\"")
                 append(",\"renderedSha256\":\"${result.sources.renderedSha256}\"")
                 append(",\"probeRenderedSha256\":${result.sources.probeRenderedSha256?.let { "\"$it\"" } ?: "null"}")
-                append(",\"anchors\":[$anchors]}\n")
+                append(",\"regions\":[$regions],\"anchors\":[$anchors]}\n")
             }
         File(outputDir, "result.json").writeText(json)
     }

@@ -121,4 +121,58 @@ class UiContractParserTest {
             indexContractsByGolden(listOf(contract("first"), contract("second")))
         }
     }
+
+    @Test
+    fun `region 必须位于 design crop 且阈值有效`() {
+        val root = createTempDirectory("moekoe-region-contract-").toFile()
+        val contractFile = File(root, "sample.properties")
+        val properties = validContractProperties().apply { setProperty("region.title", "1,2,3,4;0.1;0.2") }
+        contractFile.writer().use { properties.store(it, null) }
+
+        assertEquals("sample", UiContractParser.parse(contractFile).id)
+
+        properties.setProperty("region.title", "8,18,3,3;0.1;0.2")
+        contractFile.writer().use { properties.store(it, null) }
+        assertThrows(IllegalArgumentException::class.java) { UiContractParser.parse(contractFile) }
+
+        properties.setProperty("region.title", "1,2,3,4;1.1;0.2")
+        contractFile.writer().use { properties.store(it, null) }
+        assertThrows(IllegalArgumentException::class.java) { UiContractParser.parse(contractFile) }
+    }
+
+    @Test
+    fun `region 不得与 mask 或 dynamic 区域相交`() {
+        val root = createTempDirectory("moekoe-region-exclusion-").toFile()
+        val contractFile = File(root, "sample.properties")
+        val properties = validContractProperties()
+
+        properties.setProperty("mask.artwork", "2,2,4,4;fixture image")
+        properties.setProperty("region.title", "4,4,2,2;0.1;0.2")
+        contractFile.writer().use { properties.store(it, null) }
+        assertThrows(IllegalArgumentException::class.java) { UiContractParser.parse(contractFile) }
+
+        properties.remove("mask.artwork")
+        properties.setProperty("dynamic.title", "4,4,2,2;text;fixture text")
+        contractFile.writer().use { properties.store(it, null) }
+        assertThrows(IllegalArgumentException::class.java) { UiContractParser.parse(contractFile) }
+    }
+
+    private fun validContractProperties(): Properties =
+        Properties().apply {
+            UiContractParser.requiredKeys.forEach { setProperty(it, "value") }
+            setProperty("schemaVersion", "1")
+            setProperty("id", "sample")
+            setProperty("approval.status", "confirmed")
+            setProperty("contract.kind", "structure")
+            setProperty("structure.coverage", "core-page")
+            setProperty("design.crop", "0,0,10,20")
+            setProperty("render.crop", "0,0,10,20")
+            setProperty("debt.status", "none")
+            setProperty("anchor.card", "0,0,2,255,0,255")
+            setProperty("probe.testId", "SampleProbe")
+            setProperty("probe.source", "sample.kt")
+            setProperty("probe.golden", "probe.png")
+            setProperty("probe.goldenSha256", "hash")
+            setProperty("probe.rendered", "rendered-probe.png")
+        }
 }
