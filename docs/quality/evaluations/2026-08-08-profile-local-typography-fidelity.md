@@ -36,4 +36,4 @@
 - 修复版实测值依次为 `0.04023/0.09636`、`0.05907/0.11158`、`0.03593/0.05669`；正式 `meanError/changedRatio` 阈值依次为 `0.05/0.11`、`0.07/0.13`、`0.045/0.07`。
 - 正式集成命令：`./gradlew spotlessApply spotlessCheck :build-logic:test :feature:profile:testDebugUnitTest :feature:profile:compileDebugAndroidTestKotlin verifyArchitecture verifySkillGovernance verifyUiContracts :feature:profile:validateDebugScreenshotTest verifyUiFidelity verifyUiGoldenChange :app:assembleDebug -Pmoekoe.uiContract=user-profile.content.light --no-configuration-cache`。
 - 正式集成结果：`BUILD SUCCESSFUL`，405 个任务；架构、Skill 治理、5 个 UI contract、截图回归、设计符合度、golden 变更授权和 Debug APK 均通过。区域结果全部为 `passed=true`，全页指标与累计漂移保持 `0.0275341`、`0.0497430`、`1.3830334`。
-- 正式实现提交号在提交完成后补录。
+- 正式实现提交：`151247b`。
