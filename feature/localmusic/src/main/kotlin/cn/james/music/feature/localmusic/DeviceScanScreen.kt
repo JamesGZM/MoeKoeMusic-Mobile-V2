@@ -151,11 +151,8 @@ private fun ScanningContent(candidates: List<DeviceAudioCandidate>) {
             }
         }
         LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = MoeKoeTheme.spacing.large))
-        CandidateList(
+        ScanningCandidateList(
             candidates = candidates,
-            selectable = false,
-            selected = emptySet(),
-            onToggle = {},
             probeName = PROBE_SCAN_LIST,
             contentTopPadding = 21.dp,
         )
@@ -211,10 +208,8 @@ private fun SelectionContent(
                 modifier = Modifier.weight(1f),
             )
         } else {
-            CandidateList(
-                candidates = candidates,
-                selectable = true,
-                selected = selectedIds,
+            SelectionCandidateList(
+                state = state,
                 onToggle = onToggleCandidate,
                 modifier = Modifier.weight(1f),
             )
@@ -241,11 +236,8 @@ private fun SelectionContent(
 }
 
 @Composable
-private fun CandidateList(
+private fun ScanningCandidateList(
     candidates: List<DeviceAudioCandidate>,
-    selectable: Boolean,
-    selected: Set<Long>,
-    onToggle: (Long) -> Unit,
     modifier: Modifier = Modifier,
     probeName: String? = null,
     contentTopPadding: Dp = MoeKoeTheme.spacing.small,
@@ -261,12 +253,11 @@ private fun CandidateList(
             ),
     ) {
         itemsIndexed(candidates, key = { _, candidate -> candidate.mediaStoreId }) { index, candidate ->
-            val checked = candidate.mediaStoreId in selected
             MoeSongRow(
                 title = candidate.displayName.substringBeforeLast('.'),
                 subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
                 metadata = formatDuration(candidate.durationMs),
-                onClick = if (selectable) ({ onToggle(candidate.mediaStoreId) }) else null,
+                onClick = null,
                 modifier = if (index == 0 && probeName != null) Modifier.localMusicLayoutProbe(probeName) else Modifier,
                 artwork = {
                     Icon(
@@ -275,13 +266,46 @@ private fun CandidateList(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 },
+            )
+            HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+        }
+    }
+}
+
+@Composable
+private fun SelectionCandidateList(
+    state: DeviceImportUiState.Selection,
+    onToggle: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding =
+            PaddingValues(
+                start = MoeKoeTheme.spacing.medium,
+                top = MoeKoeTheme.spacing.small,
+                end = MoeKoeTheme.spacing.medium,
+                bottom = MoeKoeTheme.spacing.small,
+            ),
+    ) {
+        itemsIndexed(state.candidates, key = { _, candidate -> candidate.mediaStoreId }) { _, candidate ->
+            MoeSongRow(
+                title = candidate.displayName.substringBeforeLast('.'),
+                subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
+                metadata = formatDuration(candidate.durationMs),
+                onClick = { onToggle(candidate.mediaStoreId) },
+                artwork = {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
                 trailing = {
-                    if (selectable) {
-                        Checkbox(
-                            checked = checked,
-                            onCheckedChange = { onToggle(candidate.mediaStoreId) },
-                        )
-                    }
+                    Checkbox(
+                        checked = candidate.mediaStoreId in state.selectedIds,
+                        onCheckedChange = { onToggle(candidate.mediaStoreId) },
+                    )
                 },
             )
             HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
