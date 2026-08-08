@@ -1,6 +1,6 @@
 # UI 设计符合度契约
 
-每个 `.properties` 文件只描述一个稳定状态，并绑定已确认设计源、固定 fixture、`@PreviewTest`、正常 screenshot、布局 probe、裁切、遮罩、锚点和阈值。字段语义以 [contract-fields.md](../../../.agents/skills/moekoe-design-contract/references/contract-fields.md) 为准。
+每个 `.properties` 文件描述一个页面、Dialog 或 Sheet 的结构设计基线，并绑定已确认设计源、结构 `@PreviewTest`、布局 probe、动态区域、锚点和阈值。启禁、加载、错误等功能状态复用结构基线，通过状态规格、行为测试与 Design System 组件截图验证，不要求逐状态出图。字段语义以 [contract-fields.md](../../../.agents/skills/moekoe-design-contract/references/contract-fields.md) 为准。
 
 执行顺序：
 
