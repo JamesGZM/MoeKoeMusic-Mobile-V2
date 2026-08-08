@@ -32,16 +32,13 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -180,11 +177,17 @@ private fun UserProfileContent(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
                 ) {
                     Column {
-                        profile.playlists.forEach { playlist ->
+                        profile.playlists.forEachIndexed { index, playlist ->
                             UserPlaylistRow(
                                 playlist = playlist,
                                 onClick = { onPlaylist(playlist.id) },
                                 onMore = { onPlaylistMore(playlist.id) },
+                                probeName =
+                                    when (index) {
+                                        1 -> PROBE_PLAYLIST_ROW_2
+                                        2 -> PROBE_PLAYLIST_ROW_3
+                                        else -> null
+                                    },
                             )
                         }
                     }
@@ -241,23 +244,51 @@ private fun ProfileHero(
                         modifier = Modifier.padding(horizontal = 4.dp),
                     ) {
                         ProfileAvatar(profile)
-                        ProfileIdentity(profile, Modifier.weight(1f).padding(start = 16.dp, top = 8.dp))
+                        ProfileIdentity(profile, Modifier.weight(1f).padding(start = 16.dp))
                     }
                 }
                 Spacer(Modifier.height(14.dp))
                 ProfileRelations(profile, onFollowing, onFollowers, onFriends)
                 Spacer(Modifier.height(9.dp))
-                OutlinedButton(
-                    onClick = onEdit,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.profile_edit), fontSize = 16.sp)
-                }
+                EditProfileButton(onClick = onEdit)
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditProfileButton(onClick: () -> Unit) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag(USER_PROFILE_EDIT_TOUCH_TAG)
+                .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Surface(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(38.dp)
+                    .testTag(USER_PROFILE_EDIT_VISUAL_TAG)
+                    .userProfileBoundsProbe(PROBE_EDIT_TOP, PROBE_EDIT_BOTTOM),
+            shape = RoundedCornerShape(9.dp),
+            color = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.primary,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.profile_edit),
+                    style = MaterialTheme.typography.titleSmall,
+                )
             }
         }
     }
@@ -293,8 +324,7 @@ private fun ProfileIdentity(
         ) {
             Text(
                 text = profile.nickname,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
@@ -364,8 +394,8 @@ private fun RelationItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Text(value, color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text(value, color = MaterialTheme.colorScheme.primary, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -373,10 +403,14 @@ private fun RelationItem(
 private fun SectionTitle(title: String) {
     Text(
         text = title,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 15.dp, bottom = 8.dp)
+                .testTag(USER_PROFILE_OVERVIEW_TITLE_TAG)
+                .userProfileBoundsProbe(PROBE_OVERVIEW_TITLE_TOP, PROBE_OVERVIEW_TITLE_BOTTOM),
     )
 }
 
@@ -450,7 +484,7 @@ private fun OverviewItem(
             Text(
                 value,
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = 19.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.alignByBaseline(),
             )
@@ -464,7 +498,7 @@ private fun OverviewItem(
                 )
             }
         }
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -479,15 +513,30 @@ private fun PlaylistSectionTitle(
     ) {
         Text(
             stringResource(R.string.profile_created_playlists),
-            fontSize = 18.sp,
-            lineHeight = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f).align(Alignment.Bottom).padding(bottom = 5.dp),
         )
         if (showViewAll) {
-            TextButton(onClick = onViewAll) {
-                Text(stringResource(R.string.profile_view_all))
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            Box(
+                modifier = Modifier.height(48.dp).clickable(role = Role.Button, onClick = onViewAll),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                Row(
+                    modifier = Modifier.padding(start = 12.dp, end = 2.dp, bottom = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.profile_view_all),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
     }
@@ -498,14 +547,16 @@ private fun UserPlaylistRow(
     playlist: UserPlaylistUi,
     onClick: () -> Unit,
     onMore: () -> Unit,
+    probeName: String?,
 ) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp)
+                .heightIn(min = 63.dp)
+                .then(if (probeName == null) Modifier else Modifier.userProfileLayoutProbe(probeName))
                 .clickable(role = Role.Button, onClick = onClick)
-                .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
@@ -514,17 +565,22 @@ private fun UserPlaylistRow(
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)),
         )
-        Column(Modifier.weight(1f).padding(horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Column(
+            Modifier.weight(1f).padding(start = 14.dp, top = 16.dp, end = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
             Text(
                 playlist.title,
-                style = MaterialTheme.typography.titleMedium,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 playlist.songCountLabel,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
         Icon(
@@ -602,6 +658,15 @@ private fun UserProfileMessage(
 
 internal const val USER_PROFILE_CONTENT_TAG = "user_profile_content"
 internal const val USER_PROFILE_LOADING_TAG = "user_profile_loading"
+internal const val USER_PROFILE_EDIT_TOUCH_TAG = "user_profile_edit_touch"
+internal const val USER_PROFILE_EDIT_VISUAL_TAG = "user_profile_edit_visual"
+internal const val USER_PROFILE_OVERVIEW_TITLE_TAG = "user_profile_overview_title"
 internal const val PROBE_HERO = "hero"
+internal const val PROBE_EDIT_TOP = "editTop"
+internal const val PROBE_EDIT_BOTTOM = "editBottom"
+internal const val PROBE_OVERVIEW_TITLE_TOP = "overviewTitleTop"
+internal const val PROBE_OVERVIEW_TITLE_BOTTOM = "overviewTitleBottom"
 internal const val PROBE_OVERVIEW = "overview"
 internal const val PROBE_PLAYLIST_LIST = "playlistList"
+internal const val PROBE_PLAYLIST_ROW_2 = "playlistRow2"
+internal const val PROBE_PLAYLIST_ROW_3 = "playlistRow3"

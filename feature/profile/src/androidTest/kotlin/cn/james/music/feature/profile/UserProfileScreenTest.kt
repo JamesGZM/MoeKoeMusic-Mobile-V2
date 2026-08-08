@@ -3,12 +3,14 @@ package cn.james.music.feature.profile
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -35,6 +37,15 @@ class UserProfileScreenTest {
 
         composeRule.onNodeWithTag(USER_PROFILE_LOADING_TAG).assertIsDisplayed()
         composeRule.onNodeWithText("正在加载个人主页").assertIsDisplayed()
+    }
+
+    @Test
+    fun editActionSeparatesVisibleHeightFromAccessibleTouchTarget() {
+        setProfileContent(UserProfileUiState.Content(userProfileDesignPreview))
+
+        composeRule.onNodeWithTag(USER_PROFILE_EDIT_TOUCH_TAG).assertHeightIsEqualTo(48.dp)
+        composeRule.onNodeWithTag(USER_PROFILE_EDIT_VISUAL_TAG).assertHeightIsEqualTo(38.dp)
+        composeRule.onNodeWithTag(USER_PROFILE_OVERVIEW_TITLE_TAG).assertHeightIsEqualTo(24.dp)
     }
 
     @Test

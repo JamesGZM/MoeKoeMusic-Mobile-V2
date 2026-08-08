@@ -27,8 +27,14 @@ fun UserProfileContractLayoutProbeScreenshot() {
         LocalUserProfileLayoutProbeColors provides
             mapOf(
                 PROBE_HERO to Color.Magenta,
+                PROBE_EDIT_TOP to Color(0xFF0102FD),
+                PROBE_EDIT_BOTTOM to Color(0xFFFD0201),
+                PROBE_OVERVIEW_TITLE_TOP to Color(0xFF02FD7F),
+                PROBE_OVERVIEW_TITLE_BOTTOM to Color(0xFFFD7F02),
                 PROBE_OVERVIEW to Color.Cyan,
                 PROBE_PLAYLIST_LIST to Color.Green,
+                PROBE_PLAYLIST_ROW_2 to Color(0xFF0DF1A7),
+                PROBE_PLAYLIST_ROW_3 to Color(0xFF7FFD02),
             ),
     ) {
         UserProfileScreenshotContent(contentState, ThemeMode.Light)

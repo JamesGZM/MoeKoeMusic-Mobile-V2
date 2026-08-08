@@ -22,3 +22,30 @@ internal fun Modifier.userProfileLayoutProbe(name: String): Modifier =
             )
         }
     }
+
+internal fun Modifier.userProfileBoundsProbe(
+    topName: String,
+    bottomName: String,
+): Modifier =
+    composed {
+        val topColor = LocalUserProfileLayoutProbeColors.current[topName]
+        val bottomColor = LocalUserProfileLayoutProbeColors.current[bottomName]
+        if (topColor == null && bottomColor == null) return@composed this
+        drawWithContent {
+            drawContent()
+            topColor?.let {
+                drawRect(
+                    color = it,
+                    topLeft = Offset(size.width / 2f - 4f, 0f),
+                    size = Size(8f, 4f),
+                )
+            }
+            bottomColor?.let {
+                drawRect(
+                    color = it,
+                    topLeft = Offset(size.width / 2f - 4f, size.height - 4f),
+                    size = Size(8f, 4f),
+                )
+            }
+        }
+    }
