@@ -22,11 +22,16 @@ abstract class VerifySkillGovernanceTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val evalFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val skillFiles: ConfigurableFileCollection
+
     @TaskAction
     fun verify() {
         val root = repositoryRoot.get().asFile
         val evals = evalFiles.files.associateBy { it.nameWithoutExtension }
         val failures = mutableListOf<String>()
+        verifySkillMetadata(root, failures)
         evals.forEach { (id, file) ->
             val properties = file.loadProperties()
             requireFields(file, properties, EVAL_FIELDS, failures)
@@ -49,6 +54,38 @@ abstract class VerifySkillGovernanceTask : DefaultTask() {
         logger.lifecycle("Skill 治理门禁通过：${incidentFiles.files.size} 个 incident，${evals.size} 个 eval。")
     }
 
+    private fun verifySkillMetadata(
+        root: File,
+        failures: MutableList<String>,
+    ) {
+        val skillsRoot = File(root, ".agents/skills")
+        skillsRoot.listFiles()?.filter { File(it, "SKILL.md").isFile }?.sortedBy(File::getName)?.forEach { skillDirectory ->
+            val skillName = skillDirectory.name
+            val metadata = File(skillDirectory, "agents/openai.yaml")
+            if (!metadata.isFile) {
+                failures += "$skillName: 缺少 agents/openai.yaml"
+                return@forEach
+            }
+            val values =
+                metadata
+                    .readLines()
+                    .mapNotNull { line ->
+                        val match = METADATA_LINE.matchEntire(line) ?: return@mapNotNull null
+                        match.groupValues[1] to match.groupValues[2].trim().removeSurrounding("\"")
+                    }.toMap()
+            METADATA_FIELDS.forEach { field ->
+                if (values[field].isNullOrBlank()) failures += "$skillName: openai.yaml 缺少 $field"
+            }
+            val prompt = values["default_prompt"]
+            if (!prompt.isNullOrBlank() && "$$skillName" !in prompt) {
+                failures += "$skillName: default_prompt 必须包含 \$$skillName"
+            }
+            if (!prompt.isNullOrBlank() && prompt.none { it in '\u4e00'..'\u9fff' }) {
+                failures += "$skillName: default_prompt 必须包含中文说明"
+            }
+        }
+    }
+
     private fun requireFields(
         file: File,
         properties: Properties,
@@ -63,6 +100,8 @@ abstract class VerifySkillGovernanceTask : DefaultTask() {
     private fun File.loadProperties(): Properties = Properties().apply { reader(Charsets.UTF_8).use(::load) }
 
     private companion object {
+        val METADATA_FIELDS = setOf("display_name", "short_description", "default_prompt")
+        val METADATA_LINE = Regex("^\\s{2}(display_name|short_description|default_prompt):\\s*(.+?)\\s*$")
         val INCIDENT_FIELDS =
             setOf(
                 "schemaVersion",

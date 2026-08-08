@@ -24,7 +24,21 @@ internal data class UiEvidenceResult(
     val changedRatio: Double,
     val anchorResults: List<AnchorResult>,
     val cumulativeDrift: Double,
-    val passed: Boolean,
+    val status: UiEvidenceStatus,
+    val sources: UiEvidenceSources,
+)
+
+internal enum class UiEvidenceStatus {
+    PASS,
+    FAIL,
+    APPROVED_DEBT,
+}
+
+internal data class UiEvidenceSources(
+    val contractSha256: String,
+    val designSha256: String,
+    val renderedSha256: String,
+    val probeRenderedSha256: String?,
 )
 
 internal object ImageComparator {
@@ -52,19 +66,45 @@ internal object ImageComparator {
         ImageIO.write(diff(designCrop, normalizedRendered, masks), "png", File(outputDir, "diff.png"))
 
         val anchors =
-            if (properties.getProperty("debt.status") == "active") {
-                emptyList()
-            } else {
+            if (UiContractParser.hasProbe(properties)) {
                 val probe = readImage(rootDir, contract, "probe.rendered")
                 parseAnchors(properties).map { anchor -> measureAnchor(anchor, probe, renderRect, designCrop) }
+            } else {
+                emptyList()
             }
         val cumulativeDrift = cumulativeDrift(properties, anchors)
-        val passed =
+        val meetsContractThresholds =
             meanError <= properties.getProperty("pixel.meanError.max").toDouble() &&
                 changedRatio <= properties.getProperty("pixel.changedRatio.max").toDouble() &&
                 anchors.all { it.error <= it.tolerance } &&
                 cumulativeDrift <= properties.getProperty("tolerance.cumulativeY").toDouble()
-        return UiEvidenceResult(contract.id, meanError, changedRatio, anchors, cumulativeDrift, passed).also {
+        val sources =
+            UiEvidenceSources(
+                contractSha256 = contract.file.sha256(),
+                designSha256 = sourceHash(rootDir, contract, "design.path"),
+                renderedSha256 = sourceHash(rootDir, contract, "screenshot.rendered"),
+                probeRenderedSha256 = if (UiContractParser.hasProbe(properties)) sourceHash(rootDir, contract, "probe.rendered") else null,
+            )
+        val status =
+            if (properties.getProperty("debt.status") == "active") {
+                if (meetsDebtBaseline(
+                        properties,
+                        meanError,
+                        changedRatio,
+                        cumulativeDrift,
+                        anchors,
+                    )
+                ) {
+                    UiEvidenceStatus.APPROVED_DEBT
+                } else {
+                    UiEvidenceStatus.FAIL
+                }
+            } else if (meetsContractThresholds) {
+                UiEvidenceStatus.PASS
+            } else {
+                UiEvidenceStatus.FAIL
+            }
+        return UiEvidenceResult(contract.id, meanError, changedRatio, anchors, cumulativeDrift, status, sources).also {
             writeResult(outputDir, it)
         }
     }
@@ -95,6 +135,26 @@ internal object ImageComparator {
         require(file.isFile) { "${contract.id}: 缺少 $key：${file.relativeTo(rootDir)}" }
         return requireNotNull(ImageIO.read(file)) { "${contract.id}: 无法读取图片 $key" }
     }
+
+    private fun sourceHash(
+        rootDir: File,
+        contract: UiContract,
+        key: String,
+    ): String = UiContractParser.resolveRepositoryPath(rootDir, contract.id, contract.properties.getProperty(key)).sha256()
+
+    private fun meetsDebtBaseline(
+        properties: Properties,
+        meanError: Double,
+        changedRatio: Double,
+        cumulativeDrift: Double,
+        anchors: List<AnchorResult>,
+    ): Boolean =
+        meanError <= properties.getProperty("debt.baseline.meanError").toDouble() &&
+            changedRatio <= properties.getProperty("debt.baseline.changedRatio").toDouble() &&
+            cumulativeDrift <= properties.getProperty("debt.baseline.cumulativeDrift").toDouble() &&
+            anchors.all { anchor ->
+                anchor.error <= properties.getProperty("debt.baseline.anchor.${anchor.name}.error").toDouble()
+            }
 
     private fun parseRect(value: String): Rect {
         val parts = value.split(',').map { it.trim().toInt() }
@@ -267,16 +327,30 @@ internal object ImageComparator {
                 setProperty("meanError", result.meanError.toString())
                 setProperty("changedRatio", result.changedRatio.toString())
                 setProperty("cumulativeDrift", result.cumulativeDrift.toString())
-                setProperty("passed", result.passed.toString())
+                setProperty("status", result.status.name)
+                setProperty("passed", (result.status == UiEvidenceStatus.PASS).toString())
+                setProperty("contractSha256", result.sources.contractSha256)
+                setProperty("designSha256", result.sources.designSha256)
+                setProperty("renderedSha256", result.sources.renderedSha256)
+                result.sources.probeRenderedSha256?.let { setProperty("probeRenderedSha256", it) }
                 result.anchorResults.forEach { anchor -> setProperty("anchor.${anchor.name}.error", anchor.error.toString()) }
             }.also { properties -> File(outputDir, "result.properties").writer().use { properties.store(it, null) } }
         val anchors =
             result.anchorResults.joinToString(",") { anchor ->
                 "{\"name\":\"${anchor.name}\",\"expected\":[${anchor.expectedX},${anchor.expectedY}],\"actual\":[${anchor.actualX},${anchor.actualY}],\"error\":${anchor.error},\"tolerance\":${anchor.tolerance}}"
             }
-        File(outputDir, "result.json").writeText(
-            "{\"contractId\":\"${result.contractId}\",\"meanError\":${result.meanError},\"changedRatio\":${result.changedRatio},\"cumulativeDrift\":${result.cumulativeDrift},\"passed\":${result.passed},\"anchors\":[$anchors]}\n",
-        )
+        val json =
+            buildString {
+                append("{\"contractId\":\"${result.contractId}\",\"status\":\"${result.status}\"")
+                append(",\"meanError\":${result.meanError},\"changedRatio\":${result.changedRatio}")
+                append(",\"cumulativeDrift\":${result.cumulativeDrift}")
+                append(",\"contractSha256\":\"${result.sources.contractSha256}\"")
+                append(",\"designSha256\":\"${result.sources.designSha256}\"")
+                append(",\"renderedSha256\":\"${result.sources.renderedSha256}\"")
+                append(",\"probeRenderedSha256\":${result.sources.probeRenderedSha256?.let { "\"$it\"" } ?: "null"}")
+                append(",\"anchors\":[$anchors]}\n")
+            }
+        File(outputDir, "result.json").writeText(json)
     }
 }
 

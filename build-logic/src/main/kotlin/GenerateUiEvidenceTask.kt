@@ -21,6 +21,10 @@ abstract class GenerateUiEvidenceTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val contractFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val evidenceSourceFiles: ConfigurableFileCollection
+
     @get:Input
     @get:Optional
     abstract val selectedContract: Property<String>
@@ -42,11 +46,7 @@ abstract class GenerateUiEvidenceTask : DefaultTask() {
                         contract,
                         outputDirectory.dir(contract.id).get().asFile,
                     )
-                if (contract.properties.getProperty("debt.status") == "active") {
-                    logger.lifecycle("${contract.id}: 已生成指标，当前登记为历史视觉债务，不计为通过。")
-                } else {
-                    logger.lifecycle("${contract.id}: mean=${result.meanError}, changed=${result.changedRatio}, passed=${result.passed}")
-                }
+                logger.lifecycle("${contract.id}: status=${result.status}, mean=${result.meanError}, changed=${result.changedRatio}")
             } catch (error: Exception) {
                 throw GradleException("${contract.id}: 无法生成视觉证据：${error.message}", error)
             }

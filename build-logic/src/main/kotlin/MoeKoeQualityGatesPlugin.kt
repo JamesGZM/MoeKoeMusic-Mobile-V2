@@ -50,6 +50,7 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
                 description = "归一化设计稿与 Compose 渲染并生成叠加、差异和量化结果。"
                 repositoryRoot.set(target.layout.projectDirectory)
                 contractFiles.from(contracts)
+                evidenceSourceFiles.from(uiEvidenceInputs(target, contracts))
                 selectedContract.set(selectedContractId)
                 outputDirectory.set(uiEvidenceDirectory)
             }
@@ -76,9 +77,12 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
                 group = "verification"
                 description = "按 UI contract 阈值阻断不符合确认稿的 Compose 渲染。"
                 dependsOn(generateEvidence)
+                dependsOn(target.tasks.named("verifyUiContracts"))
+                repositoryRoot.set(target.layout.projectDirectory)
                 contractFiles.from(contracts)
                 selectedContract.set(selectedContractId)
                 evidenceFiles.from(target.fileTree(uiEvidenceDirectory) { include("*/result.properties") })
+                evidenceSourceFiles.from(uiEvidenceInputs(target, contracts))
             }
         target.tasks.register("verifyUiGoldenChange", VerifyUiGoldenChangeTask::class.java) {
             group = "verification"
@@ -97,6 +101,7 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
             repositoryRoot.set(target.layout.projectDirectory)
             incidentFiles.from(target.fileTree("docs/quality/incidents") { include("*.properties") })
             evalFiles.from(target.fileTree(".agents/evals") { include("*.properties") })
+            skillFiles.from(target.fileTree(".agents/skills") { include("*/SKILL.md", "*/agents/openai.yaml") })
         }
         target.tasks.register("checkAgentUpstreamUpdates", CheckAgentUpstreamUpdatesTask::class.java) {
             group = "help"
@@ -104,4 +109,29 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
             lockFile.set(target.layout.projectDirectory.file(".agents/upstreams/agent-skills.properties"))
         }
     }
+
+    private fun uiEvidenceInputs(
+        target: Project,
+        contracts: org.gradle.api.file.FileTree,
+    ) = target.files(
+        target.provider {
+            contracts.files.flatMap { file ->
+                val contract = UiContractParser.parse(file)
+                listOfNotNull(
+                    contract.file,
+                    uiEvidenceInput(target, contract, "design.path"),
+                    uiEvidenceInput(target, contract, "screenshot.source"),
+                    uiEvidenceInput(target, contract, "screenshot.rendered"),
+                    if (UiContractParser.hasProbe(contract.properties)) uiEvidenceInput(target, contract, "probe.source") else null,
+                    if (UiContractParser.hasProbe(contract.properties)) uiEvidenceInput(target, contract, "probe.rendered") else null,
+                )
+            }
+        },
+    )
+
+    private fun uiEvidenceInput(
+        target: Project,
+        contract: UiContract,
+        key: String,
+    ) = UiContractParser.resolveRepositoryPath(target.rootDir, contract.id, contract.properties.getProperty(key))
 }

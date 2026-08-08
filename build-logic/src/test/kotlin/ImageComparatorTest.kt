@@ -32,14 +32,48 @@ class ImageComparatorTest {
                 setProperty("pixel.changedRatio.max", "0")
             }
         val output = File(root, "output")
+        File(root, "sample.properties").writeText("id=sample\n")
 
         val result = ImageComparator.generate(root, UiContract(File(root, "sample.properties"), "sample", properties), output)
 
-        assertTrue(result.passed)
+        assertEquals(UiEvidenceStatus.PASS, result.status)
+        assertEquals(File(root, "sample.properties").sha256(), result.sources.contractSha256)
+        assertEquals(File(root, "design.png").sha256(), result.sources.designSha256)
+        assertEquals(File(root, "rendered.png").sha256(), result.sources.renderedSha256)
+        assertEquals(File(root, "probe.png").sha256(), result.sources.probeRenderedSha256)
         assertEquals(4.5, result.anchorResults.single().actualX, 0.0)
         assertEquals(4.0, result.anchorResults.single().actualY, 0.0)
         assertTrue(File(output, "result.json").isFile)
         assertTrue(File(output, "overlay.png").isFile)
+    }
+
+    @Test
+    fun `active 债务仅在不劣于登记指标时输出 APPROVED_DEBT`() {
+        val root = createTempDirectory("moekoe-image-debt-").toFile()
+        writeImage(File(root, "design.png"), Color.WHITE)
+        writeImage(File(root, "rendered.png"), Color.WHITE)
+        val properties =
+            Properties().apply {
+                setProperty("design.path", "design.png")
+                setProperty("screenshot.rendered", "rendered.png")
+                setProperty("design.crop", "0,0,10,10")
+                setProperty("render.crop", "0,0,10,10")
+                setProperty("debt.status", "active")
+                setProperty("pixel.meanError.max", "0")
+                setProperty("pixel.changedRatio.max", "0")
+                setProperty("tolerance.cumulativeY", "0")
+                setProperty("debt.baseline.meanError", "0")
+                setProperty("debt.baseline.changedRatio", "0")
+                setProperty("debt.baseline.cumulativeDrift", "0")
+            }
+        File(root, "sample.properties").writeText("id=sample\n")
+
+        val result = ImageComparator.generate(root, UiContract(File(root, "sample.properties"), "sample", properties), File(root, "output"))
+
+        assertEquals(UiEvidenceStatus.APPROVED_DEBT, result.status)
+        val output = Properties().apply { File(root, "output/result.properties").reader().use(::load) }
+        assertEquals("APPROVED_DEBT", output.getProperty("status"))
+        assertEquals("false", output.getProperty("passed"))
     }
 
     private fun writeImage(

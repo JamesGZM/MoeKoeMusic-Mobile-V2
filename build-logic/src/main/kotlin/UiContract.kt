@@ -93,10 +93,32 @@ internal object UiContractParser {
             }
 
             "active" -> {
-                listOf("debt.reason", "debt.owner", "debt.expiresAt", "debt.scopePaths").forEach { key ->
+                listOf(
+                    "debt.reason",
+                    "debt.owner",
+                    "debt.expiresAt",
+                    "debt.scopePaths",
+                    "debt.baseline.meanError",
+                    "debt.baseline.changedRatio",
+                    "debt.baseline.cumulativeDrift",
+                    "debt.baseline.designSha256",
+                    "debt.baseline.renderedSha256",
+                ).forEach { key ->
                     require(!properties.getProperty(key).isNullOrBlank()) { "$id: active 债务缺少 $key" }
                 }
                 LocalDate.parse(properties.getProperty("debt.expiresAt"))
+                listOf("debt.baseline.meanError", "debt.baseline.changedRatio", "debt.baseline.cumulativeDrift").forEach { key ->
+                    require(properties.getProperty(key).toDoubleOrNull() != null) { "$id: $key 必须是数字" }
+                }
+                if (hasProbe(properties)) {
+                    require(!properties.getProperty("debt.baseline.probeRenderedSha256").isNullOrBlank()) {
+                        "$id: 带 probe 的 active 债务缺少 debt.baseline.probeRenderedSha256"
+                    }
+                    properties.stringPropertyNames().filter { it.startsWith("anchor.") }.forEach { anchor ->
+                        val key = "debt.baseline.$anchor.error"
+                        require(properties.getProperty(key)?.toDoubleOrNull() != null) { "$id: 带 probe 的 active 债务缺少 $key" }
+                    }
+                }
             }
 
             else -> {
@@ -104,4 +126,6 @@ internal object UiContractParser {
             }
         }
     }
+
+    fun hasProbe(properties: Properties): Boolean = !properties.getProperty("probe.rendered").isNullOrBlank()
 }
