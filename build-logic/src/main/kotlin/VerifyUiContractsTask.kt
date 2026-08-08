@@ -39,10 +39,14 @@ abstract class VerifyUiContractsTask : DefaultTask() {
         val design = requiredPath(contract, "design.path")
         val evidence = requiredPath(contract, "approval.evidence")
         val screenshotSource = requiredPath(contract, "screenshot.source")
+        val stateSpec = requiredPath(contract, "state.spec")
+        val stateTestSource = requiredPath(contract, "state.testSource")
         val golden = requiredPath(contract, "screenshot.golden")
         requireFile(design, contract.id)
         requireFile(evidence, contract.id)
         requireFile(screenshotSource, contract.id)
+        requireFile(stateSpec, contract.id)
+        requireFile(stateTestSource, contract.id)
         requireFile(golden, contract.id)
         val expectedDesignHash = properties.getProperty("design.sha256")
         if (expectedDesignHash != design.sha256()) {
@@ -55,6 +59,9 @@ abstract class VerifyUiContractsTask : DefaultTask() {
         val testId = properties.getProperty("screenshot.testId")
         if (!source.contains("@PreviewTest") || !source.contains("fun $testId(")) {
             throw GradleException("${contract.id}: 找不到对应 @PreviewTest $testId")
+        }
+        if (!stateTestSource.readText().contains(properties.getProperty("state.testPattern"))) {
+            throw GradleException("${contract.id}: 找不到状态规则测试 ${properties.getProperty("state.testPattern")}")
         }
         if (properties.getProperty("debt.status") == "none") {
             val probeSource = requiredPath(contract, "probe.source")

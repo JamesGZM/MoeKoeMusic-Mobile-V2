@@ -1,6 +1,7 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.tasks.testing.Test
 
 class MoeKoeQualityGatesPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -64,11 +65,19 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
                     .distinct()
             generateEvidence.configure {
                 modules.forEach { module ->
-                    target
-                        .project(module)
-                        .tasks
-                        .findByName("validateDebugScreenshotTest")
-                        ?.let { dependsOn(it) }
+                    val screenshotTask =
+                        target
+                            .project(module)
+                            .tasks
+                            .findByName("validateDebugScreenshotTest")
+                    screenshotTask?.let { dependsOn(it) }
+                    if (selectedId != null && screenshotTask is Test) {
+                        val contract = contracts.files.map(UiContractParser::parse).single { it.id == selectedId }
+                        screenshotTask.filter.includeTestsMatching("*${contract.properties.getProperty("screenshot.testId")}*")
+                        contract.properties.getProperty("probe.testId")?.takeIf(String::isNotBlank)?.let { probe ->
+                            screenshotTask.filter.includeTestsMatching("*$probe*")
+                        }
+                    }
                 }
             }
         }

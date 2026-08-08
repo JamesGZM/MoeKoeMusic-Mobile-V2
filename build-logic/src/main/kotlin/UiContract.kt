@@ -15,6 +15,11 @@ internal object UiContractParser {
             "id",
             "module",
             "state",
+            "contract.kind",
+            "structure.coverage",
+            "state.spec",
+            "state.testSource",
+            "state.testPattern",
             "design.path",
             "design.sha256",
             "design.width",
@@ -46,6 +51,10 @@ internal object UiContractParser {
         val id = properties.getProperty("id")
         require(file.nameWithoutExtension == id) { "${file.name}: 文件名必须与 id 一致" }
         require(properties.getProperty("approval.status") == "confirmed") { "$id: 设计尚未确认" }
+        require(properties.getProperty("contract.kind") == "structure") { "$id: contract.kind 必须为 structure" }
+        require(properties.getProperty("structure.coverage") in setOf("core-page", "dialog", "sheet")) {
+            "$id: structure.coverage 必须为 core-page、dialog 或 sheet"
+        }
         require(properties.stringPropertyNames().any { it.startsWith("anchor.") }) { "$id: 至少登记一个固定锚点" }
         validateCrop(id, "design.crop", properties.getProperty("design.crop"))
         validateCrop(id, "render.crop", properties.getProperty("render.crop"))

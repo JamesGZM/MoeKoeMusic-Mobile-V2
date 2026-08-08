@@ -16,6 +16,8 @@ class UiContractParserTest {
                 setProperty("schemaVersion", "1")
                 setProperty("id", "sample")
                 setProperty("approval.status", "confirmed")
+                setProperty("contract.kind", "structure")
+                setProperty("structure.coverage", "core-page")
                 setProperty("design.crop", "0,0,10,20")
                 setProperty("render.crop", "0,0,10,20")
                 setProperty("debt.status", "none")
