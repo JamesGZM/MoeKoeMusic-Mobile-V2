@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -26,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.model.local.ImportCompletionAction
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalImportError
@@ -67,7 +67,7 @@ class AudioImportActivity : ComponentActivity() {
                     Text("导入到 MoeKoe", style = MaterialTheme.typography.headlineMedium)
                     Text(message, Modifier.padding(vertical = 20.dp))
                     if (finished) {
-                        Button(onClick = {
+                        MoeButton(onClick = {
                             startActivity(Intent(this@AudioImportActivity, MainActivity::class.java))
                             finish()
                         }) { Text("进入 MoeKoe") }

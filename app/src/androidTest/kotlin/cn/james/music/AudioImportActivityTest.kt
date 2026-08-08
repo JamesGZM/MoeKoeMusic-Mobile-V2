@@ -5,12 +5,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.waitUntilAtLeastOneExists
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -48,7 +50,11 @@ class AudioImportActivityTest {
                     ).playbackController()
             composeRule.waitUntil(5_000) { controller.state.value.currentItem != null }
             assertTrue("Playback state was ${controller.state.value}", controller.state.value.isPlaying)
-            composeRule.onNodeWithText("进入 MoeKoe").assertIsDisplayed().performClick()
+            composeRule
+                .onNodeWithText("进入 MoeKoe")
+                .assertIsDisplayed()
+                .assertHeightIsAtLeast(48.dp)
+                .performClick()
             composeRule.waitUntilAtLeastOneExists(hasText("我的"), 5_000)
             composeRule.onNodeWithText("我的", useUnmergedTree = true).performClick()
             composeRule.onNodeWithText("本地音乐").performClick()
