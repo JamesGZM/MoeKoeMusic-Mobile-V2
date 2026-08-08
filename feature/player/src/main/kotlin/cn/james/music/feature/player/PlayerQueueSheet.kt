@@ -473,8 +473,8 @@ private fun queueModeLabel(mode: PlaybackMode): Int =
         PlaybackMode.Shuffle -> R.string.player_mode_shuffle
     }
 
-private val QueueContainer = Color(0xFF1A2138)
-private val QueueCurrentContainer = Color(0xFF2A3157)
+private val QueueContainer = Color(0xFF222538)
+private val QueueCurrentContainer = Color(0xFF2E304F)
 private val QueueAccent = Color(0xFFA49BFF)
 private val QueueHandle = Color(0xFFAAA9CE)
 private val QueueOnSurface = Color(0xFFF5F2FF)
