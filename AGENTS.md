@@ -24,6 +24,7 @@
 - Endpoint、签名、加密、会话、登录、资料、歌词、动态 JSON 或真实酷狗服务：调用 `$moekoe-kugou-protocol`。
 - Media3、ExoPlayer、Service、队列、播放模式、恢复、通知或播放器进度：调用 `$moekoe-playback`。
 - SAF、URI、外部 Intent、本地音乐复制、去重、回滚或导入后播放：调用 `$moekoe-local-import`。
+- ADB、指定真机、UIAutomator、IME、Insets、触控、厂商系统栏或设备证据：调用 `$moekoe-device-qa`。
 - 任何代码切片完成前必须调用 `$moekoe-validate-change`；纯分析或审查任务在交付前也用它核对证据与未执行项。
 - 检查误通过、skill 漏触发、流程过慢、上游 skill 更新或规则自我迭代：调用 `$moekoe-skill-evolution`；候选规则必须人工批准。
 
