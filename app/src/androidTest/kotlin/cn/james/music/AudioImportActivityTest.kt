@@ -42,6 +42,8 @@ class AudioImportActivityTest {
             composeRule.onNodeWithText("导入到 MoeKoe").assertIsDisplayed()
             android.os.SystemClock.sleep(5_000)
             scenario.onActivity { assertEquals("导入完成 · 1/1", it.message) }
+            scenario.recreate()
+            scenario.onActivity { assertEquals("导入完成 · 1/1", it.message) }
             val controller =
                 EntryPointAccessors
                     .fromApplication(

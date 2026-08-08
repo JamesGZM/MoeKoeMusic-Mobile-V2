@@ -36,6 +36,7 @@
 - SAF、MediaStore 扫描、`ACTION_VIEW`、`ACTION_SEND`、`ACTION_SEND_MULTIPLE` 已接入统一管线；HTTP/HTTPS 与缺失 URI 会在复制前拒绝。
 - `ACTION_VIEW` 真机测试确认只有 Room 提交成功后才调用 `playNow`；重复内容复用已有记录，不播放原始 URI。
 - 外部导入 Activity 使用 `singleTop`，冷启动创建入口、顶部热启动通过 `onNewIntent` 复用；新 Intent 只替换页面观察目标，不取消已经提交的旧导入批次。
+- 外部导入页面状态与当前 `batchId` 已提升到 `AudioImportViewModel`；配置或进程重建恢复同一批次观察，不再重复提交原 Intent。
 - 2026-08-06 在指定 ELE-AL00 / API 29 真机重新运行 `AudioImportActivityTest` 5/5 通过，包含冷启动复制提交后播放、顶部热启动同实例处理第二个 `ACTION_VIEW`，以及远端 URI、缺失 URI 和错误 MIME 拒绝。
 - 正式三项底部导航、本地列表、搜索、排序、设备多选、基础 MiniPlayer 与队列 Bottom Sheet 已建立；播放工程实验台只在 Debug 可达。
 - 2026-08-09 确认新版本地音乐与独立导入页：Toolbar 仅保留导入图标，授权成功自动扫描，Repository 逐条发射候选，扫描期间只读，完成后才允许多选导入；歌曲列表统一复用 `MoeSongRow`。

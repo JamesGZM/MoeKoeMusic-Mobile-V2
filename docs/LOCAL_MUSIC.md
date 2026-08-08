@@ -80,7 +80,7 @@ enum class ImportCompletionAction {
 
 入口 Activity 只解析、校验并转交请求，不直接访问数据库或 ExoPlayer。接受可读取的本地 `content://` URI；拒绝 HTTP、HTTPS、空 URI、目录和不可读内容。发送方的 MIME 只作为初检，最终能否导入由媒体探测和 Media3 支持能力决定。
 
-冷启动和 `onNewIntent` 热启动必须产生等价请求。入口 Activity 使用 `singleTop`：导入页位于顶部时复用实例并切换到新批次，旧批次继续由 WorkManager 完成但不再驱动当前页面；导入页不在顶部时建立新的导入页面。外部临时授权只用于完成复制，不能成为长期播放来源。
+冷启动和 `onNewIntent` 热启动必须产生等价请求。入口 Activity 使用 `singleTop`：导入页位于顶部时复用实例并切换到新批次，旧批次继续由 WorkManager 完成但不再驱动当前页面；导入页不在顶部时建立新的导入页面。页面级 ViewModel 保存当前 `batchId`，配置或进程重建只恢复该批次的进度观察，不得把同一个 Intent 再次提交为新批次。外部临时授权只用于完成复制，不能成为长期播放来源。
 
 ## 存储、权限与格式
 

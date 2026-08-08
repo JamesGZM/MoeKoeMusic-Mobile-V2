@@ -249,7 +249,7 @@ LocalMusicRepository ──► App 专属 Music 目录 + Room
 ```
 
 - 外部入口 Activity 只解析和转交，不直接访问 Room 或 ExoPlayer。
-- `AudioImportActivity` 只观察领域导入进度；Hilt Worker 执行复制，播放器仍只能由 `PlaybackController` 控制。
+- `AudioImportActivity` 只适配外部 Intent、权限与渲染；`AudioImportViewModel` 持有不可变页面状态和当前 `batchId`，配置或进程重建后恢复观察而不重复提交导入。Hilt Worker 执行复制，播放器仍只能由 `PlaybackController` 控制。
 - `AudioImportActivity` 使用 `singleTop`：冷启动创建独立导入入口；应用已运行但导入页不在顶部时仍创建导入页；导入页已在顶部时通过 `onNewIntent` 复用当前实例。每个新 Intent 停止旧 UI 观察并观察新批次，但不取消已经交给 WorkManager 的导入事务。
 - 所有入口共用复制、校验、去重和提交管线。
 - `ACTION_VIEW` 只有在文件落盘与 Room 提交成功后才发送播放命令。
