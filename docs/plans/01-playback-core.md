@@ -48,6 +48,7 @@
 
 - `MoeKoePlaybackService` 是唯一创建 ExoPlayer 与 `MediaLibrarySession` 的组件，并由 Hilt 管理依赖。
 - `Media3PlaybackController` 将普通状态与 500ms 播放进度分流，通过 `StateFlow` 提供给 ViewModel。
+- `MediaController` 连接使用单飞连接槽；连接失败会清除失败 Future，下一条显式播放命令可以重新建连，并在每次成功建连后统一恢复 Player 状态监听。
 - 默认列表循环；顺序、单曲循环和随机模式映射到 Media3 repeat/shuffle 行为。
 - 队列和快照由 Room v1 原子保存；暂停、切歌、模式和队列变化立即保存，播放位置按 5 秒检查点保存。
 - 冷启动恢复队列、索引、位置和模式但保持暂停；`onPlaybackResumption` 仅响应系统或用户主动播放入口。

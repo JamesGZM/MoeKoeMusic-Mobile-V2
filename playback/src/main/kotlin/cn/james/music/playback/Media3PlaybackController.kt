@@ -9,7 +9,6 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
-import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,8 +34,6 @@ internal class Media3PlaybackController
         private val sourceResolver: PlaybackSourceResolver,
     ) : PlaybackController {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-        private val lock = Any()
-        private var controllerFuture: ListenableFuture<MediaController>? = null
         private var progressJob: Job? = null
 
         private val mutableState = MutableStateFlow(PlaybackState())
@@ -44,6 +41,31 @@ internal class Media3PlaybackController
 
         private val mutableProgress = MutableStateFlow(PlaybackProgress())
         override val progress: StateFlow<PlaybackProgress> = mutableProgress.asStateFlow()
+
+        private val controllerConnection: PlaybackControllerConnection<MediaController> =
+            PlaybackControllerConnection(
+                createFuture = {
+                    MediaController
+                        .Builder(
+                            context,
+                            SessionToken(context, ComponentName(context, MoeKoePlaybackService::class.java)),
+                        ).setListener(controllerListener)
+                        .buildAsync()
+                },
+                callbackExecutor = ContextCompat.getMainExecutor(context),
+                onConnected = { controller ->
+                    controller.addListener(playerListener)
+                    mutableState.value = mutableState.value.copy(connection = PlaybackConnectionState.Connected)
+                    updateState(controller)
+                },
+                onConnectionFailed = {
+                    mutableState.value =
+                        mutableState.value.copy(
+                            connection = PlaybackConnectionState.Disconnected,
+                            error = PlaybackError.ControllerUnavailable,
+                        )
+                },
+            )
 
         override suspend fun replaceQueue(
             items: List<PlaybackItem>,
@@ -226,39 +248,11 @@ internal class Media3PlaybackController
             }
 
         private fun connect() {
-            val future = ensureControllerFuture()
-            future.addListener(
-                {
-                    runCatching(future::get)
-                        .onSuccess { controller ->
-                            controller.addListener(playerListener)
-                            mutableState.value = mutableState.value.copy(connection = PlaybackConnectionState.Connected)
-                            updateState(controller)
-                        }.onFailure {
-                            mutableState.value =
-                                mutableState.value.copy(
-                                    connection = PlaybackConnectionState.Disconnected,
-                                    error = PlaybackError.ControllerUnavailable,
-                                )
-                        }
-                },
-                ContextCompat.getMainExecutor(context),
-            )
+            controllerConnection.ensure()
         }
 
-        private fun ensureControllerFuture(): ListenableFuture<MediaController> =
-            synchronized(lock) {
-                controllerFuture ?: MediaController
-                    .Builder(
-                        context,
-                        SessionToken(context, ComponentName(context, MoeKoePlaybackService::class.java)),
-                    ).setListener(controllerListener)
-                    .buildAsync()
-                    .also { controllerFuture = it }
-            }
-
         private suspend fun awaitController(): MediaController? {
-            val future = ensureControllerFuture()
+            val future = controllerConnection.ensure()
             return suspendCancellableCoroutine { continuation ->
                 future.addListener(
                     { continuation.resume(runCatching(future::get).getOrNull()) },
@@ -279,7 +273,7 @@ internal class Media3PlaybackController
             object : MediaController.Listener {
                 override fun onDisconnected(controller: MediaController) {
                     controller.removeListener(playerListener)
-                    synchronized(lock) { controllerFuture = null }
+                    controllerConnection.clear()
                     progressJob?.cancel()
                     mutableState.value = mutableState.value.copy(connection = PlaybackConnectionState.Disconnected)
                 }
