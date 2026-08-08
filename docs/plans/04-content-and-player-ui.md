@@ -34,6 +34,7 @@
 - 应用壳 MiniPlayer 已展示真实播放进度、封面及明确播放/暂停和队列语义；子页面隐藏一级导航时会单独处理系统导航栏安全区。
 - 通用 MiniPlayer 已按 `17-music-content-components.png` 与 `01-home-material3-v2.png` 的页面壳层完成同视口视觉校准：保留连续底部 Surface，校正封面、紧凑字级、质量徽标、上一首、主色圆形播放暂停、下一首、队列、起止时间与独立进度条；上一首/下一首继续接入既有播放命令，本次不改 `:playback` 状态所有权。浅色、深色、`1.5×` 聚焦截图与设计并排/叠加/差异证据见 [`mini-player-2026-08-08.md`](../design/evidence/mini-player-2026-08-08.md)，四项操作语义区域继续保持不小于 `48dp`。
 - Search/LocalMusic 截图验证、相关 JVM 单测、Debug 构建与 `MainActivityTest` 真机回归 6/6 通过；真机手动搜索并播放在线歌曲后，MiniPlayer、恢复为暂停状态和队列 Bottom Sheet 均已检查。
+- Search 综合结果页已完成第二轮同画布复核：保留既有搜索、分类、歌曲与横向集合事件，只修正旧证据遗漏的歌手 Hero Surface、关注按钮视觉/触控分层、徽标色调与横卡播放覆盖尺寸；真实搜索数据链路不在本 UI 切片扩展。
 - 已在 `06` 至 `08` 号确认设计图之后建立 [`player-flow`](../design/prototypes/player-flow/README.md) 本地交互原型，并验证封面/歌词双页、点击歌词定位、暂无歌词、纵向退出、队列覆盖层和“先关队列、再退出播放器”的返回优先级；原型不定义 Compose 视觉或协议行为。
 - 独立 `:feature:player` 全屏封面目的地已按 [`PLAYER_LAYOUT_SPEC.md`](../design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成第二轮同画布复核：纠正旧证据遗漏的封面锚点、歌曲信息边距、收藏位置、进度细节、核心控制节奏和次级动作密度；播放/暂停、进度、上下首、模式和队列继续复用既有接线，其余次级动作只保留视觉语义，不在本 UI 切片接业务。
 - 播放页仅消费 `:app` 映射的不可变 UI 状态和事件，不直接依赖 `:playback`；高频进度由独立 `State` 交给进度子组合读取。标准视口不依赖尺寸分档，只有内容实际溢出时允许纵向滚动。

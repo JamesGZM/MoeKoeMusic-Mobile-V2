@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,6 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -266,8 +266,8 @@ private fun ArtistHero(
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
     ) {
         if (largeText) {
             Column(Modifier.padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -287,12 +287,20 @@ private fun ArtistHero(
 
 @Composable
 private fun FollowButton(onFollow: () -> Unit) {
-    Button(
-        onClick = onFollow,
-        modifier = Modifier.width(64.dp).height(36.dp),
-        contentPadding = PaddingValues(horizontal = 0.dp),
+    Box(
+        modifier = Modifier.width(56.dp).height(48.dp).clickable(role = Role.Button, onClick = onFollow),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(stringResource(R.string.search_follow))
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(28.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.search_follow), style = MaterialTheme.typography.labelLarge)
+            }
+        }
     }
 }
 
@@ -314,7 +322,7 @@ private fun ArtistDetails(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(artist.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            artist.badge?.let { SearchBadge(it, MaterialTheme.colorScheme.secondary) }
+            artist.badge?.let { SearchBadge(it, MaterialTheme.colorScheme.tertiary) }
         }
         Text(artist.stats, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1)
         Text(artist.representativeWorks, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -418,11 +426,11 @@ private fun SearchCollectionCard(
                 modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)),
             )
             Surface(
-                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(34.dp),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(24.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.search_play_collection, item.title), modifier = Modifier.padding(6.dp))
+                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.search_play_collection, item.title), modifier = Modifier.padding(4.dp))
             }
         }
         Text(item.title, modifier = Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
