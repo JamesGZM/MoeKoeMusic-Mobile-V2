@@ -12,16 +12,7 @@ fun NavGraphBuilder.userProfileDestination(onBack: () -> Unit) {
         UserProfileScreen(
             state = UserProfileUiState.Content(userProfileDesignPreview),
             onBack = onBack,
-            onShare = {},
-            onMore = {},
-            onEdit = {},
-            onFollowing = {},
-            onFollowers = {},
-            onFriends = {},
-            onViewAll = {},
-            onPlaylist = {},
-            onPlaylistMore = {},
-            onRetry = {},
+            onAction = {},
         )
     }
 }

@@ -1,0 +1,16 @@
+package cn.james.music.feature.profile
+
+internal const val USER_PROFILE_CONTENT_TAG = "user_profile_content"
+internal const val USER_PROFILE_LOADING_TAG = "user_profile_loading"
+internal const val USER_PROFILE_EDIT_TOUCH_TAG = "user_profile_edit_touch"
+internal const val USER_PROFILE_EDIT_VISUAL_TAG = "user_profile_edit_visual"
+internal const val USER_PROFILE_OVERVIEW_TITLE_TAG = "user_profile_overview_title"
+internal const val PROBE_HERO = "hero"
+internal const val PROBE_EDIT_TOP = "editTop"
+internal const val PROBE_EDIT_BOTTOM = "editBottom"
+internal const val PROBE_OVERVIEW_TITLE_TOP = "overviewTitleTop"
+internal const val PROBE_OVERVIEW_TITLE_BOTTOM = "overviewTitleBottom"
+internal const val PROBE_OVERVIEW = "overview"
+internal const val PROBE_PLAYLIST_LIST = "playlistList"
+internal const val PROBE_PLAYLIST_ROW_2 = "playlistRow2"
+internal const val PROBE_PLAYLIST_ROW_3 = "playlistRow3"

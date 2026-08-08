@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -16,6 +17,7 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
@@ -24,11 +26,13 @@ class UserProfileScreenTest {
 
     @Test
     fun offlineStateKeepsToolbarAndRetryActionVisible() {
-        setProfileContent(UserProfileUiState.Offline)
+        var action: UserProfileAction? = null
+        setProfileContent(UserProfileUiState.Offline) { action = it }
 
         composeRule.onNodeWithText("个人主页").assertIsDisplayed()
         composeRule.onNodeWithText("当前处于离线状态").assertIsDisplayed()
-        composeRule.onNodeWithText("重试").assertIsDisplayed()
+        composeRule.onNodeWithText("重试").assertIsDisplayed().performClick()
+        assertEquals(UserProfileAction.Retry, action)
     }
 
     @Test
@@ -63,27 +67,24 @@ class UserProfileScreenTest {
         composeRule.onNodeWithText("夜间电台").assertIsDisplayed()
     }
 
-    private fun setProfileContent(state: UserProfileUiState) {
+    private fun setProfileContent(
+        state: UserProfileUiState,
+        onAction: (UserProfileAction) -> Unit = {},
+    ) {
         composeRule.setContent {
-            MoeKoeTheme(themeMode = ThemeMode.Light) { TestUserProfileScreen(state) }
+            MoeKoeTheme(themeMode = ThemeMode.Light) { TestUserProfileScreen(state, onAction) }
         }
     }
 }
 
 @androidx.compose.runtime.Composable
-private fun TestUserProfileScreen(state: UserProfileUiState) {
+private fun TestUserProfileScreen(
+    state: UserProfileUiState,
+    onAction: (UserProfileAction) -> Unit = {},
+) {
     UserProfileScreen(
         state = state,
         onBack = {},
-        onShare = {},
-        onMore = {},
-        onEdit = {},
-        onFollowing = {},
-        onFollowers = {},
-        onFriends = {},
-        onViewAll = {},
-        onPlaylist = {},
-        onPlaylistMore = {},
-        onRetry = {},
+        onAction = onAction,
     )
 }

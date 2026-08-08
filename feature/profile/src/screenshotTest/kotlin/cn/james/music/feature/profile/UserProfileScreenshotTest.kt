@@ -115,16 +115,7 @@ private fun UserProfileScreenshotContent(
             UserProfileScreen(
                 state = state,
                 onBack = {},
-                onShare = {},
-                onMore = {},
-                onEdit = {},
-                onFollowing = {},
-                onFollowers = {},
-                onFriends = {},
-                onViewAll = {},
-                onPlaylist = {},
-                onPlaylistMore = {},
-                onRetry = {},
+                onAction = {},
             )
         }
     }
