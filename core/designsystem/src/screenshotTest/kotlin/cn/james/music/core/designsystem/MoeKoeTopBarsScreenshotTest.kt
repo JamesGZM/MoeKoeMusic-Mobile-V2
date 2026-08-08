@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.navigation.MoeImmersiveTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeNavigateBackIcon
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -67,12 +67,11 @@ fun MoeKoeTopBarsScreenshot() {
                     )
                 },
                 actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "更多",
-                        )
-                    }
+                    MoeStandardTopBarAction(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "更多",
+                        onClick = {},
+                    )
                 },
             )
         }

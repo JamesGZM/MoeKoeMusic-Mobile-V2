@@ -23,6 +23,7 @@
 ### 资料 Hero
 
 - 页面水平边距 `16dp`，Hero 占满可用宽度，圆角 `24dp`，使用低对比 Primary Container 渐变和细描边；不得用纯白无边界区域替代。
+- Hero 紧接标准 Toolbar，不额外增加顶部 Spacer；由 Toolbar 自身高度建立标题与内容的垂直节奏。
 - 标准字体下头像约 `84dp`，圆形裁切并有轻量描边；昵称、VIP、等级和签名形成右侧信息组。昵称优先保留，徽标允许换行或收紧间距。
 - 关注、粉丝、好友是三等分统计，中间使用低对比分隔线；数字为 Primary，说明为 On Surface Variant。整组是可点击语义，不用三个视觉卡片。
 - 编辑资料为 Hero 内全宽 Outlined 操作，`48dp` 高、圆角 `12dp`，使用 Material 编辑图标和 Primary 文字。

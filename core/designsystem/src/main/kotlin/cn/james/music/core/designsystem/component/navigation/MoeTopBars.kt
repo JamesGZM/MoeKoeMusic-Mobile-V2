@@ -136,7 +136,7 @@ fun MoeStandardTopBar(
                 text = title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
             )
         },
         navigationIcon = {
@@ -155,6 +155,26 @@ fun MoeStandardTopBar(
             ),
         modifier = modifier,
     )
+}
+
+/** A standard Toolbar action with the product's fixed visible size and touch target. */
+@Composable
+fun MoeStandardTopBarAction(
+    imageVector: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+        )
+    }
 }
 
 @Composable
