@@ -60,8 +60,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun MoeKoeApp(
-    onChooseFiles: () -> Unit,
-    onRequestDeviceScan: (() -> Unit) -> Unit,
+    hasMediaPermission: () -> Boolean,
+    onRequestMediaPermission: ((Boolean) -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
     onLaunchTencentCaptcha: (String, (TencentCaptchaResult) -> Unit) -> Unit,
     foundationContent: (@Composable () -> Unit)?,
@@ -206,8 +206,8 @@ fun MoeKoeApp(
                 )
                 localMusicDestinations(
                     navController = navController,
-                    onChooseFiles = onChooseFiles,
-                    onRequestDeviceScan = onRequestDeviceScan,
+                    hasMediaPermission = hasMediaPermission,
+                    onRequestMediaPermission = onRequestMediaPermission,
                     onImportCandidates = onImportCandidates,
                 )
                 playerDestination(

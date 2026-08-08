@@ -33,3 +33,11 @@
 ## 独立实现结论
 
 上述项目均未提供“外部打开 = 流式复制 + 原子提交 + Room 成功后播放”的完整语义。本项目依据 Android SAF、MediaStore、WorkManager 和 Media3 官方约束独立实现；领域层不暴露 URI，原始 URI 永不成为长期播放来源。
+
+## 逐条扫描 UI 决策补充（2026-08-09）
+
+- Android MediaStore `Cursor` 天然支持逐行遍历；Repository 用冷 `Flow<DeviceAudioCandidate>` 在 IO dispatcher 上逐条发射，Feature 只追加领域候选，不接触 `Cursor`、`ContentResolver` 或 URI。
+- Kreate 的 MediaStore 投影与版本化权限继续作为扫描字段和权限分支参考；OuterTune 的扫描/元数据分层继续作为异常项隔离参考。两者均只学习思想，不复制 GPL-3.0 代码。
+- 拒绝保留 `suspend fun scanDevice(): List<...>` 后再用动画逐条展示：这会把已完成查询伪装成仍在扫描，并让取消、失败和完成边界失真。
+- 拒绝扫描期间开放多选：不断增长的候选集合会让全选语义和导入边界不稳定。扫描态严格只读，收集正常完成后才进入选择态。
+- 不新增依赖、权限、存储表或后台任务；复制导入与外部 Intent 事务保持不变。

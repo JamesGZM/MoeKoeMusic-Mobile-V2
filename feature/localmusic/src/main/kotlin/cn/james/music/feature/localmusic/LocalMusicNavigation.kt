@@ -1,5 +1,7 @@
 package cn.james.music.feature.localmusic
 
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,8 +18,8 @@ data object DeviceScanDestination
 
 fun NavGraphBuilder.localMusicDestinations(
     navController: NavHostController,
-    onChooseFiles: () -> Unit,
-    onRequestDeviceScan: (() -> Unit) -> Unit,
+    hasMediaPermission: () -> Boolean,
+    onRequestMediaPermission: ((Boolean) -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
 ) {
     composable<LocalMusicDestination> {
@@ -26,11 +28,7 @@ fun NavGraphBuilder.localMusicDestinations(
         LocalMusicScreen(
             state = state,
             onBack = navController::popBackStack,
-            onChooseFiles = onChooseFiles,
-            onScan = {
-                navController.navigate(DeviceScanDestination)
-                onRequestDeviceScan(viewModel::scanDevice)
-            },
+            onImport = { navController.navigate(DeviceScanDestination) },
             onPlay = viewModel::play,
             onDelete = viewModel::delete,
             onCancelImport = viewModel::cancelImport,
@@ -39,10 +37,20 @@ fun NavGraphBuilder.localMusicDestinations(
     composable<DeviceScanDestination> {
         val viewModel: LocalMusicViewModel = hiltViewModel(navController.getBackStackEntry(LocalMusicDestination))
         val state by viewModel.state.collectAsStateWithLifecycle()
-        DeviceScanScreen(
-            candidates = state.candidates,
-            onBack = navController::popBackStack,
-            onRefresh = { onRequestDeviceScan(viewModel::scanDevice) },
+        LaunchedEffect(viewModel) { viewModel.openImporter(hasMediaPermission()) }
+        DisposableEffect(viewModel) {
+            onDispose(viewModel::cancelDeviceScan)
+        }
+        LocalMusicImportScreen(
+            state = state.deviceImport,
+            onBack = {
+                viewModel.cancelDeviceScan()
+                navController.popBackStack()
+            },
+            onGrantPermission = { onRequestMediaPermission(viewModel::onPermissionResult) },
+            onRetry = viewModel::retryDeviceScan,
+            onToggleCandidate = viewModel::toggleCandidate,
+            onToggleAll = viewModel::toggleAllCandidates,
             onImport = {
                 onImportCandidates(it)
                 navController.popBackStack()

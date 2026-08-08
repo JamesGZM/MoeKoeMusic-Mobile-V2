@@ -3,7 +3,6 @@ package cn.james.music
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,8 +17,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import cn.james.music.core.designsystem.MoeKoeTheme
-import cn.james.music.core.model.local.ImportCompletionAction
-import cn.james.music.core.model.local.LocalImportSource
 import cn.james.music.data.local.LocalImportGateway
 import cn.james.music.feature.login.TencentCaptchaResult
 import dagger.Lazy
@@ -34,7 +31,7 @@ class MainActivity : ComponentActivity() {
     private val themeViewModel: AppThemeViewModel by viewModels()
 
     private var afterNotificationPermission: (() -> Unit)? = null
-    private var afterMediaPermission: (() -> Unit)? = null
+    private var afterMediaPermission: ((Boolean) -> Unit)? = null
     private var captchaResultCallback: ((TencentCaptchaResult) -> Unit)? = null
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -44,14 +41,9 @@ class MainActivity : ComponentActivity() {
         }
     private val mediaPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) afterMediaPermission?.invoke()
+            afterMediaPermission?.invoke(granted)
             afterMediaPermission =
                 null
-        }
-    private val documentPicker =
-        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-            uris.forEach { uri -> runCatching { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } }
-            if (uris.isNotEmpty()) enqueue(uris, LocalImportSource.DocumentPicker)
         }
     private val captchaLauncher =
         registerForActivityResult(
@@ -79,8 +71,8 @@ class MainActivity : ComponentActivity() {
             val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
             MoeKoeTheme(themeMode = themeMode) {
                 MoeKoeApp(
-                    onChooseFiles = { documentPicker.launch(arrayOf("audio/*")) },
-                    onRequestDeviceScan = ::requestMediaPermission,
+                    hasMediaPermission = ::hasMediaPermission,
+                    onRequestMediaPermission = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,
                     onLaunchTencentCaptcha = ::launchTencentCaptcha,
                     foundationContent = foundationContent(themeMode, themeViewModel::updateTheme),
@@ -98,31 +90,25 @@ class MainActivity : ComponentActivity() {
         captchaLauncher.launch(appId)
     }
 
-    private fun enqueue(
-        uris: List<Uri>,
-        source: LocalImportSource,
-    ) {
-        withNotificationPermission {
-            lifecycleScope.launch { importGateway.get().enqueue(uris, source, ImportCompletionAction.OpenLocalLibrary) }
+    private fun requestMediaPermission(onResult: (Boolean) -> Unit) {
+        val permission = mediaPermissionName()
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            afterMediaPermission = onResult
+            mediaPermission.launch(permission)
+        } else {
+            onResult(true)
         }
     }
 
-    private fun requestMediaPermission(onGranted: () -> Unit) {
-        val permission =
-            if (Build.VERSION.SDK_INT >=
-                33
-            ) {
-                Manifest.permission.READ_MEDIA_AUDIO
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            }
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            afterMediaPermission = onGranted
-            mediaPermission.launch(permission)
+    private fun hasMediaPermission(): Boolean =
+        ContextCompat.checkSelfPermission(this, mediaPermissionName()) == PackageManager.PERMISSION_GRANTED
+
+    private fun mediaPermissionName(): String =
+        if (Build.VERSION.SDK_INT >= 33) {
+            Manifest.permission.READ_MEDIA_AUDIO
         } else {
-            onGranted()
+            Manifest.permission.READ_EXTERNAL_STORAGE
         }
-    }
 
     private fun enqueueMediaStore(ids: List<Long>) {
         withNotificationPermission {

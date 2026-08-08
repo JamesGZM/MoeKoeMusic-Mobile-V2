@@ -35,6 +35,8 @@
 21. [`21-login-risk-verification.png`](21-login-risk-verification.png)：旧版横向状态总览，仅保留设计演进记录。
 22. [`22-login-multi-account.png`](22-login-multi-account.png)：旧版横向状态总览，仅保留设计演进记录。
 
+本地音乐与独立导入流程使用 [`local-music-v2`](local-music-v2/) 下的四张已确认单状态图：本地库内容、权限解释、逐条扫描只读态和扫描完成多选态。扫描态与选择态严格互斥，完整状态规则见 [`local-music-2026-08-09.md`](../evidence/local-music-2026-08-09.md)。
+
 未带 `v2` 后缀的前四张图片以及 `04-my-v2.png`、`04-my-v3.png`、`12-feedback-components.png` 保留为早期方案，仅用于设计演进对照，不再作为实现基准。
 
 旧 `19` 至 `22` 曾于 2026-08-05 确认，但其实现基线资格已因密度、覆盖层和单图分辨率复核于 2026-08-06 撤销。新版独立单状态图位于 [`candidates/login-v2`](candidates/login-v2/README.md)，现已确认为正式实现基线，可直接用于 Compose 返工。

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_music_title">本地音乐</string>
+    <string name="local_music_back">返回</string>
+    <string name="local_music_import_files">导入文件</string>
+    <string name="local_music_scan_device">扫描设备</string>
+    <string name="local_music_open_import">导入本地音乐</string>
+    <string name="local_music_import_progress">正在导入 %1$d/%2$d</string>
+    <string name="local_music_cancel">取消</string>
+    <string name="local_music_search_label">搜索歌曲或艺术家</string>
+    <string name="local_music_sort_newest">最近导入</string>
+    <string name="local_music_sort_title">标题</string>
+    <string name="local_music_sort_artist">艺术家</string>
+    <string name="local_music_sort_duration">时长</string>
+    <string name="local_music_empty_title">还没有本地音乐</string>
+    <string name="local_music_empty_message">选择音频文件，MoeKoe 会复制到 App 专属目录</string>
+    <string name="local_music_no_results_title">没有找到歌曲</string>
+    <string name="local_music_no_results_message">试试其他歌曲名或艺术家</string>
+    <string name="local_music_delete_title">删除本地音乐？</string>
+    <string name="local_music_delete_message">将删除 MoeKoe 保存的副本，不影响原始文件。</string>
+    <string name="local_music_delete">删除</string>
+    <string name="local_music_artwork_description">%1$s 封面</string>
+    <string name="local_music_more">%1$s 的更多操作</string>
+    <string name="local_music_import_title">导入本地音乐</string>
+    <string name="local_music_permission_title">允许访问设备音乐</string>
+    <string name="local_music_permission_message">授权后将自动扫描设备中的音频文件。只有你选择的歌曲才会复制到 MoeKoe 本地音乐库。</string>
+    <string name="local_music_grant_permission">授予权限</string>
+    <string name="local_music_permission_privacy">不会修改或删除设备中的原始文件</string>
+    <string name="local_music_scanning_title">正在扫描设备音乐</string>
+    <string name="local_music_discovered_count">已发现 %1$d 首</string>
+    <string name="local_music_scan_complete">扫描完成</string>
+    <string name="local_music_scan_result_count">发现 %1$d 首设备音乐</string>
+    <string name="local_music_select_all">全选</string>
+    <string name="local_music_clear_selection">取消全选</string>
+    <string name="local_music_scan_empty_title">未发现设备音乐</string>
+    <string name="local_music_scan_empty_message">设备中暂时没有可导入的音频文件</string>
+    <string name="local_music_import_copy_note">将复制到 MoeKoe 本地音乐库，不影响原始文件</string>
+    <string name="local_music_import_selected">导入已选（%1$d）</string>
+    <string name="local_music_scan_failed_title">扫描失败</string>
+    <string name="local_music_scan_failed_message">暂时无法读取设备音乐，请检查权限后重试</string>
+    <string name="local_music_retry">重试</string>
+    <string name="local_music_unknown_artist">未知艺术家</string>
+</resources>

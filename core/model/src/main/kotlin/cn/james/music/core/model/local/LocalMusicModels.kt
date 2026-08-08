@@ -67,7 +67,7 @@ interface LocalMusicRepository {
 
     fun observeImports(): Flow<List<LocalImportProgress>>
 
-    suspend fun scanDevice(): List<DeviceAudioCandidate>
+    fun scanDevice(): Flow<DeviceAudioCandidate>
 
     suspend fun cancelImport(batchId: String)
 

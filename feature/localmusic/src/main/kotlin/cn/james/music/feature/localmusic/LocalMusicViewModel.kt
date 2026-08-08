@@ -11,18 +11,36 @@ import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+internal sealed interface DeviceImportUiState {
+    data object PermissionRequired : DeviceImportUiState
+
+    data class Scanning(
+        val candidates: List<DeviceAudioCandidate>,
+    ) : DeviceImportUiState
+
+    data class Selection(
+        val candidates: List<DeviceAudioCandidate>,
+        val selectedIds: Set<Long> = emptySet(),
+    ) : DeviceImportUiState
+
+    data object Failed : DeviceImportUiState
+}
 
 internal data class LocalMusicUiState(
     val music: List<LocalMusic> = emptyList(),
     val imports: List<LocalImportProgress> = emptyList(),
-    val candidates: List<DeviceAudioCandidate> = emptyList(),
+    val deviceImport: DeviceImportUiState = DeviceImportUiState.PermissionRequired,
 )
 
 @HiltViewModel
@@ -32,13 +50,89 @@ internal class LocalMusicViewModel
         private val repository: LocalMusicRepository,
         private val playbackController: PlaybackController,
     ) : ViewModel() {
-        private val candidates = MutableStateFlow<List<DeviceAudioCandidate>>(emptyList())
+        private val deviceImport = MutableStateFlow<DeviceImportUiState>(DeviceImportUiState.PermissionRequired)
+        private var scanJob: Job? = null
         val state: StateFlow<LocalMusicUiState> =
-            combine(repository.observeMusic(), repository.observeImports(), candidates, ::LocalMusicUiState)
+            combine(repository.observeMusic(), repository.observeImports(), deviceImport, ::LocalMusicUiState)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalMusicUiState())
 
-        fun scanDevice() {
-            viewModelScope.launch { candidates.value = repository.scanDevice() }
+        fun openImporter(hasPermission: Boolean) {
+            if (hasPermission) {
+                scanDevice()
+            } else {
+                cancelDeviceScan()
+                deviceImport.value = DeviceImportUiState.PermissionRequired
+            }
+        }
+
+        fun onPermissionResult(granted: Boolean) {
+            if (granted) scanDevice() else deviceImport.value = DeviceImportUiState.PermissionRequired
+        }
+
+        fun retryDeviceScan() = scanDevice()
+
+        fun toggleCandidate(mediaStoreId: Long) {
+            deviceImport.update { current ->
+                if (current !is DeviceImportUiState.Selection) return@update current
+                current.copy(
+                    selectedIds =
+                        if (mediaStoreId in current.selectedIds) {
+                            current.selectedIds - mediaStoreId
+                        } else {
+                            current.selectedIds + mediaStoreId
+                        },
+                )
+            }
+        }
+
+        fun toggleAllCandidates() {
+            deviceImport.update { current ->
+                if (current !is DeviceImportUiState.Selection) return@update current
+                current.copy(
+                    selectedIds =
+                        if (current.selectedIds.size == current.candidates.size) {
+                            emptySet()
+                        } else {
+                            current.candidates.mapTo(linkedSetOf(), DeviceAudioCandidate::mediaStoreId)
+                        },
+                )
+            }
+        }
+
+        fun cancelDeviceScan() {
+            scanJob?.cancel()
+            scanJob = null
+        }
+
+        private fun scanDevice() {
+            scanJob?.cancel()
+            scanJob =
+                viewModelScope.launch {
+                    deviceImport.value = DeviceImportUiState.Scanning(emptyList())
+                    try {
+                        repository.scanDevice().collect { candidate ->
+                            deviceImport.update { current ->
+                                val candidates = (current as? DeviceImportUiState.Scanning)?.candidates.orEmpty()
+                                DeviceImportUiState.Scanning(
+                                    candidates =
+                                        if (candidates.any { it.mediaStoreId == candidate.mediaStoreId }) {
+                                            candidates
+                                        } else {
+                                            candidates + candidate
+                                        },
+                                )
+                            }
+                        }
+                        val candidates =
+                            (deviceImport.value as? DeviceImportUiState.Scanning)?.candidates
+                                ?: return@launch
+                        deviceImport.value = DeviceImportUiState.Selection(candidates)
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        deviceImport.value = DeviceImportUiState.Failed
+                    }
+                }
         }
 
         fun play(

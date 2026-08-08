@@ -38,6 +38,7 @@
 - 外部导入 Activity 使用 `singleTop`，冷启动创建入口、顶部热启动通过 `onNewIntent` 复用；新 Intent 只替换页面观察目标，不取消已经提交的旧导入批次。
 - 2026-08-06 在指定 ELE-AL00 / API 29 真机重新运行 `AudioImportActivityTest` 5/5 通过，包含冷启动复制提交后播放、顶部热启动同实例处理第二个 `ACTION_VIEW`，以及远端 URI、缺失 URI 和错误 MIME 拒绝。
 - 正式三项底部导航、本地列表、搜索、排序、设备多选、基础 MiniPlayer 与队列 Bottom Sheet 已建立；播放工程实验台只在 Debug 可达。
+- 2026-08-09 确认新版本地音乐与独立导入页：Toolbar 仅保留导入图标，授权成功自动扫描，Repository 逐条发射候选，扫描期间只读，完成后才允许多选导入；歌曲列表统一复用 `MoeSongRow`。
 - Room Migration 与唯一约束测试已加入；本地音乐空状态、内容状态和 `1.5×` 字体导入状态已有稳定截图基准。
 - 外部导入完成动作现由播放控制器统一切换到 Media3 应用线程；Service 初始快照恢复增加顺序屏障，避免冷启动恢复覆盖新播放命令。
 - Debug 专用 ContentProvider 通过真实 `content://` 输入提供 MP3、M4A/AAC、FLAC、Ogg/Opus、WAV 合成素材，并覆盖损坏输入和可取消慢速流。

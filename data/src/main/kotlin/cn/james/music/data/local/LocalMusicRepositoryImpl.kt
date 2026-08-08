@@ -32,8 +32,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.UUID
@@ -127,16 +130,16 @@ class AndroidLocalMusicRepository
                 completionAction = ImportCompletionAction.OpenLocalLibrary,
             )
 
-        override suspend fun scanDevice(): List<DeviceAudioCandidate> {
-            val projection =
-                arrayOf(
-                    MediaStore.Audio.Media._ID,
-                    MediaStore.Audio.Media.DISPLAY_NAME,
-                    MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media.DURATION,
-                    MediaStore.Audio.Media.SIZE,
-                )
-            return buildList {
+        override fun scanDevice(): Flow<DeviceAudioCandidate> =
+            flow {
+                val projection =
+                    arrayOf(
+                        MediaStore.Audio.Media._ID,
+                        MediaStore.Audio.Media.DISPLAY_NAME,
+                        MediaStore.Audio.Media.ARTIST,
+                        MediaStore.Audio.Media.DURATION,
+                        MediaStore.Audio.Media.SIZE,
+                    )
                 context.contentResolver
                     .query(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -151,10 +154,9 @@ class AndroidLocalMusicRepository
                         val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                         val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
                         while (cursor.moveToNext()) {
-                            val id = cursor.getLong(idColumn)
-                            add(
+                            emit(
                                 DeviceAudioCandidate(
-                                    mediaStoreId = id,
+                                    mediaStoreId = cursor.getLong(idColumn),
                                     displayName = cursor.getString(nameColumn) ?: "未知文件",
                                     artist = cursor.getString(artistColumn),
                                     durationMs = cursor.getLong(durationColumn),
@@ -163,8 +165,7 @@ class AndroidLocalMusicRepository
                             )
                         }
                     }
-            }
-        }
+            }.flowOn(Dispatchers.IO)
 
         override suspend fun cancelImport(batchId: String) {
             val batch = dao.findBatch(batchId) ?: return
