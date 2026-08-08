@@ -5,6 +5,7 @@ import cn.james.music.core.model.online.SearchRepository
 import cn.james.music.core.model.online.SearchResult
 import cn.james.music.core.model.online.Song
 import cn.james.music.feature.search.SearchCategory
+import cn.james.music.feature.search.SearchUiState
 import cn.james.music.feature.search.SearchViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -33,6 +35,21 @@ class SearchViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun searchStateMatrixKeepsIdleLoadingContentEmptyAndErrorDistinct() {
+        val idle = SearchUiState()
+        val loading = SearchUiState(query = "MoeKoe", submittedQuery = "MoeKoe", loading = true)
+        val content = SearchUiState(query = "MoeKoe", submittedQuery = "MoeKoe", songs = success("song-1").page.items)
+        val empty = SearchUiState(query = "missing", submittedQuery = "missing")
+        val error = SearchUiState(query = "MoeKoe", submittedQuery = "MoeKoe", error = cn.james.music.core.model.online.SearchError.Offline)
+
+        assertFalse(idle.hasSearched)
+        assertTrue(loading.hasSearched && loading.loading)
+        assertTrue(content.hasSearched && content.songs.isNotEmpty())
+        assertTrue(empty.hasSearched && empty.songs.isEmpty() && empty.error == null)
+        assertTrue(error.hasSearched && error.error != null)
     }
 
     @Test

@@ -2,12 +2,23 @@ package cn.james.music.features.app
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.online.SearchError
 import cn.james.music.core.model.online.Song
 import cn.james.music.feature.search.R
+import cn.james.music.feature.search.LocalSearchLayoutProbeColors
+import cn.james.music.feature.search.SEARCH_PROBE_ARTIST_HERO
+import cn.james.music.feature.search.SEARCH_PROBE_COLLECTIONS_HEADER
+import cn.james.music.feature.search.SEARCH_PROBE_COLLECTIONS_ROW
+import cn.james.music.feature.search.SEARCH_PROBE_FIRST_SONG
+import cn.james.music.feature.search.SEARCH_PROBE_FOURTH_SONG
+import cn.james.music.feature.search.SEARCH_PROBE_SONGS_HEADER
+import cn.james.music.feature.search.SEARCH_PROBE_TABS
+import cn.james.music.feature.search.SEARCH_PROBE_TOOLBAR
 import cn.james.music.feature.search.SearchArtistUi
 import cn.james.music.feature.search.SearchCollectionUi
 import cn.james.music.feature.search.SearchScreen
@@ -24,6 +35,26 @@ fun SearchIdleScreenshot() = SearchScreenshotContent(SearchUiState())
 @Preview(name = "Content", widthDp = 390, heightDp = 764)
 @Composable
 fun SearchContentScreenshot() = SearchScreenshotContent(contentState)
+
+@PreviewTest
+@Preview(name = "ContentLayoutProbe", widthDp = 390, heightDp = 764)
+@Composable
+fun SearchContentLayoutProbeScreenshot() =
+    CompositionLocalProvider(
+        LocalSearchLayoutProbeColors provides
+            mapOf(
+                SEARCH_PROBE_TOOLBAR to Color.Magenta,
+                SEARCH_PROBE_TABS to Color.Cyan,
+                SEARCH_PROBE_ARTIST_HERO to Color.Green,
+                SEARCH_PROBE_SONGS_HEADER to Color.Blue,
+                SEARCH_PROBE_FIRST_SONG to Color.Red,
+                SEARCH_PROBE_FOURTH_SONG to Color.Yellow,
+                SEARCH_PROBE_COLLECTIONS_HEADER to Color(0xFF00FF7F),
+                SEARCH_PROBE_COLLECTIONS_ROW to Color(0xFFFF7F00),
+            ),
+    ) {
+        SearchScreenshotContent(contentState)
+    }
 
 @PreviewTest
 @Preview(name = "ContentDark", widthDp = 390, heightDp = 764)

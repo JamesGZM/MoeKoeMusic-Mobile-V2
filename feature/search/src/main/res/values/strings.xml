@@ -20,6 +20,14 @@
     <string name="search_loading_title">正在搜索</string>
     <string name="search_loading_message">正在从酷狗获取歌曲</string>
     <string name="search_error_title">搜索失败</string>
+    <string name="search_error_offline">当前没有网络连接</string>
+    <string name="search_error_timeout">请求超时，请稍后重试</string>
+    <string name="search_error_connection">无法连接音乐服务</string>
+    <string name="search_error_verification_required">服务需要安全验证，请稍后重试</string>
+    <string name="search_error_authentication_required">当前接口需要登录后使用</string>
+    <string name="search_error_service_unavailable">音乐服务暂时不可用</string>
+    <string name="search_error_protocol">服务响应发生变化，请更新应用</string>
+    <string name="search_error_session_initialization">匿名会话初始化失败</string>
     <string name="search_retry">重试</string>
     <string name="search_idle_title">想听什么？</string>
     <string name="search_idle_message">输入歌曲、歌手或专辑名称开始搜索</string>
