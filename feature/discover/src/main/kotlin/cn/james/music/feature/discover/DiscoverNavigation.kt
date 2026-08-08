@@ -13,6 +13,6 @@ data object DiscoverDestination
 
 fun NavGraphBuilder.discoverGraph(onPlaylist: () -> Unit) {
     navigation<DiscoverGraph>(startDestination = DiscoverDestination) {
-        composable<DiscoverDestination> { DiscoverScreen(onPlaylist = onPlaylist) }
+        composable<DiscoverDestination> { DiscoverRoute(onPlaylist = onPlaylist) }
     }
 }

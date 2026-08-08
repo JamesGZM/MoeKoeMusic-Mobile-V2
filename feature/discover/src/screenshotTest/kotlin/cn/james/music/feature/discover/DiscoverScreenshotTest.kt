@@ -2,6 +2,8 @@ package cn.james.music.feature.discover
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -11,6 +13,36 @@ import com.android.tools.screenshot.PreviewTest
 @Preview(name = "ContentLight", widthDp = 390, heightDp = 843)
 @Composable
 fun DiscoverContentLightScreenshot() = DiscoverScreenshotContent(contentState, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "ContentLayoutProbe", widthDp = 390, heightDp = 843)
+@Composable
+fun DiscoverContentLayoutProbeScreenshot() =
+    CompositionLocalProvider(
+        LocalDiscoverLayoutProbeColors provides
+            mapOf(
+                DISCOVER_PROBE_TABS to Color.Magenta,
+                DISCOVER_PROBE_HERO to Color.Cyan,
+                DISCOVER_PROBE_RANKING_HEADER to Color.Green,
+                DISCOVER_PROBE_RANKING_GRID to Color.Blue,
+                DISCOVER_PROBE_CATEGORY_HEADER to Color.Red,
+                DISCOVER_PROBE_CATEGORY_CHIPS to Color.Yellow,
+                DISCOVER_PROBE_CATEGORY_GRID to Color(0xFF00FF7F),
+            ),
+    ) {
+        DiscoverScreenshotContent(contentState, ThemeMode.Light)
+    }
+
+@PreviewTest
+@Preview(name = "SelectionRestored", widthDp = 390, heightDp = 843)
+@Composable
+fun DiscoverSelectionRestoredScreenshot() =
+    DiscoverScreenshotContent(
+        state = contentState,
+        themeMode = ThemeMode.Light,
+        selectedTab = 4,
+        selectedCategory = 3,
+    )
 
 @PreviewTest
 @Preview(name = "ContentDark", widthDp = 390, heightDp = 843)
@@ -51,9 +83,17 @@ fun DiscoverErrorScreenshot() = DiscoverScreenshotContent(DiscoverUiState.Error,
 private fun DiscoverScreenshotContent(
     state: DiscoverUiState,
     themeMode: ThemeMode,
+    selectedTab: Int = 0,
+    selectedCategory: Int = 0,
 ) {
     MoeKoeTheme(themeMode = themeMode) {
-        Surface { DiscoverScreen(state = state) }
+        Surface {
+            DiscoverScreen(
+                state = state,
+                selectedTab = selectedTab,
+                selectedCategory = selectedCategory,
+            )
+        }
     }
 }
 
