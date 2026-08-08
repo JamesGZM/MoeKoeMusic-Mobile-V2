@@ -2,6 +2,8 @@ package cn.james.music.feature.playlist
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -11,6 +13,25 @@ import com.android.tools.screenshot.PreviewTest
 @Preview(name = "ContentLight", widthDp = 390, heightDp = 764)
 @Composable
 fun PlaylistDetailContentLightScreenshot() = PlaylistDetailScreenshotContent(contentState, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "ContentLayoutProbe", widthDp = 390, heightDp = 764)
+@Composable
+fun PlaylistDetailContentLayoutProbeScreenshot() =
+    CompositionLocalProvider(
+        LocalPlaylistDetailLayoutProbeColors provides
+            mapOf(
+                PLAYLIST_PROBE_TOOLBAR to Color.Magenta,
+                PLAYLIST_PROBE_SUMMARY to Color.Cyan,
+                PLAYLIST_PROBE_COVER to Color.Green,
+                PLAYLIST_PROBE_ACTIONS to Color.Blue,
+                PLAYLIST_PROBE_SONGS_HEADER to Color.Red,
+                PLAYLIST_PROBE_FIRST_TRACK to Color.Yellow,
+                PLAYLIST_PROBE_CURRENT_TRACK to Color(0xFF00FF7F),
+            ),
+    ) {
+        PlaylistDetailScreenshotContent(contentState, ThemeMode.Light)
+    }
 
 @PreviewTest
 @Preview(name = "ContentDark", widthDp = 390, heightDp = 764)
@@ -46,6 +67,11 @@ fun PlaylistDetailEmptyScreenshot() = PlaylistDetailScreenshotContent(PlaylistDe
 @Preview(name = "Error", widthDp = 390, heightDp = 764)
 @Composable
 fun PlaylistDetailErrorScreenshot() = PlaylistDetailScreenshotContent(PlaylistDetailUiState.Error, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "Offline", widthDp = 390, heightDp = 764)
+@Composable
+fun PlaylistDetailOfflineScreenshot() = PlaylistDetailScreenshotContent(PlaylistDetailUiState.Offline, ThemeMode.Light)
 
 @Composable
 private fun PlaylistDetailScreenshotContent(
