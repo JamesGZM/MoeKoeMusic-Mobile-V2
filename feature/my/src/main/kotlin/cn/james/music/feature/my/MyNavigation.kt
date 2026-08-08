@@ -55,15 +55,19 @@ private fun MyRoute(
     }
     MyScreen(
         state = state,
-        onRefresh = viewModel::refresh,
-        onLogin = onLogin,
-        onLocalMusic = onLocalMusic,
-        onSettings = onSettings,
-        onProfile = onProfile,
-        onRequestLogout = viewModel::requestLogout,
-        onDismissLogout = viewModel::dismissLogout,
-        onConfirmLogout = viewModel::confirmLogout,
-        onFoundationLab = onFoundationLab,
+        onAction = { action ->
+            when (action) {
+                MyAction.RefreshProfile -> viewModel.refresh()
+                MyAction.OpenLogin -> onLogin()
+                MyAction.OpenLocalMusic -> onLocalMusic()
+                MyAction.OpenSettings -> onSettings()
+                MyAction.OpenProfile -> onProfile()
+                MyAction.RequestLogout -> viewModel.requestLogout()
+                MyAction.DismissLogout -> viewModel.dismissLogout()
+                MyAction.ConfirmLogout -> viewModel.confirmLogout()
+                MyAction.OpenFoundationLab -> onFoundationLab()
+            }
+        },
         showFoundationLab = showFoundationLab,
     )
 }

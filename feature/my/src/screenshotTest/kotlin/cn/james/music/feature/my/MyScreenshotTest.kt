@@ -2,6 +2,8 @@ package cn.james.music.feature.my
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -26,6 +28,25 @@ fun MyAuthenticatedScreenshot() {
             library = designLibrary(),
         ),
     )
+}
+
+@PreviewTest
+@Preview(name = "AuthenticatedLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun MyAuthenticatedLayoutProbeScreenshot() {
+    CompositionLocalProvider(
+        LocalMyLayoutProbeColors provides
+            mapOf(
+                MY_PROBE_ACCOUNT_CARD to Color.Magenta,
+                MY_PROBE_QUICK_ENTRIES to Color.Cyan,
+                MY_PROBE_COLLECTION_GRID to Color.Green,
+                MY_PROBE_PLAYLIST_SECTION to Color(0xFF0102FD),
+                MY_PROBE_PLAYLIST_ROW_2 to Color(0xFFFD0201),
+                MY_PROBE_PLAYLIST_ROW_3 to Color(0xFF02FD7F),
+            ),
+    ) {
+        MyAuthenticatedScreenshot()
+    }
 }
 
 @PreviewTest
@@ -100,15 +121,7 @@ private fun MyScreenshotContent(
         Surface {
             MyScreen(
                 state = state,
-                onRefresh = {},
-                onLogin = {},
-                onLocalMusic = {},
-                onSettings = {},
-                onProfile = {},
-                onRequestLogout = {},
-                onDismissLogout = {},
-                onConfirmLogout = {},
-                onFoundationLab = {},
+                onAction = {},
                 showFoundationLab = false,
             )
         }
