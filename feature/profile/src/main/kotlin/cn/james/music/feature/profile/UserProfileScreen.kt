@@ -93,6 +93,7 @@ internal fun UserProfileScreen(
                         imageVector = Icons.Default.Share,
                         contentDescription = stringResource(R.string.profile_share),
                         onClick = onShare,
+                        horizontalVisualOffset = 8.dp,
                     )
                     MoeStandardTopBarAction(
                         imageVector = Icons.Default.MoreVert,

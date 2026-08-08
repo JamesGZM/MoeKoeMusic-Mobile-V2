@@ -33,11 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 
 @Composable
@@ -125,7 +128,7 @@ fun MoeStandardTopBar(
     navigationIcon: @Composable () -> Unit = {
         MoeNavigateBackIcon(
             contentDescription = navigationContentDescription,
-            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSmall),
         )
     },
     actions: @Composable RowScope.() -> Unit = {},
@@ -134,15 +137,23 @@ fun MoeStandardTopBar(
         title = {
             Text(
                 text = title,
+                modifier = Modifier.offset(y = (-4).dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium,
+                style =
+                    MaterialTheme.typography.titleSmall.copy(
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp,
+                    ),
             )
         },
         navigationIcon = {
             IconButton(
                 onClick = onNavigateBack,
-                modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
+                modifier =
+                    Modifier
+                        .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                        .offset(y = (-2).dp),
             ) {
                 navigationIcon()
             }
@@ -164,15 +175,22 @@ fun MoeStandardTopBarAction(
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    horizontalVisualOffset: Dp = 0.dp,
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget),
+        modifier =
+            modifier
+                .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                .offset(y = (-3).dp),
     ) {
         Icon(
             imageVector = imageVector,
             contentDescription = contentDescription,
-            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+            modifier =
+                Modifier
+                    .size(MoeKoeTheme.dimensions.iconSupporting)
+                    .graphicsLayer { translationX = horizontalVisualOffset.toPx() },
         )
     }
 }

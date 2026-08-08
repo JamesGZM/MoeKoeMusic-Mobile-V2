@@ -100,6 +100,7 @@ internal fun PlaylistDetailScreen(
                         imageVector = Icons.Default.Search,
                         contentDescription = stringResource(R.string.playlist_detail_search),
                         onClick = onSearch,
+                        horizontalVisualOffset = 8.dp,
                     )
                     MoeStandardTopBarAction(
                         imageVector = Icons.Default.MoreVert,
