@@ -40,6 +40,8 @@ runtimeSize = designSize × s
 
 发现页只拥有 MiniPlayer 上方的内容区域。MiniPlayer 和 NavigationBar 固定在 `Scaffold.bottomBar`；feature 截图验证页面内容，app 真机测试验证与壳层的连续关系。
 
+标准 `390dp`、`1.0×` 状态下，五段 Tab 使用 `68dp` 槽位，文字基线相对几何中心下移 `8dp` 并保持指示条贴底；Hero 高度 `215dp`，文字组在中心基准上向下校准 `12dp`。分类胶囊视觉高度 `28dp`，使用紧凑 `labelMedium` 字级；选中与未选中胶囊分别用 `11dp`、`14dp` 水平内容边距，使短中文标签与确认稿宽度一致。胶囊的可见高度不得被扩大成按钮底板，点击命中由 Compose 的最小触控扩展处理。
+
 ## 滚动、字体与图片
 
 - 页面只有一个纵向滚动所有者；顶部分段导航随内容滚动，不另加重复 Toolbar 标题。

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -141,7 +142,7 @@ private fun DiscoverTabs(
             ) {
                 Text(
                     text = label,
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center).offset(y = 8.dp),
                     fontSize = 12.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -178,15 +179,17 @@ private fun DiscoverContent(
             WeeklyHero(content.heroArtworkRes, onHeroPlay)
             Spacer(Modifier.height(8.dp))
             DiscoverSectionTitle(stringResource(R.string.discover_hot_ranking))
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(3.dp))
             RankingGrid(content.rankings, onRankingPlay)
+            Spacer(Modifier.height(5.dp))
             DiscoverSectionTitle(stringResource(R.string.discover_category_playlists))
+            Spacer(Modifier.height(2.dp))
             CategoryChips(
                 categories = content.categories,
                 selectedIndex = selectedCategory,
                 onSelected = onCategorySelected,
             )
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(10.dp))
             CategoryArtworkGrid(content.categoryArtworkRes, onPlaylist)
         }
     }
@@ -223,7 +226,7 @@ private fun WeeklyHero(
                 ),
         )
         Column(
-            modifier = Modifier.align(Alignment.CenterStart).padding(start = 18.dp),
+            modifier = Modifier.align(Alignment.CenterStart).offset(y = 12.dp).padding(start = 18.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
@@ -241,7 +244,7 @@ private fun WeeklyHero(
             )
             Button(
                 onClick = onPlay,
-                modifier = Modifier.padding(top = 14.dp).height(34.dp),
+                modifier = Modifier.padding(top = 14.dp).offset(y = (-7).dp).height(34.dp),
                 shape = RoundedCornerShape(11.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -479,10 +482,10 @@ private fun CategoryChips(
                     },
             ) {
                 Box(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = if (selected) 11.dp else 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(category, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                    Text(category, style = MaterialTheme.typography.labelMedium, maxLines = 1)
                 }
             }
         }
