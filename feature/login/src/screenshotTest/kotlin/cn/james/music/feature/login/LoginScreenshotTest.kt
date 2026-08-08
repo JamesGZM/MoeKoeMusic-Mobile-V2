@@ -2,6 +2,7 @@ package cn.james.music.feature.login
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -94,7 +95,7 @@ fun LoginMultipleAccountsScreenshot() {
             phone = "13800138000",
             code = "123456",
             accounts = previewAccounts,
-            selectedUserId = "10000002",
+            selectedUserId = "18600002258",
         ),
     )
 }
@@ -121,7 +122,7 @@ fun LoginMultipleAccountsFailureScreenshot() {
             phone = "13800138000",
             code = "123456",
             accounts = previewAccounts,
-            selectedUserId = "10000002",
+            selectedUserId = "18600002258",
             notice = LoginNotice.Failure(AuthError.Rejected),
         ),
     )
@@ -136,7 +137,7 @@ fun LoginMultipleAccountsFailureLargeTextScreenshot() {
             phone = "13800138000",
             code = "123456",
             accounts = previewAccounts,
-            selectedUserId = "10000002",
+            selectedUserId = "18600002258",
             notice = LoginNotice.Failure(AuthError.Rejected),
         ),
     )
@@ -151,7 +152,7 @@ fun LoginMultipleAccountsFailureLargestTextScreenshot() {
             phone = "13800138000",
             code = "123456",
             accounts = previewAccounts,
-            selectedUserId = "10000002",
+            selectedUserId = "18600002258",
             notice = LoginNotice.Failure(AuthError.Rejected),
         ),
     )
@@ -363,28 +364,37 @@ private fun LoginScreenshotContent(
     themeMode: ThemeMode = ThemeMode.Light,
 ) {
     MoeKoeTheme(themeMode = themeMode) {
-        Surface {
-            LoginScreen(
-                state = state,
-                onBack = {},
-                onPhoneChange = {},
-                onCodeChange = {},
-                onModeChange = {},
-                onRefreshQrLogin = {},
-                onSendCode = {},
-                onSubmitMobileCode = {},
-                onUsernameChange = {},
-                onPasswordChange = {},
-                onTogglePasswordVisibility = {},
-                onSubmitPassword = {},
-                onStartRiskVerification = {},
-                onRetryTencentVerification = {},
-                onRiskCodeChange = {},
-                onVerifyRiskCode = {},
-                onCancelRisk = {},
-                onSelectAccount = {},
-                onChooseOtherAccount = {},
-            )
+        CompositionLocalProvider(
+            LocalAccountAvatarModels provides
+                mapOf(
+                    "18600000721" to R.drawable.login_account_avatar_navy,
+                    "18600002258" to R.drawable.login_account_avatar_summer,
+                    "18600005533" to R.drawable.login_account_avatar_pink,
+                ),
+        ) {
+            Surface {
+                LoginScreen(
+                    state = state,
+                    onBack = {},
+                    onPhoneChange = {},
+                    onCodeChange = {},
+                    onModeChange = {},
+                    onRefreshQrLogin = {},
+                    onSendCode = {},
+                    onSubmitMobileCode = {},
+                    onUsernameChange = {},
+                    onPasswordChange = {},
+                    onTogglePasswordVisibility = {},
+                    onSubmitPassword = {},
+                    onStartRiskVerification = {},
+                    onRetryTencentVerification = {},
+                    onRiskCodeChange = {},
+                    onVerifyRiskCode = {},
+                    onCancelRisk = {},
+                    onSelectAccount = {},
+                    onChooseOtherAccount = {},
+                )
+            }
         }
     }
 }
@@ -405,9 +415,9 @@ private val previewMobileCodeInputState =
 
 private val previewAccounts =
     listOf(
-        AuthAccountOption("10000001", "夏日旋律", null, "VIP"),
-        AuthAccountOption("10000002", "MoeKoe", null, null),
-        AuthAccountOption("10000003", "蓝色留声机", null, null),
+        AuthAccountOption("18600000721", "小萌酱", null, "VIP"),
+        AuthAccountOption("18600002258", "海风与音乐", null, null),
+        AuthAccountOption("18600005533", "MoeKoe玩家", null, null),
     )
 
 private val previewChallenge = AuthRiskChallenge("fixture-event", null, null)

@@ -132,6 +132,7 @@ fun MoeOutlinedButton(
         border = BorderStroke(1.dp, outlineColor),
         colors =
             ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary,
                 disabledContentColor =
                     if (loading) {
                         MaterialTheme.colorScheme.primary

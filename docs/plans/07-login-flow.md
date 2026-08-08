@@ -80,6 +80,8 @@
 
 2026-08-08 扫码五态复验：`20a–e` 已在同一设计坐标下完成生成、待扫码、已扫码、过期和失败五态并排复核；修正扫码步骤图标、过期二维码中心徽标、失败网络图标与终止态纵向锚点，终止态按钮保持用户确认的全局 `MoeButton` 风格。证据见 [`login-qr-states-2026-08-08.md`](../design/evidence/login-qr-states-2026-08-08.md)。真实扫码状态 `2→4` 与服务轮询仍属于后续功能验收，不阻塞本视觉切片。
 
+2026-08-08 多账号三态复验：`22a–c` 已完成未选中、选中与验证失效三态并排复核；恢复确定性头像、VIP 等级标识、选中行浅蓝容器和确认稿 ID 掩码，主次操作统一消费公共 Button。证据见 [`login-multi-account-states-2026-08-08.md`](../design/evidence/login-multi-account-states-2026-08-08.md)。`22d` 仍只保留已确认视觉门禁，不在单会话架构下提前接入账号切换功能。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`

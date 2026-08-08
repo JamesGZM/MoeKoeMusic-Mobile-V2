@@ -187,7 +187,7 @@
 ## 操作与输入
 
 - 普通按钮最小高度 `48dp`，页面主操作可使用 `56dp`；加载状态不能改变按钮宽度。
-- 按钮类型限制为 Filled、Filled Tonal、Outlined、Text 和 Destructive，避免业务页面创建新形态。
+- 按钮类型限制为 Filled、Filled Tonal、Outlined、Text 和 Destructive，避免业务页面创建新形态。启用的 Outlined 使用 `primary` 描边与 `primary` 内容色；禁用时才回落到 `outlineVariant` 与 `onSurfaceVariant`，业务页面不得覆盖成中性灰启用态。
 - 输入框建议高度 `56dp`，圆角 `16–20dp`；聚焦使用 Primary 描边，错误使用 Error 描边和内联错误。
 - 带语义前导图标的输入框以已确认登录输入框为母版：图标不是裸放，也不使用圆形底板，而是居中放入低强调的圆角方形 `primaryContainer`。Compact 输入使用约 `30dp` 容器、`8dp` 圆角和 `18dp` 图标；Default 输入使用约 `32dp` 容器、`8dp` 圆角和 `20dp` 图标。可见背景方块与输入框高度分别测量：以 `56dp` Default 输入为例，`32dp` 方块上下各保留约 `12dp` 空间；禁止使用 `fillMaxHeight`、纵向拉伸或把不可见的 `48dp` 触控区画成背景。浅色主题容器使用 `primaryContainer` 约 56% 强度，图标使用 `primary`，并可保留极弱的 Primary 描边。
 - 手机、验证码、账号和密码分别使用 Phone、VerifiedUser、AccountCircle 与 Lock 的实心语义图标。聚焦和错误只改变输入框描边与内联反馈，默认不把前导语义图标改成 Error 色；禁用时保留容器形状并整体降低强调。

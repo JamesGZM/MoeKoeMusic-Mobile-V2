@@ -67,6 +67,8 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 - [`22c-multi-account-failure.png`](22c-multi-account-failure.png)：失败时保留选择上下文与恢复路径。
 - [`22d-switch-account-sheet.png`](22d-switch-account-sheet.png)：未来“我的”切换账号 Bottom Sheet 确认稿。
 
+`22a–c` 已完成未选中、选中和失败三态的归一化复验，证据见 [`login-multi-account-states-2026-08-08.md`](../../../evidence/login-multi-account-states-2026-08-08.md)。
+
 `22d` 只完成视觉门禁；当前单会话架构尚未支持账号切换，编码前必须另做会话切换规格、技术审计和状态矩阵。
 
 ## 实现门禁

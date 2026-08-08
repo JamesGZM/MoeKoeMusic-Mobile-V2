@@ -6,29 +6,25 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.action.MoeButton
+import cn.james.music.core.designsystem.component.action.MoeButtonSize
+import cn.james.music.core.designsystem.component.action.MoeOutlinedButton
 import cn.james.music.core.model.auth.AuthAccountOption
 import cn.james.music.core.model.auth.AuthError
 
@@ -91,7 +90,7 @@ internal fun AccountSelectionContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                Icons.Filled.VerifiedUser,
+                Icons.Outlined.VerifiedUser,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),
@@ -108,16 +107,13 @@ internal fun AccountSelectionContent(
         } else {
             LoginNoticeText(state.notice)
         }
-        Button(
+        MoeButton(
             onClick = if (requiresPhoneReverification) onChooseOtherAccount else onSubmit,
             enabled = if (requiresPhoneReverification) !state.loggingIn else state.canSubmitMobileCode,
             modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
-            shape = RoundedCornerShape(16.dp),
+            loading = state.loggingIn,
+            size = MoeButtonSize.Large,
         ) {
-            if (state.loggingIn) {
-                CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                Spacer(Modifier.width(10.dp))
-            }
             Text(
                 stringResource(
                     if (requiresPhoneReverification) {
@@ -128,11 +124,10 @@ internal fun AccountSelectionContent(
                 ),
             )
         }
-        OutlinedButton(
+        MoeOutlinedButton(
             onClick = onChooseOtherAccount,
             enabled = !state.loggingIn,
             modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
-            shape = RoundedCornerShape(16.dp),
         ) {
             Text(stringResource(R.string.login_account_other))
         }
@@ -144,16 +139,16 @@ private fun AccountFailureNotice(error: AuthError) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.errorContainer,
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Filled.ErrorOutline, contentDescription = null)
+            Icon(Icons.Filled.Error, contentDescription = null)
             Text(
                 if (error == AuthError.Rejected) {
                     stringResource(R.string.login_account_verification_expired)
@@ -176,22 +171,41 @@ private fun AccountRow(
         modifier =
             Modifier.fillMaxWidth()
                 .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .background(
+                    if (selected) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+                )
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
-            model = account.avatarUrl,
+            model = LocalAccountAvatarModels.current[account.userId] ?: account.avatarUrl,
             contentDescription = stringResource(R.string.login_account_avatar, account.nickname.ifBlank { stringResource(R.string.login_account_unnamed) }),
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest),
         )
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(
-                account.nickname.ifBlank { stringResource(R.string.login_account_unnamed) },
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    account.nickname.ifBlank { stringResource(R.string.login_account_unnamed) },
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                account.grade?.takeIf(String::isNotBlank)?.let { badge ->
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f),
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)),
+                    ) {
+                        Text(badge, modifier = Modifier.padding(horizontal = 5.dp), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
             Text(
                 stringResource(R.string.login_account_id, maskUserId(account.userId)),
                 style = MaterialTheme.typography.bodyMedium,
@@ -206,8 +220,10 @@ private fun AccountRow(
     }
 }
 
+internal val LocalAccountAvatarModels = staticCompositionLocalOf<Map<String, Any>> { emptyMap() }
+
 private fun maskUserId(value: String): String =
     when {
         value.length <= 4 -> "••••"
-        else -> "${value.take(2)}****${value.takeLast(2)}"
+        else -> "${value.take(3)}****${value.takeLast(4)}"
     }
