@@ -179,5 +179,5 @@ internal object ArchitecturePolicy {
     private val FEATURE_IMPORT = Regex("^cn\\.james\\.music\\.feature\\.([^.]+)\\.")
     private val SONG_ITEM_FUNCTION = Regex("fun\\s+([A-Za-z0-9_]*(?:Song|Track|Queue|Music)[A-Za-z0-9_]*(?:Row|Item))\\s*\\(")
     private const val SONG_ITEM_OWNER =
-        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeMusicContent.kt"
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
 }
