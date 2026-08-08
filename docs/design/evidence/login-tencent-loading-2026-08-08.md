@@ -5,7 +5,7 @@
 ## 对照范围
 
 - 确认稿：[`21d-risk-tencent-loading.png`](../mockups/candidates/login-v2/21d-risk-tencent-loading.png)，`852 × 1846`。
-- Compose 基准：`TencentCaptchaLoadingScreenshot`，`390 × 845dp`，输出 `1024 × 2216` 后归一化为 `852 × 1846`。
+- Compose 基准：`TencentCaptchaLoadingScreenshot`，`390 × 845dp`，输出 `1024 × 2218` 后归一化为 `852 × 1846`。
 - 叠加图：[`login-tencent-loading-overlay-2026-08-08.png`](login-tencent-loading-overlay-2026-08-08.png)。
 - 差异图：[`login-tencent-loading-diff-2026-08-08.png`](login-tencent-loading-diff-2026-08-08.png)。
 
@@ -16,6 +16,7 @@
 - 以 Toolbar 内容区底边为原点，进度环顶部、加载文案、底部安全图标和两行说明的纵向锚点与确认稿一致。
 - Preview 不绘制系统状态栏，因此对照时将顶部系统栏高度列为遮罩项；真机由系统状态栏和公共 Toolbar 共同组成确认稿顶部高度。
 - 加载动画允许处于不同旋转帧；Material 图标的内部笔画与确认稿示意图允许存在库级差异。
+- `login.tencent-captcha.loading` 已建立独立结构契约；加载环顶边探针测得 `704.94`，确认稿为 `705`，误差 `0.42` 设计单位。
 
 ## 回归门禁
 

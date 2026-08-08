@@ -140,13 +140,15 @@ internal data class LoginUiState(
     val riskCode: String = "",
     val resolvingRisk: Boolean = false,
     val verifyingRisk: Boolean = false,
+    val tencentCaptchaLaunching: Boolean = false,
     val riskRetryAttempted: Boolean = false,
     val qrLogin: QrLoginUiState? = null,
     val notice: LoginNotice? = null,
 ) {
     val hasMultipleAccounts: Boolean get() = mode == LoginMode.MobileCode && accounts.isNotEmpty()
     val hasActiveRisk: Boolean get() = risk != null
-    val isBusy: Boolean get() = sendingCode || loggingIn || passwordLoggingIn || resolvingRisk || verifyingRisk
+    val isBusy: Boolean
+        get() = sendingCode || loggingIn || passwordLoggingIn || resolvingRisk || verifyingRisk || tencentCaptchaLaunching
     val canSendCode: Boolean get() = PHONE_PATTERN.matches(phone) && countdownSeconds == 0 && !isBusy
     val canSubmitMobileCode: Boolean
         get() =
@@ -163,6 +165,7 @@ internal data class LoginUiState(
             "usernamePresent=${username.isNotEmpty()}, passwordPresent=${password.isNotEmpty()}, " +
             "sendingCode=$sendingCode, loggingIn=$loggingIn, passwordLoggingIn=$passwordLoggingIn, " +
             "risk=${risk?.javaClass?.simpleName}, resolvingRisk=$resolvingRisk, verifyingRisk=$verifyingRisk, " +
+            "tencentCaptchaLaunching=$tencentCaptchaLaunching, " +
             "riskRetryAttempted=$riskRetryAttempted, qrLogin=${qrLogin?.javaClass?.simpleName}, notice=$notice)"
 
     companion object {
@@ -361,6 +364,7 @@ internal class LoginViewModel
                                     mutableState.value.copy(
                                         risk = PasswordRiskUiState.Tencent(risk.challenge, method.appId),
                                         resolvingRisk = false,
+                                        tencentCaptchaLaunching = true,
                                         notice = null,
                                     )
                                 mutableEffects.emit(LoginEffect.LaunchTencentCaptcha(method.appId))
@@ -419,27 +423,32 @@ internal class LoginViewModel
         }
 
         fun retryTencentVerification() {
-            val risk = mutableState.value.risk as? PasswordRiskUiState.Tencent ?: return
-            if (mutableState.value.isBusy) return
+            val current = mutableState.value
+            val risk = current.risk as? PasswordRiskUiState.Tencent ?: return
+            if (current.isBusy) return
+            mutableState.value = current.copy(tencentCaptchaLaunching = true, notice = null)
             viewModelScope.launch { mutableEffects.emit(LoginEffect.LaunchTencentCaptcha(risk.appId)) }
         }
 
         fun handleTencentCaptchaResult(result: TencentCaptchaResult) {
             val current = mutableState.value
             val risk = current.risk as? PasswordRiskUiState.Tencent ?: return
+            if (!current.tencentCaptchaLaunching) return
+            val settled = current.copy(tencentCaptchaLaunching = false)
             when (result) {
                 TencentCaptchaResult.Cancelled -> {
+                    mutableState.value = settled
                     cancelRisk()
                 }
 
                 TencentCaptchaResult.Failure -> {
-                    mutableState.value = current.copy(notice = LoginNotice.RiskRejected)
+                    mutableState.value = settled.copy(notice = LoginNotice.RiskRejected)
                 }
 
                 is TencentCaptchaResult.Success -> {
-                    if (current.isBusy) return
+                    if (settled.isBusy) return
                     viewModelScope.launch {
-                        mutableState.value = mutableState.value.copy(verifyingRisk = true, notice = null)
+                        mutableState.value = settled.copy(verifyingRisk = true, notice = null)
                         when (
                             val verification =
                                 repository.verifyRisk(
@@ -483,19 +492,23 @@ internal class LoginViewModel
                     risk = null,
                     riskCode = "",
                     resolvingRisk = false,
+                    tencentCaptchaLaunching = false,
                     riskRetryAttempted = false,
                     notice = null,
                 )
         }
 
         fun selectAccount(userId: String) {
-            if (mutableState.value.accounts.none { it.userId == userId }) return
-            mutableState.value = mutableState.value.copy(selectedUserId = userId, notice = null)
+            val current = mutableState.value
+            if (current.isBusy || current.accounts.none { it.userId == userId }) return
+            mutableState.value = current.copy(selectedUserId = userId, notice = null)
         }
 
         fun chooseOtherAccount() {
+            val current = mutableState.value
+            if (current.isBusy) return
             mutableState.value =
-                mutableState.value.copy(
+                current.copy(
                     code = "",
                     accounts = emptyList(),
                     selectedUserId = null,

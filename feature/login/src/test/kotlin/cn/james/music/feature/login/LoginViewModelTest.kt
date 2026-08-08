@@ -20,7 +20,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
@@ -125,6 +127,30 @@ class LoginViewModelTest {
             assertEquals(VALID_PHONE, viewModel.state.value.phone)
             assertEquals("123456", viewModel.state.value.code)
             assertEquals(LoginNotice.Failure(AuthError.Rejected), viewModel.state.value.notice)
+        }
+
+    @Test
+    fun multiAccountSelectionIsLockedWhileTheSelectedAccountIsSubmitting() =
+        runTest(dispatcher) {
+            repository.loginResults.add(MobileCodeLoginResult.MultipleAccounts(ACCOUNTS))
+            viewModel.updatePhone(VALID_PHONE)
+            viewModel.updateCode("123456")
+            viewModel.submitMobileCode()
+            runCurrent()
+            viewModel.selectAccount("10001")
+            repository.mobileLoginDeferred = CompletableDeferred()
+
+            viewModel.submitMobileCode()
+            runCurrent()
+            viewModel.selectAccount("20002")
+            viewModel.chooseOtherAccount()
+
+            assertTrue(viewModel.state.value.loggingIn)
+            assertEquals(ACCOUNTS, viewModel.state.value.accounts)
+            assertEquals("10001", viewModel.state.value.selectedUserId)
+            assertEquals("10001", repository.loginCalls.last().selectedUserId)
+            repository.mobileLoginDeferred?.complete(MobileCodeLoginResult.Authenticated)
+            runCurrent()
         }
 
     @Test
@@ -312,6 +338,7 @@ class LoginViewModelTest {
             runCurrent()
 
             assertEquals(LoginEffect.LaunchTencentCaptcha("123456789"), launch.await())
+            assertTrue(viewModel.state.value.tencentCaptchaLaunching)
             viewModel.handleTencentCaptchaResult(TencentCaptchaResult.Success("fixture-ticket", "fixture-random"))
             runCurrent()
 
@@ -320,6 +347,35 @@ class LoginViewModelTest {
             assertEquals("fixture-random", proof.randomString)
             assertEquals("123456789", proof.appId)
             assertEquals(2, repository.passwordCalls.size)
+            assertFalse(viewModel.state.value.tencentCaptchaLaunching)
+        }
+
+    @Test
+    fun tencentRetryIgnoresRepeatedTapUntilTheCurrentAttemptReturns() =
+        runTest(dispatcher) {
+            repository.passwordResults.add(PasswordLoginResult.RiskChallenge(CHALLENGE))
+            repository.riskMethodResults.add(AuthRiskMethodResult.Available(AuthRiskMethod.Tencent("123456789")))
+            val launches = mutableListOf<LoginEffect.LaunchTencentCaptcha>()
+            backgroundScope.launch {
+                viewModel.effects.collect { effect ->
+                    if (effect is LoginEffect.LaunchTencentCaptcha) launches += effect
+                }
+            }
+            runCurrent()
+            enterPasswordCredentials()
+            viewModel.submitPassword()
+            runCurrent()
+            viewModel.startRiskVerification()
+            runCurrent()
+            viewModel.handleTencentCaptchaResult(TencentCaptchaResult.Failure)
+
+            viewModel.retryTencentVerification()
+            viewModel.retryTencentVerification()
+            runCurrent()
+
+            assertEquals(2, launches.size)
+            assertTrue(viewModel.state.value.tencentCaptchaLaunching)
+            assertEquals(null, viewModel.state.value.notice)
         }
 
     @Test
@@ -535,6 +591,7 @@ class LoginViewModelTest {
         val sentMobiles = mutableListOf<String>()
         val loginCalls = mutableListOf<LoginCall>()
         val loginResults = ArrayDeque<MobileCodeLoginResult>()
+        var mobileLoginDeferred: CompletableDeferred<MobileCodeLoginResult>? = null
         val passwordCalls = mutableListOf<PasswordCall>()
         val passwordResults = ArrayDeque<PasswordLoginResult>()
         val riskMethodResults = ArrayDeque<AuthRiskMethodResult>()
@@ -559,7 +616,7 @@ class LoginViewModelTest {
             selectedUserId: String?,
         ): MobileCodeLoginResult {
             loginCalls += LoginCall(mobile, code, selectedUserId)
-            return loginResults.removeFirst()
+            return mobileLoginDeferred?.await() ?: loginResults.removeFirst()
         }
 
         override suspend fun loginWithPassword(

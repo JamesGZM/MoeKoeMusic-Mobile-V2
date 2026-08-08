@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -61,14 +62,15 @@ internal fun AccountSelectionContent(
                     end = layout.page.contentEnd,
                     bottom = layout.page.contentBottom,
                 ),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(stringResource(R.string.login_accounts_title), style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(16.dp))
         Text(
             stringResource(R.string.login_accounts_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(Modifier.height(layout.dp(23f)))
         Surface(
             modifier = Modifier.loginLayoutProbe("accountList"),
             shape = RoundedCornerShape(16.dp),
@@ -79,12 +81,14 @@ internal fun AccountSelectionContent(
                     AccountRow(
                         account = account,
                         selected = state.selectedUserId == account.userId,
+                        enabled = !state.isBusy,
                         onClick = { onSelectAccount(account.userId) },
                     )
                     if (index != state.accounts.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
         }
+        Spacer(Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -103,14 +107,16 @@ internal fun AccountSelectionContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        Spacer(Modifier.height(16.dp))
         if (accountFailure != null) {
             AccountFailureNotice(accountFailure)
         } else {
             LoginNoticeText(state.notice)
         }
+        Spacer(Modifier.height(16.dp))
         MoeButton(
             onClick = if (requiresPhoneReverification) onChooseOtherAccount else onSubmit,
-            enabled = if (requiresPhoneReverification) !state.loggingIn else state.canSubmitMobileCode,
+            enabled = if (requiresPhoneReverification) !state.isBusy else state.canSubmitMobileCode,
             modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.largeButtonHeight),
             loading = state.loggingIn,
             size = MoeButtonSize.Large,
@@ -125,9 +131,10 @@ internal fun AccountSelectionContent(
                 ),
             )
         }
+        Spacer(Modifier.height(16.dp))
         MoeOutlinedButton(
             onClick = onChooseOtherAccount,
-            enabled = !state.loggingIn,
+            enabled = !state.isBusy,
             modifier = Modifier.fillMaxWidth().height(MoeKoeTheme.dimensions.buttonHeight),
         ) {
             Text(stringResource(R.string.login_account_other))
@@ -166,12 +173,18 @@ private fun AccountFailureNotice(error: AuthError) {
 private fun AccountRow(
     account: AuthAccountOption,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .selectable(
+                    selected = selected,
+                    enabled = enabled,
+                    role = Role.RadioButton,
+                    onClick = onClick,
+                )
                 .background(
                     if (selected) {
                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
@@ -215,6 +228,7 @@ private fun AccountRow(
         }
         RadioButton(
             selected = selected,
+            enabled = enabled,
             onClick = null,
             modifier = Modifier.size(48.dp),
         )

@@ -20,7 +20,7 @@
 | `21b` 提交 | `246810` | 全部中性禁用 | 两个操作锁定；确认显示进度 |
 | `21c` 错误 | 保留 `246810` | 六格 Error | 显示内联错误；取消与确认可恢复 |
 
-默认/提交 Surface 高度：设计 `466`，Compose 归一化约 `461.8`。错误 Surface 高度：设计 `493`，Compose 归一化约 `483.4`；上下边界最大偏差约 `6` 个设计单位。宽度均为约 `699 / 852`。
+默认态 Surface 通过紧凑操作区间距恢复确认稿高度与系统居中位置；独立探针测得顶边 `689.75`，确认稿为 `690`，误差 `0.42` 设计单位。宽度保持约 `699 / 852`。
 
 ## 视觉证据
 
@@ -32,7 +32,8 @@
 ## 自动验证
 
 - `:core:designsystem:validateDebugScreenshotTest`：12/12 通过。
-- `:feature:login:validateDebugScreenshotTest`：31/31 通过。
+- `login.risk-sms.default` 结构契约通过固定 `2` 设计单位阈值，原上下边界最大偏差约 `6` 的视觉债务已关闭。
+- `:feature:login:validateDebugScreenshotTest`：回归基准通过。
 - 新增真机行为测试验证错误态保留验证码与恢复操作；完整结果在提交前记录。
 
 ## 未覆盖

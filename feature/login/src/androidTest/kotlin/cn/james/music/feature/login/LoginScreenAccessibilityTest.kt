@@ -72,6 +72,29 @@ class LoginScreenAccessibilityTest {
     }
 
     @Test
+    fun conditionalScrollReturnsToTheOriginAfterOverflowIsRemoved() {
+        var viewportHeight by mutableStateOf(620.dp)
+        var state by mutableStateOf(expiredAccountState)
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                Box(Modifier.size(width = 320.dp, height = viewportHeight)) { TestLoginScreen(state) }
+            }
+        }
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("重新验证手机号"))
+        val scrolledHeroTop = composeRule.onNodeWithTag(LOGIN_HERO_IMAGE_TAG).getUnclippedBoundsInRoot().top
+
+        composeRule.runOnIdle {
+            state = LoginUiState()
+            viewportHeight = 694.dp
+        }
+
+        composeRule.onAllNodes(hasScrollAction()).assertCountEquals(0)
+        val resetHeroTop = composeRule.onNodeWithTag(LOGIN_HERO_IMAGE_TAG).getUnclippedBoundsInRoot().top
+        assertTrue(scrolledHeroTop < 0.dp)
+        assertEquals(0.dp, resetHeroTop)
+    }
+
+    @Test
     fun navigationBarInsetKeepsCardAboveTheUnsafeArea() {
         val safeInset = 56.dp
         composeRule.setContent {
@@ -567,6 +590,19 @@ class LoginScreenAccessibilityTest {
             assertEquals("10000001", selectedUserId)
             assertEquals(1, selectionChanges)
         }
+    }
+
+    @Test
+    fun accountRowsAreDisabledWhileTheSelectedAccountIsSubmitting() {
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                TestLoginScreen(expiredAccountState.copy(loggingIn = true, notice = null))
+            }
+        }
+
+        val radioRole = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
+        composeRule.onNodeWithText("夏日旋律").assert(radioRole).assertIsNotEnabled()
+        composeRule.onNodeWithText("MoeKoe").assert(radioRole).assertIsSelected().assertIsNotEnabled()
     }
 }
 

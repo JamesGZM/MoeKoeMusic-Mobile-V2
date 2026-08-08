@@ -21,7 +21,8 @@
 ## 自动验证
 
 - `:core:designsystem:validateDebugScreenshotTest`：通过。
-- `:feature:login:validateDebugScreenshotTest`：31/31 通过。
+- `login.password.risk-confirm-dialog` 独立探针测得 Surface 顶边 `722.24`，确认稿为 `722`，误差 `0.42` 设计单位；正文单行排布与系统居中高度债务已关闭。
+- `:feature:login:validateDebugScreenshotTest`：回归基准通过。
 - 其余单元、真机、lint 与 assemble 结果在本切片提交前统一记录。
 
 ## 未覆盖

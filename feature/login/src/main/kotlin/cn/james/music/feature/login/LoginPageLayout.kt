@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -83,6 +84,9 @@ internal fun LoginPageLayout(
             (layout.page.canvasHeight - cardTop - cardBottomSpacing).coerceAtLeast(0.dp)
         val scrollState = rememberScrollState()
         val scrollEnabled by remember { derivedStateOf { scrollState.maxValue > 0 } }
+        LaunchedEffect(scrollEnabled) {
+            if (!scrollEnabled && scrollState.value != 0) scrollState.scrollTo(0)
+        }
         Box(
             modifier =
                 Modifier

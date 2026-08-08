@@ -23,6 +23,17 @@ fun TencentCaptchaLoadingScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "TencentCaptchaLoadingLayoutProbe", widthDp = 390, heightDp = 845)
+@Composable
+fun TencentCaptchaLoadingLayoutProbeScreenshot() {
+    CompositionLocalProvider(LocalLoginLayoutProbeColors provides mapOf("tencentLoading" to Color.Magenta)) {
+        MoeKoeTheme(themeMode = ThemeMode.Light) {
+            TencentCaptchaScreen(onClose = {})
+        }
+    }
+}
+
+@PreviewTest
 @Preview(name = "TencentCaptchaLoadingLargeText", widthDp = 390, heightDp = 845, fontScale = 1.5f)
 @Composable
 fun TencentCaptchaLoadingLargeTextScreenshot() {
@@ -242,6 +253,22 @@ fun LoginPasswordRiskRequiredScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "PasswordRiskRequiredLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginPasswordRiskRequiredLayoutProbeScreenshot() {
+    LoginLayoutProbeScreenshot(
+        state =
+            LoginUiState(
+                mode = LoginMode.Password,
+                username = "miyu.song@moekoe.com",
+                password = "fixture-password",
+                risk = PasswordRiskUiState.Required(previewChallenge),
+            ),
+        colors = mapOf("riskConfirmDialog" to Color.Magenta),
+    )
+}
+
+@PreviewTest
 @Preview(name = "RiskSms", widthDp = 390, heightDp = 844)
 @Composable
 fun LoginRiskSmsScreenshot() {
@@ -252,6 +279,22 @@ fun LoginRiskSmsScreenshot() {
             password = "fixture-password",
             risk = PasswordRiskUiState.Sms(previewChallenge),
         ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "RiskSmsLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginRiskSmsLayoutProbeScreenshot() {
+    LoginLayoutProbeScreenshot(
+        state =
+            LoginUiState(
+                mode = LoginMode.Password,
+                username = "miyu.song@moekoe.com",
+                password = "fixture-password",
+                risk = PasswordRiskUiState.Sms(previewChallenge),
+            ),
+        colors = mapOf("riskSmsDialog" to Color.Magenta),
     )
 }
 

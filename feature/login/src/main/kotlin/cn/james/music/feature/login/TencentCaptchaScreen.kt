@@ -89,7 +89,11 @@ private fun TencentCaptchaBody(captchaContent: @Composable () -> Unit) {
         ) {
             CircularProgressIndicator(
                 progress = { 0.76f },
-                modifier = Modifier.size((TENCENT_PROGRESS_SIZE * scale).dp).rotate(-42f),
+                modifier =
+                    Modifier
+                        .size((TENCENT_PROGRESS_SIZE * scale).dp)
+                        .loginLayoutProbe("tencentLoading")
+                        .rotate(-42f),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.13f),
                 strokeWidth = (TENCENT_PROGRESS_STROKE * scale).dp,

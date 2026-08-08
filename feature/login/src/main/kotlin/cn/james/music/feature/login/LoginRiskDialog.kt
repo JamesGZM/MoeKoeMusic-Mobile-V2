@@ -45,6 +45,14 @@ internal fun LoginRiskDialog(
     val risk = state.risk ?: return
     if (risk is PasswordRiskUiState.Tencent && state.notice == null) return
     MoeDialog(
+        modifier =
+            Modifier.loginLayoutProbe(
+                when (risk) {
+                    is PasswordRiskUiState.Required -> "riskConfirmDialog"
+                    is PasswordRiskUiState.Sms -> "riskSmsDialog"
+                    is PasswordRiskUiState.Tencent -> "riskTencentDialog"
+                },
+            ),
         onDismissRequest = { if (!state.isBusy) onCancel() },
         size = if (risk is PasswordRiskUiState.Sms) MoeDialogSize.Input else MoeDialogSize.Confirm,
         dismissOnBackPress = !state.isBusy,
@@ -85,7 +93,9 @@ private fun RiskRequiredDialogContent(
     RiskDialogLayout(
         title = stringResource(R.string.login_risk_required_dialog_title),
         description = stringResource(R.string.login_risk_required_description),
+        descriptionStyle = MaterialTheme.typography.bodySmall,
         notice = state.notice,
+        actionsTopPadding = 12.dp,
     ) {
         RiskDialogActions(
             primaryLabel =
@@ -113,7 +123,7 @@ private fun RiskSmsDialogContent(
         descriptionStyle = MaterialTheme.typography.bodySmall,
         notice = state.notice,
         verticalSpacing = if (state.notice == LoginNotice.RiskRejected) 4.dp else 8.dp,
-        actionsTopPadding = 0.dp,
+        actionsTopPadding = 2.dp,
         content = {
             OtpCodeField(
                 value = state.riskCode,
