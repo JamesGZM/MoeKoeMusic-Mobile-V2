@@ -70,6 +70,7 @@ internal fun AccountSelectionContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Surface(
+            modifier = Modifier.loginLayoutProbe("accountList"),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {

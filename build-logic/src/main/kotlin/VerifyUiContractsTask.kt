@@ -48,10 +48,27 @@ abstract class VerifyUiContractsTask : DefaultTask() {
         if (expectedDesignHash != design.sha256()) {
             throw GradleException("${contract.id}: 设计源 SHA-256 已变化")
         }
+        if (properties.getProperty("screenshot.goldenSha256") != golden.sha256()) {
+            throw GradleException("${contract.id}: screenshot golden SHA-256 已变化")
+        }
         val source = screenshotSource.readText()
         val testId = properties.getProperty("screenshot.testId")
         if (!source.contains("@PreviewTest") || !source.contains("fun $testId(")) {
             throw GradleException("${contract.id}: 找不到对应 @PreviewTest $testId")
+        }
+        if (properties.getProperty("debt.status") == "none") {
+            val probeSource = requiredPath(contract, "probe.source")
+            val probeGolden = requiredPath(contract, "probe.golden")
+            requireFile(probeSource, contract.id)
+            requireFile(probeGolden, contract.id)
+            if (properties.getProperty("probe.goldenSha256") != probeGolden.sha256()) {
+                throw GradleException("${contract.id}: probe golden SHA-256 已变化")
+            }
+            val probeTestId = properties.getProperty("probe.testId")
+            val probeText = probeSource.readText()
+            if (!probeText.contains("@PreviewTest") || !probeText.contains("fun $probeTestId(")) {
+                throw GradleException("${contract.id}: 找不到对应 probe @PreviewTest $probeTestId")
+            }
         }
     }
 
@@ -66,17 +83,17 @@ abstract class VerifyUiContractsTask : DefaultTask() {
     ) {
         if (!file.isFile) throw GradleException("$contractId: 文件不存在 ${file.relativeTo(repositoryRoot.get().asFile)}")
     }
+}
 
-    private fun File.sha256(): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        inputStream().use { input ->
-            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-            while (true) {
-                val count = input.read(buffer)
-                if (count < 0) break
-                digest.update(buffer, 0, count)
-            }
+internal fun File.sha256(): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    inputStream().use { input ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            digest.update(buffer, 0, count)
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
     }
+    return digest.digest().joinToString("") { "%02x".format(it) }
 }

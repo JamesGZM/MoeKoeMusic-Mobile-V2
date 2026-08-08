@@ -59,7 +59,7 @@ internal fun LoginModeSelector(
             MaterialTheme.colorScheme.surfaceContainer
         }
     Surface(
-        modifier = modifier,
+        modifier = modifier.loginLayoutProbe("selector"),
         color = selectorContainerColor,
         shape = RoundedCornerShape(layout.form.selectorCornerRadius),
     ) {

@@ -4,6 +4,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.auth.AuthAccountOption
@@ -35,6 +36,16 @@ fun TencentCaptchaLoadingLargeTextScreenshot() {
 @Composable
 fun LoginMobileCodeScreenshot() {
     LoginScreenshotContent(LoginUiState())
+}
+
+@PreviewTest
+@Preview(name = "MobileCodeLayoutProbe", widthDp = 390, heightDp = 845)
+@Composable
+fun LoginMobileCodeLayoutProbeScreenshot() {
+    LoginLayoutProbeScreenshot(
+        state = LoginUiState(),
+        colors = mapOf("card" to Color.Magenta, "selector" to Color.Cyan),
+    )
 }
 
 @PreviewTest
@@ -97,6 +108,22 @@ fun LoginMultipleAccountsScreenshot() {
             accounts = previewAccounts,
             selectedUserId = "18600002258",
         ),
+    )
+}
+
+@PreviewTest
+@Preview(name = "MultipleAccountsLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun LoginMultipleAccountsLayoutProbeScreenshot() {
+    LoginLayoutProbeScreenshot(
+        state =
+            LoginUiState(
+                phone = "13800138000",
+                code = "123456",
+                accounts = previewAccounts,
+                selectedUserId = "18600002258",
+            ),
+        colors = mapOf("card" to Color.Magenta, "accountList" to Color.Green),
     )
 }
 
@@ -396,6 +423,16 @@ private fun LoginScreenshotContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LoginLayoutProbeScreenshot(
+    state: LoginUiState,
+    colors: Map<String, Color>,
+) {
+    CompositionLocalProvider(LocalLoginLayoutProbeColors provides colors) {
+        LoginScreenshotContent(state)
     }
 }
 

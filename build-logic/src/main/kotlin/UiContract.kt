@@ -24,6 +24,7 @@ internal object UiContractParser {
             "screenshot.testId",
             "screenshot.source",
             "screenshot.golden",
+            "screenshot.goldenSha256",
             "screenshot.rendered",
             "viewport.widthDp",
             "viewport.heightDp",
@@ -49,6 +50,11 @@ internal object UiContractParser {
         validateCrop(id, "design.crop", properties.getProperty("design.crop"))
         validateCrop(id, "render.crop", properties.getProperty("render.crop"))
         validateDebt(id, properties)
+        if (properties.getProperty("debt.status") == "none") {
+            listOf("probe.testId", "probe.source", "probe.golden", "probe.goldenSha256", "probe.rendered").forEach { key ->
+                require(!properties.getProperty(key).isNullOrBlank()) { "$id: 强制 contract 缺少 $key" }
+            }
+        }
         return UiContract(file, id, properties)
     }
 

@@ -40,5 +40,56 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
             repositoryRoot.set(target.layout.projectDirectory)
             contractFiles.from(target.fileTree("docs/design/contracts") { include("*.properties") })
         }
+
+        val selectedContractId = target.providers.gradleProperty("moekoe.uiContract")
+        val uiEvidenceDirectory = target.layout.buildDirectory.dir("reports/ui-evidence")
+        val contracts = target.fileTree("docs/design/contracts") { include("*.properties") }
+        val generateEvidence =
+            target.tasks.register("generateUiEvidence", GenerateUiEvidenceTask::class.java) {
+                group = "verification"
+                description = "归一化设计稿与 Compose 渲染并生成叠加、差异和量化结果。"
+                repositoryRoot.set(target.layout.projectDirectory)
+                contractFiles.from(contracts)
+                selectedContract.set(selectedContractId)
+                outputDirectory.set(uiEvidenceDirectory)
+            }
+        target.gradle.projectsEvaluated {
+            val selectedId = selectedContractId.orNull
+            val modules =
+                contracts.files
+                    .map(UiContractParser::parse)
+                    .filter { selectedId == null || it.id == selectedId }
+                    .map { it.properties.getProperty("module") }
+                    .distinct()
+            generateEvidence.configure {
+                modules.forEach { module ->
+                    target
+                        .project(module)
+                        .tasks
+                        .findByName("validateDebugScreenshotTest")
+                        ?.let { dependsOn(it) }
+                }
+            }
+        }
+        val verifyFidelity =
+            target.tasks.register("verifyUiFidelity", VerifyUiFidelityTask::class.java) {
+                group = "verification"
+                description = "按 UI contract 阈值阻断不符合确认稿的 Compose 渲染。"
+                dependsOn(generateEvidence)
+                contractFiles.from(contracts)
+                selectedContract.set(selectedContractId)
+                evidenceFiles.from(target.fileTree(uiEvidenceDirectory) { include("*/result.properties") })
+            }
+        target.tasks.register("verifyUiGoldenChange", VerifyUiGoldenChangeTask::class.java) {
+            group = "verification"
+            description = "阻止没有设计符合度证据的 screenshot reference 更新。"
+            dependsOn(verifyFidelity)
+            repositoryRoot.set(target.layout.projectDirectory)
+            contractFiles.from(contracts)
+            evidenceRoot.set(uiEvidenceDirectory)
+            target.providers.gradleProperty("moekoe.changedFilesFile").orNull?.let { path ->
+                changedFilesFile.set(target.layout.projectDirectory.file(path))
+            }
+        }
     }
 }

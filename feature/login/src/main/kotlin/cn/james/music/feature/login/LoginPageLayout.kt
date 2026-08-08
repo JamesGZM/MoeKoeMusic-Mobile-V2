@@ -106,7 +106,8 @@ internal fun LoginPageLayout(
                             )
                             .fillMaxWidth()
                             .heightIn(min = minimumCardHeight)
-                            .loginCardGlow(layout, MaterialTheme.colorScheme.primary),
+                            .loginCardGlow(layout, MaterialTheme.colorScheme.primary)
+                            .loginLayoutProbe("card"),
                     shape = cardShape,
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(layout.dp(1f), MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
