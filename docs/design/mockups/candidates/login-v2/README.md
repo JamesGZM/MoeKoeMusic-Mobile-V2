@@ -58,6 +58,8 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 
 `21d` 已完成公共 Toolbar、圆形关闭入口、加载区和安全页脚的归一化复验，证据见 [`login-tencent-loading-2026-08-08.md`](../../../evidence/login-tencent-loading-2026-08-08.md)。
 
+`21e` 已完成系统居中、Confirm Surface、标题正文、Tonal 取消、Filled 重试与运行时 32% 遮罩复验，证据见 [`login-tencent-failure-dialog-2026-08-08.md`](../../../evidence/login-tencent-failure-dialog-2026-08-08.md)。
+
 验证成功后最多重试一次原密码登录，不增加停留式“成功结果页”。
 
 ## 22 · 多账号

@@ -16,13 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeDestructiveButton
@@ -52,6 +55,10 @@ fun MoeDialog(
                 usePlatformDefaultWidth = false,
             ),
     ) {
+        val dialogView = LocalView.current
+        SideEffect {
+            (dialogView.parent as? DialogWindowProvider)?.window?.setDimAmount(MOE_DIALOG_DIM_AMOUNT)
+        }
         Box(
             modifier = Modifier.fillMaxWidth().padding(horizontal = MoeKoeTheme.spacing.space32),
             contentAlignment = Alignment.Center,
@@ -224,3 +231,5 @@ private val MoeDialogSize.maximumWidth: Dp
             MoeDialogSize.Confirm -> 304.dp
             MoeDialogSize.Input -> 320.dp
         }
+
+private const val MOE_DIALOG_DIM_AMOUNT = 0.32f
