@@ -35,7 +35,7 @@
 - 通用 MiniPlayer 已按 `17-music-content-components.png` 与 `01-home-material3-v2.png` 的页面壳层完成同视口视觉校准：保留连续底部 Surface，校正封面、紧凑字级、质量徽标、上一首、主色圆形播放暂停、下一首、队列、起止时间与独立进度条；上一首/下一首继续接入既有播放命令，本次不改 `:playback` 状态所有权。浅色、深色、`1.5×` 聚焦截图与设计并排/叠加/差异证据见 [`mini-player-2026-08-08.md`](../design/evidence/mini-player-2026-08-08.md)，四项操作语义区域继续保持不小于 `48dp`。
 - Search/LocalMusic 截图验证、相关 JVM 单测、Debug 构建与 `MainActivityTest` 真机回归 6/6 通过；真机手动搜索并播放在线歌曲后，MiniPlayer、恢复为暂停状态和队列 Bottom Sheet 均已检查。
 - 已在 `06` 至 `08` 号确认设计图之后建立 [`player-flow`](../design/prototypes/player-flow/README.md) 本地交互原型，并验证封面/歌词双页、点击歌词定位、暂无歌词、纵向退出、队列覆盖层和“先关队列、再退出播放器”的返回优先级；原型不定义 Compose 视觉或协议行为。
-- 独立 `:feature:player` 全屏封面目的地已按 [`PLAYER_LAYOUT_SPEC.md`](../design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成视觉复刻：补齐更多、分页点、品质、收藏、下载、加歌单、分享及独立队列动作，封面改为真实本地预览位图，播放/暂停、进度、上下首、模式和队列继续复用既有接线；其余次级动作只保留视觉语义。9 组截图、设计对照证据及 ELE-AL00 / API 29 App instrumentation 24/24 通过。
+- 独立 `:feature:player` 全屏封面目的地已按 [`PLAYER_LAYOUT_SPEC.md`](../design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成第二轮同画布复核：纠正旧证据遗漏的封面锚点、歌曲信息边距、收藏位置、进度细节、核心控制节奏和次级动作密度；播放/暂停、进度、上下首、模式和队列继续复用既有接线，其余次级动作只保留视觉语义，不在本 UI 切片接业务。
 - 播放页仅消费 `:app` 映射的不可变 UI 状态和事件，不直接依赖 `:playback`；高频进度由独立 `State` 交给进度子组合读取。标准视口不依赖尺寸分档，只有内容实际溢出时允许纵向滚动。
 - 全屏封面已覆盖正常、暂停、缓冲、控制器未连接、封面失败、未知时长、空播放项及 `1.5×`/`2.0×` 字体截图基准；真机导航、手势、队列返回优先级和播放命令仍待用户手动验收。
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；`07-player-lyrics.png` 与 `23a` 至 `23h` 加载、空、离线、错误和大字体状态均已确认，并已形成独立 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md) 视觉合同。歌词 Compose 先按全部确认稿完成纯 UI 和截图，再单独接入歌词状态与交互。

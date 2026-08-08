@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -303,10 +304,10 @@ private fun PlayerCoverPage(
     artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(23.dp))
         PlayerArtwork(item = item, artworkContent = artworkContent, modifier = Modifier.fillMaxWidth())
         PlayerPageIndicator(activePage = activePage)
-        Spacer(Modifier.height(15.dp))
+        Spacer(Modifier.height(6.dp))
         PlayerControls(
             state = state,
             progress = progress,
@@ -665,7 +666,7 @@ private fun PlayerArtwork(
             null -> null
         }
     BoxWithConstraints(
-        modifier = modifier.padding(horizontal = MoeKoeTheme.spacing.extraLarge),
+        modifier = modifier.padding(horizontal = 28.5.dp),
         contentAlignment = Alignment.TopCenter,
     ) {
         val artworkSize = maxWidth.coerceAtMost(333.dp)
@@ -717,9 +718,12 @@ private fun PlayerControls(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = if (compactLayout) 26.dp else MoeKoeTheme.spacing.large),
+                .padding(horizontal = if (compactLayout) 26.dp else 22.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(horizontal = if (compactLayout) 0.dp else 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
@@ -739,7 +743,13 @@ private fun PlayerControls(
                 )
                 PlayerQualityBadge(compact = compactLayout)
             }
-            IconButton(onClick = onFavorite, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
+            IconButton(
+                onClick = onFavorite,
+                modifier =
+                    Modifier
+                        .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                        .then(if (compactLayout) Modifier else Modifier.offset(x = 14.dp, y = (-8).dp)),
+            ) {
                 Icon(
                     imageVector = Icons.Default.FavoriteBorder,
                     contentDescription = stringResource(R.string.player_favorite),
@@ -747,15 +757,17 @@ private fun PlayerControls(
                 )
             }
         }
-        PlayerProgress(
-            progress = progress,
-            itemId = item.id,
-            enabled = state.controlsEnabled,
-            onSeek = onSeek,
-            compact = compactLayout,
-        )
+        Column(modifier = Modifier.padding(horizontal = if (compactLayout) 0.dp else 8.dp)) {
+            PlayerProgress(
+                progress = progress,
+                itemId = item.id,
+                enabled = state.controlsEnabled,
+                onSeek = onSeek,
+                compact = compactLayout,
+            )
+        }
         Row(
-            modifier = Modifier.fillMaxWidth().height(if (compactLayout) 76.dp else 88.dp),
+            modifier = Modifier.fillMaxWidth().height(if (compactLayout) 76.dp else 82.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -764,7 +776,7 @@ private fun PlayerControls(
             Surface(
                 onClick = onTogglePlayback,
                 enabled = state.controlsEnabled,
-                modifier = Modifier.size(if (compactLayout) 68.dp else 72.dp),
+                modifier = Modifier.size(68.dp),
                 shape = CircleShape,
                 color =
                     if (state.controlsEnabled) {
@@ -834,7 +846,7 @@ private fun PlayerSecondaryActions(
     onOpenQueue: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(76.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 18.dp).height(72.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -851,15 +863,19 @@ private fun PlayerSecondaryAction(
     label: Int,
     onClick: () -> Unit,
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.size(48.dp),
-        shape = CircleShape,
-        color = PlayerSecondaryContainer,
-        contentColor = PlayerSecondaryContent,
+    Box(
+        modifier = Modifier.size(48.dp).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(icon, stringResource(label), modifier = Modifier.size(24.dp))
+        Surface(
+            modifier = Modifier.size(46.dp),
+            shape = CircleShape,
+            color = PlayerSecondaryContainer,
+            contentColor = PlayerSecondaryContent,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, stringResource(label), modifier = Modifier.size(24.dp))
+            }
         }
     }
 }
@@ -888,11 +904,15 @@ private fun PlayerProgress(
         },
         valueRange = 0f..duration.coerceAtLeast(1).toFloat(),
         enabled = enabled && duration > 0,
-        modifier = Modifier.fillMaxWidth().then(if (compact) Modifier.height(34.dp) else Modifier),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(if (compact) 34.dp else 40.dp)
+                .then(if (compact) Modifier else Modifier.offset(y = 2.dp)),
         thumb = {
             Box(
                 Modifier
-                    .size(16.dp)
+                    .size(if (compact) 16.dp else 12.dp)
                     .background(
                         color = if (enabled && duration > 0) activeColor else activeColor.copy(alpha = 0.38f),
                         shape = CircleShape,
@@ -904,10 +924,14 @@ private fun PlayerProgress(
                 progress = sliderState.value / duration.coerceAtLeast(1).toFloat(),
                 activeColor = if (enabled && duration > 0) activeColor else activeColor.copy(alpha = 0.38f),
                 inactiveColor = if (enabled && duration > 0) inactiveColor else inactiveColor.copy(alpha = 0.38f),
+                compact = compact,
             )
         },
     )
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Row(
+        modifier = Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.offset(y = (-6).dp)),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
         PlayerTime(shownPosition, valid = duration > 0)
         PlayerTime((duration - shownPosition).coerceAtLeast(0), valid = duration > 0, remaining = true)
     }
@@ -918,10 +942,12 @@ private fun PlayerProgressTrack(
     progress: Float,
     activeColor: Color,
     inactiveColor: Color,
+    compact: Boolean,
 ) {
-    Canvas(Modifier.fillMaxWidth().height(4.dp)) {
+    val trackHeight = if (compact) 4.dp else 2.dp
+    Canvas(Modifier.fillMaxWidth().height(trackHeight)) {
         val centerY = size.height / 2f
-        val strokeWidth = 4.dp.toPx()
+        val strokeWidth = trackHeight.toPx()
         drawLine(
             color = inactiveColor,
             start = Offset(0f, centerY),
