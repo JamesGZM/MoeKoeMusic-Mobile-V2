@@ -56,6 +56,10 @@ internal object UiContractParser {
             "$id: structure.coverage 必须为 core-page、dialog 或 sheet"
         }
         require(properties.stringPropertyNames().any { it.startsWith("anchor.") }) { "$id: 至少登记一个固定锚点" }
+        properties.stringPropertyNames().filter { it.startsWith("regression.golden.") }.forEach { key ->
+            require(key.removePrefix("regression.golden.").isNotBlank()) { "$id: regression golden 状态名不能为空" }
+            require(!properties.getProperty(key).isNullOrBlank()) { "$id: $key 路径不能为空" }
+        }
         validateCrop(id, "design.crop", properties.getProperty("design.crop"))
         validateCrop(id, "render.crop", properties.getProperty("render.crop"))
         validateDebt(id, properties)
@@ -137,4 +141,21 @@ internal object UiContractParser {
     }
 
     fun hasProbe(properties: Properties): Boolean = !properties.getProperty("probe.rendered").isNullOrBlank()
+
+    fun goldenPaths(properties: Properties): Set<String> =
+        buildSet {
+            properties.getProperty("screenshot.golden")?.takeIf(String::isNotBlank)?.let(::add)
+            properties.getProperty("probe.golden")?.takeIf(String::isNotBlank)?.let(::add)
+            properties
+                .stringPropertyNames()
+                .filter { it.startsWith("regression.golden.") }
+                .mapNotNull { properties.getProperty(it)?.takeIf(String::isNotBlank) }
+                .forEach(::add)
+        }
+
+    fun regressionGoldenPaths(properties: Properties): Set<String> =
+        properties
+            .stringPropertyNames()
+            .filter { it.startsWith("regression.golden.") }
+            .mapTo(linkedSetOf()) { properties.getProperty(it) }
 }

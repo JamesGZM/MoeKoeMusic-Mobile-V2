@@ -33,12 +33,10 @@ abstract class VerifyUiGoldenChangeTask : DefaultTask() {
         val root = repositoryRoot.get().asFile
         val changed = changedFiles(root)
         val contracts = contractFiles.files.map(UiContractParser::parse)
+        val contractsByGolden = indexContractsByGolden(contracts)
         val failures = mutableListOf<String>()
         changed.keys.filter { it.contains("/src/screenshotTestDebug/reference/") && it.endsWith(".png") }.forEach { golden ->
-            val contract =
-                contracts.singleOrNull {
-                    it.properties.getProperty("screenshot.golden") == golden || it.properties.getProperty("probe.golden") == golden
-                }
+            val contract = contractsByGolden[golden]
             if (contract == null) {
                 failures += "$golden: reference screenshot 没有 UI contract"
             } else if (contract.properties.getProperty("debt.status") == "none") {
@@ -87,4 +85,17 @@ abstract class VerifyUiGoldenChangeTask : DefaultTask() {
             val parts = line.split('\t')
             if (parts.size >= 2) parts.last() to parts.first().take(1) else line to "M"
         }
+}
+
+internal fun indexContractsByGolden(contracts: List<UiContract>): Map<String, UiContract> {
+    val indexed = linkedMapOf<String, UiContract>()
+    contracts.forEach { contract ->
+        UiContractParser.goldenPaths(contract.properties).forEach { golden ->
+            val existing = indexed.putIfAbsent(golden, contract)
+            if (existing != null && existing.id != contract.id) {
+                throw GradleException("UI golden 重复映射：$golden 同时属于 ${existing.id} 和 ${contract.id}")
+            }
+        }
+    }
+    return indexed
 }

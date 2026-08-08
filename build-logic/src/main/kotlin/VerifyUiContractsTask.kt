@@ -48,6 +48,10 @@ abstract class VerifyUiContractsTask : DefaultTask() {
         requireFile(stateSpec, contract.id)
         requireFile(stateTestSource, contract.id)
         requireFile(golden, contract.id)
+        UiContractParser.regressionGoldenPaths(properties).forEach { path ->
+            val regressionGolden = UiContractParser.resolveRepositoryPath(repositoryRoot.get().asFile, contract.id, path)
+            requireFile(regressionGolden, contract.id)
+        }
         val expectedDesignHash = properties.getProperty("design.sha256")
         if (expectedDesignHash != design.sha256()) {
             throw GradleException("${contract.id}: 设计源 SHA-256 已变化")
