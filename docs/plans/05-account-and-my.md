@@ -8,7 +8,7 @@
 
 - 手机验证码、多账号、账号密码、扫码和风控验证的协议、状态机与功能 UI 已形成可运行切片；现有 Compose 仍需按已确认独立单状态图返工，真实扫码 `2→4`、会话恢复和主动风控兼容验收尚未完成，因此登录阶段仍不能标记完成。
 - 登录后资料、VIP 摘要、页面恢复刷新、部分失败降级和确认退出已经贯通 `:kugou-api`、`:data` 与 `:feature:my`，并使用真实会话和服务结果。
-- “我的”匿名与登录态已按 `04-my-anonymous.png`、`04-my-v4.png` 完成整页视觉结构：账户卡、品牌头像、签到/VIP、四项快捷入口、收藏与关注统计层级、创建歌单标题/列表/空态均保留；截图 fixture 提供确认稿示例数据，运行态仍只显示 Repository 的真实资料与明确空态，不把示例计数写入业务状态。
+- “我的”匿名与登录态已按 `04-my-anonymous.png`、`04-my-v4.png` 完成整页视觉结构，并于 2026-08-08 补齐 [`my-content-2026-08-08.md`](../design/evidence/my-content-2026-08-08.md) 的同画布并排、叠加和差异证据：账户卡、品牌头像、签到/VIP、四项快捷入口、收藏与关注统计层级、创建歌单标题/列表/独立空态插画均保留；截图 fixture 提供确认稿示例数据，运行态仍只显示 Repository 的真实资料与明确空态，不把示例计数写入业务状态。
 - 匿名与登录态齿轮均已接入唯一 Settings destination，登录态资料区提供独立账号菜单，退出确认不再借用设置齿轮；My → Settings → 主题切换 → Back 已在指定 ELE-AL00 / API 29 真机通过。
 - 设置与应用偏好已通过 [`../reference-audits/18-settings-and-preferences.md`](../reference-audits/18-settings-and-preferences.md) 门禁；主题持久化、应用级消费、`09-settings.png` 五个完整分组、14 个一致高度 Item、长页面滚动和关于 Dialog 均已交付。未接能力保留确认稿静态视觉但不写入假偏好，后续随真实消费者逐项接入。
 - 用户主页已完成 [`20-user-profile-ui`](../reference-audits/20-user-profile-ui.md) 门禁，并按 [`USER_PROFILE_LAYOUT_SPEC.md`](../design/USER_PROFILE_LAYOUT_SPEC.md) 与 `10-user-profile.png` 落入独立 `:feature:profile`：从已登录“我的”资料区上抛事件，由 `:app` 注册类型安全子页面；Toolbar、资料 Hero、关系统计、编辑资料、听歌概览和三行公开歌单均已按确认稿交付。Light、Dark、AMOLED、加载、空、错误、`1.5×`、`2.0×` 共 8 组截图基线及归一化设计对照证据已建立；所有示例字段只存在于 UI fixture，真实业务仍按后续纵向切片接入。
