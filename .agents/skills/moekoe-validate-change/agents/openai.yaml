@@ -1,6 +1,6 @@
 interface:
   display_name: "MoeKoe 变更验证"
   short_description: "为代码切片选择验证矩阵、同步文档并形成安全的原子提交"
-  default_prompt: "Use $moekoe-validate-change to validate and finish this MoeKoeMusic change."
+  default_prompt: "使用 $moekoe-validate-change 验证并完成这项 MoeKoeMusic 变更。"
 policy:
   allow_implicit_invocation: true

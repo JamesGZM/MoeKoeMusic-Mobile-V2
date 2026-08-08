@@ -1,6 +1,6 @@
 ---
 name: moekoe-kugou-protocol
-description: Migrate, implement, debug, or review KuGou protocol behavior in MoeKoeMusic. Use for kugou-api/, endpoints, request signing, encryption, sessions, cookies, authentication, profile, lyrics, dynamic JSON, network DTOs, error mapping, retries, or controlled live-service compatibility checks.
+description: 迁移、实现、调试或复核 MoeKoeMusic 的酷狗协议行为。涉及 kugou-api、Endpoint、请求签名、加密、会话、Cookie、认证、资料、歌词、动态 JSON、网络 DTO、错误映射、重试或受控真实服务兼容性检查时使用。
 ---
 
 # MoeKoe 酷狗协议迁移

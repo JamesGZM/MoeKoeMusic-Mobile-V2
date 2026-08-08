@@ -18,11 +18,14 @@
 
 - 重大功能、权限、存储、后台任务、新依赖、公共接口或核心系统：先调用 `$moekoe-spec-audit`。
 - 页面、导航、组件、Dialog/Sheet、交互状态、设计图、原型或 Compose UI：调用 `$moekoe-ui-compose`。
+- 已确认设计稿转实现契约、状态到设计图映射、画布/锚点/裁切/遮罩/滚动规则：调用 `$moekoe-design-contract`。
+- UI 截图、设计稿叠加、差异图、锚点误差、视觉债务或 reference 更新：调用 `$moekoe-visual-qa`。
 - 模块边界、依赖方向、Navigation、ViewModel、Repository、Room/DataStore 或 Hilt：调用 `$moekoe-architecture`。
 - Endpoint、签名、加密、会话、登录、资料、歌词、动态 JSON 或真实酷狗服务：调用 `$moekoe-kugou-protocol`。
 - Media3、ExoPlayer、Service、队列、播放模式、恢复、通知或播放器进度：调用 `$moekoe-playback`。
 - SAF、URI、外部 Intent、本地音乐复制、去重、回滚或导入后播放：调用 `$moekoe-local-import`。
 - 任何代码切片完成前必须调用 `$moekoe-validate-change`；纯分析或审查任务在交付前也用它核对证据与未执行项。
+- 检查误通过、skill 漏触发、流程过慢、上游 skill 更新或规则自我迭代：调用 `$moekoe-skill-evolution`；候选规则必须人工批准。
 
 ## Sub-agent 协作
 

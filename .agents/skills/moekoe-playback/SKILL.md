@@ -1,6 +1,6 @@
 ---
 name: moekoe-playback
-description: Implement, debug, or review MoeKoeMusic playback behavior. Use for playback/, Media3, ExoPlayer, MediaLibraryService, MediaSession, queues, play modes, source resolution, playback restoration, notifications, progress, MiniPlayer, full-screen player state, artwork palettes, or feature/player.
+description: 实现、调试或复核 MoeKoeMusic 播放行为。涉及 playback、Media3、ExoPlayer、MediaLibraryService、MediaSession、队列、播放模式、来源解析、播放恢复、通知、进度、MiniPlayer、全屏播放器状态、封面色板或 feature/player 时使用。
 ---
 
 # MoeKoe 播放内核

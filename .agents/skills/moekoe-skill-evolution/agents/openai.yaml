@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe Skill 演进"
+  short_description: "把流程漏检转成候选规则并执行隔离回归与人工晋级评测"
+  default_prompt: "使用 $moekoe-skill-evolution 将这次流程漏检转成经过回归评测的候选规则。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe 视觉验收"
+  short_description: "对比确认设计稿与 Compose 渲染并生成可审计证据"
+  default_prompt: "使用 $moekoe-visual-qa 对照已确认设计稿验收这项 MoeKoe Compose UI。"
+policy:
+  allow_implicit_invocation: true

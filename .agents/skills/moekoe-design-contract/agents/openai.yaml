@@ -1,0 +1,6 @@
+interface:
+  display_name: "MoeKoe 设计契约"
+  short_description: "将已确认设计稿固化为可执行且可机器校验的 Compose 契约"
+  default_prompt: "使用 $moekoe-design-contract 将已确认设计稿整理为可实现、可校验的 UI 契约。"
+policy:
+  allow_implicit_invocation: true

@@ -1,6 +1,6 @@
 ---
 name: moekoe-local-import
-description: Implement, debug, or review local music ingestion in MoeKoeMusic. Use for feature/localmusic, SAF, content URIs, ACTION_VIEW, external audio intents, file copying, hashing, duplicate detection, Room import transactions, cleanup, rollback, cancellation, format fixtures, or import-then-play behavior.
+description: 实现、调试或复核 MoeKoeMusic 本地音乐接入。涉及 feature/localmusic、SAF、内容 URI、ACTION_VIEW、外部音频 Intent、文件复制、哈希、去重、Room 导入事务、清理、回滚、取消、格式 fixture 或导入后播放时使用。
 ---
 
 # MoeKoe 本地音乐导入

@@ -1,6 +1,6 @@
 ---
 name: moekoe-ui-compose
-description: Design, implement, or review MoeKoeMusic user-visible UI. Use for Compose screens and components, feature/* UI, navigation, dialogs, bottom sheets, overlays, visual states, mockups, prototypes, accessibility, or files under docs/design, core/designsystem, and docs/UI_*.md.
+description: 设计、实现或复核 MoeKoeMusic 用户可见 UI。涉及 Compose 页面和组件、feature/* UI、导航、Dialog、Bottom Sheet、覆盖层、视觉状态、设计稿、原型、无障碍，或 docs/design、core/designsystem、docs/UI_*.md 下的文件时使用。
 ---
 
 # MoeKoe UI 与 Compose
@@ -9,7 +9,7 @@ description: Design, implement, or review MoeKoeMusic user-visible UI. Use for C
 
 1. 先读取 `docs/UI_DESIGN_BRIEF.md`、`docs/DESIGN_SYSTEM.md`、`docs/design/mockups/README.md` 和 `docs/DEVELOPMENT_PLAN.md` 的页面映射。
 2. 只读取任务相关设计资产；覆盖层/反馈再读 `docs/UI_COMPONENTS.md`，复杂交互再读相应 prototype README，确认每张资产是“候选 / 已确认 / 已废弃”。
-3. 涉及模块、状态所有权或导航时同时读取 `docs/ARCHITECTURE.md` 并调用 `$moekoe-architecture`。
+3. 编码前调用 `$moekoe-design-contract` 并读取目标状态 contract；涉及模块、状态所有权或导航时同时读取 `docs/ARCHITECTURE.md` 并调用 `$moekoe-architecture`。
 
 ## 设计门禁
 
@@ -23,7 +23,7 @@ description: Design, implement, or review MoeKoeMusic user-visible UI. Use for C
 - Route 获取 ViewModel 并收集状态；Screen 接收不可变状态和事件，不接收整个 ViewModel 或自行导航。
 - Token 来自 `:core:designsystem`；使用固定 Material Icons 或已批准资源，提供可访问性语义、稳定列表 key，并隔离高频状态更新。
 - 发现未设计状态时停止布局实现，先补设计并重新确认。
-- 设计确认后同步 Mockup 索引、唯一页面映射、阶段计划和 Design System；完成前调用 `$moekoe-validate-change`。
+- 设计确认后同步 Mockup 索引、唯一页面映射、阶段计划和 Design System；实现后调用 `$moekoe-visual-qa`，完成前调用 `$moekoe-validate-change`。
 
 ## 多状态视觉落地门禁
 
