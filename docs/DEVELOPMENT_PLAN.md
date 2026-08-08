@@ -48,7 +48,7 @@
 
 以上编号保留历史阶段文档索引，不代表当前实施先后。当前界面切片顺序以“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”为准；不能因为某个业务能力尚未接入而删减已经确认的页面结构，也不能为了视觉预览伪造协议结果。
 
-首页真实内容与缓存门禁已经通过，见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。首批接入每日推荐、推荐歌单和可选轮播，按协议与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、Compose 页面拆成原子切片；排行榜与新歌仍归发现页。协议、Room v5、Repository、ViewModel 与 Compose 五个原子切片已完成，缓存按匿名/用户身份分区自动切换，15 分钟内不重复自动刷新，部分或失败响应不会覆盖最后完整快照；页面覆盖首次加载、缓存刷新、部分结果、空内容、错误与身份切换，并已建立浅色、深色、`1.5×`、`2.0×` 字体截图基线。2026-08-06 自动真实测试确认每日推荐与推荐歌单当前可用；轮播返回 `31136`，恢复前不作为完整快照必需区块。
+首页真实内容与缓存门禁已经通过，见 [`reference-audits/15-home-content-and-cache.md`](reference-audits/15-home-content-and-cache.md)。首批接入每日推荐、推荐歌单和可选轮播，按协议与 Decoder、Room v5 完整快照、cache-first Repository、ViewModel、Compose 页面拆成原子切片；排行榜与新歌仍归发现页。协议、Room v5、Repository、ViewModel 与 Compose 五个原子切片已完成，缓存按匿名/用户身份分区自动切换，15 分钟内不重复自动刷新，部分或失败响应不会覆盖最后完整快照；页面覆盖首次加载、缓存刷新、部分结果、空内容、错误与身份切换，并已建立浅色、深色、`1.5×`、`2.0×` 字体截图基线。`home.content.light` 结构 contract 现绑定确认稿、独立六锚点 probe 与全部回归状态，页面编排、顶部 Hero、快捷入口、内容区和状态页已按变化原因拆分。2026-08-06 自动真实测试确认每日推荐与推荐歌单当前可用；轮播返回 `31136`，恢复前不作为完整快照必需区块。
 
 发现页确认稿 UI 已按 [`design/DISCOVER_LAYOUT_SPEC.md`](design/DISCOVER_LAYOUT_SPEC.md) 完成五段 Tab、Hero、三列排行榜、分类胶囊和三列封面，并覆盖浅色、深色、AMOLED、加载、空、错误及两档大字体截图。当前榜单与分类内容是 UI 层设计预览；真实协议、缓存、详情与播放接入留在后续纵向切片，不影响本轮视觉交付。
 
