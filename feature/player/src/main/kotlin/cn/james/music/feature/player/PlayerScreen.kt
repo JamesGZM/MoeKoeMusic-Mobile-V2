@@ -350,7 +350,7 @@ private fun PlayerLyricsPage(
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             LyricsViewport(
                 state = lyricsState,
-                modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 30.dp),
+                modifier = Modifier.fillMaxSize().padding(start = 28.dp, top = 30.dp, end = 28.dp, bottom = 12.dp),
                 onRetry = onRetryLyrics,
                 onLyricClick = onLyricClick,
             )
@@ -358,7 +358,7 @@ private fun PlayerLyricsPage(
                 modifier =
                     Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 12.dp, end = 12.dp)
+                        .padding(top = 8.dp, end = 12.dp)
                         .size(MoeKoeTheme.dimensions.minimumTouchTarget)
                         .clickable(onClick = onLyricsSettings),
                 contentAlignment = Alignment.Center,
@@ -370,11 +370,11 @@ private fun PlayerLyricsPage(
                     contentColor = PlayerAccent,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = stringResource(R.string.player_lyrics_settings),
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = stringResource(R.string.player_lyrics_settings),
                             modifier = Modifier.size(19.dp),
-                    )
+                        )
                     }
                 }
             }
@@ -410,13 +410,14 @@ private fun LyricsViewport(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (state) {
-            PlayerLyricsUiState.Loading -> LyricsLoadingState()
+            PlayerLyricsUiState.Loading -> LyricsLoadingState(modifier = Modifier.offset(y = (-45).dp))
             PlayerLyricsUiState.Empty ->
                 LyricsMessageState(
                     icon = Icons.Default.MusicOff,
                     title = stringResource(R.string.player_lyrics_empty_title),
                     message = stringResource(R.string.player_lyrics_empty_message),
                     onRetry = onRetry,
+                    modifier = Modifier,
                 )
 
             PlayerLyricsUiState.Offline ->
@@ -425,6 +426,7 @@ private fun LyricsViewport(
                     title = stringResource(R.string.player_lyrics_offline_title),
                     message = stringResource(R.string.player_lyrics_offline_message),
                     onRetry = onRetry,
+                    modifier = Modifier,
                 )
 
             PlayerLyricsUiState.Error ->
@@ -433,16 +435,22 @@ private fun LyricsViewport(
                     title = stringResource(R.string.player_lyrics_error_title),
                     message = stringResource(R.string.player_lyrics_error_message),
                     onRetry = onRetry,
+                    modifier = Modifier,
                 )
 
-            is PlayerLyricsUiState.Content -> LyricsContent(state, onLyricClick)
+            is PlayerLyricsUiState.Content ->
+                LyricsContent(
+                    state = state,
+                    onLyricClick = onLyricClick,
+                    modifier = Modifier.offset(y = lyricsContentOffset(state)),
+                )
         }
     }
 }
 
 @Composable
-private fun LyricsLoadingState() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun LyricsLoadingState(modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(
             modifier = Modifier.size(32.dp),
             color = PlayerAccent,
@@ -474,8 +482,9 @@ private fun LyricsMessageState(
     title: String,
     message: String,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
             modifier = Modifier.size(52.dp),
             shape = CircleShape,
@@ -524,10 +533,11 @@ private fun LyricsMessageState(
 private fun LyricsContent(
     state: PlayerLyricsUiState.Content,
     onLyricClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val textSizes = lyricsTextSizes(state.textSize)
     Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -595,9 +605,22 @@ private data class LyricsTextSizes(
 
 private fun lyricsTextSizes(size: PlayerLyricsTextSize): LyricsTextSizes =
     when (size) {
-        PlayerLyricsTextSize.Standard -> LyricsTextSizes(15.sp, 22.sp, 20.sp, 27.sp, 12.sp, 18.sp, 4.dp, 20.dp, 24.dp)
-        PlayerLyricsTextSize.Large -> LyricsTextSizes(19.sp, 27.sp, 25.sp, 32.sp, 15.sp, 22.sp, 5.dp, 26.dp, 29.dp)
-        PlayerLyricsTextSize.Largest -> LyricsTextSizes(22.sp, 30.sp, 28.sp, 37.sp, 18.sp, 26.sp, 6.dp, 31.dp, 34.dp)
+        PlayerLyricsTextSize.Standard -> LyricsTextSizes(15.sp, 22.sp, 20.sp, 27.sp, 12.sp, 18.sp, 4.dp, 17.dp, 21.dp)
+        PlayerLyricsTextSize.Large -> LyricsTextSizes(19.sp, 27.sp, 25.sp, 32.sp, 15.sp, 22.sp, 5.dp, 23.dp, 26.dp)
+        PlayerLyricsTextSize.Largest -> LyricsTextSizes(22.sp, 30.sp, 28.sp, 37.sp, 18.sp, 26.sp, 6.dp, 28.dp, 31.dp)
+    }
+
+private fun lyricsContentOffset(state: PlayerLyricsUiState.Content) =
+    when (state.textSize) {
+        PlayerLyricsTextSize.Standard ->
+            when {
+                state.lines.all { it.secondary == null } -> (-65).dp
+                state.lines.size <= 4 -> (-58).dp
+                else -> 18.dp
+            }
+
+        PlayerLyricsTextSize.Large -> (-29).dp
+        PlayerLyricsTextSize.Largest -> (-44).dp
     }
 
 @Composable
@@ -748,7 +771,7 @@ private fun PlayerControls(
                 modifier =
                     Modifier
                         .size(MoeKoeTheme.dimensions.minimumTouchTarget)
-                        .then(if (compactLayout) Modifier else Modifier.offset(x = 14.dp, y = (-8).dp)),
+                        .offset(x = if (compactLayout) 8.dp else 14.dp, y = (-8).dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.FavoriteBorder,
@@ -912,7 +935,7 @@ private fun PlayerProgress(
         thumb = {
             Box(
                 Modifier
-                    .size(if (compact) 16.dp else 12.dp)
+                    .size(12.dp)
                     .background(
                         color = if (enabled && duration > 0) activeColor else activeColor.copy(alpha = 0.38f),
                         shape = CircleShape,
@@ -924,7 +947,6 @@ private fun PlayerProgress(
                 progress = sliderState.value / duration.coerceAtLeast(1).toFloat(),
                 activeColor = if (enabled && duration > 0) activeColor else activeColor.copy(alpha = 0.38f),
                 inactiveColor = if (enabled && duration > 0) inactiveColor else inactiveColor.copy(alpha = 0.38f),
-                compact = compact,
             )
         },
     )
@@ -942,9 +964,8 @@ private fun PlayerProgressTrack(
     progress: Float,
     activeColor: Color,
     inactiveColor: Color,
-    compact: Boolean,
 ) {
-    val trackHeight = if (compact) 4.dp else 2.dp
+    val trackHeight = 2.dp
     Canvas(Modifier.fillMaxWidth().height(trackHeight)) {
         val centerY = size.height / 2f
         val strokeWidth = trackHeight.toPx()
