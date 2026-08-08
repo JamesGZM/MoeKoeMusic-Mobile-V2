@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +32,22 @@ import com.android.tools.screenshot.PreviewTest
 fun PlayerCoverScreenshot() {
     PlayerScreenshotContent(showArtwork = true)
 }
+
+@PreviewTest
+@Preview(name = "CoverLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun PlayerCoverLayoutProbeScreenshot() =
+    PlayerLayoutProbeProvider(
+        PLAYER_PROBE_TOP_BAR to Color.Magenta,
+        PLAYER_PROBE_ARTWORK to Color.Cyan,
+        PLAYER_PROBE_INDICATOR to Color.Green,
+        PLAYER_PROBE_INFO to Color.Blue,
+        PLAYER_PROBE_PROGRESS to Color.Red,
+        PLAYER_PROBE_CORE_CONTROLS to Color.Yellow,
+        PLAYER_PROBE_SECONDARY to Color(0xFF00FF7F),
+    ) {
+        PlayerScreenshotContent(showArtwork = true)
+    }
 
 @PreviewTest
 @Preview(name = "CoverFallback", widthDp = 390, heightDp = 844)
@@ -106,6 +123,21 @@ fun PlayerQueueScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "QueueLayoutProbe", widthDp = 390, heightDp = 470)
+@Composable
+fun PlayerQueueLayoutProbeScreenshot() =
+    PlayerLayoutProbeProvider(
+        PLAYER_PROBE_QUEUE_SHEET to Color.Magenta,
+        PLAYER_PROBE_QUEUE_HANDLE to Color.Cyan,
+        PLAYER_PROBE_QUEUE_HEADER to Color.Green,
+        PLAYER_PROBE_QUEUE_SOURCE to Color.Blue,
+        PLAYER_PROBE_QUEUE_FIRST_ITEM to Color.Red,
+        PLAYER_PROBE_QUEUE_DISMISS to Color.Yellow,
+    ) {
+        PlayerQueueScreenshotContent(queueScreenshotState())
+    }
+
+@PreviewTest
 @Preview(name = "QueueEmpty", widthDp = 390, heightDp = 470)
 @Composable
 fun PlayerQueueEmptyScreenshot() {
@@ -127,6 +159,22 @@ fun PlayerQueueLargeTextScreenshot() {
 fun PlayerLyricsTranslationScreenshot() {
     PlayerScreenshotContent(initialPage = PlayerPage.Lyrics, lyricsState = translationLyricsState())
 }
+
+@PreviewTest
+@Preview(name = "LyricsLayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun PlayerLyricsLayoutProbeScreenshot() =
+    PlayerLayoutProbeProvider(
+        PLAYER_PROBE_TOP_BAR to Color.Magenta,
+        PLAYER_PROBE_VIEWPORT to Color.Cyan,
+        PLAYER_PROBE_SETTINGS to Color.Green,
+        PLAYER_PROBE_INDICATOR to Color.Blue,
+        PLAYER_PROBE_INFO to Color.Red,
+        PLAYER_PROBE_PROGRESS to Color.Yellow,
+        PLAYER_PROBE_CORE_CONTROLS to Color(0xFF00FF7F),
+    ) {
+        PlayerScreenshotContent(initialPage = PlayerPage.Lyrics, lyricsState = translationLyricsState())
+    }
 
 @PreviewTest
 @Preview(name = "LyricsLoading", widthDp = 390, heightDp = 844)
@@ -291,6 +339,14 @@ private fun largestTextLyricsState() =
         activeLineIndex = 1,
         textSize = PlayerLyricsTextSize.Largest,
     )
+
+@Composable
+private fun PlayerLayoutProbeProvider(
+    vararg colors: Pair<String, Color>,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(LocalPlayerLayoutProbeColors provides colors.toMap(), content = content)
+}
 
 @Composable
 private fun PlayerScreenshotArtwork() {
