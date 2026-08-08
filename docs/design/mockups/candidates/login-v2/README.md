@@ -54,6 +54,8 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 - [`21d-risk-tencent-loading.png`](21d-risk-tencent-loading.png)：非导出腾讯验证 Activity 的宿主加载态；不伪造供应商验证内容。
 - [`21e-risk-tencent-failure-dialog.png`](21e-risk-tencent-failure-dialog.png)：隔离 Activity 取消或失败后返回原密码页的恢复 Dialog。
 
+`21d` 已完成公共 Toolbar、圆形关闭入口、加载区和安全页脚的归一化复验，证据见 [`login-tencent-loading-2026-08-08.md`](../../../evidence/login-tencent-loading-2026-08-08.md)。
+
 验证成功后最多重试一次原密码登录，不增加停留式“成功结果页”。
 
 ## 22 · 多账号

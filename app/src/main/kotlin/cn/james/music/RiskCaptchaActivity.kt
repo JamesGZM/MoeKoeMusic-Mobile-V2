@@ -15,20 +15,14 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.feature.login.TencentCaptchaScreen
 import cn.james.music.feature.login.TencentCaptchaResult
 import java.io.ByteArrayInputStream
 import java.net.URI
@@ -58,15 +52,7 @@ class RiskCaptchaActivity : ComponentActivity() {
 
     @Composable
     private fun CaptchaContent(appId: String) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding(),
-        ) {
-            TextButton(onClick = ::finishCancelled, modifier = Modifier.fillMaxWidth()) {
-                Text(getString(R.string.risk_captcha_cancel))
-            }
+        TencentCaptchaScreen(onClose = ::finishCancelled) {
             AndroidView(
                 factory = { context -> createCaptchaWebView(context, appId) },
                 modifier = Modifier.fillMaxSize(),
@@ -193,7 +179,7 @@ class RiskCaptchaActivity : ComponentActivity() {
 
         internal fun captchaHtml(appId: String): String {
             require(isValidAppId(appId)) { "Invalid captcha app id" }
-            return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN"><script src="$ALLOWED_ORIGIN/TCaptcha.js"></script></head><body><script>const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));},{type:'',showHeader:false});captcha.show();</script></body></html>"""
+            return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN"><style>html,body{margin:0;background:transparent}</style><script src="$ALLOWED_ORIGIN/TCaptcha.js"></script></head><body><script>const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));},{type:'',showHeader:false});captcha.show();</script></body></html>"""
         }
     }
 }

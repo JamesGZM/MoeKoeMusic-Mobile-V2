@@ -44,6 +44,11 @@
     <string name="login_risk_repeated">验证后仍需安全校验，请改用验证码登录</string>
     <string name="login_risk_unsupported">暂不支持该安全验证方式（类型 %1$d），请改用验证码登录</string>
     <string name="login_tencent_required_title">需要完成图形安全验证</string>
+    <string name="login_tencent_page_title">安全验证</string>
+    <string name="login_tencent_page_close">关闭安全验证</string>
+    <string name="login_tencent_page_loading">正在加载安全验证…</string>
+    <string name="login_tencent_page_isolated">验证将在独立安全页面中完成</string>
+    <string name="login_tencent_page_provider">由腾讯安全验证提供技术支持</string>
     <string name="login_tencent_failure_title">验证未完成</string>
     <string name="login_tencent_failure_description">安全验证未完成或加载失败，请重试。</string>
     <string name="login_tencent_required_description">验证将在独立安全页面中完成，本页不会接触你的密码或会话。</string>

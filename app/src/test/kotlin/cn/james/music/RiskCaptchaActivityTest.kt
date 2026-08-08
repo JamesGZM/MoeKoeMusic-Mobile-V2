@@ -33,6 +33,7 @@ class RiskCaptchaActivityTest {
 
         assertTrue(html.contains("https://turing.captcha.qcloud.com/TCaptcha.js"))
         assertTrue(html.contains("new TencentCaptcha('123456789'"))
+        assertTrue(html.contains("background:transparent"))
         assertTrue(html.contains("{type:'',showHeader:false}"))
         assertFalse(html.contains("addJavascriptInterface"))
         assertTrue(runCatching { RiskCaptchaActivity.captchaHtml("123');alert(1)//") }.isFailure)

@@ -12,6 +12,24 @@ import cn.james.music.core.model.auth.QrLoginSession
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
+@Preview(name = "TencentCaptchaLoading", widthDp = 390, heightDp = 845)
+@Composable
+fun TencentCaptchaLoadingScreenshot() {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        TencentCaptchaScreen(onClose = {})
+    }
+}
+
+@PreviewTest
+@Preview(name = "TencentCaptchaLoadingLargeText", widthDp = 390, heightDp = 845, fontScale = 1.5f)
+@Composable
+fun TencentCaptchaLoadingLargeTextScreenshot() {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        TencentCaptchaScreen(onClose = {})
+    }
+}
+
+@PreviewTest
 @Preview(name = "MobileCode", widthDp = 390, heightDp = 845)
 @Composable
 fun LoginMobileCodeScreenshot() {

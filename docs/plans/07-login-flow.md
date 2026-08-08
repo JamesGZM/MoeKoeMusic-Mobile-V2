@@ -76,6 +76,8 @@
 
 2026-08-07 短信风险三态复验：`21a–c` 已统一白色 Dialog Surface、Bold 标题、紧凑输入型间距、验证码默认/提交/错误描边和恢复行为；确认按钮保留用户已确认的全局 Filled 状态，取消按钮按设计改为浅蓝 Tonal 背景与蓝色文字。协议未提供手机号，因此正式文案不硬编码设计示例。证据见 [`login-risk-sms-states-2026-08-07.md`](../design/evidence/login-risk-sms-states-2026-08-07.md)。腾讯验证 `21d–e` 继续独立验收。
 
+2026-08-08 腾讯风险加载页复验：`21d` 使用公共 `MoeStandardTopBar` 及其自定义导航内容能力承载圆形关闭按钮，加载区和安全页脚按确认稿固定纵向锚点；WebView 去除默认边距并保持透明，加载完成后覆盖宿主占位。证据见 [`login-tencent-loading-2026-08-08.md`](../design/evidence/login-tencent-loading-2026-08-08.md)。`21e` 继续独立验收。
+
 ## 验收命令与真机范围
 
 - JVM：`./gradlew :kugou-api:test :data:testDebugUnitTest :feature:login:testDebugUnitTest`
