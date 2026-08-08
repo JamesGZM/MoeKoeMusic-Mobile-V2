@@ -26,8 +26,8 @@ internal data class UserProfileUi(
     val followingCount: String,
     val followerCount: String,
     val friendCount: String,
-    val listeningDuration: String,
-    val musicAge: String,
+    val listeningDurationValue: String,
+    val musicAgeValue: String,
     @param:DrawableRes val avatarRes: Int,
     val playlists: List<UserPlaylistUi>,
 )
@@ -50,8 +50,8 @@ internal val userProfileDesignPreview =
         followingCount = "28",
         followerCount = "126",
         friendCount = "12",
-        listeningDuration = "328 小时",
-        musicAge = "5 年",
+        listeningDurationValue = "328",
+        musicAgeValue = "5",
         avatarRes = R.drawable.profile_avatar,
         playlists =
             listOf(

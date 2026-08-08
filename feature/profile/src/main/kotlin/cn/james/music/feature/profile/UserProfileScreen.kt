@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,8 +55,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,6 +82,7 @@ internal fun UserProfileScreen(
 ) {
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             MoeStandardTopBar(
                 title = stringResource(R.string.profile_title),
@@ -170,7 +170,11 @@ private fun UserProfileContent(
         } else {
             item(key = "playlist-list") {
                 Surface(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .userProfileLayoutProbe(PROBE_PLAYLIST_LIST),
                     shape = RoundedCornerShape(20.dp),
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
@@ -200,7 +204,11 @@ private fun ProfileHero(
 ) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 3.dp)
+                .userProfileLayoutProbe(PROBE_HERO),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
@@ -221,21 +229,24 @@ private fun ProfileHero(
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
                 modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(104.dp),
             )
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+            Column(Modifier.padding(start = 16.dp, top = 27.dp, end = 16.dp, bottom = 9.dp)) {
                 if (largeText) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         ProfileAvatar(profile)
                         ProfileIdentity(profile, Modifier.fillMaxWidth().padding(top = 12.dp))
                     }
                 } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    ) {
                         ProfileAvatar(profile)
-                        ProfileIdentity(profile, Modifier.weight(1f).padding(start = 16.dp))
+                        ProfileIdentity(profile, Modifier.weight(1f).padding(start = 16.dp, top = 8.dp))
                     }
                 }
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(14.dp))
                 ProfileRelations(profile, onFollowing, onFollowers, onFriends)
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(9.dp))
                 OutlinedButton(
                     onClick = onEdit,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -373,27 +384,51 @@ private fun SectionTitle(title: String) {
 private fun ListeningOverview(profile: UserProfileUi) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .userProfileLayoutProbe(PROBE_OVERVIEW),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
     ) {
         if (largeText) {
             Column(Modifier.padding(vertical = 10.dp)) {
-                OverviewItem(profile.levelLabel, stringResource(R.string.profile_level), Modifier.fillMaxWidth())
-                OverviewItem(profile.listeningDuration, stringResource(R.string.profile_listening_duration), Modifier.fillMaxWidth())
-                OverviewItem(profile.musicAge, stringResource(R.string.profile_music_age), Modifier.fillMaxWidth())
+                OverviewItem(profile.levelLabel, null, stringResource(R.string.profile_level), Modifier.fillMaxWidth())
+                OverviewItem(
+                    profile.listeningDurationValue,
+                    stringResource(R.string.profile_hours_unit),
+                    stringResource(R.string.profile_listening_duration),
+                    Modifier.fillMaxWidth(),
+                )
+                OverviewItem(
+                    profile.musicAgeValue,
+                    stringResource(R.string.profile_years_unit),
+                    stringResource(R.string.profile_music_age),
+                    Modifier.fillMaxWidth(),
+                )
             }
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth().height(86.dp).padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OverviewItem(profile.levelLabel, stringResource(R.string.profile_level), Modifier.weight(1f))
+                OverviewItem(profile.levelLabel, null, stringResource(R.string.profile_level), Modifier.weight(1f))
                 VerticalDivider(Modifier.height(38.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                OverviewItem(profile.listeningDuration, stringResource(R.string.profile_listening_duration), Modifier.weight(1f))
+                OverviewItem(
+                    profile.listeningDurationValue,
+                    stringResource(R.string.profile_hours_unit),
+                    stringResource(R.string.profile_listening_duration),
+                    Modifier.weight(1f),
+                )
                 VerticalDivider(Modifier.height(38.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                OverviewItem(profile.musicAge, stringResource(R.string.profile_music_age), Modifier.weight(1f))
+                OverviewItem(
+                    profile.musicAgeValue,
+                    stringResource(R.string.profile_years_unit),
+                    stringResource(R.string.profile_music_age),
+                    Modifier.weight(1f),
+                )
             }
         }
     }
@@ -402,6 +437,7 @@ private fun ListeningOverview(profile: UserProfileUi) {
 @Composable
 private fun OverviewItem(
     value: String,
+    unit: String?,
     label: String,
     modifier: Modifier,
 ) {
@@ -410,7 +446,24 @@ private fun OverviewItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Text(value, color = MaterialTheme.colorScheme.primary, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                value,
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.alignByBaseline(),
+            )
+            unit?.let {
+                Spacer(Modifier.width(3.dp))
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.alignByBaseline(),
+                )
+            }
+        }
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
     }
 }
@@ -421,7 +474,7 @@ private fun PlaylistSectionTitle(
     onViewAll: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 10.dp, top = 12.dp, bottom = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 10.dp, bottom = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -450,7 +503,7 @@ private fun UserPlaylistRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 68.dp)
+                .heightIn(min = 72.dp)
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -514,7 +567,7 @@ private fun EmptyPlaylistSection() {
 @Composable
 private fun UserProfileLoading() {
     Column(
-        Modifier.fillMaxSize().semantics { contentDescription = "profile-loading" },
+        Modifier.fillMaxSize().testTag(USER_PROFILE_LOADING_TAG),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -548,3 +601,7 @@ private fun UserProfileMessage(
 }
 
 internal const val USER_PROFILE_CONTENT_TAG = "user_profile_content"
+internal const val USER_PROFILE_LOADING_TAG = "user_profile_loading"
+internal const val PROBE_HERO = "hero"
+internal const val PROBE_OVERVIEW = "overview"
+internal const val PROBE_PLAYLIST_LIST = "playlistList"

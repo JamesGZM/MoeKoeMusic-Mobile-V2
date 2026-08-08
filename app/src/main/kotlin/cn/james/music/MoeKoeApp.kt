@@ -76,6 +76,7 @@ fun MoeKoeApp(
     var queueVisible by rememberSaveable { mutableStateOf(false) }
     val isPlayer = currentDestination?.hasRoute<PlayerDestination>() == true
     val isSettings = currentDestination?.hasRoute<SettingsDestination>() == true
+    val isUserProfile = currentDestination?.hasRoute<UserProfileDestination>() == true
     val showBottomNavigation = !isPlayer && appState.isTopLevel(currentDestination)
     val isImmersiveLogin = currentDestination?.hasRoute<LoginDestination>() == true
     val playerUiState =
@@ -100,7 +101,12 @@ fun MoeKoeApp(
         }
 
     Scaffold(
-        contentWindowInsets = if (isImmersiveLogin || isPlayer) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
+        contentWindowInsets =
+            if (isImmersiveLogin || isPlayer || isUserProfile) {
+                WindowInsets(0, 0, 0, 0)
+            } else {
+                ScaffoldDefaults.contentWindowInsets
+            },
         bottomBar = {
             if (!isImmersiveLogin) {
                 Column(

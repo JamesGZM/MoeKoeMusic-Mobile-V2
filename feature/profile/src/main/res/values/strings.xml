@@ -12,6 +12,8 @@
     <string name="profile_level">等级</string>
     <string name="profile_listening_duration">听歌时长</string>
     <string name="profile_music_age">乐龄</string>
+    <string name="profile_hours_unit">小时</string>
+    <string name="profile_years_unit">年</string>
     <string name="profile_created_playlists">创建的歌单</string>
     <string name="profile_view_all">查看全部</string>
     <string name="profile_open_playlist">打开%1$s</string>

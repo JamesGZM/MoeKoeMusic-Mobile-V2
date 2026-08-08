@@ -13,6 +13,7 @@
 ## 基准画布与应用壳
 
 - 原稿 `853 × 1844px` 按宽度等比映射到 `390dp` 设计视口，单一比例约为 `0.4572dp/px`。
+- canonical 结构截图固定为 `390 × 843dp`；原有 `390 × 764dp` Light 截图仅作为短视口滚动回归，不作为设计 crop 或锚点真值。
 - Android 负责状态栏、导航栏与安全区；应用不绘制时间、信号、Wi-Fi 或电池图形。
 - 页面使用 `MoeStandardTopBar`：`64dp` 内容高度、页面中心标题、左侧共享 Chevron，右侧分享与更多各自占至少 `48dp` 触控区。
 - 用户主页是子页面：一级 NavigationBar 隐藏，应用级 MiniPlayer 在存在当前歌曲时保留。页面正文只消费 App 下发的底部安全留白，不自行复制 MiniPlayer。
@@ -57,7 +58,7 @@
 
 ## 设计符合度验证
 
-1. 将确认稿按 `853 × 1844px` 与 Compose `390 × 843dp` 正常 Light 状态等比归一化；App 级 MiniPlayer 区域单独标注，不参与 Feature 内容像素差异结论。
+1. 使用 `user-profile.content.light` contract，将确认稿 `0,52,853,1620` crop 与 Compose `390 × 843dp` 正常 Light 状态的 `0,0,1024,1945` render crop 等比归一化；App 级 MiniPlayer 区域单独标注，不参与 Feature 内容像素差异结论。
 2. 生成并排、50% 叠加和放大差异图，至少核对 Toolbar、Hero、头像、三项统计、编辑按钮、概览卡、歌单标题、首行与第三行锚点。
 3.  visible mismatch 必须回到同视口修正并重新比较；单独截图通过不能替代设计符合度。
 4. 允许的 P3 差异仅限平台字体栅格、Material 图标笔画和已登记的原创图片内容；组件边界、圆角、间距、行高和信息层级不在豁免范围。

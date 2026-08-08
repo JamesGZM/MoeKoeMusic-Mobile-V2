@@ -2,6 +2,8 @@ package cn.james.music.feature.profile
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -11,6 +13,27 @@ import com.android.tools.screenshot.PreviewTest
 @Preview(name = "ContentLight", widthDp = 390, heightDp = 764)
 @Composable
 fun UserProfileContentLightScreenshot() = UserProfileScreenshotContent(contentState, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "ContractContentLight", widthDp = 390, heightDp = 843)
+@Composable
+fun UserProfileContractContentLightScreenshot() = UserProfileScreenshotContent(contentState, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "ContractLayoutProbe", widthDp = 390, heightDp = 843)
+@Composable
+fun UserProfileContractLayoutProbeScreenshot() {
+    CompositionLocalProvider(
+        LocalUserProfileLayoutProbeColors provides
+            mapOf(
+                PROBE_HERO to Color.Magenta,
+                PROBE_OVERVIEW to Color.Cyan,
+                PROBE_PLAYLIST_LIST to Color.Green,
+            ),
+    ) {
+        UserProfileScreenshotContent(contentState, ThemeMode.Light)
+    }
+}
 
 @PreviewTest
 @Preview(name = "ContentDark", widthDp = 390, heightDp = 764)
@@ -50,6 +73,31 @@ fun UserProfileEmptyScreenshot() =
 @Preview(name = "Error", widthDp = 390, heightDp = 764)
 @Composable
 fun UserProfileErrorScreenshot() = UserProfileScreenshotContent(UserProfileUiState.Error, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "Offline", widthDp = 390, heightDp = 764)
+@Composable
+fun UserProfileOfflineScreenshot() = UserProfileScreenshotContent(UserProfileUiState.Offline, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "WideContent", widthDp = 840, heightDp = 764)
+@Composable
+fun UserProfileWideContentScreenshot() = UserProfileScreenshotContent(contentState, ThemeMode.Light)
+
+@PreviewTest
+@Preview(name = "LongContent", widthDp = 390, heightDp = 764)
+@Composable
+fun UserProfileLongContentScreenshot() =
+    UserProfileScreenshotContent(
+        UserProfileUiState.Content(
+            userProfileDesignPreview.copy(
+                nickname = "一段用于验证省略与徽标布局的很长昵称",
+                signature = "这是一段用于验证个人签名最多两行、不会挤压关系统计和编辑按钮的长签名内容。",
+                vipLabel = null,
+            ),
+        ),
+        ThemeMode.Light,
+    )
 
 @Composable
 private fun UserProfileScreenshotContent(
