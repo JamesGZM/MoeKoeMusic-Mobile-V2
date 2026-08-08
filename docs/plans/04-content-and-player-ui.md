@@ -32,7 +32,7 @@
 - `PlaybackItem` 使用 `Remote(HTTPS)` 与 `AppFile(相对路径)` 两类稳定封面引用；Media3 metadata、MiniPlayer、队列和 Room v4 中的播放快照共享该字段，不持久化短期音频地址。
 - Room `2→3` 与完整 `1→2→3` 迁移已在 ELE-AL00 / API 29 的真实 SQLite 上 2/2 通过；既有队列迁移后封面字段保持可空。
 - 应用壳 MiniPlayer 已展示真实播放进度、封面及明确播放/暂停和队列语义；子页面隐藏一级导航时会单独处理系统导航栏安全区。
-- 通用 MiniPlayer 已按 `17-music-content-components.png` 与页面壳层确认稿完成视觉校准：保留连续底部 Surface，补齐质量徽标、上一首、主色圆形播放暂停、下一首、队列、起止时间与独立进度条；上一首/下一首直接接入既有播放命令，不改 `:playback` 状态所有权。浅色、深色、`1.5×` 聚焦截图通过，ELE-AL00 / API 29 真机已验证四项操作语义区域不小于 `48dp` 并可切换下一首。
+- 通用 MiniPlayer 已按 `17-music-content-components.png` 与 `01-home-material3-v2.png` 的页面壳层完成同视口视觉校准：保留连续底部 Surface，校正封面、紧凑字级、质量徽标、上一首、主色圆形播放暂停、下一首、队列、起止时间与独立进度条；上一首/下一首继续接入既有播放命令，本次不改 `:playback` 状态所有权。浅色、深色、`1.5×` 聚焦截图与设计并排/叠加/差异证据见 [`mini-player-2026-08-08.md`](../design/evidence/mini-player-2026-08-08.md)，四项操作语义区域继续保持不小于 `48dp`。
 - Search/LocalMusic 截图验证、相关 JVM 单测、Debug 构建与 `MainActivityTest` 真机回归 6/6 通过；真机手动搜索并播放在线歌曲后，MiniPlayer、恢复为暂停状态和队列 Bottom Sheet 均已检查。
 - 已在 `06` 至 `08` 号确认设计图之后建立 [`player-flow`](../design/prototypes/player-flow/README.md) 本地交互原型，并验证封面/歌词双页、点击歌词定位、暂无歌词、纵向退出、队列覆盖层和“先关队列、再退出播放器”的返回优先级；原型不定义 Compose 视觉或协议行为。
 - 独立 `:feature:player` 全屏封面目的地已按 [`PLAYER_LAYOUT_SPEC.md`](../design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成视觉复刻：补齐更多、分页点、品质、收藏、下载、加歌单、分享及独立队列动作，封面改为真实本地预览位图，播放/暂停、进度、上下首、模式和队列继续复用既有接线；其余次级动作只保留视觉语义。9 组截图、设计对照证据及 ELE-AL00 / API 29 App instrumentation 24/24 通过。
