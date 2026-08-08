@@ -15,6 +15,7 @@
 - [UI 设计交付、屏幕适配与视觉验收](reference-audits/16-ui-design-handoff-and-adaptation.md)
 - [设置与应用偏好](reference-audits/18-settings-and-preferences.md)
 - [歌单详情纯 UI 与 Feature 所有权](reference-audits/19-playlist-detail-ui.md)
+- [Agent Skills 与可执行开发门禁](reference-audits/22-agent-skills-development-system.md)
 
 记录日期：2026-08-07。Stars、活跃度和 Release 会变化，本文重点记录参考价值，不将快照数据作为永久事实。
 
