@@ -35,12 +35,10 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -223,7 +221,7 @@ private fun PlaylistSummary(playlist: PlaylistDetailUi) {
         }
     } else {
         Row(
-            modifier = Modifier.fillMaxWidth().height(188.dp).padding(horizontal = 18.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().height(188.dp).padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             PlaylistCover(playlist, Modifier.width(150.dp).height(164.dp))
@@ -349,7 +347,7 @@ private fun PlaylistActions(
         return
     }
     Row(
-        modifier = Modifier.fillMaxWidth().height(66.dp).padding(horizontal = 14.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().height(54.dp).padding(start = 14.dp, top = 6.dp, end = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -378,19 +376,29 @@ private fun PlaylistPlayButton(
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        shape = RoundedCornerShape(22.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp),
+    Box(
+        modifier = modifier.height(48.dp).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
-        Text(
-            stringResource(R.string.playlist_detail_play_all),
-            modifier = Modifier.padding(start = 4.dp),
-            fontSize = 13.sp,
-            maxLines = 1,
-        )
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(40.dp),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(
+                    stringResource(R.string.playlist_detail_play_all),
+                    modifier = Modifier.padding(start = 4.dp),
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
@@ -399,25 +407,30 @@ private fun PlaylistShuffleButton(
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        shape = RoundedCornerShape(22.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-        colors =
-            ButtonDefaults.outlinedButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f),
-                contentColor = MaterialTheme.colorScheme.primary,
-            ),
+    Box(
+        modifier = modifier.height(48.dp).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(20.dp))
-        Text(
-            stringResource(R.string.playlist_detail_shuffle),
-            modifier = Modifier.padding(start = 4.dp),
-            fontSize = 13.sp,
-            maxLines = 1,
-        )
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(40.dp),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f),
+            contentColor = MaterialTheme.colorScheme.primary,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(
+                    stringResource(R.string.playlist_detail_shuffle),
+                    modifier = Modifier.padding(start = 4.dp),
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
@@ -427,15 +440,16 @@ private fun PlaylistCircleAction(
     contentDescription: String,
     onClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.size(48.dp).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
         Surface(
-            modifier = Modifier.size(38.dp),
+            modifier = Modifier.size(32.dp),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
         ) {}
-        IconButton(onClick = onClick, modifier = Modifier.size(48.dp)) {
-            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(23.dp))
-        }
+        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(21.dp))
     }
 }
 
