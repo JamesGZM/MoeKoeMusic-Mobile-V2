@@ -25,6 +25,7 @@ fun NavGraphBuilder.searchDestination(
             onSearch = viewModel::submit,
             onLoadMore = viewModel::loadMore,
             onPlay = onPlay,
+            onCategorySelected = viewModel::selectCategory,
         )
     }
 }

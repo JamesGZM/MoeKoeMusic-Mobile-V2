@@ -164,7 +164,7 @@
 
 1. 标准：以 `10-user-profile.png` 为基准。高度 `64dp`，不含系统状态栏；水平内容边距 `16dp`；标题使用单行 `titleLarge`，相对完整页面宽度几何居中，而不是跟随左侧内容起排。左侧与尾部操作均为 `24dp` 图标置于至少 `48dp` 语义触控区，不显示圆形底板、卡片外框或 Toolbar 整体阴影。
 2. 滚动标准态：保持标准态几何与居中标题；内容滚动后切换为实体 `surface`，最多增加一条轻量底部分隔线，不改变图标容器、标题位置或 Toolbar 高度。
-3. 搜索：左侧导航操作加 `56dp` 高搜索框；搜索属于子页面，不进入底部导航，也不叠加第二个页面标题。
+3. 搜索：使用独立 `56dp` Toolbar，内部搜索框视觉高度 `40dp`、圆角约 `20dp`；左侧导航与右侧语音操作各占至少 `48dp` 触控区。搜索、清除图标使用独立紧凑槽位，图标背景不得填满输入框高度。搜索属于子页面，不进入底部导航，也不叠加第二个页面标题。
 4. 多选：左侧关闭，中间显示已选数量，尾部只保留当前流程需要的少量操作；只有删除等破坏性操作使用 Error 色。
 5. 沉浸式例外：仅用于登录 Hero、播放器封面和其他确有复杂图片背景的页面。内容可绘制到状态栏后方，单个操作允许使用半透明圆形 Surface 保证对比度；该圆形外观不得回流到设置、资料、安全验证等标准页面。
 6. 内容 Tab：直接位于页面顶部或标准 Toolbar 下方，不再增加重复页面标题。
@@ -227,7 +227,7 @@ Dialog、Snackbar 和 Toast 的完整语义规则见 [`UI_COMPONENTS.md`](UI_COM
 - Typography 已补齐 `24sp`、`18sp`、`titleSmall`、`bodySmall` 等层级。
 - Spacing 已补齐 `12dp`、`20dp` 和 `40dp`，并保留旧属性兼容现有页面。
 - Shapes 已增加 `36dp` Hero 语义，图标、触控、输入、Toolbar、MiniPlayer 和底部导航尺寸已建立 Token。
-- 标准 Toolbar 已按 `10-user-profile.png` 与 `15-toolbar-navigation.png` 改为页面中心锚定标题，并允许调用方替换返回/关闭等可见导航图标；公共组件继续统一点击事件、`48dp` 触控区、颜色和 Insets。沉浸式 Toolbar 与沉浸式 IconButton 保持 Hero/封面例外。搜索、折叠和多选 Toolbar 在真实消费者接入时继续完成。
+- 标准 Toolbar 已按 `10-user-profile.png` 与 `15-toolbar-navigation.png` 改为页面中心锚定标题，并允许调用方替换返回/关闭等可见导航图标；公共组件继续统一点击事件、`48dp` 触控区、颜色和 Insets。`MoeSearchTopBar` 已由搜索页真实消费，拥有返回、输入、清除、IME Search 和可选尾部事件槽，不持有业务状态。沉浸式 Toolbar 与沉浸式 IconButton 保持 Hero/封面例外；折叠和多选 Toolbar 随真实消费者继续完成。
 - 已建立 `MoeSectionHeader`、`MoeArtwork`、`MoeMediaBadge`、`MoeSongRow`、`MoeMiniPlayer` 与 `MoeQueueRow`；搜索、本地音乐和应用播放壳已经消费同一套组件。MiniPlayer 已按 `17-music-content-components.png` 补齐封面、标题/歌手/质量徽标、上一首、主色播放暂停、下一首、队列以及带起止时间的独立进度区，并保留主区域进入全屏播放器的行为。
 - 歌曲行在 `1.5×` 字体下增加行高并将时长并入副标题行，避免标题、时长和尾部操作互相覆盖；浅色、深色与大字体截图基准已通过。
 - Button、TextField、标准/沉浸式 Toolbar、标准 Dialog 外壳与双操作区已进入 `:core:designsystem`；标准 Toolbar 和 Dialog 已有多个真实页面消费者。Snackbar Host、Input Dialog、Bottom Sheet、MoeToast 和页面状态组件继续随真实消费者落地，不预先建立万能 API。队列拖拽属于播放器后续切片。

@@ -96,7 +96,7 @@
 
 底部导航固定为“首页、发现、我的”。搜索和用户主页是子页面；播放器由歌曲、MiniPlayer 或系统恢复入口进入。
 
-`:core:designsystem` 已完成 Primary、Typography、Spacing、Shapes、Dimensions、TopBar、`MoeSnackbar` 和第一批音乐内容组件校准；Section Header、封面、徽标、歌曲行、MiniPlayer 与队列行已接入搜索、本地音乐和应用播放壳，并通过浅色、深色、`1.5×` 字体截图及 API 29 真机回归。按钮、输入、通用 Bottom Sheet、MoeToast 和页面状态组件仍需按 `DESIGN_SYSTEM.md` 与确认设计稿继续实现。无版权、VIP、网络、会话与协议错误已接入根层类型化 Snackbar，播放地址失效最多刷新一次；真实 CDN 过期与稀有服务错误样本仍需在后续兼容性验收中补证。
+`:core:designsystem` 已完成 Primary、Typography、Spacing、Shapes、Dimensions、标准/沉浸式/搜索型 TopBar、`MoeSnackbar` 和第一批音乐内容组件校准；Section Header、封面、徽标、歌曲行、MiniPlayer 与队列行已接入搜索、本地音乐和应用播放壳。搜索结果页已经按 `03-search-results-v2.png` 完成搜索 Toolbar、六分类 Tab、歌手摘要、紧凑歌曲行与横向歌单/专辑的纯 UI 复刻，并覆盖浅色、深色、AMOLED、`1.5×`、`2.0×`、空、错误和分页错误截图；真实运行态仍只消费既有歌曲协议，不伪造其他结果类型。按钮、输入、通用 Bottom Sheet、MoeToast 和页面状态组件仍需按 `DESIGN_SYSTEM.md` 与确认设计稿继续实现。无版权、VIP、网络、会话与协议错误已接入根层类型化 Snackbar，播放地址失效最多刷新一次；真实 CDN 过期与稀有服务错误样本仍需在后续兼容性验收中补证。
 
 全屏播放器封面页已按 [`PLAYER_LAYOUT_SPEC.md`](design/PLAYER_LAYOUT_SPEC.md) 和 `06-player-cover.png` 完成视觉复刻：MiniPlayer 进入后隐藏一级导航与自身，退出恢复来源页面；更多、分页点、品质、收藏、下载、加歌单、分享、队列及完整核心控制均保留确认稿结构。播放、暂停、缓冲、连接中、未知时长、封面失败、空播放项和 `1.5×`/`2.0×` 共 9 组截图、设计对照证据与指定真机 App 回归已通过；未接入次级动作只保留视觉语义，不伪装业务完成。
 

@@ -4,6 +4,7 @@ import cn.james.music.core.model.online.SearchPage
 import cn.james.music.core.model.online.SearchRepository
 import cn.james.music.core.model.online.SearchResult
 import cn.james.music.core.model.online.Song
+import cn.james.music.feature.search.SearchCategory
 import cn.james.music.feature.search.SearchViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +72,20 @@ class SearchViewModelTest {
             )
             assertEquals(1, viewModel.state.value.page)
             assertEquals(true, viewModel.state.value.hasMore)
+        }
+
+    @Test
+    fun categorySelectionOnlyChangesPresentationState() =
+        runTest(dispatcher) {
+            val repository = ControlledSearchRepository()
+            val viewModel = SearchViewModel(repository)
+
+            viewModel.updateQuery("初音未来")
+            viewModel.selectCategory(SearchCategory.Playlists)
+
+            assertEquals(SearchCategory.Playlists, viewModel.state.value.selectedCategory)
+            assertEquals("初音未来", viewModel.state.value.query)
+            assertEquals(0, repository.callCount)
         }
 
     @Test

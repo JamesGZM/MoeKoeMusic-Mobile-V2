@@ -111,6 +111,7 @@ Repository
 - `:feature:login` 按 [`plans/07-login-flow.md`](plans/07-login-flow.md) 拥有表单、倒计时、多账号选择、导航入口和测试；`:app` 只组合导航和平台安全配置，不持有认证 UI 状态。
 - `:feature:my` 消费 `UserProfileRepository` 与 `AuthRepository`，拥有匿名、加载、已认证、部分失败和完整失败状态，并在页面恢复时刷新资料；退出必须经过确认且仅在会话清除成功后切换匿名态。匿名用户点击账号资产时，Feature 只上抛具名导航事件，由 `:app` 复用唯一登录目的地；Screen、ViewModel 和 Repository 不通过禁用文案或字符串判断模拟权限，也不在进入登录前发起受认证资产请求。本地音乐与应用级设置不经过该门禁。
 - `:feature:settings` 拥有设置 Destination、Route、Screen、ViewModel 和测试，只依赖 `:core:model` 的应用偏好端口与 `:core:designsystem`；`:feature:my` 只上抛设置导航事件，`:app` 注册唯一目的地并以独立 app-level ViewModel 消费全局主题。设置页不直接访问 DataStore，也不显示没有真实消费者的假开关。
+- `:feature:search` 保留 `SearchRepository` 提供的真实歌曲搜索、分页和播放事件；歌手摘要、歌单/专辑横卡与分类选择是 Feature 内部 UI Model。未迁移的协议结果在生产态保持空，不向 Repository、Domain 或缓存注入设计 fixture。搜索型 Toolbar 由 `:core:designsystem` 提供外观、Insets 与输入语义，查询状态和请求仍归 Search ViewModel。
 - `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 传入的播放状态与事件，不依赖 `:playback`、Service、数据库或网络。歌词协议、领域映射和成功缓存位于 `:kugou-api`、`:data` 与 `:core:database`；后续只通过 `LyricsRepository` 和页面 ViewModel 接入，歌词现有主态与补充状态均已确认。
 - `:feature:playlist` 拥有歌单详情目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；详情可由首页、发现或“我的”复用，任何来源 Feature 都不依赖它。首个视觉切片不依赖 Repository、`:playback` 或网络，真实歌单纵向切片后续在本 Feature 内补 ViewModel。
 - `:feature:profile` 拥有用户主页目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；“我的”只上抛已认证用户的资料页事件，由 `:app` 完成跨 Feature 导航。首个视觉切片不读取 `UserProfileRepository`，设计示例计数不进入领域层或持久化。

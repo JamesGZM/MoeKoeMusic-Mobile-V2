@@ -104,8 +104,8 @@ interface SearchRepository {
 - `KugouSongSearchDecoder` 已兼容 ID、时长和总数的字符串/数字漂移，跳过单个坏条目，但关键列表缺失或整页不可用时返回协议错误，不制造空歌曲。
 - `KugouSearchRepository` 已串联匿名会话、真实 Transport、协议解码、分页和类型化错误映射；搜索 Host 不接收 MID、dfid、Cookie 或签名，App Manifest 仅新增 `INTERNET` 权限。
 - 2026-08-05 显式运行 `LiveKugouSearchRepositoryTest`，真实完成“设备注册 → 匿名搜索 → DTO 解码 → Domain 映射”，服务返回非空领域歌曲列表；记录未保存关键词结果、响应正文、dfid 或 Cookie。
-- 独立 Search Route 已从首页进入且不占底部 Tab，覆盖未搜索、加载、空结果、错误、内容和分页状态；新搜索取消旧任务并以 generation 防止旧响应覆盖新结果。
-- 搜索页面已建立标准与 `1.5×` 字体截图基准，ViewModel 覆盖空关键词、成功状态和旧请求隔离。2026-08-05 在 Huawei API 29 真机实际搜索并显示标题、歌手、时长与封面语义。
+- 独立 Search Route 已从首页进入且不占底部 Tab；2026-08-08 按确认稿 `03-search-results-v2.png` 完成搜索 Toolbar、六分类 Tab、歌手 Hero、紧凑歌曲行与横向歌单/专辑结构。设计示例只存在于截图 fixture，生产态仍只展示 Repository 返回的真实歌曲；新搜索继续取消旧任务并以 generation 防止旧响应覆盖新结果。
+- 搜索页面已建立未搜索、加载、综合内容、浅色/深色/AMOLED、空结果、首次错误、分页错误及 `1.5×`/`2.0×` 字体截图基准，并生成同画布并排、叠加与差异证据；ViewModel 继续覆盖空关键词、成功状态、分页和旧请求隔离。2026-08-05 在 Huawei API 29 真机实际搜索并显示标题、歌手、时长与封面语义。
 - `privilege_lite` 的基础资源与 `relate_goods`、`song_url` 的主/备 URL、时长、格式及无版权/VIP 分支已按 PC API、PC 播放队列和 Mobile `song-url.ts` 实现，未通过真实响应猜测业务格式。
 - 匿名播放沿用 Mobile 已验证路径，使用 `song_url(free_part=1)`；`privilege_lite` 作为登录后音质候选能力保留，不让匿名播放多依赖一次账号相关请求。返回的 HTTP CDN 候选只升级为 HTTPS，不开放明文流量，短期地址不写入 Room。
 - 2026-08-05 真实服务验收通过 `privilege_lite` 结构解码和安全播放地址解析；Huawei API 29 真机点击搜索结果后 Media3 进入 Playing，播放位置持续增长、缓冲与系统媒体元数据正常。

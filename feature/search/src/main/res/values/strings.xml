@@ -1,0 +1,33 @@
+<resources>
+    <string name="search_back">返回</string>
+    <string name="search_placeholder">歌曲、歌手或专辑</string>
+    <string name="search_clear">清除搜索内容</string>
+    <string name="search_voice">语音搜索</string>
+    <string name="search_tab_overview">综合</string>
+    <string name="search_tab_songs">歌曲</string>
+    <string name="search_tab_playlists">歌单</string>
+    <string name="search_tab_albums">专辑</string>
+    <string name="search_tab_artists">歌手</string>
+    <string name="search_tab_mv">MV</string>
+    <string name="search_follow">关注</string>
+    <string name="search_songs">歌曲</string>
+    <string name="search_collections">歌单与专辑</string>
+    <string name="search_view_all">查看全部</string>
+    <string name="search_more_song">%1$s的更多操作</string>
+    <string name="search_play_collection">播放%1$s</string>
+    <string name="search_quality">HQ</string>
+    <string name="search_mv">MV</string>
+    <string name="search_loading_title">正在搜索</string>
+    <string name="search_loading_message">正在从酷狗获取歌曲</string>
+    <string name="search_error_title">搜索失败</string>
+    <string name="search_retry">重试</string>
+    <string name="search_idle_title">想听什么？</string>
+    <string name="search_idle_message">输入歌曲、歌手或专辑名称开始搜索</string>
+    <string name="search_empty_title">没有找到结果</string>
+    <string name="search_empty_message">试试更短的关键词或其他写法</string>
+    <string name="search_category_empty_title">该分类暂无结果</string>
+    <string name="search_category_empty_message">当前仅已接入真实歌曲搜索</string>
+    <string name="search_load_failed">加载失败，重试</string>
+    <string name="search_load_more">加载更多</string>
+    <string name="search_unknown_artist">未知艺术家</string>
+</resources>

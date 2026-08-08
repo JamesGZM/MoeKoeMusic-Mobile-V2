@@ -148,9 +148,12 @@ fun MoeSongRow(
     onClick: () -> Unit,
     artwork: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
+    minimumHeight: Dp = 72.dp,
+    verticalContentPadding: Dp = MoeKoeTheme.spacing.small,
     metadata: String? = null,
     enabled: Boolean = true,
     isPlaying: Boolean = false,
+    titleLeading: @Composable RowScope.() -> Unit = {},
     badges: @Composable RowScope.() -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
@@ -160,10 +163,10 @@ fun MoeSongRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = if (largeText) 96.dp else 72.dp)
+                .heightIn(min = if (largeText) 96.dp else minimumHeight)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CONTENT_ALPHA)
-                .padding(vertical = MoeKoeTheme.spacing.small),
+                .padding(vertical = verticalContentPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (isPlaying) {
@@ -179,6 +182,7 @@ fun MoeSongRow(
             verticalArrangement = Arrangement.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                titleLeading()
                 Text(
                     text = title,
                     modifier = Modifier.weight(1f),
