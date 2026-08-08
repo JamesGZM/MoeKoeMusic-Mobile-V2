@@ -21,7 +21,7 @@
     <string name="settings_standard">标准</string>
     <string name="settings_storage">存储</string>
     <string name="settings_cache_limit">缓存上限</string>
-    <string name="settings_cache_limit_value">2 GB</string>
+    <string name="settings_unavailable">尚未开放</string>
     <string name="settings_clear_cache">清理缓存</string>
     <string name="settings_other">其他</string>
     <string name="settings_language">语言</string>

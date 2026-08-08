@@ -20,7 +20,14 @@ internal data class SettingsUiState(
     val savingTheme: AppThemePreference? = null,
     val problem: AppSettingsProblem? = null,
     val canRetry: Boolean = false,
+    val overlay: SettingsOverlay? = null,
 )
+
+internal sealed interface SettingsOverlay {
+    data object ThemeSelection : SettingsOverlay
+
+    data object About : SettingsOverlay
+}
 
 @HiltViewModel
 internal class SettingsViewModel
@@ -32,13 +39,21 @@ internal class SettingsViewModel
         val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
         private var updateJob: Job? = null
         private var retryTheme: AppThemePreference? = null
+        private var updateGeneration = 0L
+        private var persistedTheme = AppThemePreference.System
 
         init {
             viewModelScope.launch {
                 repository.settings.collect { snapshot ->
+                    persistedTheme = snapshot.settings.theme
                     mutableState.update { current ->
                         current.copy(
-                            theme = snapshot.settings.theme,
+                            theme =
+                                if (current.savingTheme == null || current.savingTheme == snapshot.settings.theme) {
+                                    snapshot.settings.theme
+                                } else {
+                                    current.theme
+                                },
                             problem = if (current.problem == AppSettingsProblem.Write) current.problem else snapshot.problem,
                         )
                     }
@@ -47,7 +62,9 @@ internal class SettingsViewModel
         }
 
         fun selectTheme(theme: AppThemePreference) {
+            mutableState.update { it.copy(overlay = null) }
             if (theme == mutableState.value.theme && mutableState.value.savingTheme == null) return
+            val generation = ++updateGeneration
             updateJob?.cancel()
             updateJob =
                 viewModelScope.launch {
@@ -55,13 +72,16 @@ internal class SettingsViewModel
                     mutableState.update { it.copy(savingTheme = theme, problem = null, canRetry = false) }
                     when (repository.setTheme(theme)) {
                         AppSettingsUpdateResult.Success -> {
-                            mutableState.update { it.copy(savingTheme = null) }
+                            if (generation != updateGeneration) return@launch
+                            mutableState.update { it.copy(theme = persistedTheme, savingTheme = null) }
                         }
 
                         is AppSettingsUpdateResult.Failure -> {
+                            if (generation != updateGeneration) return@launch
                             retryTheme = theme
                             mutableState.update {
                                 it.copy(
+                                    theme = persistedTheme,
                                     savingTheme = null,
                                     problem = AppSettingsProblem.Write,
                                     canRetry = true,
@@ -79,5 +99,17 @@ internal class SettingsViewModel
         fun dismissProblem() {
             retryTheme = null
             mutableState.update { it.copy(problem = null, canRetry = false) }
+        }
+
+        fun showThemeSelection() {
+            mutableState.update { it.copy(overlay = SettingsOverlay.ThemeSelection) }
+        }
+
+        fun showAbout() {
+            mutableState.update { it.copy(overlay = SettingsOverlay.About) }
+        }
+
+        fun dismissOverlay() {
+            mutableState.update { it.copy(overlay = null) }
         }
     }

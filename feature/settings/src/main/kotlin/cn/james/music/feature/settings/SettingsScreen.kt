@@ -1,74 +1,17 @@
 package cn.james.music.feature.settings
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.Colorize
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.Waves
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.designsystem.component.overlay.MoeDialog
 import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppThemePreference
 
@@ -77,17 +20,19 @@ internal fun SettingsScreen(
     state: SettingsUiState,
     onBack: () -> Unit,
     onThemeSelected: (AppThemePreference) -> Unit,
+    onThemeDialogRequest: () -> Unit,
+    onAboutDialogRequest: () -> Unit,
+    onDismissOverlay: () -> Unit,
     onRetry: () -> Unit,
     onDismissProblem: () -> Unit,
 ) {
-    var showThemeDialog by rememberSaveable { mutableStateOf(false) }
-    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         topBar = {
             MoeStandardTopBar(
                 title = stringResource(R.string.settings_title),
                 navigationContentDescription = stringResource(R.string.settings_back),
                 onNavigateBack = onBack,
+                modifier = Modifier.settingsLayoutProbe(SETTINGS_PROBE_TOOLBAR),
             )
         },
         snackbarHost = {
@@ -108,300 +53,27 @@ internal fun SettingsScreen(
             }
         },
     ) { contentPadding ->
-        Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().widthIn(max = 720.dp),
-                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item {
-                    SettingsGroup(title = stringResource(R.string.settings_appearance)) {
-                        SettingsItem(
-                            icon = Icons.Default.Colorize,
-                            iconColor = MaterialTheme.colorScheme.secondary,
-                            title = stringResource(R.string.settings_theme_mode),
-                            value = state.theme.displayName(),
-                            loading = state.savingTheme != null,
-                            onClick = { showThemeDialog = true },
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.Palette,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.settings_theme_color),
-                            value = stringResource(R.string.settings_theme_color_sky),
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.AutoAwesome,
-                            iconColor = MaterialTheme.colorScheme.tertiary,
-                            title = stringResource(R.string.settings_dynamic_color),
-                            checked = true,
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.DarkMode,
-                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            title = stringResource(R.string.settings_amoled_mode),
-                            checked = state.theme == AppThemePreference.Amoled,
-                        )
-                    }
-                }
-                item {
-                    SettingsGroup(title = stringResource(R.string.settings_playback_quality)) {
-                        SettingsItem(
-                            icon = Icons.Default.GraphicEq,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.settings_default_quality),
-                            value = stringResource(R.string.settings_quality_standard),
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.SkipNext,
-                            iconColor = MaterialTheme.colorScheme.tertiary,
-                            title = stringResource(R.string.settings_skip_failed),
-                            checked = true,
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.Waves,
-                            iconColor = MaterialTheme.colorScheme.secondary,
-                            title = stringResource(R.string.settings_fade),
-                            value = stringResource(R.string.settings_disabled),
-                        )
-                    }
-                }
-                item {
-                    SettingsGroup(title = stringResource(R.string.settings_lyrics)) {
-                        SettingsItem(
-                            icon = Icons.Default.ChatBubbleOutline,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.settings_lyrics_display),
-                            value = stringResource(R.string.settings_lyrics_line_by_line),
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.Translate,
-                            iconColor = MaterialTheme.colorScheme.tertiary,
-                            title = stringResource(R.string.settings_translation),
-                            checked = true,
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.TextFields,
-                            iconColor = MaterialTheme.colorScheme.secondary,
-                            title = stringResource(R.string.settings_lyrics_font_size),
-                            value = stringResource(R.string.settings_standard),
-                        )
-                    }
-                }
-                item {
-                    SettingsGroup(title = stringResource(R.string.settings_storage)) {
-                        SettingsItem(
-                            icon = Icons.Default.FolderOpen,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.settings_cache_limit),
-                            value = stringResource(R.string.settings_cache_limit_value),
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.DeleteOutline,
-                            iconColor = MaterialTheme.colorScheme.tertiary,
-                            title = stringResource(R.string.settings_clear_cache),
-                        )
-                    }
-                }
-                item {
-                    SettingsGroup(title = stringResource(R.string.settings_other)) {
-                        SettingsItem(
-                            icon = Icons.Default.Language,
-                            iconColor = MaterialTheme.colorScheme.secondary,
-                            title = stringResource(R.string.settings_language),
-                            value = stringResource(R.string.settings_language_zh_cn),
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            icon = Icons.Default.Info,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.settings_about),
-                            value = null,
-                            loading = false,
-                            onClick = { showAboutDialog = true },
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    if (showThemeDialog) {
-        ThemeSelectionDialog(
-            selected = state.theme,
-            saving = state.savingTheme,
-            onSelect = {
-                onThemeSelected(it)
-                showThemeDialog = false
-            },
-            onDismiss = { showThemeDialog = false },
-        )
-    }
-    if (showAboutDialog) {
-        AboutDialog(onDismiss = { showAboutDialog = false })
-    }
-}
-
-@Composable
-private fun SettingsGroup(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
-    ) {
-        Column {
-            Text(
-                text = title,
-                modifier = Modifier.padding(start = 14.dp, top = 12.dp, end = 14.dp, bottom = 4.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-            )
-            content()
-        }
-    }
-}
-
-@Composable
-private fun SettingsItem(
-    icon: ImageVector,
-    iconColor: Color,
-    title: String,
-    value: String? = null,
-    loading: Boolean = false,
-    checked: Boolean? = null,
-    onClick: (() -> Unit)? = null,
-) {
-    val interactionModifier = if (onClick != null) Modifier.clickable(enabled = !loading, onClick = onClick) else Modifier
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp)
-                .then(interactionModifier)
-                .padding(horizontal = 14.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
         Box(
-            modifier = Modifier.size(30.dp).background(iconColor.copy(alpha = 0.10f), CircleShape),
-            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize().padding(contentPadding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
-        }
-        Spacer(Modifier.width(14.dp))
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-        )
-        if (loading) {
-            CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-        } else if (checked != null) {
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-                modifier = Modifier.graphicsLayer(scaleX = 0.8f, scaleY = 0.8f),
-            )
-        } else {
-            value?.let {
-                Text(
-                    text = it,
-                    modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.End,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8),
+            SettingsContent(
+                state = state,
+                onThemeDialogRequest = onThemeDialogRequest,
+                onAboutDialogRequest = onAboutDialogRequest,
             )
         }
     }
-}
 
-@Composable
-private fun SettingsDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 14.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f),
-    )
-}
-
-@Composable
-private fun ThemeSelectionDialog(
-    selected: AppThemePreference,
-    saving: AppThemePreference?,
-    onSelect: (AppThemePreference) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    MoeDialog(onDismissRequest = onDismiss) {
-        Text(
-            text = stringResource(R.string.settings_choose_theme),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Column(Modifier.padding(top = MoeKoeTheme.spacing.space12).selectableGroup()) {
-            AppThemePreference.entries.forEach { theme ->
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .selectable(
-                                selected = theme == selected,
-                                enabled = saving == null,
-                                role = Role.RadioButton,
-                                onClick = { onSelect(theme) },
-                            )
-                            .padding(vertical = MoeKoeTheme.spacing.space8),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = theme == selected, onClick = null, enabled = saving == null)
-                    Text(theme.displayName(), modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8))
-                }
-            }
-        }
-        TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-            Text(stringResource(R.string.settings_cancel))
-        }
+    when (state.overlay) {
+        SettingsOverlay.ThemeSelection ->
+            ThemeSelectionDialog(
+                selected = state.theme,
+                saving = state.savingTheme,
+                onSelect = onThemeSelected,
+                onDismiss = onDismissOverlay,
+            )
+        SettingsOverlay.About -> AboutDialog(onDismiss = onDismissOverlay)
+        null -> Unit
     }
 }
-
-@Composable
-private fun AboutDialog(onDismiss: () -> Unit) {
-    MoeDialog(onDismissRequest = onDismiss) {
-        Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        HorizontalDivider(Modifier.padding(vertical = MoeKoeTheme.spacing.space16))
-        Text(stringResource(R.string.settings_about_message), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End).padding(top = MoeKoeTheme.spacing.space16)) {
-            Text(stringResource(R.string.settings_done))
-        }
-    }
-}
-
-@Composable
-private fun AppThemePreference.displayName(): String =
-    stringResource(
-        when (this) {
-            AppThemePreference.System -> R.string.settings_theme_system
-            AppThemePreference.Light -> R.string.settings_theme_light
-            AppThemePreference.Dark -> R.string.settings_theme_dark
-            AppThemePreference.Amoled -> R.string.settings_theme_amoled
-        },
-    )

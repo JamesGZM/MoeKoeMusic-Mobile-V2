@@ -18,6 +18,9 @@ fun NavGraphBuilder.settingsDestination(onBack: () -> Unit) {
             state = state,
             onBack = onBack,
             onThemeSelected = viewModel::selectTheme,
+            onThemeDialogRequest = viewModel::showThemeSelection,
+            onAboutDialogRequest = viewModel::showAbout,
+            onDismissOverlay = viewModel::dismissOverlay,
             onRetry = viewModel::retry,
             onDismissProblem = viewModel::dismissProblem,
         )

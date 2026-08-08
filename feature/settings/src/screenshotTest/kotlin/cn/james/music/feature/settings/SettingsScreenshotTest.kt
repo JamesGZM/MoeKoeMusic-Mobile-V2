@@ -2,6 +2,8 @@ package cn.james.music.feature.settings
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
@@ -12,6 +14,23 @@ import com.android.tools.screenshot.PreviewTest
 @Preview(name = "Light", widthDp = 390, heightDp = 844)
 @Composable
 fun SettingsLightScreenshot() = SettingsScreenshotContent(ThemeMode.Light, AppThemePreference.System)
+
+@PreviewTest
+@Preview(name = "LayoutProbe", widthDp = 390, heightDp = 844)
+@Composable
+fun SettingsLayoutProbeScreenshot() =
+    CompositionLocalProvider(
+        LocalSettingsLayoutProbeColors provides
+            mapOf(
+                SETTINGS_PROBE_TOOLBAR to Color.Magenta,
+                SETTINGS_PROBE_APPEARANCE to Color.Cyan,
+                SETTINGS_PROBE_PLAYBACK to Color.Green,
+                SETTINGS_PROBE_LYRICS to Color.Blue,
+                SETTINGS_PROBE_STORAGE to Color.Red,
+            ),
+    ) {
+        SettingsScreenshotContent(ThemeMode.Light, AppThemePreference.System)
+    }
 
 @PreviewTest
 @Preview(name = "Dark", widthDp = 390, heightDp = 844)
@@ -49,6 +68,9 @@ private fun SettingsScreenshotContent(
                 state = SettingsUiState(theme = preference),
                 onBack = {},
                 onThemeSelected = {},
+                onThemeDialogRequest = {},
+                onAboutDialogRequest = {},
+                onDismissOverlay = {},
                 onRetry = {},
                 onDismissProblem = {},
             )

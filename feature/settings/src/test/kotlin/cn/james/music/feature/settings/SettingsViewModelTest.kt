@@ -6,8 +6,10 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -16,6 +18,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -94,6 +97,49 @@ class SettingsViewModelTest {
             assertFalse(viewModel.state.value.canRetry)
         }
 
+    @Test
+    fun overlaysAreOwnedByViewModelAndSelectingThemeDismissesThem() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.showThemeSelection()
+            assertEquals(SettingsOverlay.ThemeSelection, viewModel.state.value.overlay)
+
+            viewModel.selectTheme(AppThemePreference.Dark)
+            assertEquals(null, viewModel.state.value.overlay)
+            advanceUntilIdle()
+
+            viewModel.showAbout()
+            assertEquals(SettingsOverlay.About, viewModel.state.value.overlay)
+            viewModel.dismissOverlay()
+            assertEquals(null, viewModel.state.value.overlay)
+        }
+
+    @Test
+    fun staleWriteCannotOverrideNewerThemeSelection() =
+        runTest(dispatcher) {
+            val repository = OutOfOrderRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.selectTheme(AppThemePreference.Dark)
+            runCurrent()
+            viewModel.selectTheme(AppThemePreference.Light)
+            runCurrent()
+
+            repository.complete(AppThemePreference.Dark)
+            runCurrent()
+            assertEquals(AppThemePreference.System, viewModel.state.value.theme)
+            assertEquals(AppThemePreference.Light, viewModel.state.value.savingTheme)
+
+            repository.complete(AppThemePreference.Light)
+            advanceUntilIdle()
+            assertEquals(AppThemePreference.Light, viewModel.state.value.theme)
+            assertEquals(null, viewModel.state.value.savingTheme)
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -109,6 +155,24 @@ class SettingsViewModelTest {
                     settingsState.value = AppSettingsSnapshot(settings = AppSettings(theme))
                 }
             }
+        }
+    }
+
+    private class OutOfOrderRepository(
+        initialTheme: AppThemePreference,
+    ) : AppSettingsRepository {
+        private val settingsState = MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme)))
+        override val settings: Flow<AppSettingsSnapshot> = settingsState
+        private val completions = AppThemePreference.entries.associateWith { CompletableDeferred<Unit>() }
+
+        override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
+            withContext(NonCancellable) { completions.getValue(theme).await() }
+            settingsState.value = AppSettingsSnapshot(settings = AppSettings(theme))
+            return AppSettingsUpdateResult.Success
+        }
+
+        fun complete(theme: AppThemePreference) {
+            completions.getValue(theme).complete(Unit)
         }
     }
 }
