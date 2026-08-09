@@ -39,6 +39,8 @@ internal object ArchitecturePolicy {
             addAll(validatePreviewUiProperties(sources))
             addAll(validateSearchParallelMaps(sources))
             addAll(validatePlayerFeatureBoundary(rootDir, sourceFiles))
+            addAll(validateFeatureEntryModels(rootDir, sourceFiles))
+            addAll(validateImmutableFeatureModels(rootDir, sourceFiles))
             addAll(validateDataDrivenUiComponents(rootDir, sourceFiles, DATA_DRIVEN_UI_COMPONENTS))
         }
     }
@@ -186,6 +188,89 @@ internal object ArchitecturePolicy {
                 }
             }
         }
+
+    internal fun validateFeatureEntryModels(
+        rootDir: File,
+        sourceFiles: Iterable<File>,
+    ): List<String> =
+        sourceFiles.flatMap { file ->
+            val relative = file.relativeTo(rootDir).invariantSeparatorsPath
+            if (!relative.contains("/src/main/")) return@flatMap emptyList()
+            val code = maskNonCode(file.readText())
+            buildList {
+                when {
+                    relative.startsWith(SETTINGS_PRODUCTION_SOURCE_PREFIX) -> {
+                        addAll(forbiddenUiConstructorTypes(relative, code, SETTINGS_UI_FORBIDDEN_TYPES))
+                    }
+
+                    relative.startsWith(MY_PRODUCTION_SOURCE_PREFIX) -> {
+                        addAll(forbiddenUiConstructorTypes(relative, code, MY_UI_FORBIDDEN_TYPES))
+                        MY_LEGACY_LIBRARY_PROPERTY.findAll(code).forEach { property ->
+                            add("$relative: MyLibraryUi 不得保留平行字段 ${property.value}")
+                        }
+                        if (relative == MY_NAVIGATION_SOURCE && MY_NAVIGATION_PARALLEL_JOIN.containsMatchIn(code)) {
+                            add("$relative: Route 不得临时 join quickEntries 与 collectionEntries，必须调用 stable id 解析边界")
+                        }
+                    }
+
+                    relative.startsWith(DISCOVER_PRODUCTION_SOURCE_PREFIX) -> {
+                        if (DISCOVER_PARALLEL_ARTWORK.containsMatchIn(code)) {
+                            add("$relative: Discover 不得保留 categories 与 categoryArtworkRes 平行列表")
+                        }
+                        if (relative == DISCOVER_MODELS_SOURCE && DISCOVER_INDEX_GENERATED_ID.containsMatchIn(code)) {
+                            add("$relative: Discover 默认内容必须使用显式语义 stable id，禁止 mapIndexed 生成 id")
+                        }
+                        DISCOVER_INDEX_SELECTION.findAll(code).forEach { selection ->
+                            add("$relative: Discover 选择状态必须使用 stable id，禁止 ${selection.value}")
+                        }
+                        UI_MODEL_DATA_CLASS.findAll(code).forEach { match ->
+                            val constructor = extractDelimited(code, match.range.last, '(', ')').orEmpty()
+                            DISCOVER_UI_MODEL_VISUAL_MEMBER.findAll(constructor).forEach { member ->
+                                add("$relative: Discover UI model 不得持有视觉布局字段 ${member.value}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    internal fun validateImmutableFeatureModels(
+        rootDir: File,
+        sourceFiles: Iterable<File>,
+    ): List<String> {
+        val sources = sourceFiles.associateBy { it.relativeTo(rootDir).invariantSeparatorsPath }
+        return IMMUTABLE_FEATURE_MODEL_SOURCES.flatMap { relative ->
+            val file = sources[relative] ?: return@flatMap listOf("$relative: immutable Feature UI model 文件不存在")
+            val lines = file.readLines()
+            lines.mapIndexedNotNull { index, line ->
+                val name = FEATURE_UI_MODEL_DECLARATION.find(line)?.groupValues?.get(1) ?: return@mapIndexedNotNull null
+                if (name.endsWith("Action")) return@mapIndexedNotNull null
+                val previous =
+                    lines
+                        .subList(0, index)
+                        .asReversed()
+                        .firstOrNull { it.isNotBlank() }
+                        ?.trim()
+                if (previous == "@Immutable") null else "$relative:${index + 1}: Feature UI model $name 必须标注 @Immutable"
+            }
+        }
+    }
+
+    private fun forbiddenUiConstructorTypes(
+        relative: String,
+        code: String,
+        forbiddenTypes: Set<String>,
+    ): List<String> =
+        UI_MODEL_DATA_CLASS
+            .flatMapConstructors(code)
+            .flatMap { constructor ->
+                forbiddenTypes.filter { type -> Regex("\\b${Regex.escape(type)}\\b").containsMatchIn(constructor) }.map { type ->
+                    "$relative: UI model 构造器不得持有领域类型 $type"
+                }
+            }.toList()
+
+    private fun Regex.flatMapConstructors(code: String): Sequence<String> =
+        findAll(code).map { match -> extractDelimited(code, match.range.last, '(', ')').orEmpty() }
 
     private fun uiModelMainConstructorProperties(
         source: String,
@@ -467,6 +552,36 @@ internal object ArchitecturePolicy {
     private val PLAYER_UI_MODEL_VISUAL_MEMBER =
         Regex(
             "(?i)(?:\\b(?:Dp|Shape|Color|PaddingValues)\\b|@Composable|\\b(?:val|var)\\s+[A-Za-z0-9_]*(?:padding|offset|preview)[A-Za-z0-9_]*\\b)",
+        )
+    private const val SETTINGS_PRODUCTION_SOURCE_PREFIX = "feature/settings/src/main/"
+    private const val MY_PRODUCTION_SOURCE_PREFIX = "feature/my/src/main/"
+    private const val DISCOVER_PRODUCTION_SOURCE_PREFIX = "feature/discover/src/main/"
+    private const val MY_NAVIGATION_SOURCE =
+        "feature/my/src/main/kotlin/cn/james/music/feature/my/MyNavigation.kt"
+    private const val DISCOVER_MODELS_SOURCE =
+        "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverModels.kt"
+    private val SETTINGS_UI_FORBIDDEN_TYPES = setOf("AppThemePreference", "AppSettingsProblem", "AppSettingsRepository")
+    private val MY_UI_FORBIDDEN_TYPES = setOf("UserProfileError", "AuthError", "VipSummary", "UserProfile")
+    private val MY_LEGACY_LIBRARY_PROPERTY =
+        Regex(
+            "\\b(?:likedCount|recentCount|localCount|cloudSize|savedPlaylistCount|savedAlbumCount|followedArtistCount|followedFriendCount)\\b",
+        )
+    private val DISCOVER_PARALLEL_ARTWORK = Regex("\\bcategoryArtworkRes\\b")
+    private val DISCOVER_INDEX_GENERATED_ID = Regex("\\bmapIndexed\\b")
+    private val MY_NAVIGATION_PARALLEL_JOIN =
+        Regex("quickEntries\\s*\\+\\s*(?:state\\.library\\.)?collectionEntries")
+    private val DISCOVER_INDEX_SELECTION = Regex("\\bselected(?:Tab|Category)\\s*:\\s*Int\\b")
+    private val DISCOVER_UI_MODEL_VISUAL_MEMBER =
+        Regex(
+            "(?i)(?:\\b(?:Dp|Shape|Color|PaddingValues)\\b|@Composable|\\b(?:val|var)\\s+[A-Za-z0-9_]*(?:padding|offset|layout)[A-Za-z0-9_]*\\b)",
+        )
+    private val FEATURE_UI_MODEL_DECLARATION =
+        Regex("^internal\\s+(?:sealed\\s+interface|data\\s+class|enum\\s+class)\\s+([A-Za-z][A-Za-z0-9_]*)\\b")
+    private val IMMUTABLE_FEATURE_MODEL_SOURCES =
+        setOf(
+            "feature/settings/src/main/kotlin/cn/james/music/feature/settings/SettingsUiModels.kt",
+            "feature/my/src/main/kotlin/cn/james/music/feature/my/MyUiModels.kt",
+            DISCOVER_MODELS_SOURCE,
         )
     private val MOE_SONG_ROW_STYLE_ENUM = Regex("enum\\s+class\\s+MoeSongRowStyle\\s*")
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")

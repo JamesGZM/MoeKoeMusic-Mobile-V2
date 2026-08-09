@@ -13,7 +13,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import cn.james.music.core.designsystem.MoeKoeTheme
-import cn.james.music.core.model.settings.AppThemePreference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -32,13 +31,10 @@ class SettingsScreenTest {
                 Surface {
                     SettingsScreen(
                         state = SettingsUiState(),
-                        onBack = { backRequested = true },
-                        onThemeSelected = {},
-                        onThemeDialogRequest = { themeDialogRequested = true },
-                        onAboutDialogRequest = {},
-                        onDismissOverlay = {},
-                        onRetry = {},
-                        onDismissProblem = {},
+                        onAction = {
+                            if (it == SettingsAction.Back) backRequested = true
+                            if (it == SettingsAction.OpenTheme) themeDialogRequested = true
+                        },
                     )
                 }
             }
@@ -53,19 +49,13 @@ class SettingsScreenTest {
 
     @Test
     fun themeDialogIsRenderedOnlyFromStateAndForwardsSelection() {
-        var selected: AppThemePreference? = null
+        var selected: SettingsThemeUi? = null
         composeRule.setContent {
             MoeKoeTheme {
                 Surface {
                     SettingsScreen(
                         state = SettingsUiState(overlay = SettingsOverlay.ThemeSelection),
-                        onBack = {},
-                        onThemeSelected = { selected = it },
-                        onThemeDialogRequest = {},
-                        onAboutDialogRequest = {},
-                        onDismissOverlay = {},
-                        onRetry = {},
-                        onDismissProblem = {},
+                        onAction = { if (it is SettingsAction.SelectTheme) selected = it.theme },
                     )
                 }
             }
@@ -74,12 +64,12 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("选择主题模式").assertIsDisplayed()
         composeRule.onNodeWithText("浅色").performClick()
 
-        assertEquals(AppThemePreference.Light, selected)
+        assertEquals(SettingsThemeUi.Light, selected)
     }
 
     @Test
     fun amoledPreferenceRendersEnabledCheckedSwitch() {
-        setSettingsContent(AppThemePreference.Amoled)
+        setSettingsContent(SettingsThemeUi.Amoled)
 
         composeRule
             .onNode(toggleableState(ToggleableState.On), useUnmergedTree = true)
@@ -89,7 +79,7 @@ class SettingsScreenTest {
 
     @Test
     fun systemPreferenceRendersEnabledUncheckedSwitch() {
-        setSettingsContent(AppThemePreference.System)
+        setSettingsContent(SettingsThemeUi.System)
 
         composeRule
             .onNode(toggleableState(ToggleableState.Off), useUnmergedTree = true)
@@ -97,19 +87,13 @@ class SettingsScreenTest {
             .assertIsOff()
     }
 
-    private fun setSettingsContent(theme: AppThemePreference) {
+    private fun setSettingsContent(theme: SettingsThemeUi) {
         composeRule.setContent {
             MoeKoeTheme {
                 Surface {
                     SettingsScreen(
-                        state = SettingsUiState(theme = theme),
-                        onBack = {},
-                        onThemeSelected = {},
-                        onThemeDialogRequest = {},
-                        onAboutDialogRequest = {},
-                        onDismissOverlay = {},
-                        onRetry = {},
-                        onDismissProblem = {},
+                        state = SettingsUiState(theme = theme, groups = settingsGroups(theme)),
+                        onAction = {},
                     )
                 }
             }

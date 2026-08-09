@@ -53,7 +53,7 @@ fun MyAuthenticatedLayoutProbeScreenshot() {
 @Preview(name = "Anonymous", widthDp = 390, heightDp = 844)
 @Composable
 fun MyAnonymousScreenshot() {
-    MyScreenshotContent(MyUiState(account = MyAccountUiState.Anonymous))
+    MyScreenshotContent(anonymousState())
 }
 
 @PreviewTest
@@ -61,7 +61,7 @@ fun MyAnonymousScreenshot() {
 @Composable
 fun MyAnonymousDarkScreenshot() {
     MyScreenshotContent(
-        state = MyUiState(account = MyAccountUiState.Anonymous),
+        state = anonymousState(),
         themeMode = ThemeMode.Dark,
     )
 }
@@ -70,7 +70,7 @@ fun MyAnonymousDarkScreenshot() {
 @Preview(name = "AnonymousLargeText", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
 fun MyAnonymousLargeTextScreenshot() {
-    MyScreenshotContent(MyUiState(account = MyAccountUiState.Anonymous))
+    MyScreenshotContent(anonymousState())
 }
 
 @PreviewTest
@@ -96,19 +96,43 @@ fun MyAuthenticatedLargeTextScreenshot() {
 
 private fun designLibrary() =
     MyLibraryUi(
-        likedCount = "126 首",
-        recentCount = "78 首",
-        localCount = "54 首",
-        cloudSize = "2.4 GB",
-        savedPlaylistCount = "36 个",
-        savedAlbumCount = "28 张",
-        followedArtistCount = "19 位",
-        followedFriendCount = "12 位",
+        quickEntries =
+            myQuickEntries(
+                accountAssetsAvailable = false,
+                supportingText =
+                    mapOf(
+                        MyEntryId.Liked to "126 首",
+                        MyEntryId.Recent to "78 首",
+                        MyEntryId.LocalMusic to "54 首",
+                        MyEntryId.Cloud to "2.4 GB",
+                    ),
+            ),
+        collectionEntries =
+            myCollectionEntries(
+                accountAssetsAvailable = false,
+                supportingText =
+                    mapOf(
+                        MyEntryId.SavedPlaylists to "36 个",
+                        MyEntryId.SavedAlbums to "28 张",
+                        MyEntryId.FollowedArtists to "19 位",
+                        MyEntryId.FollowedFriends to "12 位",
+                    ),
+            ),
         playlists =
             listOf(
-                MyPlaylistUi("我喜欢", "126 首", MyPlaylistArtwork.Liked),
-                MyPlaylistUi("ACG 收藏", "82 首", MyPlaylistArtwork.Acg),
-                MyPlaylistUi("夜间电台", "45 首", MyPlaylistArtwork.NightRadio),
+                MyPlaylistUi("liked", "我喜欢", "126 首", MyPlaylistArtwork.Liked),
+                MyPlaylistUi("acg", "ACG 收藏", "82 首", MyPlaylistArtwork.Acg),
+                MyPlaylistUi("night-radio", "夜间电台", "45 首", MyPlaylistArtwork.NightRadio),
+            ),
+    )
+
+private fun anonymousState() =
+    MyUiState(
+        account = MyAccountUiState.Anonymous,
+        library =
+            MyLibraryUi(
+                quickEntries = myQuickEntries(accountAssetsAvailable = true),
+                collectionEntries = myCollectionEntries(accountAssetsAvailable = true),
             ),
     )
 

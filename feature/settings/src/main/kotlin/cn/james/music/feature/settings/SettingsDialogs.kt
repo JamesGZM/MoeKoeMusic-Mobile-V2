@@ -19,23 +19,21 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.overlay.MoeDialog
-import cn.james.music.core.model.settings.AppThemePreference
 
 @Composable
 internal fun ThemeSelectionDialog(
-    selected: AppThemePreference,
-    saving: AppThemePreference?,
-    onSelect: (AppThemePreference) -> Unit,
-    onDismiss: () -> Unit,
+    selected: SettingsThemeUi,
+    saving: SettingsThemeUi?,
+    onAction: (SettingsAction) -> Unit,
 ) {
-    MoeDialog(onDismissRequest = onDismiss) {
+    MoeDialog(onDismissRequest = { onAction(SettingsAction.DismissOverlay) }) {
         Text(
             text = stringResource(R.string.settings_choose_theme),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
         )
         Column(Modifier.padding(top = MoeKoeTheme.spacing.space12).selectableGroup()) {
-            AppThemePreference.entries.forEach { theme ->
+            SettingsThemeUi.entries.forEach { theme ->
                 Row(
                     modifier =
                         Modifier
@@ -44,7 +42,7 @@ internal fun ThemeSelectionDialog(
                                 selected = theme == selected,
                                 enabled = saving == null,
                                 role = Role.RadioButton,
-                                onClick = { onSelect(theme) },
+                                onClick = { onAction(SettingsAction.SelectTheme(theme)) },
                             )
                             .padding(vertical = MoeKoeTheme.spacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
@@ -54,20 +52,20 @@ internal fun ThemeSelectionDialog(
                 }
             }
         }
-        MoeTextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+        MoeTextButton(onClick = { onAction(SettingsAction.DismissOverlay) }, modifier = Modifier.align(Alignment.End)) {
             Text(stringResource(R.string.settings_cancel))
         }
     }
 }
 
 @Composable
-internal fun AboutDialog(onDismiss: () -> Unit) {
-    MoeDialog(onDismissRequest = onDismiss) {
+internal fun AboutDialog(onAction: (SettingsAction) -> Unit) {
+    MoeDialog(onDismissRequest = { onAction(SettingsAction.DismissOverlay) }) {
         Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         MoeHorizontalDivider(Modifier.padding(vertical = MoeKoeTheme.spacing.space16))
         Text(stringResource(R.string.settings_about_message), color = MaterialTheme.colorScheme.onSurfaceVariant)
         MoeTextButton(
-            onClick = onDismiss,
+            onClick = { onAction(SettingsAction.DismissOverlay) },
             modifier = Modifier.align(Alignment.End).padding(top = MoeKoeTheme.spacing.space16),
         ) {
             Text(stringResource(R.string.settings_done))

@@ -39,7 +39,6 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.MoePassiveOutline
 import cn.james.music.core.designsystem.component.action.MoeSwitch
-import cn.james.music.core.model.settings.AppThemePreference
 
 @Composable
 internal fun SettingsGroup(
@@ -67,22 +66,78 @@ internal fun SettingsGroup(
 }
 
 @Composable
-internal fun SettingsItem(
+internal fun SettingsActionItem(
     icon: ImageVector,
     iconColor: Color,
     title: String,
     value: String? = null,
     loading: Boolean = false,
-    checked: Boolean? = null,
-    onClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
 ) {
-    val interactionModifier =
-        if (onClick != null) {
-            Modifier.clickable(enabled = !loading, onClick = onClick)
-        } else {
-            Modifier.semantics { disabled() }
-        }
-    val enabled = onClick != null
+    SettingsItemLayout(
+        icon = icon,
+        iconColor = iconColor,
+        title = title,
+        value = value,
+        loading = loading,
+        checked = null,
+        enabled = true,
+        onClick = onClick,
+    )
+}
+
+@Composable
+internal fun SettingsUnavailableItem(
+    icon: ImageVector,
+    iconColor: Color,
+    title: String,
+    value: String,
+) {
+    SettingsItemLayout(
+        icon = icon,
+        iconColor = iconColor,
+        title = title,
+        value = value,
+        loading = false,
+        checked = null,
+        enabled = false,
+        onClick = {},
+    )
+}
+
+@Composable
+internal fun SettingsToggleItem(
+    icon: ImageVector,
+    iconColor: Color,
+    title: String,
+    checked: Boolean,
+    loading: Boolean,
+    onClick: () -> Unit,
+) {
+    SettingsItemLayout(
+        icon = icon,
+        iconColor = iconColor,
+        title = title,
+        value = null,
+        loading = loading,
+        checked = checked,
+        enabled = true,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun SettingsItemLayout(
+    icon: ImageVector,
+    iconColor: Color,
+    title: String,
+    value: String?,
+    loading: Boolean,
+    checked: Boolean?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val interactionModifier = if (enabled) Modifier.clickable(enabled = !loading, onClick = onClick) else Modifier.semantics { disabled() }
     Row(
         modifier =
             Modifier
@@ -110,7 +165,7 @@ internal fun SettingsItem(
         } else if (checked != null) {
             MoeSwitch(
                 checked = checked,
-                onCheckedChange = if (onClick == null) null else { _ -> onClick() },
+                onCheckedChange = { _ -> onClick() },
                 enabled = enabled,
             )
         } else {
@@ -141,14 +196,3 @@ internal fun SettingsItem(
 internal fun SettingsDivider() {
     MoeHorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
 }
-
-@Composable
-internal fun AppThemePreference.displayName(): String =
-    stringResource(
-        when (this) {
-            AppThemePreference.System -> R.string.settings_theme_system
-            AppThemePreference.Light -> R.string.settings_theme_light
-            AppThemePreference.Dark -> R.string.settings_theme_dark
-            AppThemePreference.Amoled -> R.string.settings_theme_amoled
-        },
-    )

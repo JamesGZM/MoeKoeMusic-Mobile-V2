@@ -1,6 +1,5 @@
 package cn.james.music.feature.discover
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -31,9 +30,9 @@ import cn.james.music.core.designsystem.component.MoePassiveOutline
 
 @Composable
 internal fun CategoryChips(
-    categories: List<String>,
-    selectedIndex: Int,
-    onSelected: (Int) -> Unit,
+    categories: List<DiscoverCategoryUi>,
+    selectedId: String,
+    onAction: (DiscoverAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
@@ -45,10 +44,13 @@ internal fun CategoryChips(
                 .padding(horizontal = 15.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        categories.forEachIndexed { index, category ->
-            val selected = selectedIndex == index
+        categories.forEach { category ->
+            val selected = selectedId == category.id
             Surface(
-                modifier = Modifier.height(if (largeText) 52.dp else 28.dp).clickable { onSelected(index) },
+                modifier =
+                    Modifier
+                        .height(if (largeText) 52.dp else 28.dp)
+                        .clickable { onAction(DiscoverAction.SelectCategory(category.id)) },
                 shape = RoundedCornerShape(24.dp),
                 color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                 contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -58,7 +60,7 @@ internal fun CategoryChips(
                     modifier = Modifier.padding(horizontal = if (selected) 11.dp else 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(category, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                    Text(category.label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
                 }
             }
         }
@@ -67,26 +69,37 @@ internal fun CategoryChips(
 
 @Composable
 internal fun CategoryArtworkGrid(
-    @DrawableRes artwork: List<Int>,
-    onPlaylist: () -> Unit,
+    playlists: List<DiscoverPlaylistCardUi>,
+    onAction: (DiscoverAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 15.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        artwork.take(3).forEach { res ->
+        playlists.take(3).forEach { playlist ->
             Image(
-                painter = painterResource(res),
+                painter = painterResource(playlist.artwork.drawableRes()),
                 contentDescription = stringResource(R.string.discover_open_playlist),
                 modifier =
                     Modifier
                         .weight(1f)
                         .aspectRatio(1.18f)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onPlaylist),
+                        .clickable { onAction(DiscoverAction.OpenPlaylist(playlist.id)) },
                 contentScale = ContentScale.Crop,
             )
         }
     }
 }
+
+internal fun DiscoverArtworkUi.drawableRes(): Int =
+    when (this) {
+        DiscoverArtworkUi.WeeklyHero -> R.drawable.discover_weekly_hero
+        DiscoverArtworkUi.RankingRising -> R.drawable.discover_rank_rising
+        DiscoverArtworkUi.RankingNew -> R.drawable.discover_rank_new
+        DiscoverArtworkUi.RankingHot -> R.drawable.discover_rank_hot
+        DiscoverArtworkUi.CategoryHeadphones -> R.drawable.discover_category_headphones
+        DiscoverArtworkUi.CategoryLive -> R.drawable.discover_category_live
+        DiscoverArtworkUi.CategoryHealing -> R.drawable.discover_category_healing
+    }

@@ -23,7 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,28 +40,31 @@ import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 
 @Composable
 internal fun DiscoverRoute(onPlaylist: () -> Unit = {}) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-    var selectedCategory by rememberSaveable { mutableIntStateOf(0) }
+    var selectedTabId by rememberSaveable { mutableStateOf(discoverDefaultContent.tabs.first().id) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf(discoverDefaultContent.categories.first().id) }
     DiscoverScreen(
-        state = DiscoverUiState.Content(discoverDesignPreview),
-        selectedTab = selectedTab,
-        selectedCategory = selectedCategory,
-        onTabSelected = { selectedTab = it },
-        onCategorySelected = { selectedCategory = it },
-        onPlaylist = onPlaylist,
+        state = DiscoverUiState.Content(discoverDefaultContent),
+        selectedTabId = selectedTabId,
+        selectedCategoryId = selectedCategoryId,
+        onAction = { action ->
+            when (action) {
+                is DiscoverAction.SelectTab -> selectedTabId = action.id
+                is DiscoverAction.SelectCategory -> selectedCategoryId = action.id
+                is DiscoverAction.OpenPlaylist -> onPlaylist()
+                is DiscoverAction.HeroPlay,
+                is DiscoverAction.RankingPlay,
+                -> Unit
+            }
+        },
     )
 }
 
 @Composable
 internal fun DiscoverScreen(
     state: DiscoverUiState,
-    selectedTab: Int = 0,
-    selectedCategory: Int = 0,
-    onTabSelected: (Int) -> Unit = {},
-    onCategorySelected: (Int) -> Unit = {},
-    onHeroPlay: () -> Unit = {},
-    onRankingPlay: (Int) -> Unit = {},
-    onPlaylist: () -> Unit = {},
+    selectedTabId: String = discoverDefaultContent.tabs.first().id,
+    selectedCategoryId: String = discoverDefaultContent.categories.first().id,
+    onAction: (DiscoverAction) -> Unit = {},
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val contentWidth = if (maxWidth >= 600.dp) 480.dp else maxWidth
@@ -71,8 +74,9 @@ internal fun DiscoverScreen(
         ) {
             Column {
                 DiscoverTabs(
-                    selectedIndex = selectedTab,
-                    onSelected = onTabSelected,
+                    tabs = (state as? DiscoverUiState.Content)?.value?.tabs ?: discoverDefaultContent.tabs,
+                    selectedId = selectedTabId,
+                    onAction = onAction,
                     modifier = Modifier.discoverLayoutProbe(DISCOVER_PROBE_TABS),
                 )
                 when (state) {
@@ -90,11 +94,8 @@ internal fun DiscoverScreen(
                     is DiscoverUiState.Content ->
                         DiscoverContent(
                             content = state.value,
-                            selectedCategory = selectedCategory,
-                            onCategorySelected = onCategorySelected,
-                            onHeroPlay = onHeroPlay,
-                            onRankingPlay = onRankingPlay,
-                            onPlaylist = onPlaylist,
+                            selectedCategoryId = selectedCategoryId,
+                            onAction = onAction,
                         )
                 }
             }
@@ -104,18 +105,11 @@ internal fun DiscoverScreen(
 
 @Composable
 private fun DiscoverTabs(
-    selectedIndex: Int,
-    onSelected: (Int) -> Unit,
+    tabs: List<DiscoverTabUi>,
+    selectedId: String,
+    onAction: (DiscoverAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val labels =
-        listOf(
-            stringResource(R.string.discover_tab_featured),
-            stringResource(R.string.discover_tab_playlists),
-            stringResource(R.string.discover_tab_new_songs),
-            stringResource(R.string.discover_tab_albums),
-            stringResource(R.string.discover_tab_ranking),
-        )
     val largeText = LocalDensity.current.fontScale >= 1.3f
     Box(modifier = modifier.fillMaxWidth().heightIn(min = DiscoverDimensions.tabsHeight)) {
         Row(
@@ -125,18 +119,18 @@ private fun DiscoverTabs(
                     .heightIn(min = DiscoverDimensions.tabsHeight)
                     .then(if (largeText) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
         ) {
-            labels.forEachIndexed { index, label ->
-                val selected = selectedIndex == index
+            tabs.forEach { tab ->
+                val selected = selectedId == tab.id
                 Box(
                     modifier =
                         Modifier
                             .then(if (largeText) Modifier.width(88.dp) else Modifier.weight(1f))
                             .heightIn(min = DiscoverDimensions.tabsHeight)
-                            .clickable { onSelected(index) },
+                            .clickable { onAction(DiscoverAction.SelectTab(tab.id)) },
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     Text(
-                        text = label,
+                        text = tab.label.displayName(),
                         modifier = Modifier.align(Alignment.Center).offset(y = 8.dp),
                         fontSize = 12.sp,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
@@ -162,11 +156,8 @@ private fun DiscoverTabs(
 @Composable
 private fun DiscoverContent(
     content: DiscoverContentUi,
-    selectedCategory: Int,
-    onCategorySelected: (Int) -> Unit,
-    onHeroPlay: () -> Unit,
-    onRankingPlay: (Int) -> Unit,
-    onPlaylist: () -> Unit,
+    selectedCategoryId: String,
+    onAction: (DiscoverAction) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().semantics { contentDescription = "discover-content" },
@@ -174,8 +165,8 @@ private fun DiscoverContent(
     ) {
         item {
             WeeklyHero(
-                artworkRes = content.heroArtworkRes,
-                onPlay = onHeroPlay,
+                model = content.hero,
+                onAction = onAction,
                 modifier = Modifier.discoverLayoutProbe(DISCOVER_PROBE_HERO),
             )
             Spacer(Modifier.height(8.dp))
@@ -186,7 +177,7 @@ private fun DiscoverContent(
             Spacer(Modifier.height(3.dp))
             RankingGrid(
                 rankings = content.rankings,
-                onPlay = onRankingPlay,
+                onAction = onAction,
                 modifier = Modifier.discoverLayoutProbe(DISCOVER_PROBE_RANKING_GRID),
             )
             Spacer(Modifier.height(5.dp))
@@ -197,16 +188,33 @@ private fun DiscoverContent(
             Spacer(Modifier.height(2.dp))
             CategoryChips(
                 categories = content.categories,
-                selectedIndex = selectedCategory,
-                onSelected = onCategorySelected,
+                selectedId = selectedCategoryId,
+                onAction = onAction,
                 modifier = Modifier.discoverLayoutProbe(DISCOVER_PROBE_CATEGORY_CHIPS),
             )
             Spacer(Modifier.height(10.dp))
             CategoryArtworkGrid(
-                artwork = content.categoryArtworkRes,
-                onPlaylist = onPlaylist,
+                playlists = content.playlists,
+                onAction = onAction,
                 modifier = Modifier.discoverLayoutProbe(DISCOVER_PROBE_CATEGORY_GRID),
             )
         }
     }
 }
+
+internal object DiscoverDimensions {
+    val tabsHeight = 68.dp
+    val horizontalPadding = 11.dp
+}
+
+@Composable
+private fun DiscoverTabLabelUi.displayName(): String =
+    stringResource(
+        when (this) {
+            DiscoverTabLabelUi.Featured -> R.string.discover_tab_featured
+            DiscoverTabLabelUi.Playlists -> R.string.discover_tab_playlists
+            DiscoverTabLabelUi.NewSongs -> R.string.discover_tab_new_songs
+            DiscoverTabLabelUi.Albums -> R.string.discover_tab_albums
+            DiscoverTabLabelUi.Ranking -> R.string.discover_tab_ranking
+        },
+    )

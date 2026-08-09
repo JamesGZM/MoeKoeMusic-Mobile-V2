@@ -18,4 +18,8 @@ internal sealed interface MyAction {
     data object ConfirmLogout : MyAction
 
     data object OpenFoundationLab : MyAction
+
+    data class ActivateEntry(
+        val id: MyEntryId,
+    ) : MyAction
 }

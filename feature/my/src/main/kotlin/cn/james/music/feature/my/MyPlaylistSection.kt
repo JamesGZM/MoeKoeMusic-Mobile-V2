@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -67,15 +68,17 @@ internal fun MyPlaylistSection(
             playlists.isEmpty() -> MyEmptyPlaylistState()
             else ->
                 playlists.forEachIndexed { index, playlist ->
-                    MyPlaylistRow(
-                        playlist = playlist,
-                        probeName =
-                            when (index) {
-                                1 -> MY_PROBE_PLAYLIST_ROW_2
-                                2 -> MY_PROBE_PLAYLIST_ROW_3
-                                else -> null
-                            },
-                    )
+                    key(playlist.id) {
+                        MyPlaylistRow(
+                            playlist = playlist,
+                            probeName =
+                                when (index) {
+                                    1 -> MY_PROBE_PLAYLIST_ROW_2
+                                    2 -> MY_PROBE_PLAYLIST_ROW_3
+                                    else -> null
+                                },
+                        )
+                    }
                 }
         }
     }

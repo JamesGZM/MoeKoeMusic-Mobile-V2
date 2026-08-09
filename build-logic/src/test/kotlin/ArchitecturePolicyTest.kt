@@ -105,6 +105,148 @@ class ArchitecturePolicyTest {
     }
 
     @Test
+    fun `Settings UI model 构造器拒绝领域类型但允许纯语义类型`() {
+        val root = createTempDirectory("moekoe-settings-ui-model-").toFile()
+        val legal =
+            writeSource(
+                root,
+                "feature/settings/src/main/kotlin/cn/james/music/feature/settings/SettingsUiModels.kt",
+                "data class SettingsUiState(val theme: SettingsThemeUi, val problem: SettingsProblemUi?)",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal)).isEmpty())
+
+        legal.writeText("data class SettingsUiState(val theme: AppThemePreference, val problem: AppSettingsProblem?)")
+        val violations = ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal))
+        assertTrue(violations.any { it.contains("AppThemePreference") })
+        assertTrue(violations.any { it.contains("AppSettingsProblem") })
+    }
+
+    @Test
+    fun `My UI model 拒绝领域类型和八个平行资产字段`() {
+        val root = createTempDirectory("moekoe-my-ui-model-").toFile()
+        val legal =
+            writeSource(
+                root,
+                "feature/my/src/main/kotlin/cn/james/music/feature/my/MyUiModels.kt",
+                "data class MyUiState(val problem: MyProfileProblemUi?)\ndata class MyLibraryUi(val quickEntries: List<MyEntryUi>)",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal)).isEmpty())
+
+        legal.writeText(
+            "data class MyUiState(val profile: UserProfile, val error: AuthError?)\n" +
+                "data class MyLibraryUi(val likedCount: String?, val followedFriendCount: String?)",
+        )
+        val violations = ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal))
+        assertTrue(violations.any { it.contains("UserProfile") })
+        assertTrue(violations.any { it.contains("AuthError") })
+        assertTrue(violations.any { it.contains("likedCount") })
+        assertTrue(violations.any { it.contains("followedFriendCount") })
+    }
+
+    @Test
+    fun `Discover 拒绝平行图片列表和 index 选择状态`() {
+        val root = createTempDirectory("moekoe-discover-selection-").toFile()
+        val legal =
+            writeSource(
+                root,
+                "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverModels.kt",
+                "data class DiscoverContentUi(val playlists: List<DiscoverPlaylistCardUi>)\nfun Screen(selectedTabId: String, selectedCategoryId: String) = Unit",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal)).isEmpty())
+
+        legal.writeText(
+            "data class DiscoverContentUi(val categoryArtworkRes: List<Int>)\n" +
+                "fun Screen(selectedTab: Int, selectedCategory: Int) = Unit",
+        )
+        val violations = ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal))
+        assertTrue(violations.any { it.contains("categoryArtworkRes") })
+        assertEquals(2, violations.count { it.contains("stable id") })
+    }
+
+    @Test
+    fun `Discover UI model 拒绝视觉和布局字段`() {
+        val root = createTempDirectory("moekoe-discover-visual-model-").toFile()
+        val legal =
+            writeSource(
+                root,
+                "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverModels.kt",
+                "data class DiscoverRankingUi(val id: String, val tone: DiscoverRankingToneUi)",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal)).isEmpty())
+
+        legal.writeText("data class DiscoverRankingUi(val badge: Color, val itemPadding: Dp, val layoutMode: String)")
+        val violations = ArchitecturePolicy.validateFeatureEntryModels(root, listOf(legal))
+        assertTrue(violations.any { it.contains("Color") })
+        assertTrue(violations.any { it.contains("Dp") })
+        assertTrue(violations.any { it.contains("layoutMode") })
+    }
+
+    @Test
+    fun `三组 Feature 展示模型必须声明 Immutable`() {
+        val root = createTempDirectory("moekoe-immutable-feature-model-").toFile()
+        val settings =
+            writeSource(
+                root,
+                "feature/settings/src/main/kotlin/cn/james/music/feature/settings/SettingsUiModels.kt",
+                "@Immutable\ninternal data class SettingsUiState(val theme: String)",
+            )
+        val my =
+            writeSource(
+                root,
+                "feature/my/src/main/kotlin/cn/james/music/feature/my/MyUiModels.kt",
+                "@Immutable\ninternal sealed interface MyAccountUiState",
+            )
+        val discover =
+            writeSource(
+                root,
+                "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverModels.kt",
+                "@Immutable\ninternal enum class DiscoverRankingToneUi { Rising }\ninternal sealed interface DiscoverAction",
+            )
+
+        assertTrue(ArchitecturePolicy.validateImmutableFeatureModels(root, listOf(settings, my, discover)).isEmpty())
+
+        discover.writeText("internal data class DiscoverContentUi(val id: String)")
+        assertTrue(
+            ArchitecturePolicy
+                .validateImmutableFeatureModels(root, listOf(settings, my, discover))
+                .single()
+                .contains("DiscoverContentUi"),
+        )
+    }
+
+    @Test
+    fun `Discover 默认分类拒绝由 index 生成 stable id`() {
+        val root = createTempDirectory("moekoe-discover-semantic-id-").toFile()
+        val source =
+            writeSource(
+                root,
+                "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverModels.kt",
+                "val discoverDefaultContent = listOf(DiscoverCategoryUi(\"pop\", \"流行\"))",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(source)).isEmpty())
+
+        source.writeText(
+            "val discoverDefaultContent = labels.mapIndexed { index, label -> DiscoverCategoryUi(\"category-\$index\", label) }",
+        )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(source)).single().contains("mapIndexed"))
+    }
+
+    @Test
+    fun `My Navigation 禁止临时拼接两组 entry`() {
+        val root = createTempDirectory("moekoe-my-entry-resolution-").toFile()
+        val source =
+            writeSource(
+                root,
+                "feature/my/src/main/kotlin/cn/james/music/feature/my/MyNavigation.kt",
+                "fun route() = state.library.actionFor(id)",
+            )
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(source)).isEmpty())
+
+        source.writeText("fun route() = (state.library.quickEntries + state.library.collectionEntries).firstOrNull()")
+        assertTrue(ArchitecturePolicy.validateFeatureEntryModels(root, listOf(source)).single().contains("join"))
+    }
+
+    @Test
     fun `legacy MoeSongRow 路径数量与视觉参数必须精确冻结`() {
         val root = createTempDirectory("moekoe-legacy-song-row-").toFile()
         val path = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeSections.kt"

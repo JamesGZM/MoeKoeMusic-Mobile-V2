@@ -40,8 +40,8 @@ fun DiscoverSelectionRestoredScreenshot() =
     DiscoverScreenshotContent(
         state = contentState,
         themeMode = ThemeMode.Light,
-        selectedTab = 4,
-        selectedCategory = 3,
+        selectedTabId = "ranking",
+        selectedCategoryId = "light",
     )
 
 @PreviewTest
@@ -83,18 +83,18 @@ fun DiscoverErrorScreenshot() = DiscoverScreenshotContent(DiscoverUiState.Error,
 private fun DiscoverScreenshotContent(
     state: DiscoverUiState,
     themeMode: ThemeMode,
-    selectedTab: Int = 0,
-    selectedCategory: Int = 0,
+    selectedTabId: String = discoverDefaultContent.tabs.first().id,
+    selectedCategoryId: String = discoverDefaultContent.categories.first().id,
 ) {
     MoeKoeTheme(themeMode = themeMode) {
         Surface {
             DiscoverScreen(
                 state = state,
-                selectedTab = selectedTab,
-                selectedCategory = selectedCategory,
+                selectedTabId = selectedTabId,
+                selectedCategoryId = selectedCategoryId,
             )
         }
     }
 }
 
-private val contentState = DiscoverUiState.Content(discoverDesignPreview)
+private val contentState = DiscoverUiState.Content(discoverDefaultContent)

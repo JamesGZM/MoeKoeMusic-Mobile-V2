@@ -47,7 +47,7 @@ class SettingsViewModelTest {
             val viewModel = SettingsViewModel(repository)
             runCurrent()
 
-            assertEquals(AppThemePreference.Dark, viewModel.state.value.theme)
+            assertEquals(SettingsThemeUi.Dark, viewModel.state.value.theme)
             repository.settingsState.value =
                 AppSettingsSnapshot(
                     settings = AppSettings(AppThemePreference.System),
@@ -55,8 +55,8 @@ class SettingsViewModelTest {
                 )
             runCurrent()
 
-            assertEquals(AppThemePreference.System, viewModel.state.value.theme)
-            assertEquals(AppSettingsProblem.Read, viewModel.state.value.problem)
+            assertEquals(SettingsThemeUi.System, viewModel.state.value.theme)
+            assertEquals(SettingsProblemUi.Read, viewModel.state.value.problem)
         }
 
     @Test
@@ -66,10 +66,10 @@ class SettingsViewModelTest {
             val viewModel = SettingsViewModel(repository)
             runCurrent()
 
-            viewModel.selectTheme(AppThemePreference.Amoled)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Amoled))
             advanceUntilIdle()
 
-            assertEquals(AppThemePreference.Amoled, viewModel.state.value.theme)
+            assertEquals(SettingsThemeUi.Amoled, viewModel.state.value.theme)
             assertEquals(null, viewModel.state.value.savingTheme)
             assertEquals(listOf(AppThemePreference.Amoled), repository.requests)
         }
@@ -82,18 +82,18 @@ class SettingsViewModelTest {
             val viewModel = SettingsViewModel(repository)
             runCurrent()
 
-            viewModel.selectTheme(AppThemePreference.Light)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Light))
             advanceUntilIdle()
 
-            assertEquals(AppThemePreference.Dark, viewModel.state.value.theme)
-            assertEquals(AppSettingsProblem.Write, viewModel.state.value.problem)
+            assertEquals(SettingsThemeUi.Dark, viewModel.state.value.theme)
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
             assertTrue(viewModel.state.value.canRetry)
 
             repository.result = AppSettingsUpdateResult.Success
-            viewModel.retry()
+            viewModel.onAction(SettingsAction.Retry)
             advanceUntilIdle()
 
-            assertEquals(AppThemePreference.Light, viewModel.state.value.theme)
+            assertEquals(SettingsThemeUi.Light, viewModel.state.value.theme)
             assertFalse(viewModel.state.value.canRetry)
         }
 
@@ -104,16 +104,16 @@ class SettingsViewModelTest {
             val viewModel = SettingsViewModel(repository)
             runCurrent()
 
-            viewModel.showThemeSelection()
+            viewModel.onAction(SettingsAction.OpenTheme)
             assertEquals(SettingsOverlay.ThemeSelection, viewModel.state.value.overlay)
 
-            viewModel.selectTheme(AppThemePreference.Dark)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
             assertEquals(null, viewModel.state.value.overlay)
             advanceUntilIdle()
 
-            viewModel.showAbout()
+            viewModel.onAction(SettingsAction.OpenAbout)
             assertEquals(SettingsOverlay.About, viewModel.state.value.overlay)
-            viewModel.dismissOverlay()
+            viewModel.onAction(SettingsAction.DismissOverlay)
             assertEquals(null, viewModel.state.value.overlay)
         }
 
@@ -124,19 +124,19 @@ class SettingsViewModelTest {
             val viewModel = SettingsViewModel(repository)
             runCurrent()
 
-            viewModel.selectTheme(AppThemePreference.Dark)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
             runCurrent()
-            viewModel.selectTheme(AppThemePreference.Light)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Light))
             runCurrent()
 
             repository.complete(AppThemePreference.Dark)
             runCurrent()
-            assertEquals(AppThemePreference.System, viewModel.state.value.theme)
-            assertEquals(AppThemePreference.Light, viewModel.state.value.savingTheme)
+            assertEquals(SettingsThemeUi.System, viewModel.state.value.theme)
+            assertEquals(SettingsThemeUi.Light, viewModel.state.value.savingTheme)
 
             repository.complete(AppThemePreference.Light)
             advanceUntilIdle()
-            assertEquals(AppThemePreference.Light, viewModel.state.value.theme)
+            assertEquals(SettingsThemeUi.Light, viewModel.state.value.theme)
             assertEquals(null, viewModel.state.value.savingTheme)
         }
 

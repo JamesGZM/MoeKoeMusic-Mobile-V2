@@ -79,7 +79,7 @@ class MyViewModelTest {
             runCurrent()
 
             assertTrue(viewModel.state.value.account is MyAccountUiState.Authenticated)
-            assertEquals(UserProfileError.Timeout, viewModel.state.value.refreshError)
+            assertEquals(MyProfileProblemUi.Timeout, viewModel.state.value.refreshProblem)
         }
 
     @Test
@@ -140,7 +140,7 @@ class MyViewModelTest {
             runCurrent()
 
             assertTrue(viewModel.state.value.account is MyAccountUiState.Authenticated)
-            assertEquals(AuthError.Storage, viewModel.state.value.logoutError)
+            assertEquals(MyLogoutProblemUi.Storage, viewModel.state.value.logoutProblem)
             assertFalse(viewModel.state.value.loggingOut)
         }
 
@@ -164,7 +164,7 @@ class MyViewModelTest {
             assertTrue(viewModel.state.value.loggingOut)
             runCurrent()
             assertTrue(viewModel.state.value.account is MyAccountUiState.Authenticated)
-            assertEquals(AuthError.Storage, viewModel.state.value.logoutError)
+            assertEquals(MyLogoutProblemUi.Storage, viewModel.state.value.logoutProblem)
             assertFalse(viewModel.state.value.refreshing)
         }
 

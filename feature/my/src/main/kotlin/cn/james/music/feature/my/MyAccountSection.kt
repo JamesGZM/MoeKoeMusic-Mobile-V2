@@ -62,7 +62,7 @@ internal fun MyAccountSection(
         MyAccountUiState.Anonymous -> MyAnonymousAccountCard(onAction)
         is MyAccountUiState.Failure ->
             MyFailureAccountCard(
-                message = account.error.profileMessage(),
+                message = account.problem.profileMessage(),
                 onRetry = { onAction(MyAction.RefreshProfile) },
             )
         is MyAccountUiState.Authenticated ->

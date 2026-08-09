@@ -78,7 +78,7 @@ internal fun DiscoverSectionTitle(
 @Composable
 internal fun RankingGrid(
     rankings: List<DiscoverRankingUi>,
-    onPlay: (Int) -> Unit,
+    onAction: (DiscoverAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (LocalDensity.current.fontScale >= 1.3f) {
@@ -87,7 +87,11 @@ internal fun RankingGrid(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             rankings.take(3).forEachIndexed { index, ranking ->
-                RankingLargeTextRow(ranking = ranking, rank = index + 1, onPlay = { onPlay(index) })
+                RankingLargeTextRow(
+                    ranking = ranking,
+                    rank = index + 1,
+                    onPlay = { onAction(DiscoverAction.RankingPlay(ranking.id)) },
+                )
             }
         }
         return
@@ -100,7 +104,7 @@ internal fun RankingGrid(
             Column(modifier = Modifier.weight(1f)) {
                 Box {
                     Image(
-                        painter = painterResource(ranking.artworkRes),
+                        painter = painterResource(ranking.artwork.drawableRes()),
                         contentDescription = ranking.title,
                         modifier = Modifier.fillMaxWidth().aspectRatio(1.1f).clip(RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Crop,
@@ -108,7 +112,7 @@ internal fun RankingGrid(
                     Surface(
                         modifier = Modifier.padding(6.dp).size(24.dp),
                         shape = RoundedCornerShape(4.dp),
-                        color = ranking.badgeColor,
+                        color = ranking.tone.color(),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
@@ -129,7 +133,7 @@ internal fun RankingGrid(
                 )
                 ranking.songs.take(2).forEachIndexed { songIndex, song ->
                     Text(
-                        text = "${songIndex + 1}. $song",
+                        text = "${songIndex + 1}. ${song.text}",
                         modifier = Modifier.padding(top = 3.dp),
                         fontSize = 11.sp,
                         lineHeight = 14.sp,
@@ -139,7 +143,11 @@ internal fun RankingGrid(
                     )
                 }
                 Row(
-                    modifier = Modifier.padding(top = 2.dp).height(24.dp).clickable { onPlay(index) },
+                    modifier =
+                        Modifier
+                            .padding(top = 2.dp)
+                            .height(24.dp)
+                            .clickable { onAction(DiscoverAction.RankingPlay(ranking.id)) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Surface(
@@ -180,7 +188,7 @@ private fun RankingLargeTextRow(
     ) {
         Box {
             Image(
-                painter = painterResource(ranking.artworkRes),
+                painter = painterResource(ranking.artwork.drawableRes()),
                 contentDescription = ranking.title,
                 modifier = Modifier.size(96.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop,
@@ -188,7 +196,7 @@ private fun RankingLargeTextRow(
             Surface(
                 modifier = Modifier.padding(5.dp).size(24.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = ranking.badgeColor,
+                color = ranking.tone.color(),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text("$rank", color = Color.White, style = MaterialTheme.typography.labelMedium)
@@ -205,7 +213,7 @@ private fun RankingLargeTextRow(
             )
             ranking.songs.take(2).forEachIndexed { index, song ->
                 Text(
-                    text = "${index + 1}. $song",
+                    text = "${index + 1}. ${song.text}",
                     modifier = Modifier.padding(top = 2.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -228,3 +236,10 @@ private fun RankingLargeTextRow(
         }
     }
 }
+
+private fun DiscoverRankingToneUi.color(): Color =
+    when (this) {
+        DiscoverRankingToneUi.Rising -> Color(0xFFFF5A75)
+        DiscoverRankingToneUi.New -> Color(0xFF9564E8)
+        DiscoverRankingToneUi.Hot -> Color(0xFFFF8A2A)
+    }

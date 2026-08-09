@@ -1,6 +1,5 @@
 package cn.james.music.feature.discover
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,8 +38,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun WeeklyHero(
-    @DrawableRes artworkRes: Int,
-    onPlay: () -> Unit,
+    model: DiscoverHeroUi,
+    onAction: (DiscoverAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -54,7 +53,7 @@ internal fun WeeklyHero(
                 .semantics { contentDescription = "discover-weekly-hero" },
     ) {
         Image(
-            painter = painterResource(artworkRes),
+            painter = painterResource(model.artwork.drawableRes()),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -86,7 +85,7 @@ internal fun WeeklyHero(
                 fontSize = 13.sp,
                 color = Color(0xFF5F6368),
             )
-            DiscoverHeroButton(onClick = onPlay)
+            DiscoverHeroButton(onClick = { onAction(DiscoverAction.HeroPlay(model.id)) })
         }
     }
 }

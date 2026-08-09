@@ -50,18 +50,18 @@ internal fun MyScreen(
                     onAction = onAction,
                 )
             }
-            state.refreshError?.let { error ->
+            state.refreshProblem?.let { problem ->
                 item(key = "refresh-error") {
                     MyInlineFailure(
-                        message = error.profileMessage(),
+                        message = problem.profileMessage(),
                         onRetry = { onAction(MyAction.RefreshProfile) },
                     )
                 }
             }
-            state.logoutError?.let { error ->
+            state.logoutProblem?.let { problem ->
                 item(key = "logout-error") {
                     MyInlineFailure(
-                        message = error.logoutMessage(),
+                        message = problem.logoutMessage(),
                         onRetry = { onAction(MyAction.RequestLogout) },
                     )
                 }
@@ -69,8 +69,7 @@ internal fun MyScreen(
             item(key = "quick-entries") {
                 Box(Modifier.padding(top = 12.dp)) {
                     MyQuickEntries(
-                        account = state.account,
-                        library = state.library,
+                        entries = state.library.quickEntries,
                         onAction = onAction,
                     )
                 }
@@ -78,8 +77,7 @@ internal fun MyScreen(
             item(key = "collection") {
                 Box(Modifier.padding(top = 8.dp)) {
                     MyCollectionSection(
-                        account = state.account,
-                        library = state.library,
+                        entries = state.library.collectionEntries,
                         onAction = onAction,
                     )
                 }

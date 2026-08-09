@@ -66,6 +66,13 @@ private fun MyRoute(
                 MyAction.DismissLogout -> viewModel.dismissLogout()
                 MyAction.ConfirmLogout -> viewModel.confirmLogout()
                 MyAction.OpenFoundationLab -> onFoundationLab()
+                is MyAction.ActivateEntry -> {
+                    when (state.library.actionFor(action.id)) {
+                        MyEntryActionId.AccountAsset -> onLogin()
+                        MyEntryActionId.LocalMusic -> onLocalMusic()
+                        null -> Unit
+                    }
+                }
             }
         },
         showFoundationLab = showFoundationLab,

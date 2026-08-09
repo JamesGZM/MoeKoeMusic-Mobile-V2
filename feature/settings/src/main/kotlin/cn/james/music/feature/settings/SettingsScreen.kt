@@ -12,26 +12,18 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.model.settings.AppSettingsProblem
-import cn.james.music.core.model.settings.AppThemePreference
 
 @Composable
 internal fun SettingsScreen(
     state: SettingsUiState,
-    onBack: () -> Unit,
-    onThemeSelected: (AppThemePreference) -> Unit,
-    onThemeDialogRequest: () -> Unit,
-    onAboutDialogRequest: () -> Unit,
-    onDismissOverlay: () -> Unit,
-    onRetry: () -> Unit,
-    onDismissProblem: () -> Unit,
+    onAction: (SettingsAction) -> Unit,
 ) {
     Scaffold(
         topBar = {
             MoeStandardTopBar(
                 title = stringResource(R.string.settings_title),
                 navigationContentDescription = stringResource(R.string.settings_back),
-                onNavigateBack = onBack,
+                onNavigateBack = { onAction(SettingsAction.Back) },
                 modifier = Modifier.settingsLayoutProbe(SETTINGS_PROBE_TOOLBAR),
             )
         },
@@ -41,14 +33,16 @@ internal fun SettingsScreen(
                     message =
                         stringResource(
                             when (problem) {
-                                AppSettingsProblem.Read -> R.string.settings_read_failed
-                                AppSettingsProblem.Write -> R.string.settings_write_failed
+                                SettingsProblemUi.Read -> R.string.settings_read_failed
+                                SettingsProblemUi.Write -> R.string.settings_write_failed
                             },
                         ),
                     modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
                     tone = MoeSnackbarTone.Error,
                     actionLabel = if (state.canRetry) stringResource(R.string.settings_retry) else stringResource(R.string.settings_dismiss),
-                    onAction = if (state.canRetry) onRetry else onDismissProblem,
+                    onAction = {
+                        onAction(if (state.canRetry) SettingsAction.Retry else SettingsAction.DismissProblem)
+                    },
                 )
             }
         },
@@ -58,9 +52,8 @@ internal fun SettingsScreen(
             contentAlignment = Alignment.TopCenter,
         ) {
             SettingsContent(
-                state = state,
-                onThemeDialogRequest = onThemeDialogRequest,
-                onAboutDialogRequest = onAboutDialogRequest,
+                groups = state.groups,
+                onAction = onAction,
             )
         }
     }
@@ -70,10 +63,9 @@ internal fun SettingsScreen(
             ThemeSelectionDialog(
                 selected = state.theme,
                 saving = state.savingTheme,
-                onSelect = onThemeSelected,
-                onDismiss = onDismissOverlay,
+                onAction = onAction,
             )
-        SettingsOverlay.About -> AboutDialog(onDismiss = onDismissOverlay)
+        SettingsOverlay.About -> AboutDialog(onAction = onAction)
         null -> Unit
     }
 }

@@ -18,62 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class MyProfileUi(
-    val userId: String,
-    val nickname: String?,
-    val avatarUrl: String?,
-    val vipLabel: String?,
-    val vipUnavailable: Boolean,
-)
-
-internal data class MyLibraryUi(
-    val likedCount: String? = null,
-    val recentCount: String? = null,
-    val localCount: String? = null,
-    val cloudSize: String? = null,
-    val savedPlaylistCount: String? = null,
-    val savedAlbumCount: String? = null,
-    val followedArtistCount: String? = null,
-    val followedFriendCount: String? = null,
-    val playlists: List<MyPlaylistUi> = emptyList(),
-)
-
-internal data class MyPlaylistUi(
-    val title: String,
-    val supportingText: String,
-    val artwork: MyPlaylistArtwork,
-)
-
-internal enum class MyPlaylistArtwork {
-    Liked,
-    Acg,
-    NightRadio,
-}
-
-internal sealed interface MyAccountUiState {
-    data object Loading : MyAccountUiState
-
-    data object Anonymous : MyAccountUiState
-
-    data class Authenticated(
-        val profile: MyProfileUi,
-    ) : MyAccountUiState
-
-    data class Failure(
-        val error: UserProfileError,
-    ) : MyAccountUiState
-}
-
-internal data class MyUiState(
-    val account: MyAccountUiState = MyAccountUiState.Loading,
-    val library: MyLibraryUi = MyLibraryUi(),
-    val refreshing: Boolean = false,
-    val refreshError: UserProfileError? = null,
-    val showLogoutConfirmation: Boolean = false,
-    val loggingOut: Boolean = false,
-    val logoutError: AuthError? = null,
-)
-
 @HiltViewModel
 internal class MyViewModel
     @Inject
@@ -99,14 +43,18 @@ internal class MyViewModel
                         mutableState.value.copy(
                             account = if (hasStableContent) previousAccount else MyAccountUiState.Loading,
                             refreshing = previousAccount is MyAccountUiState.Authenticated,
-                            refreshError = null,
-                            logoutError = null,
+                            refreshProblem = null,
+                            logoutProblem = null,
                         )
                     val result = profileRepository.load()
                     if (generation != refreshGeneration) return@launch
                     when (result) {
                         UserProfileResult.Anonymous -> {
-                            mutableState.value = MyUiState(account = MyAccountUiState.Anonymous)
+                            mutableState.value =
+                                MyUiState(
+                                    account = MyAccountUiState.Anonymous,
+                                    library = mutableState.value.library.withAccountAssetsAvailable(true),
+                                )
                         }
 
                         is UserProfileResult.Failure -> {
@@ -115,11 +63,11 @@ internal class MyViewModel
                                     mutableState.value.copy(
                                         account = previousAccount,
                                         refreshing = false,
-                                        refreshError = result.error,
+                                        refreshProblem = result.error.toUi(),
                                     )
                                 } else {
                                     mutableState.value.copy(
-                                        account = MyAccountUiState.Failure(result.error),
+                                        account = MyAccountUiState.Failure(result.error.toUi()),
                                         refreshing = false,
                                     )
                                 }
@@ -129,6 +77,7 @@ internal class MyViewModel
                             mutableState.value =
                                 mutableState.value.copy(
                                     account = MyAccountUiState.Authenticated(result.profile.toUi()),
+                                    library = mutableState.value.library.withAccountAssetsAvailable(false),
                                     refreshing = false,
                                 )
                         }
@@ -138,7 +87,7 @@ internal class MyViewModel
 
         fun requestLogout() {
             if (mutableState.value.account !is MyAccountUiState.Authenticated || mutableState.value.loggingOut) return
-            mutableState.value = mutableState.value.copy(showLogoutConfirmation = true, logoutError = null)
+            mutableState.value = mutableState.value.copy(showLogoutConfirmation = true, logoutProblem = null)
         }
 
         fun dismissLogout() {
@@ -155,16 +104,20 @@ internal class MyViewModel
                     refreshing = false,
                     showLogoutConfirmation = false,
                     loggingOut = true,
-                    logoutError = null,
+                    logoutProblem = null,
                 )
             viewModelScope.launch {
                 when (val result = authRepository.logout()) {
                     AuthActionResult.Success -> {
-                        mutableState.value = MyUiState(account = MyAccountUiState.Anonymous)
+                        mutableState.value =
+                            MyUiState(
+                                account = MyAccountUiState.Anonymous,
+                                library = mutableState.value.library.withAccountAssetsAvailable(true),
+                            )
                     }
 
                     is AuthActionResult.Failure -> {
-                        mutableState.value = mutableState.value.copy(loggingOut = false, logoutError = result.error)
+                        mutableState.value = mutableState.value.copy(loggingOut = false, logoutProblem = result.error.toLogoutUi())
                     }
                 }
             }
@@ -180,4 +133,31 @@ internal class MyViewModel
                 vipUnavailable = vip is VipSummary.Unavailable,
             )
         }
+
+        private fun UserProfileError.toUi(): MyProfileProblemUi =
+            when (this) {
+                UserProfileError.SessionInitialization -> MyProfileProblemUi.SessionInitialization
+                UserProfileError.Offline -> MyProfileProblemUi.Offline
+                UserProfileError.Timeout -> MyProfileProblemUi.Timeout
+                UserProfileError.Connection -> MyProfileProblemUi.Connection
+                UserProfileError.ServiceUnavailable -> MyProfileProblemUi.ServiceUnavailable
+                UserProfileError.VerificationRequired -> MyProfileProblemUi.VerificationRequired
+                UserProfileError.Rejected -> MyProfileProblemUi.Rejected
+                UserProfileError.Protocol -> MyProfileProblemUi.Protocol
+            }
+
+        private fun AuthError.toLogoutUi(): MyLogoutProblemUi =
+            when (this) {
+                AuthError.Storage,
+                AuthError.SessionInitialization,
+                -> MyLogoutProblemUi.Storage
+
+                AuthError.Offline,
+                AuthError.Timeout,
+                AuthError.Connection,
+                AuthError.ServiceUnavailable,
+                AuthError.Rejected,
+                AuthError.Protocol,
+                -> MyLogoutProblemUi.Retry
+            }
     }

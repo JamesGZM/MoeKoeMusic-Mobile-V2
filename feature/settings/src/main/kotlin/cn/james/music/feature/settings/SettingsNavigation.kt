@@ -16,13 +16,19 @@ fun NavGraphBuilder.settingsDestination(onBack: () -> Unit) {
         val state by viewModel.state.collectAsStateWithLifecycle()
         SettingsScreen(
             state = state,
-            onBack = onBack,
-            onThemeSelected = viewModel::selectTheme,
-            onThemeDialogRequest = viewModel::showThemeSelection,
-            onAboutDialogRequest = viewModel::showAbout,
-            onDismissOverlay = viewModel::dismissOverlay,
-            onRetry = viewModel::retry,
-            onDismissProblem = viewModel::dismissProblem,
+            onAction = { action ->
+                when (action) {
+                    SettingsAction.Back -> onBack()
+
+                    is SettingsAction.SelectTheme,
+                    SettingsAction.OpenTheme,
+                    SettingsAction.OpenAbout,
+                    SettingsAction.DismissOverlay,
+                    SettingsAction.Retry,
+                    SettingsAction.DismissProblem,
+                    -> viewModel.onAction(action)
+                }
+            },
         )
     }
 }
