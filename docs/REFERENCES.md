@@ -15,6 +15,7 @@
 - [UI 设计交付、屏幕适配与视觉验收](reference-audits/16-ui-design-handoff-and-adaptation.md)
 - [设置与应用偏好](reference-audits/18-settings-and-preferences.md)
 - [品牌主题色与全局配色](reference-audits/25-brand-theme-color.md)
+- [缓存管理与清理范围](reference-audits/26-cache-management.md)
 - [歌单详情纯 UI 与 Feature 所有权](reference-audits/19-playlist-detail-ui.md)
 - [Agent Skills 与可执行开发门禁](reference-audits/22-agent-skills-development-system.md)
 - [数据驱动公共 UI 架构与迁移准入](reference-audits/23-data-driven-ui-architecture.md)
@@ -195,6 +196,8 @@
 设置与应用偏好的 DataStore 所有权、主题即时/持久生效、独立 Feature 导航、失败恢复和确认稿渐进交付边界见 [`reference-audits/18-settings-and-preferences.md`](reference-audits/18-settings-and-preferences.md)。审计固定 Now in Android `7d45eae4` 的 DataStore/Settings 链路与 Metrolist `289ed45` 的音乐设置分组源码；后者为 GPL-3.0，只学习状态和布局策略，不复制代码。首批不新增依赖，只实现有真实消费者的主题与关于分组。
 
 品牌主题色的六档来源、Android 默认蓝优先、Material color roles、DataStore 边界和拒绝系统 Monet 的理由见 [`reference-audits/25-brand-theme-color.md`](reference-audits/25-brand-theme-color.md)。本次实际核对 PC `52c9833` 的 `src/config/settings.js` / `src/utils/utils.js`、旧 Mobile `ab71195` 的 `src/constants/accents.ts` / `src/hooks/use-palette.ts` / `src/features/settings/store.ts` / `src/app/settings.tsx`、Now in Android `7d45eae4` 的 `core/datastore/src/main/kotlin/com/google/samples/apps/nowinandroid/core/datastore/NiaPreferencesDataSource.kt`，以及 Android 官方 Material 3、Custom Design System 与 Preferences DataStore 文档；仅采用状态、所有权和语义角色原则，不复制 GPL 代码。
+
+缓存清理的白名单、Room/Coil 失效边界和 CacheLimit 拆分见 [`reference-audits/26-cache-management.md`](reference-audits/26-cache-management.md)。本次实际核对 PC `52c9833` 的 Settings/config、旧 Mobile `ab71195` 的 Settings storage、Coil `51638b0` 的 `SingletonImageLoader` / `MemoryCache` / `DiskCache`（Apache-2.0）、AntennaPod `d39bf05` 的 episode cleanup strategy（GPL-3.0-only，仅参考“容量策略独立”）以及 Android 官方 app-specific storage / Room asynchronous queries 文档；不复制 GPL 代码，不调用全设备清缓存 Intent。
 
 歌单详情确认稿的纯 UI 范围、独立 `:feature:playlist` 所有权、类型安全子页面导航、应用壳 MiniPlayer 边界和事件端口见 [`reference-audits/19-playlist-detail-ui.md`](reference-audits/19-playlist-detail-ui.md)。审计复用 Now in Android `7d45eae4` 与 Compose Samples `84788c81` 的 Apache-2.0 模块和 UI 分层原则，不复制页面实现、不新增依赖，也不把设计示例数据写入业务层。
 

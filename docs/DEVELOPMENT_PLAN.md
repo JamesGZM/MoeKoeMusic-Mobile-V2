@@ -56,7 +56,7 @@
 
 用户主页确认稿 UI 已按 [`design/USER_PROFILE_LAYOUT_SPEC.md`](design/USER_PROFILE_LAYOUT_SPEC.md) 落入独立 `:feature:profile`，由已登录“我的”资料区进入类型安全子页面；标准 Toolbar、资料 Hero、关系统计、编辑资料、听歌概览、公开歌单、空态、离线、长文本、宽屏与两档大字体重排均已覆盖，`user-profile.content.light` 结构 contract、三锚点 probe、13 组截图及归一化并排、叠加和差异证据均已通过。页面数据为设计预览，真实关系、听歌统计、编辑、分享与公开歌单协议继续独立接入。
 
-设置页确认稿 UI 已按 `09-settings.png` 完整恢复外观、播放与音质、歌词、存储、其他五个分组及 14 个 Item，并使用统一最小触控高度和单一长页面滚动；主题、关于与默认开启的“播放失败时自动跳过”保持真实交互。自动跳过在下一次不可恢复播放错误生效，关闭时暂停且不取消已开始的地址刷新或已排队恢复；“默认音质”已完成 [`24-default-playback-quality`](reference-audits/24-default-playback-quality.md) 的领域偏好、登录态候选回退、短期 resolved-quality runtime state、真实 Settings Dialog 和 Player/MiniPlayer 实际角标闭环，真实服务与真机验证仍独立。[`25-brand-theme-color`](reference-audits/25-brand-theme-color.md) 的六档全局品牌色预设已完成领域、Design System、app 消费与 Settings 的代码/语义：默认天空蓝严格保持当前 Light/Dark/AMOLED 色表，五种非蓝状态和 Dialog 基线已受限更新；最终视觉门禁和指定真机验证仍待完成。其余尚无消费者的能力只呈现静态视觉，不持久化假值或展示假缓存容量。
+设置页确认稿 UI 已按 `09-settings.png` 完整恢复外观、播放与音质、歌词、存储、其他五个分组及 14 个 Item，并使用统一最小触控高度和单一长页面滚动；主题、关于与默认开启的“播放失败时自动跳过”保持真实交互。自动跳过在下一次不可恢复播放错误生效，关闭时暂停且不取消已开始的地址刷新或已排队恢复；“默认音质”已完成 [`24-default-playback-quality`](reference-audits/24-default-playback-quality.md) 的领域偏好、登录态候选回退、短期 resolved-quality runtime state、真实 Settings Dialog 和 Player/MiniPlayer 实际角标闭环，真实服务与真机验证仍独立。[`25-brand-theme-color`](reference-audits/25-brand-theme-color.md) 的六档全局品牌色预设已完成领域、Design System、app 消费与 Settings 的代码/语义：默认天空蓝严格保持当前 Light/Dark/AMOLED 色表，五种非蓝状态和 Dialog 基线已受限更新；最终视觉门禁和指定真机验证仍待完成。[`26-cache-management`](reference-audits/26-cache-management.md) 已批准“清理缓存”作为独立 Android 闭环：仅清首页/歌词 Room 内容缓存与 Coil singleton image cache，绝不清本地音乐、播放恢复、会话、DataStore 或数据库其他表；CacheLimit 因缺少容量/淘汰产品定义而继续 Deferred。其余尚无消费者的能力只呈现静态视觉，不持久化假值或展示假缓存容量。
 
 ## UI 实现基线
 
