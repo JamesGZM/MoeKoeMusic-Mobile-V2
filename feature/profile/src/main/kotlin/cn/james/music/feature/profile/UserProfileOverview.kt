@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.james.music.core.designsystem.component.MoePassiveOutline
+import cn.james.music.core.designsystem.component.MoeVerticalDivider
 
 @Composable
 internal fun ProfileSectionTitle(title: String) {
@@ -50,7 +51,7 @@ internal fun ListeningOverview(profile: UserProfileUi) {
                 .userProfileLayoutProbe(PROBE_OVERVIEW),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+        border = MoePassiveOutline(),
     ) {
         if (largeText) {
             Column(Modifier.padding(vertical = 10.dp)) {
@@ -74,14 +75,14 @@ internal fun ListeningOverview(profile: UserProfileUi) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 OverviewItem(profile.levelLabel, null, stringResource(R.string.profile_level), Modifier.weight(1f))
-                VerticalDivider(Modifier.height(38.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                MoeVerticalDivider(Modifier.height(38.dp))
                 OverviewItem(
                     profile.listeningDurationValue,
                     stringResource(R.string.profile_hours_unit),
                     stringResource(R.string.profile_listening_duration),
                     Modifier.weight(1f),
                 )
-                VerticalDivider(Modifier.height(38.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                MoeVerticalDivider(Modifier.height(38.dp))
                 OverviewItem(
                     profile.musicAgeValue,
                     stringResource(R.string.profile_years_unit),

@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoePassiveOutline
+import cn.james.music.core.designsystem.component.MoeVerticalDivider
 
 @Composable
 internal fun MyQuickEntries(
@@ -53,7 +54,7 @@ internal fun MyQuickEntries(
         modifier = Modifier.myLayoutProbe(MY_PROBE_QUICK_ENTRIES),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = MoePassiveOutline(),
     ) {
         if (largeText) {
             Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
@@ -154,7 +155,7 @@ internal fun MyCollectionSection(
             modifier = Modifier.myLayoutProbe(MY_PROBE_COLLECTION_GRID),
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            border = MoePassiveOutline(),
         ) {
             if (largeText) {
                 Column(Modifier.fillMaxWidth().padding(vertical = MoeKoeTheme.spacing.medium)) {
@@ -235,5 +236,5 @@ private fun MyCollectionEntry(
 
 @Composable
 private fun MyEntryDivider() {
-    VerticalDivider(modifier = Modifier.height(64.dp), color = MaterialTheme.colorScheme.outlineVariant)
+    MoeVerticalDivider(modifier = Modifier.height(64.dp))
 }

@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.component.MoeArtwork
+import cn.james.music.core.designsystem.component.MoePassiveOutline
 
 internal fun LazyListScope.userProfilePlaylistSection(
     playlists: List<UserPlaylistUi>,
@@ -58,7 +59,7 @@ internal fun LazyListScope.userProfilePlaylistSection(
                         .userProfileLayoutProbe(PROBE_PLAYLIST_LIST),
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+                border = MoePassiveOutline(),
             ) {
                 Column {
                     playlists.forEachIndexed { index, playlist ->
@@ -183,7 +184,7 @@ private fun EmptyPlaylistSection() {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+        border = MoePassiveOutline(),
     ) {
         Column(
             Modifier.fillMaxWidth().padding(24.dp),
