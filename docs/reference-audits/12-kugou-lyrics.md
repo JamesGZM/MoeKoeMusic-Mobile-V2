@@ -138,7 +138,7 @@
 ## 模块、缓存与数据流
 
 ```text
-:feature:player PlayerRoute / PlayerViewModel
+:app AppPlayerLyricsViewModel（组合根）
         │ LyricsRepository（只在歌词页可见时调用）
         ▼
 :data KugouLyricsRepository
@@ -153,7 +153,7 @@
 - `:kugou-api` 新增请求、DTO decoder 和 KRC 解包，返回解包后的协议 DTO；动态 JSON、候选和 `accesskey` 不越过模块。
 - `:core:model` 新增稳定 `LyricsDocument`、`LyricsLine`、`LyricsSyllable`、`LyricsResult/Error` 与 `LyricsRepository`。领域时间使用 `Long` 毫秒，第三方 `Int` 在 data 映射时做非负和范围校验。
 - `:data` 负责来源判断、Room cache-first、调用在线协议、使用 `lyrics-core` 解析和映射。相同 hash 的并发请求 single-flight；调用协程取消后不得转为普通失败。
-- `:feature:player` 后续新增 `PlayerViewModel` 只拥有歌词状态和显式 `onLyricsPageVisible/retry`，不创建 PlaybackController；播放状态仍由 `:app` 的 `AppPlaybackViewModel` 单一注入。
+- `:app` 的独立 `AppPlayerLyricsViewModel` 注入 `LyricsRepository`，将领域文档映射为 `:feature:player` 的纯 UI 状态，并只在 Pager 已 settled 到歌词页时调用；这是保持 `:feature:player` 仅依赖 Design System、不得引入 `:core:model`/data/Hilt 的已批准组合根落点。它不创建或控制 `PlaybackController`；播放 seek 仍由 `AppPlaybackViewModel` 处理。
 - `MediaLibraryService`、`:playback`、Compose Screen 不访问歌词网络、Room 或解析器。
 
 缓存表以 `source_key = "kugou:<lowercase hash>"` 为主键，只保存解包 KRC 文本、`parser_version` 与 `updated_at_epoch_ms`，不保存候选 id、其摘要或 accesskey。读取缓存解析失败时原子删除该行并允许一次回源；写入只发生在完整解包和解析成功后。
@@ -177,7 +177,7 @@
 2. 依赖与领域：引入 `lyrics-core 0.4.7`，建立稳定领域模型和 parser mapping 单测；第三方类型不外泄。
 3. Room cache：schema v4、DAO、`3→4` 与 `1→2→3→4` 迁移测试、Repository cache-first/single-flight。
 4. 设计：`07` 主态与 `23a` 至 `23h` 补充状态已经确认，可直接作为歌词 Compose 基线；只有新发现的未覆盖状态才补图确认。
-5. UI：`PlayerViewModel`、`HorizontalPager`、歌词列表/逐字高亮/点击 seek/滚动跟随和截图。
+5. UI：app-side `AppPlayerLyricsViewModel`、`HorizontalPager`、歌词列表/逐字高亮/点击 seek 和截图；手动滚动暂停自动跟随保留后续切片。
 6. 真机：只在用户指定且已连接的真机验证，不启动模拟器；用户手动反馈结果，除非用户明确授权，不使用 ADB 截图。
 
 每个切片通过对应验证后立即形成只包含该切片的原子提交。

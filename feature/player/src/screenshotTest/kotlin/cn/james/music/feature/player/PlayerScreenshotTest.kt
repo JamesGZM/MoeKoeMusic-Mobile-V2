@@ -109,6 +109,7 @@ fun PlayerEmptyScreenshot() {
     PlayerScreenContent(
         state = PlayerUiState(),
         progress = remember { mutableStateOf(PlayerProgressUiState()) },
+        lyricsProgress = remember { mutableStateOf(PlayerLyricsProgressUiState()) },
         onBack = {},
         onTogglePlayback = {},
         onSeek = {},
@@ -245,6 +246,7 @@ private fun PlayerScreenshotContent(
     showArtwork: Boolean = false,
     initialPage: PlayerPage = PlayerPage.Cover,
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    lyricsProgress: PlayerLyricsProgressUiState = PlayerLyricsProgressUiState(activeLineIndex = 2, highlightedPrefixCharacterCount = 3),
     dynamicCoverColors: Boolean = true,
     paletteOverride: PlayerPalette? = null,
 ) {
@@ -287,6 +289,7 @@ private fun PlayerScreenshotContent(
         onOpenQueue = {},
         initialPage = initialPage,
         lyricsState = lyricsState,
+        lyricsProgress = remember { mutableStateOf(lyricsProgress) },
         paletteOverride = paletteOverride,
     )
 }
@@ -297,13 +300,12 @@ private fun translationLyricsState() =
             listOf(
                 PlayerLyricLineUi("コレカラさ変わる未来", "现在开始 不同的未来"),
                 PlayerLyricLineUi("なけなしの希望を手に", "手握缥缈的希望"),
-                PlayerLyricLineUi("崖っぷち進もう", "朝悬边前进吧", highlightedCharacterCount = 3),
+                PlayerLyricLineUi("崖っぷち進もう", "朝悬边前进吧"),
                 PlayerLyricLineUi("崖の向こうには花が咲く", "山崖的对面是鲜花盛开"),
                 PlayerLyricLineUi("ちっぽけで", "心里罗列着"),
                 PlayerLyricLineUi("大きな夢を並べては", "渺小却又伟大的梦想"),
                 PlayerLyricLineUi("砂のようにすり抜けても", "就算如沙般从指缝中溜走"),
             ),
-        activeLineIndex = 2,
     )
 
 private fun originalLyricsState() =
@@ -312,12 +314,11 @@ private fun originalLyricsState() =
             listOf(
                 PlayerLyricLineUi("コレカラさ変わる未来"),
                 PlayerLyricLineUi("なけなしの希望を手に"),
-                PlayerLyricLineUi("崖っぷち進もう", highlightedCharacterCount = 3),
+                PlayerLyricLineUi("崖っぷち進もう"),
                 PlayerLyricLineUi("崖の向こうには花が咲く"),
                 PlayerLyricLineUi("ちっぽけで"),
                 PlayerLyricLineUi("大きな夢を並べては"),
             ),
-        activeLineIndex = 2,
     )
 
 private fun phoneticLyricsState() =
@@ -326,23 +327,20 @@ private fun phoneticLyricsState() =
             listOf(
                 PlayerLyricLineUi("コレカラさ変わる未来", "kore kara sa kawaru mirai"),
                 PlayerLyricLineUi("なけなしの希望を手に", "nakenashi no kibō o te ni"),
-                PlayerLyricLineUi("崖っぷち進もう", "gakeppuchi susumō", highlightedCharacterCount = 3),
+                PlayerLyricLineUi("崖っぷち進もう", "gakeppuchi susumō"),
                 PlayerLyricLineUi("崖の向こうには花が咲く", "gake no mukō ni wa hana ga saku"),
             ),
-        activeLineIndex = 2,
     )
 
 private fun largeTextLyricsState() =
     PlayerLyricsUiState.Content(
         lines = translationLyricsState().lines.drop(1).take(4),
-        activeLineIndex = 1,
         textSize = PlayerLyricsTextSize.Large,
     )
 
 private fun largestTextLyricsState() =
     PlayerLyricsUiState.Content(
         lines = translationLyricsState().lines.drop(1).take(3),
-        activeLineIndex = 1,
         textSize = PlayerLyricsTextSize.Largest,
     )
 

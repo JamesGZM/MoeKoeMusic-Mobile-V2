@@ -50,6 +50,7 @@ import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.player.PlayerDestination
 import cn.james.music.feature.player.PlayerProgressUiState
+import cn.james.music.feature.player.toPlayerLyricsProgressUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.playlist.PlaylistDetailDestination
 import cn.james.music.feature.playlist.playlistDetailDestination
@@ -70,14 +71,17 @@ fun MoeKoeApp(
     onLaunchTencentCaptcha: (String, (TencentCaptchaResult) -> Unit) -> Unit,
     foundationContent: (@Composable () -> Unit)?,
     viewModel: AppPlaybackViewModel = hiltViewModel(),
+    lyricsViewModel: AppPlayerLyricsViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val progress = viewModel.progress.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
+    val lyricsState by lyricsViewModel.state.collectAsStateWithLifecycle()
     val appState = rememberMoeKoeAppState(navController)
     val currentDestination = appState.navController.currentBackStackEntryAsState().value?.destination
     var queueVisible by rememberSaveable { mutableStateOf(false) }
+    var lyricsPageVisible by remember { mutableStateOf(false) }
     val isPlayer = currentDestination?.hasRoute<PlayerDestination>() == true
     val isSettings = currentDestination?.hasRoute<SettingsDestination>() == true
     val isUserProfile = currentDestination?.hasRoute<UserProfileDestination>() == true
@@ -87,6 +91,7 @@ fun MoeKoeApp(
         rememberUpdatedState(
             state.toPlayerUiState(),
         )
+    val playerLyricsUiState = rememberUpdatedState(lyricsState)
     val playerProgressUiState =
         remember(progress) {
             derivedStateOf {
@@ -96,6 +101,10 @@ fun MoeKoeApp(
                     durationMs = currentProgress.durationMs,
                 )
             }
+        }
+    val playerLyricsProgressUiState =
+        remember(progress, lyricsState) {
+            derivedStateOf { lyricsState.toPlayerLyricsProgressUiState(progress.value.positionMs) }
         }
 
     Scaffold(
@@ -243,6 +252,8 @@ fun MoeKoeApp(
                     dynamicCoverColors = dynamicCoverColors,
                     state = playerUiState,
                     progress = playerProgressUiState,
+                    lyricsState = playerLyricsUiState,
+                    lyricsProgress = playerLyricsProgressUiState,
                     onBack = navController::popBackStack,
                     onTogglePlayback = viewModel::togglePlayback,
                     onSeek = viewModel::seekTo,
@@ -250,6 +261,9 @@ fun MoeKoeApp(
                     onNext = viewModel::skipNext,
                     onChangeMode = viewModel::cycleMode,
                     onOpenQueue = { queueVisible = true },
+                    onRetryLyrics = lyricsViewModel::retry,
+                    onLyricClick = viewModel::seekTo,
+                    onLyricsPageVisibilityChanged = { lyricsPageVisible = it },
                 )
                 playlistDetailDestination(onBack = navController::popBackStack)
                 userProfileDestination(onBack = navController::popBackStack)
@@ -269,6 +283,14 @@ fun MoeKoeApp(
             queueVisible = false
             navController.popBackStack()
         }
+    }
+
+    LaunchedEffect(isPlayer, lyricsPageVisible, state.currentItem?.id, state.currentItem?.source) {
+        lyricsViewModel.updateRequest(
+            itemId = state.currentItem?.id,
+            source = state.currentItem?.source,
+            lyricsPageVisible = isPlayer && lyricsPageVisible,
+        )
     }
 
     if (queueVisible) {

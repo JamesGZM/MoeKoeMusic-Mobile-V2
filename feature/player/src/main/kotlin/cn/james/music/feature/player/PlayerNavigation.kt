@@ -12,6 +12,8 @@ fun NavGraphBuilder.playerDestination(
     dynamicCoverColors: Boolean,
     state: State<PlayerUiState>,
     progress: State<PlayerProgressUiState>,
+    lyricsState: State<PlayerLyricsUiState>,
+    lyricsProgress: State<PlayerLyricsProgressUiState>,
     onBack: () -> Unit,
     onTogglePlayback: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -19,12 +21,17 @@ fun NavGraphBuilder.playerDestination(
     onNext: () -> Unit,
     onChangeMode: () -> Unit,
     onOpenQueue: () -> Unit,
+    onRetryLyrics: () -> Unit,
+    onLyricClick: (Long) -> Unit,
+    onLyricsPageVisibilityChanged: (Boolean) -> Unit,
 ) {
     composable<PlayerDestination> {
         PlayerScreen(
             dynamicCoverColors = dynamicCoverColors,
             state = state.value,
             progress = progress,
+            lyricsState = lyricsState.value,
+            lyricsProgress = lyricsProgress,
             onBack = onBack,
             onTogglePlayback = onTogglePlayback,
             onSeek = onSeek,
@@ -32,6 +39,9 @@ fun NavGraphBuilder.playerDestination(
             onNext = onNext,
             onChangeMode = onChangeMode,
             onOpenQueue = onOpenQueue,
+            onRetryLyrics = onRetryLyrics,
+            onLyricClick = onLyricClick,
+            onLyricsPageVisibilityChanged = onLyricsPageVisibilityChanged,
         )
     }
 }

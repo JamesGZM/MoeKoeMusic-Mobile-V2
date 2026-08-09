@@ -47,6 +47,7 @@ internal fun PlayerLyricsPage(
     progress: State<PlayerProgressUiState>,
     item: PlayerItemUiModel,
     lyricsState: PlayerLyricsUiState,
+    lyricsProgress: State<PlayerLyricsProgressUiState>,
     activePage: Int,
     onTogglePlayback: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -63,6 +64,7 @@ internal fun PlayerLyricsPage(
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             LyricsViewport(
                 state = lyricsState,
+                progress = lyricsProgress,
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -125,13 +127,16 @@ internal fun PlayerLyricsPage(
 @Composable
 private fun LyricsViewport(
     state: PlayerLyricsUiState,
+    progress: State<PlayerLyricsProgressUiState>,
     onRetry: () -> Unit,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (state) {
-            PlayerLyricsUiState.Loading -> LyricsLoadingState(modifier = Modifier.offset(y = (-45).dp))
+            PlayerLyricsUiState.Unrequested,
+            PlayerLyricsUiState.Loading,
+            -> LyricsLoadingState(modifier = Modifier.offset(y = (-45).dp))
             PlayerLyricsUiState.Empty ->
                 LyricsMessageState(
                     icon = Icons.Default.MusicOff,
@@ -162,6 +167,7 @@ private fun LyricsViewport(
             is PlayerLyricsUiState.Content ->
                 LyricsContent(
                     state = state,
+                    progress = progress,
                     onLyricClick = onLyricClick,
                     modifier = Modifier.offset(y = lyricsContentOffset(state)),
                 )
@@ -249,26 +255,28 @@ private fun LyricsMessageState(
 @Composable
 private fun LyricsContent(
     state: PlayerLyricsUiState.Content,
+    progress: State<PlayerLyricsProgressUiState>,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPlayerPalette.current
     val textSizes = lyricsTextSizes(state.textSize)
+    val timing = progress.value
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         state.lines.forEachIndexed { index, line ->
-            val isActive = index == state.activeLineIndex
+            val isActive = index == timing.activeLineIndex
             val original =
-                if (isActive && line.highlightedCharacterCount > 0) {
-                    val split = (line.original.length - line.highlightedCharacterCount).coerceIn(0, line.original.length)
+                if (isActive && timing.highlightedPrefixCharacterCount > 0) {
+                    val split = timing.highlightedPrefixCharacterCount.coerceIn(0, line.original.length)
                     buildAnnotatedString {
-                        append(line.original.substring(0, split))
                         withStyle(SpanStyle(color = palette.accent)) {
-                            append(line.original.substring(split))
+                            append(line.original.substring(0, split))
                         }
+                        append(line.original.substring(split))
                     }
                 } else {
                     buildAnnotatedString { append(line.original) }

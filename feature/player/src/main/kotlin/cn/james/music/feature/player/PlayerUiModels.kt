@@ -82,8 +82,22 @@ enum class PlayerPage {
 data class PlayerLyricLineUi(
     val original: String,
     val secondary: String? = null,
-    val highlightedCharacterCount: Int = 0,
     val startTimeMs: Long = 0,
+    val endTimeMs: Long = startTimeMs + 1,
+    val syllables: List<PlayerLyricSyllableUi> = emptyList(),
+)
+
+@Immutable
+data class PlayerLyricSyllableUi(
+    val content: String,
+    val startTimeMs: Long,
+    val endTimeMs: Long,
+)
+
+@Immutable
+data class PlayerLyricsProgressUiState(
+    val activeLineIndex: Int = -1,
+    val highlightedPrefixCharacterCount: Int = 0,
 )
 
 enum class PlayerLyricsTextSize {
@@ -94,6 +108,8 @@ enum class PlayerLyricsTextSize {
 
 @Immutable
 sealed interface PlayerLyricsUiState {
+    data object Unrequested : PlayerLyricsUiState
+
     data object Loading : PlayerLyricsUiState
 
     data object Empty : PlayerLyricsUiState
@@ -104,9 +120,51 @@ sealed interface PlayerLyricsUiState {
 
     data class Content(
         val lines: List<PlayerLyricLineUi>,
-        val activeLineIndex: Int,
         val textSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
     ) : PlayerLyricsUiState
+}
+
+fun PlayerLyricsUiState.toPlayerLyricsProgressUiState(positionMs: Long): PlayerLyricsProgressUiState {
+    val content = this as? PlayerLyricsUiState.Content ?: return PlayerLyricsProgressUiState()
+    val activeIndex = content.lines.upperBoundByStart(positionMs) - 1
+    if (activeIndex == -1) return PlayerLyricsProgressUiState()
+    val line = content.lines[activeIndex]
+    return PlayerLyricsProgressUiState(
+        activeLineIndex = activeIndex,
+        highlightedPrefixCharacterCount = line.highlightedPrefixCharacterCountAt(positionMs),
+    )
+}
+
+internal fun PlayerLyricLineUi.highlightedPrefixCharacterCountAt(positionMs: Long): Int =
+    syllables
+        .sumOf { syllable ->
+            when {
+                positionMs <= syllable.startTimeMs -> {
+                    0
+                }
+
+                positionMs >= syllable.endTimeMs -> {
+                    syllable.content.length
+                }
+
+                else -> {
+                    (
+                        (syllable.content.length * (positionMs - syllable.startTimeMs)) /
+                            (syllable.endTimeMs - syllable.startTimeMs)
+                    ).toInt()
+                        .coerceIn(1, syllable.content.length)
+                }
+            }
+        }.coerceIn(0, original.length)
+
+private fun List<PlayerLyricLineUi>.upperBoundByStart(positionMs: Long): Int {
+    var low = 0
+    var high = size
+    while (low < high) {
+        val middle = (low + high) ushr 1
+        if (this[middle].startTimeMs <= positionMs) low = middle + 1 else high = middle
+    }
+    return low
 }
 
 private fun String.isSafeArtworkStorageKey(): Boolean =

@@ -16,7 +16,11 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -41,10 +45,12 @@ fun PlayerScreen(
     onAddToPlaylist: () -> Unit = {},
     onShare: () -> Unit = {},
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    lyricsProgress: State<PlayerLyricsProgressUiState>,
     initialPage: PlayerPage = PlayerPage.Cover,
     onLyricsSettings: () -> Unit = {},
     onRetryLyrics: () -> Unit = {},
     onLyricClick: (Long) -> Unit = {},
+    onLyricsPageVisibilityChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     PlayerScreenContent(
@@ -64,10 +70,12 @@ fun PlayerScreen(
         onAddToPlaylist = onAddToPlaylist,
         onShare = onShare,
         lyricsState = lyricsState,
+        lyricsProgress = lyricsProgress,
         initialPage = initialPage,
         onLyricsSettings = onLyricsSettings,
         onRetryLyrics = onRetryLyrics,
         onLyricClick = onLyricClick,
+        onLyricsPageVisibilityChanged = onLyricsPageVisibilityChanged,
         modifier = modifier,
     )
 }
@@ -90,10 +98,12 @@ internal fun PlayerScreenContent(
     onAddToPlaylist: () -> Unit = {},
     onShare: () -> Unit = {},
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    lyricsProgress: State<PlayerLyricsProgressUiState>,
     initialPage: PlayerPage = PlayerPage.Cover,
     onLyricsSettings: () -> Unit = {},
     onRetryLyrics: () -> Unit = {},
     onLyricClick: (Long) -> Unit = {},
+    onLyricsPageVisibilityChanged: (Boolean) -> Unit = {},
     paletteOverride: PlayerPalette? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -129,10 +139,12 @@ internal fun PlayerScreenContent(
                         onShare = onShare,
                         onArtworkSuccess = paletteState.onArtworkSuccess,
                         lyricsState = lyricsState,
+                        lyricsProgress = lyricsProgress,
                         initialPage = initialPage,
                         onLyricsSettings = onLyricsSettings,
                         onRetryLyrics = onRetryLyrics,
                         onLyricClick = onLyricClick,
+                        onLyricsPageVisibilityChanged = onLyricsPageVisibilityChanged,
                     )
                 }
             }
@@ -159,13 +171,23 @@ private fun PlayerContent(
     onShare: () -> Unit,
     onArtworkSuccess: (coil3.Image) -> Unit,
     lyricsState: PlayerLyricsUiState,
+    lyricsProgress: State<PlayerLyricsProgressUiState>,
     initialPage: PlayerPage,
     onLyricsSettings: () -> Unit,
     onRetryLyrics: () -> Unit,
     onLyricClick: (Long) -> Unit,
+    onLyricsPageVisibilityChanged: (Boolean) -> Unit,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(25.dp)
     val pagerState = rememberPagerState(initialPage = initialPage.ordinal, pageCount = { PlayerPage.entries.size })
+    val lyricsVisibility = remember { PlayerLyricsPageVisibilityCoordinator() }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }
+            .collect { page -> lyricsVisibility.onSettledPage(page)?.let(onLyricsPageVisibilityChanged) }
+    }
+    DisposableEffect(Unit) {
+        onDispose { lyricsVisibility.onDisposed()?.let(onLyricsPageVisibilityChanged) }
+    }
     Column(
         modifier =
             Modifier
@@ -209,6 +231,7 @@ private fun PlayerContent(
                         progress = progress,
                         item = item,
                         lyricsState = lyricsState,
+                        lyricsProgress = lyricsProgress,
                         activePage = page,
                         onTogglePlayback = onTogglePlayback,
                         onSeek = onSeek,
