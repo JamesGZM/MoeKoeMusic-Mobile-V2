@@ -42,6 +42,7 @@ Compose 页面开发使用单 contract 快循环，不需要每次运行全部�
 
 ```bash
 ./gradlew verifyUiContracts
+./gradlew verifyUiImpact
 ./gradlew verifyUiFidelity \
   -Pmoekoe.uiContract=login.mobile-code.default \
   --no-configuration-cache

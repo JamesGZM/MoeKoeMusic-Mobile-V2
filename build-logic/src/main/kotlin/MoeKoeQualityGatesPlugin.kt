@@ -93,10 +93,23 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
                 evidenceFiles.from(target.fileTree(uiEvidenceDirectory) { include("*/result.properties") })
                 evidenceSourceFiles.from(uiEvidenceInputs(target, contracts))
             }
+        val verifyUiImpact =
+            target.tasks.register("verifyUiImpact", VerifyUiImpactTask::class.java) {
+                group = "verification"
+                description = "公共 Design System 组件变化时校验全部登记消费者的当轮视觉证据。"
+                dependsOn(verifyFidelity)
+                repositoryRoot.set(target.layout.projectDirectory)
+                registryFile.set(target.layout.projectDirectory.file("docs/design/UI_IMPACT.properties"))
+                contractFiles.from(contracts)
+                evidenceRoot.set(uiEvidenceDirectory)
+                target.providers.gradleProperty("moekoe.changedFilesFile").orNull?.let { path ->
+                    changedFilesFile.set(target.layout.projectDirectory.file(path))
+                }
+            }
         target.tasks.register("verifyUiGoldenChange", VerifyUiGoldenChangeTask::class.java) {
             group = "verification"
             description = "阻止没有设计符合度证据的 screenshot reference 更新。"
-            dependsOn(verifyFidelity)
+            dependsOn(verifyUiImpact)
             repositoryRoot.set(target.layout.projectDirectory)
             contractFiles.from(contracts)
             evidenceRoot.set(uiEvidenceDirectory)

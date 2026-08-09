@@ -71,6 +71,7 @@ jobs:
           ./gradlew --no-configuration-cache
           validateDebugScreenshotTest
           verifyUiFidelity
+          verifyUiImpact
           verifyUiGoldenChange
           -Pmoekoe.changedFilesFile=build/changed-files.txt
 
