@@ -17,6 +17,7 @@ import cn.james.music.kugou.api.transport.KugouRequestContext
 import cn.james.music.playback.KugouSourceResolver
 import cn.james.music.playback.PlaybackSourceError
 import cn.james.music.playback.RemotePlaybackSourceResult
+import cn.james.music.playback.ResolvedPlaybackQuality
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -107,7 +108,12 @@ class KugouPlaybackSourceResolver
                                 } else {
                                     return value.address.urls
                                         .firstOrNull()
-                                        ?.let(RemotePlaybackSourceResult::Resolved)
+                                        ?.let { url ->
+                                            RemotePlaybackSourceResult.Resolved(
+                                                url = url,
+                                                quality = candidate.quality.toResolvedPlaybackQuality(),
+                                            )
+                                        }
                                         ?: RemotePlaybackSourceResult.Unavailable(PlaybackSourceError.Protocol)
                                 }
                             }
@@ -172,6 +178,17 @@ class KugouPlaybackSourceResolver
                         PlaybackSourceError.Protocol
                     }
                 }
+            }
+
+        private fun KugouPlaybackQuality.toResolvedPlaybackQuality(): ResolvedPlaybackQuality =
+            when (this) {
+                KugouPlaybackQuality.Standard -> ResolvedPlaybackQuality.Standard
+                KugouPlaybackQuality.High -> ResolvedPlaybackQuality.High
+                KugouPlaybackQuality.Lossless -> ResolvedPlaybackQuality.Lossless
+                KugouPlaybackQuality.HiRes -> ResolvedPlaybackQuality.HiRes
+                KugouPlaybackQuality.ViperAtmos -> ResolvedPlaybackQuality.ViperAtmos
+                KugouPlaybackQuality.ViperClear -> ResolvedPlaybackQuality.ViperClear
+                KugouPlaybackQuality.ViperTape -> ResolvedPlaybackQuality.ViperTape
             }
 
         private companion object {

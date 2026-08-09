@@ -18,6 +18,7 @@ import kotlin.math.sin
 internal sealed interface PlaybackSourceResult {
     data class Resolved(
         val uri: Uri,
+        val quality: ResolvedPlaybackQuality?,
     ) : PlaybackSourceResult
 
     data class Unavailable(
@@ -48,11 +49,13 @@ internal class DefaultPlaybackSourceResolver
         override suspend fun resolve(item: PlaybackItem): PlaybackSourceResult =
             when (val source = item.source) {
                 PlaybackSource.FoundationDemo -> {
-                    PlaybackSourceResult.Resolved(DemoAudioFile.ensure(context))
+                    PlaybackSourceResult.Resolved(DemoAudioFile.ensure(context), quality = null)
                 }
 
                 is PlaybackSource.ImportedLocal -> {
-                    importedLocalSourceResolver.resolve(source.localMusicId)?.let(PlaybackSourceResult::Resolved)
+                    importedLocalSourceResolver.resolve(source.localMusicId)?.let { uri ->
+                        PlaybackSourceResult.Resolved(uri, quality = null)
+                    }
                         ?: PlaybackSourceResult.Unavailable(
                             PlaybackError.SourceUnavailable(item.id, PlaybackSourceError.InvalidSource),
                         )
@@ -64,7 +67,7 @@ internal class DefaultPlaybackSourceResolver
                             Uri
                                 .parse(result.url)
                                 .takeIf { uri -> uri.scheme == "https" && !uri.host.isNullOrBlank() }
-                                ?.let(PlaybackSourceResult::Resolved)
+                                ?.let { uri -> PlaybackSourceResult.Resolved(uri, quality = result.quality) }
                                 ?: PlaybackSourceResult.Unavailable(
                                     PlaybackError.SourceUnavailable(item.id, PlaybackSourceError.Protocol),
                                 )

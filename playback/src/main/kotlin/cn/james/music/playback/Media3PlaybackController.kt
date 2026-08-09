@@ -119,7 +119,11 @@ internal class Media3PlaybackController
             val request =
                 when (val result = sourceResolver.resolve(item)) {
                     is PlaybackSourceResult.Resolved -> {
-                        PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
+                        PlaybackMediaItemMapper.withUri(
+                            request = PlaybackMediaItemMapper.toRequest(item),
+                            uri = result.uri,
+                            quality = result.quality,
+                        )
                     }
 
                     is PlaybackSourceResult.Unavailable -> {
@@ -321,6 +325,14 @@ internal class Media3PlaybackController
                             else -> PlaybackStatus.Idle
                         },
                     mode = PlaybackModeMapper.from(player),
+                    currentResolvedQuality =
+                        PlaybackRuntimeQualityPolicy.currentQuality(
+                            qualities =
+                                (0 until player.mediaItemCount).map { index ->
+                                    PlaybackMediaItemMapper.resolvedQuality(player.getMediaItemAt(index))
+                                },
+                            currentIndex = player.currentMediaItemIndex,
+                        ),
                     error =
                         player.playerError?.let {
                             PlaybackError.PlayerFailure(

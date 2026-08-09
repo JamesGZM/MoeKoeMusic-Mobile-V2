@@ -171,7 +171,11 @@ class MoeKoePlaybackService : MediaLibraryService() {
         items.mapNotNull { item ->
             when (val result = sourceResolver.resolve(item)) {
                 is PlaybackSourceResult.Resolved -> {
-                    PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
+                    PlaybackMediaItemMapper.withUri(
+                        request = PlaybackMediaItemMapper.toRequest(item),
+                        uri = result.uri,
+                        quality = result.quality,
+                    )
                 }
 
                 is PlaybackSourceResult.Unavailable -> {
@@ -220,7 +224,12 @@ class MoeKoePlaybackService : MediaLibraryService() {
                 val index = player.currentMediaItemIndex
                 if (index !in 0 until player.mediaItemCount || player.currentMediaItem?.mediaId != item.id) return
                 val positionMs = player.currentPosition.coerceAtLeast(0)
-                val refreshed = PlaybackMediaItemMapper.withUri(PlaybackMediaItemMapper.toRequest(item), result.uri)
+                val refreshed =
+                    PlaybackMediaItemMapper.withUri(
+                        request = PlaybackMediaItemMapper.toRequest(item),
+                        uri = result.uri,
+                        quality = result.quality,
+                    )
                 player.replaceMediaItem(index, refreshed)
                 player.seekTo(index, positionMs)
                 player.prepare()

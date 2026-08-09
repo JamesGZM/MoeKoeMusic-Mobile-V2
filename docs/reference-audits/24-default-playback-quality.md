@@ -43,9 +43,11 @@ KugouPlaybackSourceResolver (:data) --next logged-in resolve-->
 
 ### 实际质量的显示真值
 
-PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/components/player/songQueue/OnlineMusicQueue.js:196-217`。Android 目前 `RemotePlaybackSourceResult.Resolved` 只携带 URL，且全屏角标硬编码“标准”；见 `playback/src/main/kotlin/cn/james/music/playback/PlaybackModels.kt:76-84` 与 `feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerControls.kt:257-271`。
+PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/components/player/songQueue/OnlineMusicQueue.js:196-217`。026 前 Android 的 `RemotePlaybackSourceResult.Resolved` 只携带 URL，且全屏角标至今仍硬编码“标准”；见 `playback/src/main/kotlin/cn/james/music/playback/PlaybackModels.kt` 与 `feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerControls.kt:257-271`。
 
-因此后续实现必须把 `resolvedQuality` 添加到短期、类型安全的 resolved-source/runtime-state 边界，并使 Player 仅在该值存在时显示对应标签。不得把偏好值直接当作当前播放质量，亦不得在 High/无损已成功时继续显示“标准”；本地、演示、未解析和错误状态显示无质量角标而不是猜测值。
+026 已将 `resolvedQuality` 加入短期、类型安全的 resolved-source/runtime-state 边界：`:playback` 自有 `ResolvedPlaybackQuality`，`:data` 在成功地址候选处显式映射它，并仅经 `MediaItem` metadata extras 从 Service 流向 Controller。`PlaybackState.currentResolvedQuality` 读取当前 Media3 item 的 runtime metadata；切换队列项读取各自值，地址刷新以新解析结果替换旧值。本地、演示、未解析和错误来源均为 `null`。
+
+该值不属于 `PlaybackItem`、`PlaybackSnapshot`、`PlaybackMediaItemMapper.toModel` 或 Room；持久队列恢复会重新解析地址与实际质量。Player 角标仍未接入，后续 UI 切片只能在该值存在时显示对应标签，且不得把偏好值直接当作当前播放质量，亦不得在 High/无损已成功时继续显示“标准”。
 
 ## Android 约束、失败恢复与视觉准入
 
@@ -57,7 +59,7 @@ PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/componen
 
 1. 领域：`PlaybackQualityPreference`、`AppSettings`、Repository setter、独立 v1 string key；已完成。core 只定义七档语义顺序；data 私有地映射稳定 storage value。default/round-trip/unknown/read/write/cancellation、每档 raw storage value 及与既有偏好互不覆盖均由 core/data JVM 测试覆盖；尚未开放设置 UI 或消费解析偏好。协议字符串到 `KugouPlaybackQuality` 的映射留给下一协议切片。
 2. 协议与数据：类型化候选计划、client 质量参数、登录/匿名分支、逐档回退、停止边界、取消和迟到结果；已完成，并以固定虚构 DTO/Transport 覆盖七档顺序、匿名、候选、VIP/mp4、停止错误、取消和偏好快照；未碰真实服务。
-3. 播放：resolved-source/runtime-state 只携带实际质量；覆盖地址刷新后质量替换、不持久化 URI/质量及本地/演示不展示角标。
+3. 播放：resolved-source/runtime-state 只携带实际质量；已完成。JVM 覆盖协议候选到 runtime quality 的七档映射、当前队列项读取、地址刷新替换，以及 `PlaybackItem`/快照边界不携带质量；本地/演示 source result 为 `null`。`MediaItem` extras 的运行时跨进程行为与实际播放留给后续指定真机验收。
 4. 设置：真实选择行、复用确认 Dialog、独立保存代际、回滚和精确 Retry；在写入中仅禁用该行/Dialog。
 5. UI/证据：Settings dialog/语义、Player 实际标签/无标签状态、现有浅深/AMOLED/大字体截图与定向 fidelity；再进行受控真实登录/匿名地址解析和指定真机播放验证。
 

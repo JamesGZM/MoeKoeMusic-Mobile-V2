@@ -18,6 +18,7 @@ internal object PlaybackMediaItemMapper {
     private const val ARTWORK_VALUE_KEY = "cn.james.music.playback.ARTWORK_VALUE"
     private const val ARTWORK_REMOTE = "remote"
     private const val ARTWORK_APP_FILE = "app_file"
+    private const val RESOLVED_QUALITY_KEY = "cn.james.music.playback.RESOLVED_QUALITY"
 
     fun toRequest(item: PlaybackItem): MediaItem {
         val extras = Bundle()
@@ -68,7 +69,26 @@ internal object PlaybackMediaItemMapper {
     fun withUri(
         request: MediaItem,
         uri: Uri,
-    ): MediaItem = request.buildUpon().setUri(uri).build()
+        quality: ResolvedPlaybackQuality?,
+    ): MediaItem {
+        val extras = Bundle(request.mediaMetadata.extras ?: Bundle())
+        quality?.let { resolved ->
+            extras.putString(RESOLVED_QUALITY_KEY, resolved.runtimeValue)
+        }
+        val metadata =
+            request.mediaMetadata
+                .buildUpon()
+                .setExtras(extras)
+                .build()
+        return request
+            .buildUpon()
+            .setUri(uri)
+            .setMediaMetadata(metadata)
+            .build()
+    }
+
+    fun resolvedQuality(item: MediaItem): ResolvedPlaybackQuality? =
+        ResolvedPlaybackQuality.fromRuntimeValue(item.mediaMetadata.extras?.getString(RESOLVED_QUALITY_KEY))
 
     fun toModel(item: MediaItem): PlaybackItem? {
         val metadata = item.mediaMetadata

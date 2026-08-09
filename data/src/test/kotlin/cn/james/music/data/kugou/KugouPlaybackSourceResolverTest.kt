@@ -25,6 +25,7 @@ import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
 import cn.james.music.playback.PlaybackSourceError
 import cn.james.music.playback.RemotePlaybackSourceResult
+import cn.james.music.playback.ResolvedPlaybackQuality
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -46,7 +47,13 @@ class KugouPlaybackSourceResolverTest {
                     appSettingsRepository = throwingSettingsRepository(),
                 )
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/audio.mp3"), resolver.resolve(" ABCDEF "))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/audio.mp3",
+                    quality = ResolvedPlaybackQuality.Standard,
+                ),
+                resolver.resolve(" ABCDEF "),
+            )
             assertEquals(listOf("song_url"), transport.requests.map(KugouPreparedRequest::id))
             assertEquals("128", transport.requests.single().query["quality"])
             assertEquals("1", transport.requests.single().query["IsFreePart"])
@@ -62,11 +69,46 @@ class KugouPlaybackSourceResolverTest {
                 )
             val resolver = resolver(authenticatedProvider(), transport, PlaybackQualityPreference.HiRes)
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/high.mp3"), resolver.resolve("original"))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/high.mp3",
+                    quality = ResolvedPlaybackQuality.HiRes,
+                ),
+                resolver.resolve("original"),
+            )
             assertEquals(listOf("privilege_lite", "song_url"), transport.requests.map(KugouPreparedRequest::id))
             assertEquals("high", transport.requests.last().query["quality"])
             assertEquals("0", transport.requests.last().query["IsFreePart"])
             assertEquals("high", transport.requests.last().query["hash"])
+        }
+
+    @Test
+    fun resolvedCandidateQualityMapsToPlaybackRuntimeQuality() =
+        runBlocking {
+            listOf(
+                "128" to ResolvedPlaybackQuality.Standard,
+                "320" to ResolvedPlaybackQuality.High,
+                "flac" to ResolvedPlaybackQuality.Lossless,
+                "high" to ResolvedPlaybackQuality.HiRes,
+                "viper_atmos" to ResolvedPlaybackQuality.ViperAtmos,
+                "viper_clear" to ResolvedPlaybackQuality.ViperClear,
+                "viper_tape" to ResolvedPlaybackQuality.ViperTape,
+            ).forEach { (wireQuality, expectedQuality) ->
+                val transport =
+                    RecordingTransport(
+                        success(privilegeBody(wireQuality to "FIXTURE")),
+                        success("""{"status":1,"url":["https://cdn.example/$wireQuality.mp3"]}"""),
+                    )
+                val resolver = resolver(authenticatedProvider(), transport, PlaybackQualityPreference.ViperTape)
+
+                assertEquals(
+                    RemotePlaybackSourceResult.Resolved(
+                        url = "https://cdn.example/$wireQuality.mp3",
+                        quality = expectedQuality,
+                    ),
+                    resolver.resolve("original"),
+                )
+            }
         }
 
     @Test
@@ -79,7 +121,13 @@ class KugouPlaybackSourceResolverTest {
                 )
             val resolver = resolver(authenticatedProvider(), transport, PlaybackQualityPreference.ViperTape)
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/flac.mp3"), resolver.resolve("original"))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/flac.mp3",
+                    quality = ResolvedPlaybackQuality.Lossless,
+                ),
+                resolver.resolve("original"),
+            )
             assertEquals("flac", transport.requests.last().query["quality"])
             assertEquals("flac", transport.requests.last().query["hash"])
         }
@@ -95,7 +143,13 @@ class KugouPlaybackSourceResolverTest {
                 )
             val resolver = resolver(authenticatedProvider(), transport, PlaybackQualityPreference.High)
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/standard.mp3"), resolver.resolve("original"))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/standard.mp3",
+                    quality = ResolvedPlaybackQuality.Standard,
+                ),
+                resolver.resolve("original"),
+            )
             assertEquals(listOf("320", "128"), transport.requests.drop(1).map { it.query.getValue("quality") })
             assertEquals(listOf("original", "original"), transport.requests.drop(1).map { it.query.getValue("hash") })
         }
@@ -111,7 +165,13 @@ class KugouPlaybackSourceResolverTest {
                 )
             val resolver = resolver(authenticatedProvider(), transport, PlaybackQualityPreference.High)
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/audio.mp3"), resolver.resolve("original"))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/audio.mp3",
+                    quality = ResolvedPlaybackQuality.Standard,
+                ),
+                resolver.resolve("original"),
+            )
             assertEquals(listOf("320", "128"), transport.requests.drop(1).map { it.query.getValue("quality") })
         }
 
@@ -243,7 +303,13 @@ class KugouPlaybackSourceResolverTest {
                 )
             val resolver = KugouPlaybackSourceResolver(authenticatedProvider(), onlineClient(transport), settings)
 
-            assertEquals(RemotePlaybackSourceResult.Resolved("https://cdn.example/high.mp3"), resolver.resolve("original"))
+            assertEquals(
+                RemotePlaybackSourceResult.Resolved(
+                    url = "https://cdn.example/high.mp3",
+                    quality = ResolvedPlaybackQuality.High,
+                ),
+                resolver.resolve("original"),
+            )
             assertEquals(1, settingsReads)
             assertEquals("320", transport.requests.last().query["quality"])
 

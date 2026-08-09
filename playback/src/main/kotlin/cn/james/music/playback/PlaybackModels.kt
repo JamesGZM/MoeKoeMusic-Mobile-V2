@@ -73,9 +73,28 @@ sealed interface PlaybackSourceError {
     data object InvalidSource : PlaybackSourceError
 }
 
+/** The quality of the URL currently resolved for a remote playback item. */
+enum class ResolvedPlaybackQuality(
+    val runtimeValue: String,
+) {
+    Standard("standard"),
+    High("high"),
+    Lossless("lossless"),
+    HiRes("hi_res"),
+    ViperAtmos("viper_atmos"),
+    ViperClear("viper_clear"),
+    ViperTape("viper_tape"),
+    ;
+
+    companion object {
+        fun fromRuntimeValue(value: String?): ResolvedPlaybackQuality? = entries.firstOrNull { quality -> quality.runtimeValue == value }
+    }
+}
+
 sealed interface RemotePlaybackSourceResult {
     data class Resolved(
         val url: String,
+        val quality: ResolvedPlaybackQuality,
     ) : RemotePlaybackSourceResult
 
     data class Unavailable(
@@ -98,6 +117,7 @@ data class PlaybackState(
     val isPlaying: Boolean = false,
     val status: PlaybackStatus = PlaybackStatus.Idle,
     val mode: PlaybackMode = PlaybackMode.RepeatAll,
+    val currentResolvedQuality: ResolvedPlaybackQuality? = null,
     val error: PlaybackError? = null,
 ) {
     val currentItem: PlaybackItem?
