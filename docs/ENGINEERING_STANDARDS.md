@@ -39,7 +39,7 @@
 
 截图测试分为“设计符合度”和“实现回归”。前者以已确认设计图为期望值，归一化运行截图后做锚点、叠加和差异验证；后者只防止已批准实现发生意外变化。未先通过设计符合度时，禁止通过重新录制截图让测试变绿并宣称视觉完成。
 
-设计门禁必须落到 `docs/design/contracts/<state-id>.properties`，并通过 `verifyUiContracts`、`verifyUiFidelity` 与 `verifyUiGoldenChange` 执行。Contract 绑定结构设计基线；功能状态由产品规格、状态机、行为测试和 Design System 组件状态共同证明，不要求每个状态单独出图。强制 contract 的设计源、正常 screenshot golden 和布局 probe golden 都固定 SHA-256；probe 绘制独立色标，禁止在 contract 中手填“实现实际坐标”自证通过。历史偏差只能登记为包含原因、负责人、范围和到期日的 active debt；首次登记后，修改范围内任一文件或超过到期日都会阻断，不能通过续期或放宽阈值继续开发。
+设计门禁必须落到 `docs/design/contracts/<state-id>.properties`，并通过 `verifyUiContracts`、`verifyUiFidelity` 与 `verifyUiGoldenChange` 执行。Contract 绑定结构设计基线；功能状态由产品规格、状态机、行为测试和 Design System 组件状态共同证明，不要求每个状态单独出图。强制 contract 的设计源、正常 screenshot golden 和布局 probe golden 都固定 SHA-256；probe 绘制独立色标，禁止在 contract 中手填“实现实际坐标”自证通过。`strict` 档的页面固定使用 `fixed<=2`、`cumulativeY<=3`，`core-page` 还必须登记至少三个不与动态内容或遮罩相交的局部视觉 `region.*`；未补齐证据的历史页面只能进入带原因、负责人和到期日的 `migration` 档，不能无声冒充严格通过。历史像素偏差只能登记为包含原因、负责人、范围和到期日的 active debt；首次登记后，修改范围内任一文件或超过到期日都会阻断，不能通过续期或放宽阈值继续开发。
 
 本地 UI 快循环使用 `-Pmoekoe.uiContract=<id>` 只验证目标状态；PR 执行全部 screenshot、设计符合度与 golden 变更门禁。机器结果负责哈希、裁切、遮罩、全页/已登记局部区域像素指标与锚点，人工复核字体栅格、阴影、图标路径、摄影裁切和整体节奏，两者都不能省略。关键标题、操作区或局部排版可能被全页平均值稀释时，contract 必须登记不与 mask/dynamic 相交的 `region.*`，且局部与全页指标同时通过。
 

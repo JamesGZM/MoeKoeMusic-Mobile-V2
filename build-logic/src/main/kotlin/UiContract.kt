@@ -38,6 +38,7 @@ internal object UiContractParser {
             "fontScale",
             "design.crop",
             "render.crop",
+            "tolerance.profile",
             "tolerance.fixed",
             "tolerance.cumulativeY",
             "debt.status",
@@ -63,6 +64,8 @@ internal object UiContractParser {
         validateCrop(id, "design.crop", properties.getProperty("design.crop"))
         validateCrop(id, "render.crop", properties.getProperty("render.crop"))
         validateRegions(id, properties)
+        validateToleranceProfile(id, properties)
+        validateStressCases(id, properties)
         validateDebt(id, properties)
         if (properties.getProperty("debt.status") == "none") {
             listOf("probe.testId", "probe.source", "probe.golden", "probe.goldenSha256", "probe.rendered").forEach { key ->
@@ -70,6 +73,57 @@ internal object UiContractParser {
             }
         }
         return UiContract(file, id, properties)
+    }
+
+    private fun validateToleranceProfile(
+        id: String,
+        properties: Properties,
+    ) {
+        val fixed = properties.getProperty("tolerance.fixed").toDoubleOrNull()
+        val cumulative = properties.getProperty("tolerance.cumulativeY").toDoubleOrNull()
+        require(fixed != null && fixed >= 0.0) { "$id: tolerance.fixed 必须是非负数字" }
+        require(cumulative != null && cumulative >= 0.0) { "$id: tolerance.cumulativeY 必须是非负数字" }
+        when (properties.getProperty("tolerance.profile")) {
+            "strict" -> {
+                require(fixed <= STRICT_FIXED_MAX && cumulative <= STRICT_CUMULATIVE_Y_MAX) {
+                    "$id: strict contract 必须满足 fixed<=${STRICT_FIXED_MAX.toInt()}、cumulativeY<=${STRICT_CUMULATIVE_Y_MAX.toInt()}"
+                }
+                if (properties.getProperty("structure.coverage") == "core-page") {
+                    val regionCount = properties.stringPropertyNames().count { it.startsWith("region.") }
+                    require(regionCount >= STRICT_CORE_PAGE_REGION_MIN) {
+                        "$id: strict core-page 至少需要 $STRICT_CORE_PAGE_REGION_MIN 个局部视觉 region"
+                    }
+                }
+            }
+
+            "migration" -> {
+                listOf("migration.reason", "migration.owner", "migration.expiresAt").forEach { key ->
+                    require(!properties.getProperty(key).isNullOrBlank()) { "$id: migration contract 缺少 $key" }
+                }
+                val expiresAt = LocalDate.parse(properties.getProperty("migration.expiresAt"))
+                require(!expiresAt.isBefore(LocalDate.now())) { "$id: migration contract 已于 $expiresAt 到期" }
+            }
+
+            else -> {
+                error("$id: tolerance.profile 只能是 strict 或 migration")
+            }
+        }
+    }
+
+    private fun validateStressCases(
+        id: String,
+        properties: Properties,
+    ) {
+        properties.getProperty("stress.singleLineInput")?.let { value ->
+            require(value == "true" || value == "false") { "$id: stress.singleLineInput 必须是 true 或 false" }
+            if (value == "true") {
+                val regression = properties.getProperty("stress.longText.regression")
+                require(!regression.isNullOrBlank()) { "$id: 单行输入 contract 缺少 stress.longText.regression" }
+                require(!properties.getProperty("regression.golden.$regression").isNullOrBlank()) {
+                    "$id: stress.longText.regression=$regression 未绑定 regression golden"
+                }
+            }
+        }
     }
 
     fun resolveRepositoryPath(
@@ -215,4 +269,7 @@ internal object UiContractParser {
     }
 
     private val REGION_NAME = Regex("[A-Za-z][A-Za-z0-9_-]*")
+    private const val STRICT_FIXED_MAX = 2.0
+    private const val STRICT_CUMULATIVE_Y_MAX = 3.0
+    private const val STRICT_CORE_PAGE_REGION_MIN = 3
 }

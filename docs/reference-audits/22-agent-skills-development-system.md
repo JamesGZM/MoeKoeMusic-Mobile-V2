@@ -87,3 +87,11 @@
 采用：结构 contract 可登记 `region.<name>=x,y,width,height;meanErrorMax;changedRatioMax`，坐标继续使用 design crop 空间；区域与全页指标、锚点同时参与结果，active debt 也不能绕过区域失败。区域越界、阈值不在 `[0,1]`，或与 `mask.*` / `dynamic.*` 相交时直接拒绝。
 
 拒绝：不通过持续收紧全页阈值碰运气，不用实现常量断言代替渲染结果，不允许局部通过覆盖全页失败，也不把关键文字或按钮改登记为 mask。该扩展沿用本审计已固定的 Google Android Skills 与 Compose Agent Skill 版本，只强化项目级设计门禁，不复制上游代码、不改变 App 运行时行为。
+
+## 2026-08-09 契约质量档位补充审计
+
+首页、搜索、本地音乐和设置页的复核再次证明：整块容器锚点或全页平均像素通过，不能证明文字基线、Switch 状态、边框、分隔线、徽标和尾部图标已经符合设计。既有 contract 还允许页面在没有任何局部 `region.*` 时使用“通过”结果，宽松阈值也没有显式迁移语义。
+
+采用：所有 contract 必须声明 `tolerance.profile`。`strict` 页面固定满足 `fixed<=2`、`cumulativeY<=3`，其中 `core-page` 至少登记三个不与 `mask.*` / `dynamic.*` 相交的局部视觉区域；历史证据尚未补齐时使用 `migration`，并强制登记原因、负责人和不可过期的截止日期。单行输入可声明长文本压力态，并必须绑定已登记的 regression golden。
+
+拒绝：不把所有既有页面一次性伪造成 strict，不为让门禁变绿而生成未经人工复核的局部阈值，也不把 migration 当作新的永久债务类型。该档位只暴露存量证据缺口；到期后必须补齐局部契约或直接失败。
