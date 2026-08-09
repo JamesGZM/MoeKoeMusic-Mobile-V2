@@ -136,7 +136,7 @@ fun MoeKoeApp(
                             state.toMoeMiniPlayerUiModel(
                                 positionMs = currentProgress.positionMs,
                                 durationMs = currentProgress.durationMs,
-                                badgeLabel = stringResource(R.string.mini_player_quality_standard),
+                                badgeLabel = state.currentResolvedQuality?.toPlayerQualityUi()?.label,
                                 semantics =
                                     MoeMiniPlayerSemanticsUi(
                                         play = stringResource(R.string.mini_player_play),

@@ -5,7 +5,6 @@
     <string name="navigation_home">首页</string>
     <string name="navigation_discover">发现</string>
     <string name="navigation_my">我的</string>
-    <string name="mini_player_quality_standard">标准</string>
     <string name="mini_player_play">播放</string>
     <string name="mini_player_pause">暂停</string>
     <string name="mini_player_previous">上一首</string>

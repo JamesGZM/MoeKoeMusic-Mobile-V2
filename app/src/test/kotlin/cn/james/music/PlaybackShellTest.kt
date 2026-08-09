@@ -8,6 +8,7 @@ import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.feature.player.PlayerArtworkStorageRef
 import cn.james.music.feature.player.PlayerArtworkUiModel
 import cn.james.music.feature.player.PlayerPlaybackModeUi
+import cn.james.music.feature.player.PlayerQualityUi
 import cn.james.music.feature.player.PlayerQueueAction
 import cn.james.music.feature.player.PlayerQueueMoveRequest
 import cn.james.music.feature.player.PlayerQueueMoveResult
@@ -15,6 +16,7 @@ import cn.james.music.playback.PlaybackCommandResult
 import cn.james.music.playback.PlaybackConnectionState
 import cn.james.music.playback.PlaybackState
 import cn.james.music.playback.PlaybackStatus
+import cn.james.music.playback.ResolvedPlaybackQuality
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -33,6 +35,7 @@ class PlaybackShellTest {
                 isPlaying = true,
                 status = PlaybackStatus.Buffering,
                 mode = PlaybackMode.Shuffle,
+                currentResolvedQuality = ResolvedPlaybackQuality.HiRes,
             )
 
         val player = state.toPlayerUiState()
@@ -46,6 +49,7 @@ class PlaybackShellTest {
         assertTrue(player.isBuffering)
         assertTrue(player.controlsEnabled)
         assertEquals(PlayerPlaybackModeUi.Shuffle, player.mode)
+        assertEquals(PlayerQualityUi.HiRes, player.quality)
         assertEquals(listOf("remote", "local"), queue.items.map { it.id })
         assertEquals(listOf("Title remote", "Title local"), queue.items.map { it.title })
         assertEquals(listOf("Artist remote", "Artist local"), queue.items.map { it.artist })
@@ -66,6 +70,23 @@ class PlaybackShellTest {
         assertEquals(PlayerPlaybackModeUi.RepeatAll, PlaybackMode.RepeatAll.toPlayerPlaybackModeUi())
         assertEquals(PlayerPlaybackModeUi.RepeatOne, PlaybackMode.RepeatOne.toPlayerPlaybackModeUi())
         assertEquals(PlayerPlaybackModeUi.Shuffle, PlaybackMode.Shuffle.toPlayerPlaybackModeUi())
+    }
+
+    @Test
+    fun everyResolvedQualityMapsToItsPureUiLabelAndNullStaysAbsent() {
+        assertEquals(
+            listOf(
+                PlayerQualityUi.Standard,
+                PlayerQualityUi.High,
+                PlayerQualityUi.Lossless,
+                PlayerQualityUi.HiRes,
+                PlayerQualityUi.ViperAtmos,
+                PlayerQualityUi.ViperClear,
+                PlayerQualityUi.ViperTape,
+            ),
+            ResolvedPlaybackQuality.entries.map(ResolvedPlaybackQuality::toPlayerQualityUi),
+        )
+        assertNull(PlaybackState().toPlayerUiState().quality)
     }
 
     @Test
@@ -110,6 +131,42 @@ class PlaybackShellTest {
         assertTrue(model.canOpenPlayer)
         assertEquals("标准", model.badgeLabel)
         assertEquals(semantics, model.semantics)
+    }
+
+    @Test
+    fun miniPlayerBadgeUsesActualResolvedQualityOrStaysHidden() {
+        val state =
+            PlaybackState(queue = listOf(item("current")), currentIndex = 0, currentResolvedQuality = ResolvedPlaybackQuality.ViperTape)
+        val semantics =
+            MoeMiniPlayerSemanticsUi(
+                play = "播放",
+                pause = "暂停",
+                previous = "上一首",
+                next = "下一首",
+                queue = "播放队列",
+            )
+
+        assertEquals(
+            "母带",
+            requireNotNull(
+                state.toMoeMiniPlayerUiModel(
+                    positionMs = 0,
+                    durationMs = 0,
+                    badgeLabel = state.currentResolvedQuality?.toPlayerQualityUi()?.label,
+                    semantics = semantics,
+                ),
+            ).badgeLabel,
+        )
+        assertNull(
+            requireNotNull(
+                PlaybackState(queue = listOf(item("local")), currentIndex = 0).toMoeMiniPlayerUiModel(
+                    positionMs = 0,
+                    durationMs = 0,
+                    badgeLabel = null,
+                    semantics = semantics,
+                ),
+            ).badgeLabel,
+        )
     }
 
     @Test

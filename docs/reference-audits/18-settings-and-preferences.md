@@ -105,7 +105,7 @@
 6. 封面动态取色：把 `DynamicColor` 接入真实 Toggle、持久化和全屏播放器派生色板；不改变全局系统动态主题、封面请求或歌词数据链路。已完成。
 7. “翻译与音译”：把 `Translation` 接入真实 Toggle、独立持久化与 Player 渲染层；关闭只隐藏 secondary，不重新读取歌词。已完成。
 8. “歌词字体大小”：把 `LyricsFontSize` 接入真实选择行、统一 Radio Dialog、独立枚举持久化与 Player 纯字号输入；不把字号写入歌词文档。已完成。
-9. “默认音质”：core 仅含七档语义 enum，data 私有映射稳定 storage value；`AppSettings` Repository setter、独立 v1 DataStore key、登录态候选回退、`KugouPlaybackQuality` 映射与真实 resolved-quality 运行时状态已完成。设置行现已接入真实七档选择 Dialog，并拥有独立保存代际、失败回滚最后持久值和精确 Retry；它仍只改变下一次在线地址解析的偏好上限，Player 实际质量角标、真实服务和真机验证继续独立。
+9. “默认音质”：core 仅含七档语义 enum，data 私有映射稳定 storage value；`AppSettings` Repository setter、独立 v1 DataStore key、登录态候选回退、`KugouPlaybackQuality` 映射与真实 resolved-quality 运行时状态已完成。设置行现已接入真实七档选择 Dialog，并拥有独立保存代际、失败回滚最后持久值和精确 Retry；Player 与 MiniPlayer 现仅从 resolved runtime quality 显示实际角标，null（本地、演示、未解析或错误）不显示。它仍只改变下一次在线地址解析的偏好上限；真实服务和真机验证继续独立。
 10. 后续缓存及其余播放能力分别在真实消费者完成时增加对应设置 Item。
 
 每个切片独立提交、推送并恢复干净工作区。

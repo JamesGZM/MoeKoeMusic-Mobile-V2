@@ -2,7 +2,7 @@
 
 - 权威设计：[`17-music-content-components.png`](../mockups/17-music-content-components.png) 的 MiniPlayer 组件区；[`01-home-material3-v2.png`](../mockups/01-home-material3-v2.png) 用于校验它与页面壳层的实际密度。
 - 实现截图：`MoeMiniPlayerLightScreenshot`；Dark 与 `1.5×` 字体继续作为回归基线。
-- 状态：简体中文、Light、`390 × 72dp`、播放中、存在封面/质量徽标/进度。
+- 状态：简体中文、Light、`390 × 72dp`、播放中、存在封面/进度；当且仅当当前 runtime resolved quality 非空时存在质量徽标。
 
 ## 同画布方法
 
@@ -18,7 +18,7 @@
 
 ## 复核结论
 
-- 连续底部 Surface、`12dp` 圆角、紧凑封面、单行标题/歌手、质量徽标、上一首/播放暂停/下一首/队列、独立时间与进度条均与确认稿同序。
+- 连续底部 Surface、`12dp` 圆角、紧凑封面、单行标题/歌手、条件质量徽标、上一首/播放暂停/下一首/队列、独立时间与进度条均与确认稿同序。028 后徽标只显示当前 runtime resolved quality 的实际标签，local/demo/未解析为 null 时不预留或伪造“标准”。
 - 标题不再因过大的字级和控制槽位提前省略；四个控制节点的可见图标保持紧凑，但语义触控区域仍为 `48dp`。
 - 截图 fixture 使用仓库已有的真实方形插画资源，不再用渐变或圆形头像假装歌曲封面；运行时封面仍由既有 `PlaybackItem` 与 Coil 链路提供。
 - 确认稿封面内容、Android 字体栅格化与 Material Icons 笔画存在 P3 像素差异；结构、锚点、密度、色阶和触控约束一致。

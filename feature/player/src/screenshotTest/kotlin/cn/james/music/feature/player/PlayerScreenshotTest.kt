@@ -28,6 +28,20 @@ fun PlayerCoverScreenshot() {
 }
 
 @PreviewTest
+@Preview(name = "CoverNoQuality", widthDp = 390, heightDp = 844)
+@Composable
+fun PlayerCoverNoQualityScreenshot() {
+    PlayerScreenshotContent(showArtwork = true, quality = null)
+}
+
+@PreviewTest
+@Preview(name = "CoverQualityTape", widthDp = 390, heightDp = 844)
+@Composable
+fun PlayerCoverQualityTapeScreenshot() {
+    PlayerScreenshotContent(showArtwork = true, quality = PlayerQualityUi.ViperTape)
+}
+
+@PreviewTest
 @Preview(name = "CoverLayoutProbe", widthDp = 390, heightDp = 844)
 @Composable
 fun PlayerCoverLayoutProbeScreenshot() =
@@ -256,6 +270,7 @@ private fun PlayerScreenshotContent(
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
     lyricsTextSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
     lyricsProgress: PlayerLyricsProgressUiState = PlayerLyricsProgressUiState(activeLineIndex = 2, highlightedPrefixCharacterCount = 3),
+    quality: PlayerQualityUi? = PlayerQualityUi.Standard,
     dynamicCoverColors: Boolean = true,
     paletteOverride: PlayerPalette? = null,
 ) {
@@ -279,6 +294,7 @@ private fun PlayerScreenshotContent(
                 isBuffering = isBuffering,
                 controlsEnabled = controlsEnabled,
                 mode = PlayerPlaybackModeUi.RepeatAll,
+                quality = quality,
             ),
         progress =
             remember {

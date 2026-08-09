@@ -163,7 +163,9 @@ internal fun PlayerControls(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                PlayerQualityBadge(compact = compactLayout)
+                state.quality?.let { quality ->
+                    PlayerQualityBadge(quality = quality, compact = compactLayout)
+                }
             }
             IconButton(
                 onClick = onFavorite,
@@ -254,7 +256,10 @@ internal fun PlayerControls(
 }
 
 @Composable
-private fun PlayerQualityBadge(compact: Boolean) {
+private fun PlayerQualityBadge(
+    quality: PlayerQualityUi,
+    compact: Boolean,
+) {
     val palette = LocalPlayerPalette.current
     Surface(
         modifier = Modifier.padding(top = if (compact) 2.dp else 4.dp),
@@ -263,7 +268,7 @@ private fun PlayerQualityBadge(compact: Boolean) {
         contentColor = palette.secondaryContent,
     ) {
         Text(
-            text = stringResource(R.string.player_quality_standard),
+            text = quality.label,
             modifier = Modifier.padding(horizontal = 7.dp, vertical = 1.dp),
             fontSize = 10.sp,
             maxLines = 1,

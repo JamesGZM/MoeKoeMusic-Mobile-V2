@@ -27,7 +27,9 @@ import cn.james.music.feature.player.PlayerQueueMoveRequest
 import cn.james.music.feature.player.PlayerQueueMoveResult
 import cn.james.music.feature.player.PlayerQueueSheet
 import cn.james.music.feature.player.PlayerQueueUiState
+import cn.james.music.feature.player.PlayerQualityUi
 import cn.james.music.feature.player.PlayerUiState
+import cn.james.music.playback.ResolvedPlaybackQuality
 import cn.james.music.playback.PlaybackState
 import java.io.File
 
@@ -76,12 +78,13 @@ internal fun PlaybackState.toPlayerUiState(): PlayerUiState =
         isBuffering = status == cn.james.music.playback.PlaybackStatus.Buffering,
         controlsEnabled = connection == cn.james.music.playback.PlaybackConnectionState.Connected,
         mode = mode.toPlayerPlaybackModeUi(),
+        quality = currentResolvedQuality?.toPlayerQualityUi(),
     )
 
 internal fun PlaybackState.toMoeMiniPlayerUiModel(
     positionMs: Long,
     durationMs: Long,
-    badgeLabel: String,
+    badgeLabel: String?,
     semantics: MoeMiniPlayerSemanticsUi,
 ): MoeMiniPlayerUiModel? {
     val item = currentItem ?: return null
@@ -139,6 +142,17 @@ internal fun PlaybackMode.toPlayerPlaybackModeUi(): PlayerPlaybackModeUi =
         PlaybackMode.RepeatAll -> PlayerPlaybackModeUi.RepeatAll
         PlaybackMode.RepeatOne -> PlayerPlaybackModeUi.RepeatOne
         PlaybackMode.Shuffle -> PlayerPlaybackModeUi.Shuffle
+    }
+
+internal fun ResolvedPlaybackQuality.toPlayerQualityUi(): PlayerQualityUi =
+    when (this) {
+        ResolvedPlaybackQuality.Standard -> PlayerQualityUi.Standard
+        ResolvedPlaybackQuality.High -> PlayerQualityUi.High
+        ResolvedPlaybackQuality.Lossless -> PlayerQualityUi.Lossless
+        ResolvedPlaybackQuality.HiRes -> PlayerQualityUi.HiRes
+        ResolvedPlaybackQuality.ViperAtmos -> PlayerQualityUi.ViperAtmos
+        ResolvedPlaybackQuality.ViperClear -> PlayerQualityUi.ViperClear
+        ResolvedPlaybackQuality.ViperTape -> PlayerQualityUi.ViperTape
     }
 
 private fun PlaybackArtwork?.toPlayerArtworkUiModel(): PlayerArtworkUiModel =

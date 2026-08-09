@@ -58,6 +58,19 @@ enum class PlayerPlaybackModeUi {
     Shuffle,
 }
 
+/** The quality actually resolved for the current runtime playback item. */
+enum class PlayerQualityUi(
+    val label: String,
+) {
+    Standard("标准"),
+    High("高品"),
+    Lossless("FLAC"),
+    HiRes("Hi-Res"),
+    ViperAtmos("全景声"),
+    ViperClear("超清"),
+    ViperTape("母带"),
+}
+
 @Immutable
 data class PlayerUiState(
     val item: PlayerItemUiModel? = null,
@@ -65,6 +78,7 @@ data class PlayerUiState(
     val isBuffering: Boolean = false,
     val controlsEnabled: Boolean = true,
     val mode: PlayerPlaybackModeUi = PlayerPlaybackModeUi.RepeatAll,
+    val quality: PlayerQualityUi? = null,
 )
 
 @Immutable

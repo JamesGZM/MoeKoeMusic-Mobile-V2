@@ -47,7 +47,7 @@ PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/componen
 
 026 已将 `resolvedQuality` 加入短期、类型安全的 resolved-source/runtime-state 边界：`:playback` 自有 `ResolvedPlaybackQuality`，`:data` 在成功地址候选处显式映射它，并仅经 `MediaItem` metadata extras 从 Service 流向 Controller。`PlaybackState.currentResolvedQuality` 读取当前 Media3 item 的 runtime metadata；切换队列项读取各自值，地址刷新以新解析结果替换旧值。本地、演示、未解析和错误来源均为 `null`。
 
-该值不属于 `PlaybackItem`、`PlaybackSnapshot`、`PlaybackMediaItemMapper.toModel` 或 Room；持久队列恢复会重新解析地址与实际质量。Player 角标仍未接入，后续 UI 切片只能在该值存在时显示对应标签，且不得把偏好值直接当作当前播放质量，亦不得在 High/无损已成功时继续显示“标准”。
+该值不属于 `PlaybackItem`、`PlaybackSnapshot`、`PlaybackMediaItemMapper.toModel` 或 Room；持久队列恢复会重新解析地址与实际质量。028 已在 `app/src/main/kotlin/cn/james/music/PlaybackShell.kt` 显式映射为 `:feature:player` 的纯 `PlayerQualityUi`：全屏封面/歌词共用控制区与 MiniPlayer 仅在该值非空时显示“标准 / 高品 / FLAC / Hi-Res / 全景声 / 超清 / 母带”，本地、演示、未解析和错误来源保持无角标；不得把偏好值直接当作当前播放质量，亦不得在 High/无损已成功时继续显示“标准”。
 
 ## Android 约束、失败恢复与视觉准入
 
@@ -61,7 +61,7 @@ PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/componen
 2. 协议与数据：类型化候选计划、client 质量参数、登录/匿名分支、逐档回退、停止边界、取消和迟到结果；已完成，并以固定虚构 DTO/Transport 覆盖七档顺序、匿名、候选、VIP/mp4、停止错误、取消和偏好快照；未碰真实服务。
 3. 播放：resolved-source/runtime-state 只携带实际质量；已完成。JVM 覆盖协议候选到 runtime quality 的七档映射、当前队列项读取、地址刷新替换，以及 `PlaybackItem`/快照边界不携带质量；本地/演示 source result 为 `null`。`MediaItem` extras 的运行时跨进程行为与实际播放留给后续指定真机验收。
 4. 设置：真实选择行、复用确认 Dialog、独立保存代际、回滚和精确 Retry；已完成。保存中仅禁用该行/Dialog，七档文案、Radio 语义、失败回滚、快速代际与最后失败精确 Retry 均由 settings JVM/Compose/screenshot 覆盖；未触碰 Player badge 或真实服务。
-5. UI/证据：Settings dialog/语义、Player 实际标签/无标签状态、现有浅深/AMOLED/大字体截图与定向 fidelity；再进行受控真实登录/匿名地址解析和指定真机播放验证。
+5. UI/证据：已完成。Settings dialog/语义、Player 实际标签/无标签状态、Standard 确认基线、无质量与“母带”截图、Player contract 局部 qualityBadge region 及 app/player 七档/null 测试均已通过。真实登录/匿名地址解析和指定真机播放验证仍待单独受控执行。
 
 JVM 必测：七档顺序与未知值；匿名不查候选且始终 128；登录优先档/缺候选/逐级回退；VIP、无版权、风控、登录失效、离线、超时、连接、服务、协议；`mp4`、空/过滤后 URL 映射到既有 `Unavailable` 的行为；取消、A→B 切歌迟到、地址刷新；偏好并发写入和当前流不换流。Compose/截图必测：选择语义、保存中禁用、失败回滚/Retry，以及 badge 只反映 resolved quality。设备与真实服务均留给实现后验收，本审计未运行。
 

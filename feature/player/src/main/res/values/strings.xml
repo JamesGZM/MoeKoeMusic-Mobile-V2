@@ -14,7 +14,6 @@
     <string name="player_download">下载</string>
     <string name="player_add_to_playlist">加入歌单</string>
     <string name="player_share">分享</string>
-    <string name="player_quality_standard">标准</string>
     <string name="player_mode_sequence">顺序播放</string>
     <string name="player_mode_repeat_all">列表循环</string>
     <string name="player_mode_repeat_one">单曲循环</string>

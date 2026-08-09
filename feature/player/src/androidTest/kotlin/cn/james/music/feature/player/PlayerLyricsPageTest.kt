@@ -87,4 +87,47 @@ class PlayerLyricsPageTest {
         composeRule.onAllNodesWithText("translation").assertCountEquals(0)
         assertEquals("translation", (lyrics.lines.single()).secondary)
     }
+
+    @Test
+    fun qualityBadgeIsHiddenWithoutResolvedQualityAndShownOnLyricsPageWhenAvailable() {
+        composeRule.setContent {
+            PlayerScreenContent(
+                state = PlayerUiState(item = PlayerItemUiModel("id", "title", "artist")),
+                progress = remember { mutableStateOf(PlayerProgressUiState()) },
+                lyricsState = PlayerLyricsUiState.Loading,
+                lyricsProgress = remember { mutableStateOf(PlayerLyricsProgressUiState()) },
+                initialPage = PlayerPage.Cover,
+                onBack = {},
+                onTogglePlayback = {},
+                onSeek = {},
+                onPrevious = {},
+                onNext = {},
+                onChangeMode = {},
+                onOpenQueue = {},
+            )
+        }
+        composeRule.onAllNodesWithText("母带").assertCountEquals(0)
+
+        composeRule.setContent {
+            PlayerScreenContent(
+                state =
+                    PlayerUiState(
+                        item = PlayerItemUiModel("id", "title", "artist"),
+                        quality = PlayerQualityUi.ViperTape,
+                    ),
+                progress = remember { mutableStateOf(PlayerProgressUiState()) },
+                lyricsState = PlayerLyricsUiState.Loading,
+                lyricsProgress = remember { mutableStateOf(PlayerLyricsProgressUiState()) },
+                initialPage = PlayerPage.Lyrics,
+                onBack = {},
+                onTogglePlayback = {},
+                onSeek = {},
+                onPrevious = {},
+                onNext = {},
+                onChangeMode = {},
+                onOpenQueue = {},
+            )
+        }
+        composeRule.onNodeWithText("母带").assertExists()
+    }
 }

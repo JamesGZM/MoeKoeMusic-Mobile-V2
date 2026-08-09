@@ -16,6 +16,16 @@ class PlayerUiStateContractTest {
         assertNotEquals(PlayerLyricsUiState.Empty, PlayerLyricsUiState.Offline)
         assertNotEquals(PlayerLyricsUiState.Offline, PlayerLyricsUiState.Error)
         assertEquals(item, content.item)
+        assertEquals(null, content.quality)
+    }
+
+    @Test
+    fun qualityUiUsesOnlyResolvedRuntimeLabels() {
+        assertEquals(
+            listOf("标准", "高品", "FLAC", "Hi-Res", "全景声", "超清", "母带"),
+            PlayerQualityUi.entries.map(PlayerQualityUi::label),
+        )
+        assertEquals(null, PlayerUiState(item = PlayerItemUiModel("fixture", "Title", "Artist")).quality)
     }
 
     @Test
