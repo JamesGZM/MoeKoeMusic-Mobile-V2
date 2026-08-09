@@ -201,9 +201,38 @@ object KugouEndpoints {
         albumAudioId: Long = 0,
         quality: String = "128",
         freePart: Boolean = true,
+    ): KugouRequestSpec =
+        songUrlWithWireQuality(
+            hash = hash,
+            albumId = albumId,
+            albumAudioId = albumAudioId,
+            quality = MAGIC_QUALITIES[quality] ?: quality,
+            freePart = freePart,
+        )
+
+    fun songUrl(
+        hash: String,
+        quality: KugouPlaybackQuality,
+        albumId: Long = 0,
+        albumAudioId: Long = 0,
+        freePart: Boolean = true,
+    ): KugouRequestSpec =
+        songUrlWithWireQuality(
+            hash = hash,
+            albumId = albumId,
+            albumAudioId = albumAudioId,
+            quality = quality.wireValue,
+            freePart = freePart,
+        )
+
+    private fun songUrlWithWireQuality(
+        hash: String,
+        albumId: Long,
+        albumAudioId: Long,
+        quality: String,
+        freePart: Boolean,
     ): KugouRequestSpec {
         require(hash.isNotBlank()) { "Song hash must not be blank" }
-        val normalizedQuality = MAGIC_QUALITIES[quality] ?: quality
         return KugouRequestSpec(
             id = "song_url",
             method = KugouHttpMethod.Get,
@@ -216,7 +245,7 @@ object KugouEndpoints {
                     "ssa_flag" to "is_fromtrack",
                     "version" to "11430",
                     "page_id" to "151369488",
-                    "quality" to normalizedQuality,
+                    "quality" to quality,
                     "album_audio_id" to albumAudioId.toString(),
                     "behavior" to "play",
                     "pid" to "2",

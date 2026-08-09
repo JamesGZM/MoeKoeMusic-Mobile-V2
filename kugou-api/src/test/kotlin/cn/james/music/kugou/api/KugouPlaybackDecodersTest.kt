@@ -2,6 +2,7 @@ package cn.james.music.kugou.api
 
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecodeResult
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
+import cn.james.music.kugou.api.endpoint.KugouPlaybackQuality
 import cn.james.music.kugou.api.endpoint.KugouPlaybackUnavailableReason
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecodeResult
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
@@ -31,7 +32,18 @@ class KugouPlaybackDecodersTest {
             )
 
         assertTrue(result is KugouPrivilegeDecodeResult.Success)
-        assertEquals(listOf("flac", "128"), (result as KugouPrivilegeDecodeResult.Success).candidates.map { it.quality })
+        assertEquals(
+            listOf(KugouPlaybackQuality.Lossless, KugouPlaybackQuality.Standard),
+            (result as KugouPrivilegeDecodeResult.Success).candidates.map { it.quality },
+        )
+    }
+
+    @Test
+    fun playbackQualityUsesTheFixedSevenLevelWireOrder() {
+        assertEquals(
+            listOf("128", "320", "flac", "high", "viper_atmos", "viper_clear", "viper_tape"),
+            KugouPlaybackQuality.entries.map(KugouPlaybackQuality::wireValue),
+        )
     }
 
     @Test

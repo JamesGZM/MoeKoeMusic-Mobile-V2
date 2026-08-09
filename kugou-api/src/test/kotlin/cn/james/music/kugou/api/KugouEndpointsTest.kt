@@ -2,6 +2,7 @@ package cn.james.music.kugou.api
 
 import cn.james.music.kugou.api.endpoint.KugouAudioResource
 import cn.james.music.kugou.api.endpoint.KugouEndpoints
+import cn.james.music.kugou.api.endpoint.KugouPlaybackQuality
 import cn.james.music.kugou.api.transport.EpochSecondsProvider
 import cn.james.music.kugou.api.transport.KugouRequestContext
 import cn.james.music.kugou.api.transport.KugouRequestFactory
@@ -171,5 +172,37 @@ class KugouEndpointsTest {
         assertEquals("f5af8938b8d0c11e68a7d55ca366e99f", request.query["signature"])
         assertEquals("trackercdn.kugou.com", request.headers["x-router"])
         assertFalse(request.toString().contains("abcdef012345"))
+    }
+
+    @Test
+    fun stringSongUrlKeepsExistingMagicQualityMapping() {
+        val request =
+            factory.prepare(
+                KugouEndpoints.songUrl(
+                    hash = "ABCDEF012345",
+                    quality = "piano",
+                    freePart = false,
+                ),
+                context,
+            )
+
+        assertEquals("magic_piano", request.query["quality"])
+        assertEquals("0", request.query["IsFreePart"])
+    }
+
+    @Test
+    fun typedSongUrlUsesTheRequestedFixedQuality() {
+        val request =
+            factory.prepare(
+                KugouEndpoints.songUrl(
+                    hash = "ABCDEF012345",
+                    quality = KugouPlaybackQuality.ViperClear,
+                    freePart = false,
+                ),
+                context,
+            )
+
+        assertEquals("viper_clear", request.query["quality"])
+        assertEquals("0", request.query["IsFreePart"])
     }
 }

@@ -38,7 +38,7 @@ Ktor Client + OkHttp Engine Transport 和 `register_dev`、歌曲搜索、`privi
 
 ## 默认音质的后续接入
 
-默认音质的具体准入已固定在 [`reference-audits/24-default-playback-quality.md`](reference-audits/24-default-playback-quality.md)。它不增加 Endpoint：匿名保持现有 `song_url(quality=128, IsFreePart=1)`，登录态才使用已迁移的 `privilege_lite` 候选和已有 `song_url` 质量参数，从用户偏好向低档回退。`Risk`、认证失效和无版权是终止结果；只有候选级 VIP、`mp4`、空或不安全 URL 可尝试更低档。实现仍须先通过固定虚构 fixture，再进行隔离的真实服务兼容验证；不得把候选、短期 URL、Cookie 或实际质量落盘。
+默认音质的具体准入已固定在 [`reference-audits/24-default-playback-quality.md`](reference-audits/24-default-playback-quality.md)。024b 不增加 Endpoint：匿名不读偏好、不查 `privilege_lite`，保持 `song_url(quality=128, IsFreePart=1)`；仅 token 非空且 userid 为正数的登录会话读取一次偏好、调用一次 `privilege_lite`，再从用户偏好向低档回退。`Risk`、认证失效、无版权、网络、HTTP 和协议错误是终止结果；只有候选级 VIP 或成功响应的 `mp4` 可尝试更低档。decoder 对空/不安全 URL 已归类为 `NoCopyright` 或 `VipRequired`，不会向 resolver 泄漏原始原因。实现已通过固定虚构 fixture；仍须进行隔离的真实服务兼容验证，且不得把候选、短期 URL、Cookie 或实际质量落盘。
 
 ## 建议目录
 

@@ -79,8 +79,16 @@ class KugouOnlineClient(
     suspend fun resolvePlaybackAddress(
         songHash: String,
         context: KugouRequestContext,
+        quality: KugouPlaybackQuality = KugouPlaybackQuality.Standard,
+        freePart: Boolean = true,
     ): KugouApiResult<KugouPlaybackAddressResult> =
-        when (val response = executor.executeJson(KugouEndpoints.songUrl(songHash), context)) {
+        when (
+            val response =
+                executor.executeJson(
+                    KugouEndpoints.songUrl(songHash, quality, freePart = freePart),
+                    context,
+                )
+        ) {
             is KugouProtocolResult.Failure -> {
                 KugouApiResult.Failure(response.error)
             }

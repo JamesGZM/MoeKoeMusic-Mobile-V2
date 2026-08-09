@@ -12,9 +12,26 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
+enum class KugouPlaybackQuality(
+    val wireValue: String,
+) {
+    Standard("128"),
+    High("320"),
+    Lossless("flac"),
+    HiRes("high"),
+    ViperAtmos("viper_atmos"),
+    ViperClear("viper_clear"),
+    ViperTape("viper_tape"),
+    ;
+
+    companion object {
+        fun fromWireValue(value: String): KugouPlaybackQuality? = entries.firstOrNull { quality -> quality.wireValue == value }
+    }
+}
+
 data class KugouPrivilegeCandidate(
     val hash: String,
-    val quality: String,
+    val quality: KugouPlaybackQuality,
 )
 
 sealed interface KugouPrivilegeDecodeResult {
@@ -36,7 +53,7 @@ class KugouPrivilegeDecoder {
                     .flatMap { resource -> resource.variants() }
                     .mapNotNull { variant -> variant.toCandidateOrNull() }
                     .distinctBy(KugouPrivilegeCandidate::quality)
-                    .sortedByDescending { candidate -> QUALITY_ORDER.indexOf(candidate.quality) }
+                    .sortedByDescending { candidate -> candidate.quality.ordinal }
             KugouPrivilegeDecodeResult.Success(candidates)
         } catch (_: Exception) {
             KugouPrivilegeDecodeResult.Failure(KugouError.Protocol(KugouError.Protocol.Reason.MalformedResponse))
@@ -51,7 +68,11 @@ class KugouPrivilegeDecoder {
         runCatching {
             val item = jsonObject
             val hash = item.stringValue("hash")?.takeIf(String::isNotBlank) ?: return null
-            val quality = item.stringValue("quality")?.takeIf { it in QUALITY_ORDER } ?: return null
+            val quality =
+                item
+                    .stringValue("quality")
+                    ?.let(KugouPlaybackQuality::fromWireValue)
+                    ?: return null
             if (item["level"].intValue() == 0) return null
             KugouPrivilegeCandidate(hash = hash, quality = quality)
         }.getOrNull()
@@ -60,10 +81,6 @@ class KugouPrivilegeDecoder {
         KugouPrivilegeDecodeResult.Failure(
             KugouError.Protocol(KugouError.Protocol.Reason.MissingRequiredField),
         )
-
-    private companion object {
-        val QUALITY_ORDER = listOf("128", "320", "flac", "high", "viper_atmos", "viper_clear", "viper_tape")
-    }
 }
 
 data class KugouPlaybackAddress(
