@@ -64,6 +64,17 @@ class AppThemeViewModelTest {
         }
 
     @Test
+    fun dynamicCoverColorsMapsFromAppSettingsWithoutChangingTheme() =
+        runTest(dispatcher) {
+            val repository = FakeAppSettingsRepository(AppThemePreference.Dark, dynamicCoverColors = false)
+            val viewModel = AppThemeViewModel(repository)
+            runCurrent()
+
+            assertEquals(ThemeMode.Dark, viewModel.themeMode.value)
+            assertEquals(false, viewModel.dynamicCoverColors.value)
+        }
+
+    @Test
     fun newerSelectionCancelsPendingOlderWrite() =
         runTest(dispatcher) {
             val repository = FakeAppSettingsRepository(AppThemePreference.System)
@@ -84,8 +95,10 @@ class AppThemeViewModelTest {
 
     private class FakeAppSettingsRepository(
         initialTheme: AppThemePreference,
+        dynamicCoverColors: Boolean = true,
     ) : AppSettingsRepository {
-        private val mutableSettings = MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme)))
+        private val mutableSettings =
+            MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme, dynamicCoverColors = dynamicCoverColors)))
         override val settings: Flow<AppSettingsSnapshot> = mutableSettings
         var updateResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var nextWriteGate: CompletableDeferred<Unit>? = null
@@ -102,6 +115,8 @@ class AppThemeViewModelTest {
         }
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = updateResult
+
+        override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = updateResult
     }
 
     private val AppThemePreference.expectedThemeMode: ThemeMode

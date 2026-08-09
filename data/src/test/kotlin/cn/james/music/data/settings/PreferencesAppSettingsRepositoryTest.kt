@@ -69,6 +69,25 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun dynamicCoverColorsDefaultsToTrueAndRoundTrips() =
+        withFixture {
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.dynamicCoverColors,
+            )
+
+            assertEquals(AppSettingsUpdateResult.Success, repository.setDynamicCoverColors(false))
+            assertEquals(
+                false,
+                repository.settings
+                    .first()
+                    .settings.dynamicCoverColors,
+            )
+        }
+
+    @Test
     fun unknownStoredThemeFallsBackToSystemAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.THEME] = "future-theme" }
@@ -117,6 +136,23 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.autoSkipFailedPlayback,
+            )
+        }
+
+    @Test
+    fun dynamicCoverColorsWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setDynamicCoverColors(false),
+            )
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.dynamicCoverColors,
             )
         }
 

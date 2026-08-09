@@ -110,6 +110,62 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun dynamicCoverColorsForwardsItsOwnToggleAction() {
+        var enabled: Boolean? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        dynamicCoverColors = true,
+                                    ),
+                            ),
+                        onAction = { action ->
+                            if (action is SettingsAction.SetDynamicCoverColors) enabled = action.enabled
+                        },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("封面动态取色").performClick()
+
+        assertEquals(false, enabled)
+    }
+
+    @Test
+    fun savingDynamicCoverColorsDisablesItsRow() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                dynamicCoverColors = true,
+                                savingDynamicCoverColors = true,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        dynamicCoverColors = true,
+                                        savingDynamicCoverColors = true,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("封面动态取色").assertIsNotEnabled()
+    }
+
+    @Test
     fun savingAutoSkipFailedPlaybackDisablesItsRow() {
         composeRule.setContent {
             MoeKoeTheme {

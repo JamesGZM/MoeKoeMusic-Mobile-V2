@@ -29,6 +29,7 @@ coil = "3.4.0"
 webkit = "1.16.0"
 zxing = "3.5.4"
 lyrics-core = "0.4.7"
+palette = "1.0.0"
 
 [libraries]
 android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -79,6 +80,7 @@ androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref =
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 lyrics-core = { module = "com.mocharealm.accompanist:lyrics-core", version.ref = "lyrics-core" }
+androidx-palette = { module = "androidx.palette:palette", version.ref = "palette" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

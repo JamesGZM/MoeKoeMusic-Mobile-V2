@@ -42,11 +42,13 @@ internal fun PlayerCoverPage(
     onDownload: () -> Unit,
     onAddToPlaylist: () -> Unit,
     onShare: () -> Unit,
+    onArtworkSuccess: (coil3.Image) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Spacer(Modifier.height(23.dp))
-        PlayerArtwork(
-            item = item,
+            PlayerArtwork(
+                item = item,
+                onArtworkSuccess = onArtworkSuccess,
             modifier = Modifier.fillMaxWidth().playerLayoutProbe(PLAYER_PROBE_ARTWORK),
         )
         PlayerPageIndicator(
@@ -78,6 +80,7 @@ internal fun PlayerCoverPage(
 @Composable
 private fun PlayerArtwork(
     item: PlayerItemUiModel,
+    onArtworkSuccess: (coil3.Image) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
@@ -104,6 +107,7 @@ private fun PlayerArtwork(
                 model = item.artwork,
                 contentDescription = stringResource(R.string.player_artwork, item.title),
                 modifier = Modifier.fillMaxSize(),
+                onArtworkSuccess = onArtworkSuccess,
             )
         }
     }

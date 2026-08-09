@@ -23,19 +23,24 @@ internal class SettingsViewModel
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(SettingsUiState())
         val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
+
         private var themeUpdateJob: Job? = null
         private var autoSkipUpdateJob: Job? = null
+        private var dynamicCoverColorsUpdateJob: Job? = null
         private var retryRequest: RetryRequest? = null
         private var themeUpdateGeneration = 0L
         private var autoSkipUpdateGeneration = 0L
+        private var dynamicCoverColorsUpdateGeneration = 0L
         private var persistedTheme = AppThemePreference.System
         private var persistedAutoSkipFailedPlayback = true
+        private var persistedDynamicCoverColors = true
 
         init {
             viewModelScope.launch {
                 repository.settings.collect { snapshot ->
                     persistedTheme = snapshot.settings.theme
                     persistedAutoSkipFailedPlayback = snapshot.settings.autoSkipFailedPlayback
+                    persistedDynamicCoverColors = snapshot.settings.dynamicCoverColors
                     mutableState.update { current ->
                         val theme =
                             if (current.savingTheme == null || current.savingTheme.toDomain() == snapshot.settings.theme) {
@@ -43,7 +48,7 @@ internal class SettingsViewModel
                             } else {
                                 current.theme
                             }
-                        val autoSkipFailedPlayback =
+                        val autoSkip =
                             if (
                                 current.savingAutoSkipFailedPlayback == null ||
                                 current.savingAutoSkipFailedPlayback == snapshot.settings.autoSkipFailedPlayback
@@ -52,17 +57,20 @@ internal class SettingsViewModel
                             } else {
                                 current.autoSkipFailedPlayback
                             }
-                        current.copy(
+                        val dynamicColors =
+                            if (
+                                current.savingDynamicCoverColors == null ||
+                                current.savingDynamicCoverColors == snapshot.settings.dynamicCoverColors
+                            ) {
+                                snapshot.settings.dynamicCoverColors
+                            } else {
+                                current.dynamicCoverColors
+                            }
+                        current.withGroups(
                             theme = theme,
-                            autoSkipFailedPlayback = autoSkipFailedPlayback,
+                            autoSkipFailedPlayback = autoSkip,
+                            dynamicCoverColors = dynamicColors,
                             problem = if (current.problem == SettingsProblemUi.Write) current.problem else snapshot.problem?.toUi(),
-                            groups =
-                                settingsGroups(
-                                    theme = theme,
-                                    autoSkipFailedPlayback = autoSkipFailedPlayback,
-                                    savingTheme = current.savingTheme,
-                                    savingAutoSkipFailedPlayback = current.savingAutoSkipFailedPlayback,
-                                ),
                         )
                     }
                 }
@@ -76,6 +84,7 @@ internal class SettingsViewModel
                 SettingsAction.OpenTheme -> mutableState.update { it.copy(overlay = SettingsOverlay.ThemeSelection) }
                 SettingsAction.OpenAbout -> mutableState.update { it.copy(overlay = SettingsOverlay.About) }
                 is SettingsAction.SetAutoSkipFailedPlayback -> setAutoSkipFailedPlayback(action.enabled)
+                is SettingsAction.SetDynamicCoverColors -> setDynamicCoverColors(action.enabled)
                 SettingsAction.DismissOverlay -> mutableState.update { it.copy(overlay = null) }
                 SettingsAction.Retry -> retry()
                 SettingsAction.DismissProblem -> dismissProblem()
@@ -90,54 +99,27 @@ internal class SettingsViewModel
             themeUpdateJob =
                 viewModelScope.launch {
                     retryRequest = null
-                    mutableState.update {
-                        it.copy(
-                            savingTheme = theme,
-                            problem = null,
-                            canRetry = false,
-                            groups =
-                                settingsGroups(
-                                    theme = it.theme,
-                                    autoSkipFailedPlayback = it.autoSkipFailedPlayback,
-                                    savingTheme = theme,
-                                    savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
-                                ),
-                        )
+                    mutableState.update { current ->
+                        current.withGroups(savingTheme = theme, problem = null, canRetry = false)
                     }
                     when (repository.setTheme(theme.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
-                            if (generation != themeUpdateGeneration) return@launch
-                            mutableState.update {
-                                it.copy(
-                                    theme = theme,
-                                    savingTheme = null,
-                                    groups =
-                                        settingsGroups(
-                                            theme = theme,
-                                            autoSkipFailedPlayback = it.autoSkipFailedPlayback,
-                                            savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
-                                        ),
-                                )
+                            if (generation == themeUpdateGeneration) {
+                                mutableState.update { current -> current.withGroups(theme = theme, savingTheme = null) }
                             }
                         }
 
                         is AppSettingsUpdateResult.Failure -> {
-                            if (generation != themeUpdateGeneration) return@launch
-                            retryRequest = RetryRequest.Theme(theme)
-                            mutableState.update {
-                                val persisted = persistedTheme.toUi()
-                                it.copy(
-                                    theme = persisted,
-                                    savingTheme = null,
-                                    problem = SettingsProblemUi.Write,
-                                    canRetry = true,
-                                    groups =
-                                        settingsGroups(
-                                            theme = persisted,
-                                            autoSkipFailedPlayback = it.autoSkipFailedPlayback,
-                                            savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
-                                        ),
-                                )
+                            if (generation == themeUpdateGeneration) {
+                                retryRequest = RetryRequest.Theme(theme)
+                                mutableState.update { current ->
+                                    current.withGroups(
+                                        theme = persistedTheme.toUi(),
+                                        savingTheme = null,
+                                        problem = SettingsProblemUi.Write,
+                                        canRetry = true,
+                                    )
+                                }
                             }
                         }
                     }
@@ -151,53 +133,65 @@ internal class SettingsViewModel
             autoSkipUpdateJob =
                 viewModelScope.launch {
                     retryRequest = null
-                    mutableState.update {
-                        it.copy(
-                            savingAutoSkipFailedPlayback = enabled,
-                            problem = null,
-                            canRetry = false,
-                            groups =
-                                settingsGroups(
-                                    theme = it.theme,
-                                    autoSkipFailedPlayback = it.autoSkipFailedPlayback,
-                                    savingTheme = it.savingTheme,
-                                    savingAutoSkipFailedPlayback = enabled,
-                                ),
-                        )
+                    mutableState.update { current ->
+                        current.withGroups(savingAutoSkipFailedPlayback = enabled, problem = null, canRetry = false)
                     }
                     when (repository.setAutoSkipFailedPlayback(enabled)) {
                         AppSettingsUpdateResult.Success -> {
-                            if (generation != autoSkipUpdateGeneration) return@launch
-                            mutableState.update {
-                                it.copy(
-                                    autoSkipFailedPlayback = enabled,
-                                    savingAutoSkipFailedPlayback = null,
-                                    groups =
-                                        settingsGroups(
-                                            theme = it.theme,
-                                            autoSkipFailedPlayback = enabled,
-                                            savingTheme = it.savingTheme,
-                                        ),
-                                )
+                            if (generation == autoSkipUpdateGeneration) {
+                                mutableState.update { current ->
+                                    current.withGroups(autoSkipFailedPlayback = enabled, savingAutoSkipFailedPlayback = null)
+                                }
                             }
                         }
 
                         is AppSettingsUpdateResult.Failure -> {
-                            if (generation != autoSkipUpdateGeneration) return@launch
-                            retryRequest = RetryRequest.AutoSkipFailedPlayback(enabled)
-                            mutableState.update {
-                                it.copy(
-                                    autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
-                                    savingAutoSkipFailedPlayback = null,
-                                    problem = SettingsProblemUi.Write,
-                                    canRetry = true,
-                                    groups =
-                                        settingsGroups(
-                                            theme = it.theme,
-                                            autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
-                                            savingTheme = it.savingTheme,
-                                        ),
-                                )
+                            if (generation == autoSkipUpdateGeneration) {
+                                retryRequest = RetryRequest.AutoSkipFailedPlayback(enabled)
+                                mutableState.update { current ->
+                                    current.withGroups(
+                                        autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
+                                        savingAutoSkipFailedPlayback = null,
+                                        problem = SettingsProblemUi.Write,
+                                        canRetry = true,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+
+        private fun setDynamicCoverColors(enabled: Boolean) {
+            if (enabled == mutableState.value.dynamicCoverColors && mutableState.value.savingDynamicCoverColors == null) return
+            val generation = ++dynamicCoverColorsUpdateGeneration
+            dynamicCoverColorsUpdateJob?.cancel()
+            dynamicCoverColorsUpdateJob =
+                viewModelScope.launch {
+                    retryRequest = null
+                    mutableState.update { current ->
+                        current.withGroups(savingDynamicCoverColors = enabled, problem = null, canRetry = false)
+                    }
+                    when (repository.setDynamicCoverColors(enabled)) {
+                        AppSettingsUpdateResult.Success -> {
+                            if (generation == dynamicCoverColorsUpdateGeneration) {
+                                mutableState.update { current ->
+                                    current.withGroups(dynamicCoverColors = enabled, savingDynamicCoverColors = null)
+                                }
+                            }
+                        }
+
+                        is AppSettingsUpdateResult.Failure -> {
+                            if (generation == dynamicCoverColorsUpdateGeneration) {
+                                retryRequest = RetryRequest.DynamicCoverColors(enabled)
+                                mutableState.update { current ->
+                                    current.withGroups(
+                                        dynamicCoverColors = persistedDynamicCoverColors,
+                                        savingDynamicCoverColors = null,
+                                        problem = SettingsProblemUi.Write,
+                                        canRetry = true,
+                                    )
+                                }
                             }
                         }
                     }
@@ -209,6 +203,7 @@ internal class SettingsViewModel
                 null -> Unit
                 is RetryRequest.Theme -> selectTheme(request.theme)
                 is RetryRequest.AutoSkipFailedPlayback -> setAutoSkipFailedPlayback(request.enabled)
+                is RetryRequest.DynamicCoverColors -> setDynamicCoverColors(request.enabled)
             }
         }
 
@@ -225,7 +220,43 @@ internal class SettingsViewModel
             data class AutoSkipFailedPlayback(
                 val enabled: Boolean,
             ) : RetryRequest
+
+            data class DynamicCoverColors(
+                val enabled: Boolean,
+            ) : RetryRequest
         }
+
+        private fun SettingsUiState.withGroups(
+            theme: SettingsThemeUi = this.theme,
+            autoSkipFailedPlayback: Boolean = this.autoSkipFailedPlayback,
+            dynamicCoverColors: Boolean = this.dynamicCoverColors,
+            savingTheme: SettingsThemeUi? = this.savingTheme,
+            savingAutoSkipFailedPlayback: Boolean? = this.savingAutoSkipFailedPlayback,
+            savingDynamicCoverColors: Boolean? = this.savingDynamicCoverColors,
+            problem: SettingsProblemUi? = this.problem,
+            canRetry: Boolean = this.canRetry,
+            overlay: SettingsOverlay? = this.overlay,
+        ): SettingsUiState =
+            copy(
+                theme = theme,
+                autoSkipFailedPlayback = autoSkipFailedPlayback,
+                dynamicCoverColors = dynamicCoverColors,
+                savingTheme = savingTheme,
+                savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
+                savingDynamicCoverColors = savingDynamicCoverColors,
+                problem = problem,
+                canRetry = canRetry,
+                overlay = overlay,
+                groups =
+                    settingsGroups(
+                        theme = theme,
+                        autoSkipFailedPlayback = autoSkipFailedPlayback,
+                        dynamicCoverColors = dynamicCoverColors,
+                        savingTheme = savingTheme,
+                        savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
+                        savingDynamicCoverColors = savingDynamicCoverColors,
+                    ),
+            )
 
         private fun AppThemePreference.toUi(): SettingsThemeUi =
             when (this) {

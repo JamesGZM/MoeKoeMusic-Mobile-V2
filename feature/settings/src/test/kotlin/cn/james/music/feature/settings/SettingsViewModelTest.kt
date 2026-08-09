@@ -181,6 +181,28 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun failedDynamicCoverColorSelectionRollsBackAndRetriesItsOwnRequest() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.dynamicCoverColorsResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            advanceUntilIdle()
+
+            assertTrue(viewModel.state.value.dynamicCoverColors)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.dynamicCoverColorsResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.dynamicCoverColors)
+            assertEquals(listOf(false, false), repository.dynamicCoverColorsRequests)
+        }
+
+    @Test
     fun retryTargetsTheLastFailureWhenThemeAndAutoSkipWritesBothFail() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
@@ -207,6 +229,36 @@ class SettingsViewModelTest {
             assertEquals(listOf(false, false), repository.autoSkipRequests)
         }
 
+    @Test
+    fun retryTargetsDynamicCoverColorsWhenItsFailureFinishesLast() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            runCurrent()
+
+            repository.failTheme()
+            runCurrent()
+            repository.failAutoSkipFailedPlayback()
+            runCurrent()
+            repository.failDynamicCoverColors()
+            runCurrent()
+
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+            assertTrue(viewModel.state.value.canRetry)
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertEquals(listOf(false), repository.autoSkipRequests)
+            assertEquals(listOf(false, false), repository.dynamicCoverColorsRequests)
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -214,8 +266,10 @@ class SettingsViewModelTest {
         override val settings: Flow<AppSettingsSnapshot> = settingsState
         var result: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var autoSkipResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        var dynamicCoverColorsResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
+        val dynamicCoverColorsRequests = mutableListOf<Boolean>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -232,6 +286,16 @@ class SettingsViewModelTest {
                 if (it == AppSettingsUpdateResult.Success) {
                     settingsState.value =
                         settingsState.value.copy(settings = settingsState.value.settings.copy(autoSkipFailedPlayback = enabled))
+                }
+            }
+        }
+
+        override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult {
+            dynamicCoverColorsRequests += enabled
+            return dynamicCoverColorsResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value =
+                        settingsState.value.copy(settings = settingsState.value.settings.copy(dynamicCoverColors = enabled))
                 }
             }
         }
@@ -252,6 +316,8 @@ class SettingsViewModelTest {
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
 
+        override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+
         fun complete(theme: AppThemePreference) {
             completions.getValue(theme).complete(Unit)
         }
@@ -264,8 +330,10 @@ class SettingsViewModelTest {
         override val settings: Flow<AppSettingsSnapshot> = settingsState
         private val themeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val autoSkipCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val dynamicCoverColorsCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
+        val dynamicCoverColorsRequests = mutableListOf<Boolean>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -285,12 +353,25 @@ class SettingsViewModelTest {
             }
         }
 
+        override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult {
+            dynamicCoverColorsRequests += enabled
+            return if (dynamicCoverColorsRequests.size == 1) {
+                withContext(NonCancellable) { dynamicCoverColorsCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
+
         fun failTheme() {
             themeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
 
         fun failAutoSkipFailedPlayback() {
             autoSkipCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failDynamicCoverColors() {
+            dynamicCoverColorsCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }

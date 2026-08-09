@@ -63,6 +63,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun MoeKoeApp(
+    dynamicCoverColors: Boolean = true,
     hasMediaPermission: () -> Boolean,
     onRequestMediaPermission: ((Boolean) -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
@@ -239,6 +240,7 @@ fun MoeKoeApp(
                     onImportCandidates = onImportCandidates,
                 )
                 playerDestination(
+                    dynamicCoverColors = dynamicCoverColors,
                     state = playerUiState,
                     progress = playerProgressUiState,
                     onBack = navController::popBackStack,

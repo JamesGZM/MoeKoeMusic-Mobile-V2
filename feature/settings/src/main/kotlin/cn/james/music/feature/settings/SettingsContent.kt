@@ -96,6 +96,7 @@ private fun SettingsRow(
                     when (row.id) {
                         SettingsRowId.AmoledMode -> onAction(SettingsAction.OpenTheme)
                         SettingsRowId.SkipFailed -> onAction(SettingsAction.SetAutoSkipFailedPlayback(enabled))
+                        SettingsRowId.DynamicColor -> onAction(SettingsAction.SetDynamicCoverColors(enabled))
                         else -> Unit
                     }
                 },

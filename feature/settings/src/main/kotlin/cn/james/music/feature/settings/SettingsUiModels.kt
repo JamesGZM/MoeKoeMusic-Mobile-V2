@@ -85,8 +85,10 @@ internal data class SettingsGroupUi(
 internal data class SettingsUiState(
     val theme: SettingsThemeUi = SettingsThemeUi.System,
     val autoSkipFailedPlayback: Boolean = true,
+    val dynamicCoverColors: Boolean = true,
     val savingTheme: SettingsThemeUi? = null,
     val savingAutoSkipFailedPlayback: Boolean? = null,
+    val savingDynamicCoverColors: Boolean? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
@@ -108,6 +110,10 @@ internal sealed interface SettingsAction {
         val enabled: Boolean,
     ) : SettingsAction
 
+    data class SetDynamicCoverColors(
+        val enabled: Boolean,
+    ) : SettingsAction
+
     data object DismissOverlay : SettingsAction
 
     data object Retry : SettingsAction
@@ -118,8 +124,10 @@ internal sealed interface SettingsAction {
 internal fun settingsGroups(
     theme: SettingsThemeUi,
     autoSkipFailedPlayback: Boolean,
+    dynamicCoverColors: Boolean = true,
     savingTheme: SettingsThemeUi? = null,
     savingAutoSkipFailedPlayback: Boolean? = null,
+    savingDynamicCoverColors: Boolean? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -128,7 +136,11 @@ internal fun settingsGroups(
                 listOf(
                     SettingsRowUi.Value(SettingsRowId.ThemeMode, theme, savingTheme != null),
                     SettingsRowUi.Unavailable(SettingsRowId.ThemeColor),
-                    SettingsRowUi.Unavailable(SettingsRowId.DynamicColor),
+                    SettingsRowUi.Toggle(
+                        id = SettingsRowId.DynamicColor,
+                        checked = dynamicCoverColors,
+                        loading = savingDynamicCoverColors != null,
+                    ),
                     SettingsRowUi.Toggle(SettingsRowId.AmoledMode, theme == SettingsThemeUi.Amoled, savingTheme != null),
                 ),
         ),

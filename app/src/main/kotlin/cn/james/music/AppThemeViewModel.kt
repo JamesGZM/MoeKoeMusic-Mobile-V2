@@ -29,6 +29,15 @@ internal class AppThemeViewModel
                     initialValue = ThemeMode.System,
                 )
 
+        val dynamicCoverColors: StateFlow<Boolean> =
+            repository.settings
+                .map { snapshot -> snapshot.settings.dynamicCoverColors }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = true,
+                )
+
         private var updateJob: Job? = null
 
         fun updateTheme(themeMode: ThemeMode) {

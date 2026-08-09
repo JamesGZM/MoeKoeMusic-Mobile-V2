@@ -50,7 +50,7 @@
 - 播放队列已按 [`PLAYER_QUEUE_LAYOUT_SPEC.md`](../design/PLAYER_QUEUE_LAYOUT_SPEC.md) 和 `08-player-queue.png` 完成第二轮纯 UI 同画布复刻：系统 `ModalBottomSheet` 内的几何锚点保持一致，并纠正旧证据未拦住的 Sheet 大面积容器色和当前项 Surface 偏蓝问题；标准、空队列、`1.5×` 共 3 组截图基线及主态并排/叠加/差异证据已更新。拖拽仍只表达确认稿视觉，不伪装重排业务已完成。
 - 歌单详情已经完成 [`19-playlist-detail-ui`](../reference-audits/19-playlist-detail-ui.md) 门禁，并按 [`PLAYLIST_DETAIL_LAYOUT_SPEC.md`](../design/PLAYLIST_DETAIL_LAYOUT_SPEC.md) 与 `05-playlist-detail.png` 落入独立 `:feature:playlist`：从发现页使用类型安全子页面导航进入，恢复标准 Toolbar、资料 Hero、五项操作、紧凑歌曲列表与当前项 Surface；子页面隐藏一级底栏并保留应用级 MiniPlayer。Light、Dark、AMOLED、加载、空、错误、`1.5×`、`2.0×` 共 8 组截图基线及归一化设计对照证据已建立，指定 ELE-AL00 / API 29 已验证入口、返回与窄屏操作区无裁切。真实协议、收藏、下载、排序和播放行为继续拆分为后续纵向切片。
 - 歌词 Repository 已完成仅支持酷狗来源的缓存优先读取、损坏缓存删除后单次回源、同 Hash 并发单飞、旧请求取消透传和成功解析后缓存；匿名歌词客户端不再接受账号请求上下文，JVM 行为测试与 App Hilt 装配已通过。
-- `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页必须共享当前歌曲封面派生的语义色板。动态取色已经完成独立 [`13-player-artwork-palette`](../reference-audits/13-player-artwork-palette.md) 审计，允许先实现调色基础与现有封面页接入。
+- `23a` 至 `23h` 歌词状态稿的页面结构和状态表达已确认；稿件颜色只作示例，封面页和歌词页已共享当前歌曲已解码封面派生的 `PlayerPalette`。动态取色由应用偏好控制，关闭立即回退静态色板；取色不新增图片请求、只在 `96px / 12 色 / Dispatchers.Default` 边界执行，并以当前媒体 id 隔离迟到结果。
 
 ## 当前剩余
 

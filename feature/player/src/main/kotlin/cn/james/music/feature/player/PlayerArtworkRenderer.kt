@@ -8,11 +8,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import coil3.compose.AsyncImage
+import coil3.Image
 
 @Composable
 internal fun PlayerArtworkRenderer(
     model: PlayerArtworkUiModel,
     contentDescription: String?,
+    onArtworkSuccess: (Image) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     when (model) {
@@ -23,6 +25,7 @@ internal fun PlayerArtworkRenderer(
                 contentDescription = contentDescription,
                 modifier = modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { onArtworkSuccess(it.result.image) },
             )
 
         is PlayerArtworkUiModel.AppStorage ->
@@ -31,6 +34,7 @@ internal fun PlayerArtworkRenderer(
                 contentDescription = contentDescription,
                 modifier = modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { onArtworkSuccess(it.result.image) },
             )
 
         is PlayerArtworkUiModel.BundledResource ->

@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 data object PlayerDestination
 
 fun NavGraphBuilder.playerDestination(
+    dynamicCoverColors: Boolean,
     state: State<PlayerUiState>,
     progress: State<PlayerProgressUiState>,
     onBack: () -> Unit,
@@ -21,6 +22,7 @@ fun NavGraphBuilder.playerDestination(
 ) {
     composable<PlayerDestination> {
         PlayerScreen(
+            dynamicCoverColors = dynamicCoverColors,
             state = state.value,
             progress = progress,
             onBack = onBack,

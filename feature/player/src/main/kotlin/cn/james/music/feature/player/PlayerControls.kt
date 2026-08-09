@@ -94,6 +94,7 @@ internal fun PlayerPageIndicator(
     activePage: Int,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalPlayerPalette.current
     Row(
         modifier = modifier.fillMaxWidth().height(36.dp),
         horizontalArrangement = Arrangement.Center,
@@ -105,7 +106,7 @@ internal fun PlayerPageIndicator(
                 Modifier
                     .size(if (page == activePage) 8.dp else 7.dp)
                     .background(
-                        if (page == activePage) PlayerAccent else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f),
+                        if (page == activePage) palette.accent else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f),
                         CircleShape,
                     ),
             )
@@ -131,6 +132,7 @@ internal fun PlayerControls(
     showSecondaryActions: Boolean,
     compactLayout: Boolean,
 ) {
+    val palette = LocalPlayerPalette.current
     Column(
         modifier =
             Modifier
@@ -209,13 +211,13 @@ internal fun PlayerControls(
                 shape = CircleShape,
                 color =
                     if (state.controlsEnabled) {
-                        PlayerAccent
+                        palette.accent
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerHighest
                     },
                 contentColor =
                     if (state.controlsEnabled) {
-                        MaterialTheme.colorScheme.onPrimary
+                        palette.onAccent
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                     },
@@ -224,7 +226,7 @@ internal fun PlayerControls(
                     if (state.isBuffering) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(30.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = palette.onAccent,
                             strokeWidth = 3.dp,
                         )
                     } else {
@@ -253,11 +255,12 @@ internal fun PlayerControls(
 
 @Composable
 private fun PlayerQualityBadge(compact: Boolean) {
+    val palette = LocalPlayerPalette.current
     Surface(
         modifier = Modifier.padding(top = if (compact) 2.dp else 4.dp),
         shape = RoundedCornerShape(10.dp),
-        color = PlayerSecondaryContainer,
-        contentColor = PlayerSecondaryContent,
+        color = palette.secondaryContainer,
+        contentColor = palette.secondaryContent,
     ) {
         Text(
             text = stringResource(R.string.player_quality_standard),
@@ -276,6 +279,7 @@ private fun PlayerSecondaryActions(
     onOpenQueue: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalPlayerPalette.current
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 18.dp).height(72.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -294,6 +298,7 @@ private fun PlayerSecondaryAction(
     label: Int,
     onClick: () -> Unit,
 ) {
+    val palette = LocalPlayerPalette.current
     Box(
         modifier = Modifier.size(48.dp).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -301,8 +306,8 @@ private fun PlayerSecondaryAction(
         Surface(
             modifier = Modifier.size(46.dp),
             shape = CircleShape,
-            color = PlayerSecondaryContainer,
-            contentColor = PlayerSecondaryContent,
+            color = palette.secondaryContainer,
+            contentColor = palette.secondaryContent,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(icon, stringResource(label), modifier = Modifier.size(24.dp))
@@ -320,11 +325,12 @@ private fun PlayerProgress(
     onSeek: (Long) -> Unit,
     compact: Boolean,
 ) {
+    val palette = LocalPlayerPalette.current
     var draggedPosition by remember(itemId) { mutableStateOf<Long?>(null) }
     val current = progress.value
     val duration = current.durationMs.coerceAtLeast(0)
     val shownPosition = (draggedPosition ?: current.positionMs).coerceIn(0, duration)
-    val activeColor = PlayerAccent
+    val activeColor = palette.accent
     val inactiveColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)
     Slider(
         value = shownPosition.toFloat(),

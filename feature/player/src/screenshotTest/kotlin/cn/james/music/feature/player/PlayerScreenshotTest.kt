@@ -47,7 +47,17 @@ fun PlayerCoverLayoutProbeScreenshot() =
 @Preview(name = "CoverFallback", widthDp = 390, heightDp = 844)
 @Composable
 fun PlayerCoverFallbackScreenshot() {
-    PlayerScreenshotContent()
+    PlayerScreenshotContent(dynamicCoverColors = false)
+}
+
+@PreviewTest
+@Preview(name = "CoverDynamicPalette", widthDp = 390, heightDp = 844)
+@Composable
+fun PlayerCoverDynamicPaletteScreenshot() {
+    PlayerScreenshotContent(
+        showArtwork = true,
+        paletteOverride = PlayerPaletteResolver.resolve(Color(0xFFEA245C)),
+    )
 }
 
 @PreviewTest
@@ -96,7 +106,7 @@ fun PlayerCoverConnectingScreenshot() {
 @Preview(name = "Empty", widthDp = 390, heightDp = 844)
 @Composable
 fun PlayerEmptyScreenshot() {
-    PlayerScreen(
+    PlayerScreenContent(
         state = PlayerUiState(),
         progress = remember { mutableStateOf(PlayerProgressUiState()) },
         onBack = {},
@@ -235,8 +245,11 @@ private fun PlayerScreenshotContent(
     showArtwork: Boolean = false,
     initialPage: PlayerPage = PlayerPage.Cover,
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    dynamicCoverColors: Boolean = true,
+    paletteOverride: PlayerPalette? = null,
 ) {
-    PlayerScreen(
+    PlayerScreenContent(
+        dynamicCoverColors = dynamicCoverColors,
         state =
             PlayerUiState(
                 item =
@@ -274,6 +287,7 @@ private fun PlayerScreenshotContent(
         onOpenQueue = {},
         initialPage = initialPage,
         lyricsState = lyricsState,
+        paletteOverride = paletteOverride,
     )
 }
 

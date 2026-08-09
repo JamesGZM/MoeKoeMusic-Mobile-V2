@@ -69,8 +69,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
+            val dynamicCoverColors by themeViewModel.dynamicCoverColors.collectAsStateWithLifecycle()
             MoeKoeTheme(themeMode = themeMode) {
                 MoeKoeApp(
+                    dynamicCoverColors = dynamicCoverColors,
                     hasMediaPermission = ::hasMediaPermission,
                     onRequestMediaPermission = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,

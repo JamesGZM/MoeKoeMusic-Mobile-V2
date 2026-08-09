@@ -25,6 +25,7 @@ import cn.james.music.core.designsystem.ThemeMode
 
 @Composable
 fun PlayerScreen(
+    dynamicCoverColors: Boolean = true,
     state: PlayerUiState,
     progress: State<PlayerProgressUiState>,
     onBack: () -> Unit,
@@ -46,9 +47,63 @@ fun PlayerScreen(
     onLyricClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    PlayerScreenContent(
+        dynamicCoverColors = dynamicCoverColors,
+        state = state,
+        progress = progress,
+        onBack = onBack,
+        onTogglePlayback = onTogglePlayback,
+        onSeek = onSeek,
+        onPrevious = onPrevious,
+        onNext = onNext,
+        onChangeMode = onChangeMode,
+        onOpenQueue = onOpenQueue,
+        onMore = onMore,
+        onFavorite = onFavorite,
+        onDownload = onDownload,
+        onAddToPlaylist = onAddToPlaylist,
+        onShare = onShare,
+        lyricsState = lyricsState,
+        initialPage = initialPage,
+        onLyricsSettings = onLyricsSettings,
+        onRetryLyrics = onRetryLyrics,
+        onLyricClick = onLyricClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun PlayerScreenContent(
+    dynamicCoverColors: Boolean = true,
+    state: PlayerUiState,
+    progress: State<PlayerProgressUiState>,
+    onBack: () -> Unit,
+    onTogglePlayback: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onChangeMode: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onMore: () -> Unit = {},
+    onFavorite: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onAddToPlaylist: () -> Unit = {},
+    onShare: () -> Unit = {},
+    lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    initialPage: PlayerPage = PlayerPage.Cover,
+    onLyricsSettings: () -> Unit = {},
+    onRetryLyrics: () -> Unit = {},
+    onLyricClick: (Long) -> Unit = {},
+    paletteOverride: PlayerPalette? = null,
+    modifier: Modifier = Modifier,
+) {
     MoeKoeTheme(themeMode = ThemeMode.Dark) {
         val item = state.item
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+        val paletteState = rememberPlayerArtworkPalette(item, dynamicCoverColors)
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            LocalPlayerPalette provides (paletteOverride ?: paletteState.current),
+        ) {
             Box(
                 modifier = modifier.fillMaxSize(),
             ) {
@@ -72,6 +127,7 @@ fun PlayerScreen(
                         onDownload = onDownload,
                         onAddToPlaylist = onAddToPlaylist,
                         onShare = onShare,
+                        onArtworkSuccess = paletteState.onArtworkSuccess,
                         lyricsState = lyricsState,
                         initialPage = initialPage,
                         onLyricsSettings = onLyricsSettings,
@@ -101,6 +157,7 @@ private fun PlayerContent(
     onDownload: () -> Unit,
     onAddToPlaylist: () -> Unit,
     onShare: () -> Unit,
+    onArtworkSuccess: (coil3.Image) -> Unit,
     lyricsState: PlayerLyricsUiState,
     initialPage: PlayerPage,
     onLyricsSettings: () -> Unit,
@@ -143,6 +200,7 @@ private fun PlayerContent(
                         onDownload = onDownload,
                         onAddToPlaylist = onAddToPlaylist,
                         onShare = onShare,
+                        onArtworkSuccess = onArtworkSuccess,
                     )
 
                 PlayerPage.Lyrics ->

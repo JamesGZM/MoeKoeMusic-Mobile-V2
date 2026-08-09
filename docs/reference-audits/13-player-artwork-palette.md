@@ -20,7 +20,7 @@
 - [AndroidX Palette 发布页](https://developer.android.com/jetpack/androidx/releases/palette)当前生产稳定版为 `1.0.0`；`1.1.0-alpha01` 尚处 Alpha。本项目固定 `androidx.palette:palette:1.0.0`，不为尚未需要的新 API 采用 Alpha。
 - [Coil 3 `Image.toBitmap`](https://coil-kt.github.io/coil/api/coil-core/coil3/to-bitmap.html)允许直接复用已解码的 Coil 图片。本功能只消费 `AsyncImage` 的成功结果，不另发封面请求，也不把图片或颜色写入数据库。
 
-AndroidX Palette 为 Apache-2.0，维护主体为 AndroidX，职责仅是对小尺寸 Bitmap 做成熟的颜色量化。现有 Compose、Coil 或 Material 依赖不提供等价的封面主色提取能力；因此后续实现允许新增该单一稳定依赖，项目只保留亮度、对比度、语义角色和生命周期策略，不自行重写完整量化器，也不引入模糊、取色或动态主题大库。本审计只确定方案，当前切片不修改依赖或生产代码。
+AndroidX Palette 为 Apache-2.0，维护主体为 AndroidX，职责仅是对小尺寸 Bitmap 做成熟的颜色量化。现有 Compose、Coil 或 Material 依赖不提供等价的封面主色提取能力；因此实现新增该单一稳定依赖，项目只保留亮度、对比度、语义角色和生命周期策略，不自行重写完整量化器，也不引入模糊、取色或动态主题大库。
 
 ## 成熟开源项目固定参考
 
@@ -75,11 +75,13 @@ PlayerPalette（不可变语义 UI model）
 - 取色结果属于可重建 UI 派生状态，不写 Room/DataStore。Coil 继续负责图片内存/磁盘缓存；单次播放器组合生命周期内，同一媒体成功图片只量化一次。
 - 切歌以稳定媒体 `id` 作为代际边界。协程取消必须继续抛出，普通图片/取色异常才回退；回调和结果提交都再次核对媒体 `id`。
 - 背景保持静态三段渐变，不引入实时模糊。取色失败不能阻断封面、歌词、播放控制或队列。
+- `dynamicCoverColors` 是应用级布尔偏好，默认开启。`MainActivity` 仅把它作为纯 Boolean 经 `MoeKoeApp` 和 Player destination 传入 `:feature:player`；播放器 Feature 不依赖 Repository、DataStore 或 `:core:model`，也不得把它接到 Android 系统 Monet 的 `MoeKoeTheme(dynamicColor)`。
+- 关闭时当前播放器立即恢复完整静态色板并取消当前提取；重新开启只复用当前已成功解码的封面，不触发新的网络、磁盘或数据库读取。取色完成前、封面缺失、取消外的异常或无合格候选均使用整套静态色板，不能保留上一首的一部分颜色。
 
 ## 色彩门禁
 
 - 大面积背景候选先与 MoeKoe 深色基底混合，并限制相对亮度，避免高亮封面造成白字失去对比。
-- 强调色必须与最亮背景段达到至少 `3:1` 的非文本可辨识对比；强调容器文字/图标达到至少 `4.5:1`。
+- 强调色必须与最亮背景段达到至少 `3:1` 的非文本可辨识对比；最亮段从固定深色基底按 Canvas 的四层 glow 实际绘制顺序逐层 alpha 合成，并在基底与各累计结果中取最高亮度（忽略后续纵向黑色渐变以保持保守）；强调容器文字/图标达到至少 `4.5:1`。
 - 主要文本使用校验后的浅色语义色，次要文本保持不低于 70% 视觉强调；不能直接采用 Palette 返回的任意正文色。
 - 封面为灰阶、近黑、近白或极端高饱和色时仍应得到稳定、可读的背景；无法修正时整体回退，不保留半套动态色。
 - `07` 与 `23a` 至 `23h` 的蓝紫示例只表示动态色的一个可能实例，不得硬编码为所有歌曲的播放器色板。

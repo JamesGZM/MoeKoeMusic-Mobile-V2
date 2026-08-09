@@ -52,12 +52,13 @@ internal fun PlayerEmptyState(onBack: () -> Unit) {
 
 @Composable
 internal fun PlayerBackdrop() {
+    val palette = LocalPlayerPalette.current
     Canvas(Modifier.fillMaxSize()) {
-        drawRect(Color(0xFF07101F))
+        drawRect(palette.base)
         drawRect(
             brush =
                 Brush.radialGradient(
-                    colors = listOf(Color(0x8C6A2C5C), Color.Transparent),
+                    colors = listOf(palette.glowPrimary, Color.Transparent),
                     center = Offset(size.width * 0.48f, size.height * 0.06f),
                     radius = size.height * 0.31f,
                 ),
@@ -65,7 +66,7 @@ internal fun PlayerBackdrop() {
         drawRect(
             brush =
                 Brush.radialGradient(
-                    colors = listOf(Color(0xC06A2058), Color.Transparent),
+                    colors = listOf(palette.glowSecondary, Color.Transparent),
                     center = Offset(-size.width * 0.08f, size.height * 0.34f),
                     radius = size.height * 0.42f,
                 ),
@@ -73,7 +74,7 @@ internal fun PlayerBackdrop() {
         drawRect(
             brush =
                 Brush.radialGradient(
-                    colors = listOf(Color(0x7A173B69), Color.Transparent),
+                    colors = listOf(palette.glowTertiary, Color.Transparent),
                     center = Offset(size.width * 1.04f, size.height * 0.22f),
                     radius = size.height * 0.42f,
                 ),
@@ -81,7 +82,7 @@ internal fun PlayerBackdrop() {
         drawRect(
             brush =
                 Brush.radialGradient(
-                    colors = listOf(Color(0x66552A58), Color.Transparent),
+                    colors = listOf(palette.glowQuaternary, Color.Transparent),
                     center = Offset(size.width * 0.82f, size.height * 0.52f),
                     radius = size.height * 0.34f,
                 ),
@@ -103,7 +104,3 @@ internal fun formatPlayerTime(millis: Long): String {
     val seconds = totalSeconds % 60
     return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
-
-internal val PlayerAccent = Color(0xFF9488FF)
-internal val PlayerSecondaryContainer = Color(0xFF252A43)
-internal val PlayerSecondaryContent = Color(0xFFC3BCFF)

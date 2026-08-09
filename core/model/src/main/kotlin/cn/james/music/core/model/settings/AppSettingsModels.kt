@@ -12,6 +12,7 @@ enum class AppThemePreference {
 data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
     val autoSkipFailedPlayback: Boolean = true,
+    val dynamicCoverColors: Boolean = true,
 )
 
 sealed interface AppSettingsProblem {
@@ -39,4 +40,6 @@ interface AppSettingsRepository {
     suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult
 
     suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult
+
+    suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult
 }

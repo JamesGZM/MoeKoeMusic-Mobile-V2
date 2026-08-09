@@ -58,6 +58,7 @@ internal fun PlayerLyricsPage(
     onRetryLyrics: () -> Unit,
     onLyricClick: (Long) -> Unit,
 ) {
+    val palette = LocalPlayerPalette.current
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             LyricsViewport(
@@ -83,8 +84,8 @@ internal fun PlayerLyricsPage(
                 Surface(
                     modifier = Modifier.size(35.dp),
                     shape = CircleShape,
-                    color = PlayerSecondaryContainer.copy(alpha = 0.9f),
-                    contentColor = PlayerAccent,
+                    color = palette.secondaryContainer.copy(alpha = 0.9f),
+                    contentColor = palette.accent,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -170,10 +171,11 @@ private fun LyricsViewport(
 
 @Composable
 private fun LyricsLoadingState(modifier: Modifier = Modifier) {
+    val palette = LocalPlayerPalette.current
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(
             modifier = Modifier.size(32.dp),
-            color = PlayerAccent,
+            color = palette.accent,
             trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
             strokeWidth = 3.dp,
         )
@@ -204,13 +206,14 @@ private fun LyricsMessageState(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalPlayerPalette.current
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
             modifier = Modifier.size(52.dp),
             shape = CircleShape,
-            color = PlayerSecondaryContainer.copy(alpha = 0.92f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, PlayerSecondaryContent.copy(alpha = 0.18f)),
-            contentColor = PlayerSecondaryContent,
+            color = palette.secondaryContainer.copy(alpha = 0.92f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, palette.secondaryContent.copy(alpha = 0.18f)),
+            contentColor = palette.secondaryContent,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp))
@@ -249,6 +252,7 @@ private fun LyricsContent(
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalPlayerPalette.current
     val textSizes = lyricsTextSizes(state.textSize)
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -262,7 +266,7 @@ private fun LyricsContent(
                     val split = (line.original.length - line.highlightedCharacterCount).coerceIn(0, line.original.length)
                     buildAnnotatedString {
                         append(line.original.substring(0, split))
-                        withStyle(SpanStyle(color = PlayerAccent)) {
+                        withStyle(SpanStyle(color = palette.accent)) {
                             append(line.original.substring(split))
                         }
                     }
