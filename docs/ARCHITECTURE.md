@@ -167,6 +167,15 @@ sealed interface SearchUiState {
 - 一次性反馈使用可消费事件或 UI 层明确处理的 effect，不把 Toast 文案永久放入状态。
 - 导航由 UI 响应事件执行，Repository 不持有 NavController。
 
+## 数据驱动公共 UI
+
+- Feature 将 Domain/Repository/播放快照映射为不可变 Feature UI Model；Screen 再向公共组件提供不可变展示数据，并把类型化组件事件交给 Route、ViewModel 或应用组合根。完整准入与迁移顺序见 [`reference-audits/23-data-driven-ui-architecture.md`](reference-audits/23-data-driven-ui-architecture.md)。
+- UI Model 与公共展示模型不得包含 DTO、Entity、Repository、DAO、Service、`PlaybackState`、`PlaybackController`、Android 文件/URI/Context、导航对象，或任何 `Dp`、`Shape`、`Color`、内部 Padding、视觉偏移和任意视觉 Slot。
+- 公共组件拥有已确认的内部几何、颜色、字体、状态和受控动作。图片是唯一受控例外：应用/Feature 可在组件固定容器内提供像素 renderer，但 renderer 不得控制容器或其他内部布局；本规则不要求 Design System 引入图片加载依赖。
+- 当前架构阶段冻结 `MoeSongRow` 现有调用点、style、Slot、视觉覆写和 API 增长。十个原子切片完成并获得独立 UI 授权后，标准 Item 才迁移为展示数据驱动；届时未提供徽标自然折叠，More 为组件固有的 `More(id)` 事件。当前阶段不得由 Feature 新增歌曲行内部播放、徽标或尾部视觉。
+- 该冻结只适用于 `MoeSongRow`。本阶段已批准 `MoeMiniPlayerUiModel`/`MoeMiniPlayerEvent`、`MoeSnackbarUiModel/Event`、`MoeAlertDialogUiModel/Event` 与 Standard/Search TopBar 受控 action data/action ID 的生产接口和消费者原子迁移；它们同样不得改变已确认像素或状态所有权。
+- 复杂业务内容仍留 Feature：`MoeDialog` 可保留受控内容 Slot，输入与原子控件维持平台/语义边界。数据化不是将所有 Compose 函数包装成万能模型的理由。
+
 ## 播放器边界
 
 ```text
