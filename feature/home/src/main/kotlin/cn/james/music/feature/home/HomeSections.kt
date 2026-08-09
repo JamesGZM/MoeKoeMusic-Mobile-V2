@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +36,8 @@ import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeSongMoreAction
+import cn.james.music.core.designsystem.component.MoeSongMoreActionAlignment
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
 
@@ -46,13 +47,13 @@ internal fun HomeSectionHeader(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 33.dp).padding(start = 14.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
+        modifier = modifier.fillMaxWidth().height(33.dp).padding(start = 14.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier
-                .size(width = 4.dp, height = 20.dp)
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp)),
+                .size(width = 3.dp, height = 16.dp)
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.5.dp)),
         )
         Text(
             text = title,
@@ -97,13 +98,14 @@ internal fun HomeSongRow(
                         tone = if (song.previewBadgeIsError) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
                     )
                 }
-                MoeSongMoreAction(contentDescription = null, onClick = null)
+                MoeSongMoreAction(
+                    contentDescription = null,
+                    onClick = null,
+                    visualAlignment = MoeSongMoreActionAlignment.End,
+                )
             },
         )
-        HorizontalDivider(
-            modifier = Modifier.padding(start = 58.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-        )
+        MoeHorizontalDivider(startIndent = 58.dp)
     }
 }
 

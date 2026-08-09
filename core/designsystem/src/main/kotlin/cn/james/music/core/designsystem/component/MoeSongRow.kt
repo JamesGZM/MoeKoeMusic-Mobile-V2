@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +28,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,6 +47,11 @@ enum class MoeSongRowStyle {
     PlaylistCurrent,
     Queue,
     QueueCurrent,
+}
+
+enum class MoeSongMoreActionAlignment {
+    Center,
+    End,
 }
 
 @Composable
@@ -127,24 +133,15 @@ fun MoeSongRow(
             verticalArrangement = Arrangement.Center,
         ) {
             if (layout.inlineTitleContent) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    titleLeading()
-                    Text(
-                        text = title,
-                        modifier = Modifier.weight(1f),
-                        style = layout.titleStyle,
-                        fontWeight = titleFontWeight,
-                        color = if (isPlaying && highlightTitleWhenPlaying) playingColor else titleColor,
-                        maxLines = titleLines,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Row(
-                        modifier = Modifier.padding(start = MoeKoeTheme.spacing.small),
-                        horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.extraSmall),
-                        verticalAlignment = Alignment.CenterVertically,
-                        content = badges,
-                    )
-                }
+                InlineSongTitle(
+                    title = title,
+                    style = layout.titleStyle,
+                    fontWeight = titleFontWeight,
+                    color = if (isPlaying && highlightTitleWhenPlaying) playingColor else titleColor,
+                    maxLines = titleLines,
+                    leading = titleLeading,
+                    badges = badges,
+                )
             } else {
                 Text(
                     text = title,
@@ -212,24 +209,83 @@ fun MoeSongMoreAction(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     tint: Color = MaterialTheme.colorScheme.onSurface,
+    visualAlignment: MoeSongMoreActionAlignment = MoeSongMoreActionAlignment.Center,
 ) {
-    if (onClick == null) {
-        Box(modifier = modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget), contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = contentDescription,
-                tint = tint,
-                modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+    Box(
+        modifier =
+            modifier
+                .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                .then(
+                    if (onClick == null) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(role = Role.Button, onClick = onClick)
+                    },
+                ),
+        contentAlignment =
+            when (visualAlignment) {
+                MoeSongMoreActionAlignment.Center -> Alignment.Center
+                MoeSongMoreActionAlignment.End -> Alignment.CenterEnd
+            },
+    ) {
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = contentDescription,
+            tint = tint,
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+@Composable
+private fun InlineSongTitle(
+    title: String,
+    style: TextStyle,
+    fontWeight: FontWeight,
+    color: Color,
+    maxLines: Int,
+    leading: @Composable RowScope.() -> Unit,
+    badges: @Composable RowScope.() -> Unit,
+) {
+    val badgeGap = MoeKoeTheme.spacing.extraSmall
+    Layout(
+        modifier = Modifier.fillMaxWidth(),
+        content = {
+            Row(verticalAlignment = Alignment.CenterVertically, content = leading)
+            Text(
+                text = title,
+                style = style,
+                fontWeight = fontWeight,
+                color = color,
+                maxLines = maxLines,
+                overflow = TextOverflow.Ellipsis,
             )
-        }
-    } else {
-        IconButton(onClick = onClick, modifier = modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = contentDescription,
-                tint = tint,
-                modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.extraSmall),
+                verticalAlignment = Alignment.CenterVertically,
+                content = badges,
             )
+        },
+    ) { measurables, constraints ->
+        val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+        val leadingPlaceable = measurables[0].measure(looseConstraints)
+        val badgesPlaceable = measurables[2].measure(looseConstraints)
+        val gap = if (badgesPlaceable.width == 0) 0 else badgeGap.roundToPx()
+        val titleWidth =
+            (constraints.maxWidth - leadingPlaceable.width - badgesPlaceable.width - gap)
+                .coerceAtLeast(0)
+        val titlePlaceable = measurables[1].measure(looseConstraints.copy(maxWidth = titleWidth))
+        val height =
+            maxOf(leadingPlaceable.height, titlePlaceable.height, badgesPlaceable.height)
+                .coerceAtLeast(constraints.minHeight)
+
+        layout(constraints.maxWidth, height) {
+            var x = 0
+            leadingPlaceable.placeRelative(x, (height - leadingPlaceable.height) / 2)
+            x += leadingPlaceable.width
+            titlePlaceable.placeRelative(x, (height - titlePlaceable.height) / 2)
+            x += titlePlaceable.width + gap
+            badgesPlaceable.placeRelative(x, (height - badgesPlaceable.height) / 2)
         }
     }
 }
@@ -326,8 +382,8 @@ private fun MoeSongRowStyle.layout(): SongRowLayout =
                 metadataStartPadding = 0.dp,
                 metadataEndPadding = 8.dp,
                 metadataInSubtitleOnLargeText = true,
-                titleStyle = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, lineHeight = 18.sp),
-                subtitleStyle = MaterialTheme.typography.labelSmall,
+                titleStyle = MaterialTheme.typography.labelLarge,
+                subtitleStyle = MaterialTheme.typography.bodySmall,
                 metadataStyle = MaterialTheme.typography.bodySmall,
                 titleMaxLines = 1,
                 largeTextTitleMaxLines = 1,

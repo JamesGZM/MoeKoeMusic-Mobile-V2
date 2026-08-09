@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -44,6 +47,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoePassiveOutline
+import cn.james.music.core.designsystem.component.input.MoeSearchField
 
 @Composable
 fun MoeSearchTopBar(
@@ -75,54 +80,14 @@ fun MoeSearchTopBar(
                 modifier = Modifier.size(18.dp),
             )
         }
-        Surface(
-            modifier = Modifier.weight(1f).height(40.dp).offset { IntOffset(0, 4.dp.roundToPx()) },
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.54f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onSearch() }),
-                    decorationBox = { innerTextField ->
-                        Box(contentAlignment = Alignment.CenterStart) {
-                            if (query.isEmpty()) {
-                                Text(
-                                    text = placeholder,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                            }
-                            innerTextField()
-                        }
-                    },
-                )
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(
-                            Icons.Default.Clear,
-                            contentDescription = clearContentDescription,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-            }
-        }
+        MoeSearchField(
+            value = query,
+            placeholder = placeholder,
+            onValueChange = onQueryChange,
+            modifier = Modifier.weight(1f).offset { IntOffset(0, 4.dp.roundToPx()) },
+            clearContentDescription = clearContentDescription,
+            onSearch = onSearch,
+        )
         Box(Modifier.offset { IntOffset(0, 4.dp.roundToPx()) }) { trailingAction?.invoke() }
     }
 }

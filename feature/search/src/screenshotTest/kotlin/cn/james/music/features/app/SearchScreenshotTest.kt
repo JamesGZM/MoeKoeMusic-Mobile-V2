@@ -37,6 +37,18 @@ fun SearchIdleScreenshot() = SearchScreenshotContent(SearchUiState())
 fun SearchContentScreenshot() = SearchScreenshotContent(contentState)
 
 @PreviewTest
+@Preview(name = "LongQueryClear", widthDp = 390, heightDp = 764)
+@Composable
+fun SearchLongQueryClearScreenshot() =
+    SearchScreenshotContent(
+        SearchUiState(
+            query = "初音未来最受欢迎的经典歌曲合集",
+            submittedQuery = "初音未来最受欢迎的经典歌曲合集",
+            loading = true,
+        ),
+    )
+
+@PreviewTest
 @Preview(name = "ContentLayoutProbe", widthDp = 390, heightDp = 764)
 @Composable
 fun SearchContentLayoutProbeScreenshot() =

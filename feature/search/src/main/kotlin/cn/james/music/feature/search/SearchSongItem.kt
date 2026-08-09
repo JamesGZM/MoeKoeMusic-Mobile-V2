@@ -1,25 +1,22 @@
 package cn.james.music.feature.search
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import cn.james.music.core.designsystem.component.MoeMediaBadge
+import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongMoreAction
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
@@ -51,7 +48,7 @@ internal fun SearchSongItem(
                     Icons.Default.GraphicEq,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(end = 6.dp).size(18.dp),
+                    modifier = Modifier.padding(end = 8.dp).size(14.dp),
                 )
             }
         },
@@ -64,9 +61,9 @@ internal fun SearchSongItem(
         },
         badges = {
             badge?.let {
-                SearchBadge(
-                    if (it == SearchSongBadge.Mv) stringResource(R.string.search_mv) else stringResource(R.string.search_quality),
-                    if (it == SearchSongBadge.Mv) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                MoeMediaBadge(
+                    text = if (it == SearchSongBadge.Mv) stringResource(R.string.search_mv) else stringResource(R.string.search_quality),
+                    tone = if (it == SearchSongBadge.Mv) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
                 )
             }
         },
@@ -77,14 +74,4 @@ internal fun SearchSongItem(
             )
         },
     )
-}
-
-@Composable
-internal fun SearchBadge(
-    label: String,
-    color: Color,
-) {
-    Surface(shape = RoundedCornerShape(6.dp), color = Color.Transparent, border = BorderStroke(1.dp, color)) {
-        Text(label, color = color, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp))
-    }
 }

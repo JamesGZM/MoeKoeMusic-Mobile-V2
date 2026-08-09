@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,14 +39,20 @@ internal fun SearchCollectionCard(
                 painterResource(item.artworkRes),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)),
+                modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(8.dp)),
             )
             Surface(
-                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(24.dp),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(22.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.search_play_collection, item.title), modifier = Modifier.padding(4.dp))
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = stringResource(R.string.search_play_collection, item.title),
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
             }
         }
         Text(item.title, modifier = Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

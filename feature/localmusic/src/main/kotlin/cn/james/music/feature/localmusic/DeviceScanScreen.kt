@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
@@ -269,7 +269,7 @@ private fun ScanningCandidateList(
                     )
                 },
             )
-            HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+            MoeHorizontalDivider(startIndent = 74.dp)
         }
     }
 }
@@ -311,7 +311,7 @@ private fun SelectionCandidateList(
                     )
                 },
             )
-            HorizontalDivider(modifier = Modifier.padding(start = 64.dp))
+            MoeHorizontalDivider(startIndent = 74.dp)
         }
     }
 }

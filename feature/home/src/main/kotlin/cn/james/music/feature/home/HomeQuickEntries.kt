@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import cn.james.music.core.designsystem.component.MoePassiveOutline
 
 @Composable
 internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
@@ -47,7 +48,7 @@ internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
                 .testTag("home_quick_entries"),
         shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = MoePassiveOutline(),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),

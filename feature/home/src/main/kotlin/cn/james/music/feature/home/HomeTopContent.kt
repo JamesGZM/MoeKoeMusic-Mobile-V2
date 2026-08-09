@@ -44,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.james.music.core.designsystem.component.MoePassiveOutline
+import cn.james.music.core.designsystem.component.MoePassiveOutlineEmphasis
 
 @Composable
 internal fun HomeHeader(onSearch: () -> Unit) {
@@ -100,7 +102,7 @@ private fun HomeSearch(
             modifier = Modifier.fillMaxWidth().height(36.dp),
             shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surfaceContainerLow,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            border = MoePassiveOutline(MoePassiveOutlineEmphasis.Standard),
         ) {
             Row(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -221,17 +223,22 @@ internal fun HomeRadioHero(modifier: Modifier = Modifier) {
                 ) {
                     Surface(
                         modifier = Modifier.height(40.dp),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.height(40.dp).padding(horizontal = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp),
                         ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
-                            Text(stringResource(R.string.home_radio_play), fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Text(
+                                text = stringResource(R.string.home_radio_play),
+                                style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 20.sp),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
                         }
                     }
                 }

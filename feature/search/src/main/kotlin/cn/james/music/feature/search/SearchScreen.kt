@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.action.MoeTextButton
+import cn.james.music.core.designsystem.component.MoeDividerEmphasis
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.navigation.MoeSearchTopBar
 import cn.james.music.core.model.online.SearchError
 import cn.james.music.core.model.online.Song
@@ -117,17 +118,17 @@ private fun SearchTabs(
                 Text(
                     category.label(),
                     color = if (category == selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (category == selected) FontWeight.SemiBold else FontWeight.Normal,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (category == selected) FontWeight.Medium else FontWeight.Normal,
                 )
-                Spacer(Modifier.height(5.dp))
+                Spacer(Modifier.height(7.dp))
                 Box(Modifier.width(32.dp).height(3.dp).clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))) {
                     if (category == selected) Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.primary) {}
                 }
             }
         }
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
+    MoeHorizontalDivider(emphasis = MoeDividerEmphasis.Standard)
 }
 
 @Composable

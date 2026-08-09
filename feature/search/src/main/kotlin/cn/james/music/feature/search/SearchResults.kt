@@ -2,8 +2,10 @@ package cn.james.music.feature.search
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,7 +15,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.action.MoeTextButton
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.model.online.Song
 
 @Composable
@@ -49,6 +51,9 @@ internal fun SearchResults(
             item(key = "artist") { SearchArtistHero(artist, onFollowArtist) }
         }
         if (showSongs) {
+            if (showArtist) {
+                item(key = "songs-gap") { Spacer(Modifier.height(3.dp)) }
+            }
             item(key = "songs-title") {
                 SearchSectionTitle(
                     title = stringResource(R.string.search_songs),
@@ -71,7 +76,7 @@ internal fun SearchResults(
                             else -> Modifier
                         },
                 )
-                HorizontalDivider(Modifier.padding(start = 82.dp, end = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                MoeHorizontalDivider(startIndent = 76.dp, endIndent = 16.dp)
             }
             if (state.hasMore || state.loadingMore || state.error != null) {
                 item(key = "load-more") {

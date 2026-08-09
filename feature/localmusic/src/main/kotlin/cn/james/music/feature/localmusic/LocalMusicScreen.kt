@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +45,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
+import cn.james.music.core.designsystem.component.MoePassiveOutline
+import cn.james.music.core.designsystem.component.MoePassiveOutlineEmphasis
 import cn.james.music.core.designsystem.component.action.MoeTextButton
+import cn.james.music.core.designsystem.component.input.MoeSearchField
+import cn.james.music.core.designsystem.component.input.MoeSearchFieldStyle
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 import cn.james.music.core.designsystem.component.navigation.MoeTopBarTitleEmphasis
@@ -135,7 +141,17 @@ internal fun LocalMusicScreen(
                     FilterChip(
                         selected = sort == option,
                         onClick = { sort = option },
-                        label = { Text(stringResource(option.labelRes), style = MaterialTheme.typography.labelMedium) },
+                        label = {
+                            Text(
+                                stringResource(option.labelRes),
+                                style =
+                                    MaterialTheme.typography.labelMedium.copy(
+                                        fontSize = 11.sp,
+                                        lineHeight = 16.sp,
+                                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                    ),
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 imageVector =
@@ -146,7 +162,7 @@ internal fun LocalMusicScreen(
                                         LocalMusicSort.Duration -> Icons.Default.Schedule
                                     },
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(16.dp),
                             )
                         },
                         colors =
@@ -156,6 +172,7 @@ internal fun LocalMusicScreen(
                                 selectedLabelColor = MaterialTheme.colorScheme.primary,
                                 selectedLeadingIconColor = MaterialTheme.colorScheme.primary,
                             ),
+                        border = MoePassiveOutline(MoePassiveOutlineEmphasis.Standard),
                     )
                 }
             }
@@ -181,7 +198,7 @@ internal fun LocalMusicScreen(
                     contentPadding =
                         PaddingValues(
                             start = 19.dp,
-                            top = 9.dp,
+                            top = 11.dp,
                             end = 8.dp,
                             bottom = MoeKoeTheme.spacing.medium,
                         ),
@@ -194,7 +211,7 @@ internal fun LocalMusicScreen(
                             onDelete = { deleting = music },
                             modifier = if (index == 0) Modifier.localMusicLayoutProbe(PROBE_LIBRARY_LIST) else Modifier,
                         )
-                        HorizontalDivider()
+                        MoeHorizontalDivider(startIndent = 74.dp)
                     }
                 }
             }
@@ -224,42 +241,11 @@ private fun LocalMusicSearchField(
     placeholder: String,
     modifier: Modifier = Modifier,
 ) {
-    BasicTextField(
+    MoeSearchField(
         value = value,
         onValueChange = onValueChange,
-        singleLine = true,
-        textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-        modifier = modifier.height(44.dp),
-        decorationBox = { innerTextField ->
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Box(modifier = Modifier.weight(1f).padding(start = 10.dp)) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            }
-        },
+        placeholder = placeholder,
+        modifier = modifier,
+        style = MoeSearchFieldStyle.Standalone,
     )
 }
