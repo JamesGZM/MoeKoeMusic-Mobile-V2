@@ -84,13 +84,13 @@
 | 页面状态与覆盖层 | [`18-mobile-states-overlays.png`](design/mockups/18-mobile-states-overlays.png) | 系统居中白色 Dialog、Tonal 取消与贴底 Bottom Sheet |
 | 密码登录与风控 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#19--密码登录) | 凭据错误内联，风险确认使用居中 Dialog |
 | 扫码登录状态 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#20--扫码登录) | 生成、等待、已扫码、过期和失败分别建模 |
-| 登录安全验证 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#21--风险验证) | 短信 Dialog 与隔离腾讯验证保持安全边界 |
+| 登录安全验证 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#21--风险验证) | 短信 Dialog；隔离腾讯验证以白色全尺寸 WebView 宿主承接远端滑块 |
 | 手机号多账号 | [`login-v2` 已确认稿](design/mockups/candidates/login-v2/README.md#22--多账号) | 只在多账号响应后展示，不自动选择 |
 
 旧登录流程 `19` 至 `22` 号横向设计稿的实现基线资格已撤销；[`login-flow`](design/prototypes/login-flow/README.md) 仅保留为历史交互参考。新版独立单状态图已经确认，可直接用于 Compose 视觉返工；只有发现现有图片未覆盖的新状态时才补图并等待确认。
 
 登录纵向闭环的协议、会话、安全和成熟库选型审计已经通过，见 [`reference-audits/09-login-session-and-risk.md`](reference-audits/09-login-session-and-risk.md)。实施按协议基础、短信/多账号、密码/安全验证、扫码和整体验收拆为原子提交；当前验收只使用已连接的 API 29 真机，不创建或启动模拟器。
-短信/多账号、密码、安全验证与扫码五态已经进入 `:feature:login` Compose 功能实现；协议、状态机和安全边界继续作为行为证据。2026-08-08 已按 [`LOGIN_LAYOUT_SPEC.md`](design/LOGIN_LAYOUT_SPEC.md) 完成手机号、密码、风险 Dialog、短信风险、腾讯加载与失败返回、扫码五态和多账号三态的 `852 × 1846` 归一化复验，证据索引见 [`login-v2`](design/mockups/candidates/login-v2/README.md)。登录确认稿视觉门禁已关闭；真实验证码、密码/风控、扫码状态 `2→4`、会话恢复和跨设备兼容仍属于用户主动验收项，不阻塞后续页面视觉开发。
+短信/多账号、密码、安全验证与扫码五态已经进入 `:feature:login` Compose 功能实现；协议、状态机和安全边界继续作为行为证据。2026-08-09 已按 [`LOGIN_LAYOUT_SPEC.md`](design/LOGIN_LAYOUT_SPEC.md) 重新校准腾讯加载态：标准返回 Toolbar 下只保留白色全尺寸 WebView 宿主与最小 loading fallback，远端滑块 H5/iframe 不再被伪造成原生设计。其余手机号、密码、风险 Dialog、短信风险、腾讯失败返回、扫码五态和多账号三态仍使用各自确认稿，证据索引见 [`login-v2`](design/mockups/candidates/login-v2/README.md)。真实验证码、密码/风控、扫码状态 `2→4`、会话恢复和跨设备兼容仍属于用户主动验收项，不阻塞后续页面视觉开发。
 
 “我的”首个账户纵向切片已经贯通 `:kugou-api`、`:data` 与 `:feature:my`：按 `04-my-v4.png` 展示真实用户资料和 VIP 摘要，覆盖匿名、加载、部分失败、刷新与退出确认，不用假资产计数填补尚未迁移的接口；匿名与已登录确认稿已补齐 [`my-content-2026-08-08.md`](design/evidence/my-content-2026-08-08.md) 的归一化并排、叠加和差异证据，深色与 `1.5×` 字体截图基准及 API 29 真机导航验证继续作为回归门禁。密码与安全验证已完成协议、领域、一次重试状态机和隔离腾讯验证容器；二维码已完成协议、领域、2 秒生命周期轮询、120 秒本地过期截止、连续三次失败恢复和五态功能行为，并通过 API 29 真机入口、真实 key、离页和截图解码门禁。腾讯 Activity 非导出门禁也已通过；真实扫码状态 `2→4`、会话恢复和真实风控域名/票据兼容仍需用户主动验收。签到、VIP 领取和音乐库资产属于后续切片。
 

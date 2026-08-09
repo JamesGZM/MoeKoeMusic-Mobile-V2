@@ -10,7 +10,7 @@
 
 - `:kugou-api` 已基于 Ktor Client + OkHttp Engine 实现短信和密码登录、临时 AES/RSA 包装、类型化会话、多账号、风险方式与验证提交，以及二维码 key/check Endpoint 和 `0/1/2/4` 类型化状态；`:feature:login` 已实现 ZXing 渲染和生命周期轮询，真机可扫/服务兼容仍待验收。2026-08-06 已按新版单状态确认稿完成风险确认、短信验证和腾讯失败三类居中 Dialog，底层密码页在覆盖期间保持不变并锁定输入。
 - `:data` 已通过 Android Keystore AES-256-GCM 保存版本化 `KugouSessionSnapshot`，并实现认证互斥、会话原子提交、退出保留匿名身份，以及密码/风险领域映射。
-- `:feature:login` 已拥有短信/多账号、密码与短信/腾讯安全验证状态，并实现验证成功后最多一次的原密码重试；多账号拒绝态保留账号、选择项与验证码上下文，并把恢复操作路由回手机号验证。`:app` 已提供非导出的隔离腾讯 Activity；扫码状态机、生命周期轮询和五态恢复已进入实现，真实认证仍按下述真机门禁验收。
+- `:feature:login` 已拥有短信/多账号、密码与短信/腾讯安全验证状态，并实现验证成功后最多一次的原密码重试；多账号拒绝态保留账号、选择项与验证码上下文，并把恢复操作路由回手机号验证。`:app` 已提供非导出的隔离腾讯 Activity：Compose 仅提供标准返回 Toolbar 和白色全尺寸宿主 fallback，真实滑块由远端 H5/iframe 接管，真实认证仍按下述真机门禁验收。
 - 登录主状态设计稿 `13` 与新版独立单状态图均为已确认基线；旧 `19` 至 `22` 横向总览稿的实现基线资格已撤销。交互原型仅保留为历史状态关系参考，不能作为 Compose 图标、尺寸或视觉实现依据。
 - 当前 `KugouRequestFactory` 拒绝 HTTP origin，而固定 `captcha_sent.js` 仍使用 `http://login.user.kugou.com`。不得因此全局允许明文流量。
 
@@ -30,7 +30,7 @@
 
 腾讯图形验证是项目唯一允许的登录 WebView：放在非导出的独立 Activity；只加载 HTTPS 且只允许 `turing.captcha.qcloud.com` 及验证实际跳转所需、经真机记录确认的腾讯域；禁止 `addJavascriptInterface`、文件访问、内容访问、文件选择、下载和任意外部导航；消息必须使用 AndroidX WebKit 的 origin allowlist；Activity 只返回成功、取消或类型化失败，不接触 Repository、token、Cookie 或密码。域名单在首次真机兼容验收中只增补实际证据，不预先宽放 `*.qq.com`。
 
-实现按[腾讯云 Web 客户端接入](https://cloud.tencent.com/document/product/1110/36841)使用官方 `https://turing.captcha.qcloud.com/TCaptcha.js`，并通过 AndroidX WebKit `addWebMessageListener` 精确 origin 规则接收类型化回调；CSP、请求拦截和导航策略初始只允许该 HTTPS origin。当前 ELE-AL00 / API 29 已验证最终 Manifest 中 Activity 非导出；真实验证码若请求其他腾讯资源域，只能在用户主动验收取得证据后逐个加入，不使用通配符。
+实现按[腾讯云 Web 客户端接入](https://cloud.tencent.com/document/product/1110/36841)使用官方 `https://turing.captcha.qcloud.com/TCaptcha.js`，并通过 AndroidX WebKit `addWebMessageListener` 精确 origin 规则接收类型化回调；CSP、请求拦截和导航策略初始只允许该 HTTPS origin。宿主 HTML 固定 `html/body`、居中 `#status`、腾讯 transform 容器及 iframe 的白色 `100%` 宽高与 `overflow:hidden`，使 H5 仅在 Toolbar 下的完整内容区接管。当前 ELE-AL00 / API 29 已验证最终 Manifest 中 Activity 非导出；真实验证码若请求其他腾讯资源域，只能在用户主动验收取得证据后逐个加入，不使用通配符。
 
 ### 会话存储
 
@@ -85,9 +85,9 @@
   - `src/lib/kugou-api/use-axios.ts`
   - `src/lib/kugou-api/session.ts`
 
-采用：手机号格式与脱敏；`data.info_list` 的多账号兼容映射；`ssaCode/sid/edt` 挑战解析；离开二维码页即取消旧轮询；连续三次检查失败转可恢复错误；密码验证成功后只重试一次。
+采用：手机号格式与脱敏；`data.info_list` 的多账号兼容映射；`ssaCode/sid/edt` 挑战解析；离开二维码页即取消旧轮询；连续三次检查失败转可恢复错误；密码验证成功后只重试一次；TCaptcha.js 的 `html/body` 全尺寸白底、居中加载层和腾讯 transform/iframe 满铺宿主关系。
 
-不采用：React Native WebView 注入 HTML、弱类型对象流入页面、错误对象穿透、定时器脱离 ViewModel 生命周期和服务端消息直接展示。只学习移动流程和响应兼容，不迁移 TypeScript 实现。
+不采用：React Native 的通配 origin、消息桥、HTML 实现、弱类型对象流入页面、错误对象穿透、定时器脱离 ViewModel 生命周期和服务端消息直接展示。只学习移动流程、响应兼容和可审计的宿主 CSS 关系，不迁移 TypeScript 实现。
 
 ## 成熟库优先决策
 

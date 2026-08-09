@@ -179,7 +179,32 @@ class RiskCaptchaActivity : ComponentActivity() {
 
         internal fun captchaHtml(appId: String): String {
             require(isValidAppId(appId)) { "Invalid captcha app id" }
-            return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN"><style>html,body{margin:0;background:transparent}</style><script src="$ALLOWED_ORIGIN/TCaptcha.js"></script></head><body><script>const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));},{type:'',showHeader:false});captcha.show();</script></body></html>"""
+            return """
+                <!doctype html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+                  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' $ALLOWED_ORIGIN; connect-src $ALLOWED_ORIGIN; img-src data: $ALLOWED_ORIGIN; style-src 'unsafe-inline' $ALLOWED_ORIGIN; frame-src $ALLOWED_ORIGIN">
+                  <style>
+                    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#fff}
+                    #status{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#6e7580;font:14px sans-serif;background:#fff}
+                    .spinner{width:24px;height:24px;border:2px solid rgba(22,119,242,.18);border-top-color:#1677f2;border-radius:50%;animation:spin .8s linear infinite}
+                    @keyframes spin{to{transform:rotate(360deg)}}
+                    #tcaptcha_transform_dy,[id^="tcaptcha_transform"],.tcaptcha_transform{position:fixed!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;overflow:hidden!important;transform:none!important;background:#fff!important}
+                    #tcaptcha_transform_dy iframe,[id^="tcaptcha_transform"] iframe,.tcaptcha_transform iframe{display:block!important;width:100%!important;height:100%!important;border:0!important}
+                  </style>
+                  <script src="$ALLOWED_ORIGIN/TCaptcha.js"></script>
+                </head>
+                <body>
+                  <div id="status"><div class="spinner"></div><div>正在打开滑块安全验证…</div></div>
+                  <script>
+                    const captcha=new TencentCaptcha('$appId',function(result){MoeKoeCaptcha.postMessage(JSON.stringify(result));},{type:'',showHeader:false});
+                    captcha.show();
+                  </script>
+                </body>
+                </html>
+            """.trimIndent()
         }
     }
 }

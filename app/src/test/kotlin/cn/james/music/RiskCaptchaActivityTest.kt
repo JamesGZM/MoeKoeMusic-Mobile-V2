@@ -28,12 +28,16 @@ class RiskCaptchaActivityTest {
     }
 
     @Test
-    fun generatedDocumentPinsTheOfficialScriptAndEscapesNoUserInput() {
+    fun generatedDocumentUsesAFullSizeHostWhileKeepingTheOfficialOriginBoundary() {
         val html = RiskCaptchaActivity.captchaHtml("123456789")
 
         assertTrue(html.contains("https://turing.captcha.qcloud.com/TCaptcha.js"))
         assertTrue(html.contains("new TencentCaptcha('123456789'"))
-        assertTrue(html.contains("background:transparent"))
+        assertTrue(html.contains("html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#fff}"))
+        assertTrue(html.contains("#status{position:fixed;inset:0;display:flex"))
+        assertTrue(html.contains("#tcaptcha_transform_dy,[id^=\"tcaptcha_transform\"],.tcaptcha_transform"))
+        assertTrue(html.contains("width:100%!important;height:100%!important"))
+        assertTrue(html.contains("frame-src https://turing.captcha.qcloud.com"))
         assertTrue(html.contains("{type:'',showHeader:false}"))
         assertFalse(html.contains("addJavascriptInterface"))
         assertTrue(runCatching { RiskCaptchaActivity.captchaHtml("123');alert(1)//") }.isFailure)

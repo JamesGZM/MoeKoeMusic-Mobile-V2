@@ -1,6 +1,6 @@
 # 腾讯安全验证加载页设计符合度
 
-状态：通过。复验日期：2026-08-09。
+状态：通过。宿主校准复验日期：2026-08-09。
 
 ## 对照范围
 
@@ -8,18 +8,17 @@
 - Compose 基准：`TencentCaptchaLoadingScreenshot`，`390 × 845dp`，输出 `1024 × 2218` 后归一化为 `852 × 1846`。
 - 叠加图：[`login-tencent-loading-overlay-2026-08-08.png`](login-tencent-loading-overlay-2026-08-08.png)。
 - 差异图：[`login-tencent-loading-diff-2026-08-08.png`](login-tencent-loading-diff-2026-08-08.png)。
+- 并排图：[`login-tencent-loading-side-by-side-2026-08-09.png`](login-tencent-loading-side-by-side-2026-08-09.png)。
 
 ## 结论
 
-- 页面使用公共 `MoeStandardTopBar`，左上角使用共享 `MoeNavigateBackIcon` 的标准返回入口；本次确认稿仅确定性替换旧关闭组合，标题和内容区保持原布局。
-- 去除 WebView 默认页面边距并使用透明宿主背景，供应商内容加载后覆盖加载占位，不额外制造顶部或底部补偿。
-- 以 Toolbar 内容区底边为原点，进度环顶部、加载文案、底部安全图标和两行说明的纵向锚点与确认稿一致。
-- Preview 不绘制系统状态栏，因此对照时将顶部系统栏高度列为遮罩项；真机由系统状态栏和公共 Toolbar 共同组成确认稿顶部高度。
-- 加载动画允许处于不同旋转帧；严格局部像素区域仅覆盖静态加载文案，进度环仍由固定锚点验证位置；Material 图标的内部笔画与确认稿示意图允许存在库级差异。
-- `login.tencent-captcha.loading` 已建立独立结构契约；加载环顶边探针测得 `704.94`，确认稿为 `705`，误差 `0.42` 设计单位。
+- 页面使用公共 `MoeStandardTopBar`，左上角使用共享 `MoeNavigateBackIcon` 的标准返回入口；标题下方是纯白、填满剩余视口的 WebView 宿主。
+- Preview/loading fallback 只绘制居中的 `24dp` 最小不定进度环和“正在打开滑块安全验证…”。远端 `TCaptcha.js` 创建的 H5/iframe 在真实 Activity 中满铺接管该内容区；供应商滑块不是静态设计真值，也不被 Compose 截图伪造。
+- 不再绘制渐变、大环、盾牌或两行原生页脚。HTML 的 `html/body`、`#status` 与腾讯容器/iframe 都使用白色、`100%` 宽高和 `overflow:hidden`，不造成宿主外的空白或滚动。
+- `login.tencent-captcha.loading` 保持 strict core-page contract：导航、Toolbar 标题、白色 host 与加载文案为局部像素 region；进度环顶部探针实测 `932.16`、登记 `932`，误差 `0.16` 个设计单位。加载环的旋转帧不作为供应商内容或布局豁免。
 
 ## 回归门禁
 
 - 截图测试覆盖标准字体和 `1.5×` 大字体。
-- `RiskCaptchaActivityTest` 验证固定腾讯脚本源、透明页面背景、禁用 JavaScript Interface 和 AppId 注入防护。
-- 该页面只负责视觉宿主与安全 WebView 容器，不把腾讯验证码内容伪造成原生页面。
+- `RiskCaptchaActivityTest` 验证固定腾讯脚本源、全尺寸白色宿主、禁用 JavaScript Interface、精确 CSP/origin 边界和 AppId 注入防护。
+- 该页面只负责可控宿主与安全 WebView 容器；真实服务/真机兼容时由腾讯供应商内容接管，仍需用户主动验收。

@@ -56,7 +56,7 @@ Dialog 已于 2026-08-06 按 390dp 参考画布重新校准：普通确认型视
 - [`21d-risk-tencent-loading.png`](21d-risk-tencent-loading.png)：非导出腾讯验证 Activity 的宿主加载态；不伪造供应商验证内容。
 - [`21e-risk-tencent-failure-dialog.png`](21e-risk-tencent-failure-dialog.png)：隔离 Activity 取消或失败后返回原密码页的恢复 Dialog。
 
-`21d` 已完成公共 Toolbar、返回入口、加载区和安全页脚的归一化复验；2026-08-09 确认将旧关闭入口修订为共享返回箭头，证据见 [`login-tencent-loading-2026-08-08.md`](../../../evidence/login-tencent-loading-2026-08-08.md)。
+`21d` 是隔离 WebView 的静态宿主加载态：公共 Toolbar 保留共享返回箭头，Toolbar 下为白色全尺寸供应商内容区；只在远端 H5/iframe 接管前显示居中的最小加载环与“正在打开滑块安全验证…”，不伪造滑块、盾牌或原生页脚。2026-08-09 已按 PC/Mobile 的 TCaptcha.js 宿主模式重校，证据见 [`login-tencent-loading-2026-08-08.md`](../../../evidence/login-tencent-loading-2026-08-08.md)。
 
 `21e` 已完成系统居中、Confirm Surface、标题正文、Tonal 取消、Filled 重试与运行时 32% 遮罩复验，证据见 [`login-tencent-failure-dialog-2026-08-08.md`](../../../evidence/login-tencent-failure-dialog-2026-08-08.md)。
 
