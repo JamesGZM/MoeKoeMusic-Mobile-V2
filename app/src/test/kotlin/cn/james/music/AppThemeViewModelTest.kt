@@ -7,6 +7,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.core.model.settings.PlaybackQualityPreference
 import cn.james.music.feature.player.PlayerLyricsTextSize
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -149,6 +150,8 @@ class AppThemeViewModelTest {
                 }
             }
         }
+
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult = updateResult
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = updateResult
 

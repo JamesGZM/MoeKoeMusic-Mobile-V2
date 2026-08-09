@@ -14,6 +14,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -40,6 +41,9 @@ class PreferencesAppSettingsRepository
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult =
             update { preferences -> preferences[THEME] = theme.storageValue }
 
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
+            update { preferences -> preferences[PLAYBACK_QUALITY] = quality.storageValue }
+
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult =
             update { preferences -> preferences[AUTO_SKIP_FAILED_PLAYBACK] = enabled }
 
@@ -55,6 +59,11 @@ class PreferencesAppSettingsRepository
         private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
             val storedTheme = preferences[THEME]
             val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
+            val storedPlaybackQuality = preferences[PLAYBACK_QUALITY]
+            val playbackQuality =
+                storedPlaybackQuality?.let { stored ->
+                    playbackQualityFromStorageValue(stored)
+                }
             val storedLyricsTextSize = preferences[LYRICS_TEXT_SIZE]
             val lyricsTextSize =
                 storedLyricsTextSize?.let { stored ->
@@ -64,13 +73,18 @@ class PreferencesAppSettingsRepository
                 settings =
                     AppSettings(
                         theme = theme ?: AppThemePreference.System,
+                        playbackQuality = playbackQuality ?: PlaybackQualityPreference.Standard,
                         autoSkipFailedPlayback = preferences[AUTO_SKIP_FAILED_PLAYBACK] ?: true,
                         dynamicCoverColors = preferences[DYNAMIC_COVER_COLORS] ?: true,
                         showLyricsSupplementalText = preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] ?: true,
                         lyricsTextSize = lyricsTextSize ?: LyricsTextSizePreference.Standard,
                     ),
                 problem =
-                    if ((storedTheme != null && theme == null) || (storedLyricsTextSize != null && lyricsTextSize == null)) {
+                    if (
+                        (storedTheme != null && theme == null) ||
+                        (storedPlaybackQuality != null && playbackQuality == null) ||
+                        (storedLyricsTextSize != null && lyricsTextSize == null)
+                    ) {
                         AppSettingsProblem.Read
                     } else {
                         null
@@ -94,8 +108,33 @@ class PreferencesAppSettingsRepository
         private val LyricsTextSizePreference.storageValue: String
             get() = name.lowercase()
 
+        private val PlaybackQualityPreference.storageValue: String
+            get() =
+                when (this) {
+                    PlaybackQualityPreference.Standard -> "128"
+                    PlaybackQualityPreference.High -> "320"
+                    PlaybackQualityPreference.Lossless -> "flac"
+                    PlaybackQualityPreference.HiRes -> "high"
+                    PlaybackQualityPreference.ViperAtmos -> "viper_atmos"
+                    PlaybackQualityPreference.ViperClear -> "viper_clear"
+                    PlaybackQualityPreference.ViperTape -> "viper_tape"
+                }
+
+        private fun playbackQualityFromStorageValue(value: String): PlaybackQualityPreference? =
+            when (value) {
+                "128" -> PlaybackQualityPreference.Standard
+                "320" -> PlaybackQualityPreference.High
+                "flac" -> PlaybackQualityPreference.Lossless
+                "high" -> PlaybackQualityPreference.HiRes
+                "viper_atmos" -> PlaybackQualityPreference.ViperAtmos
+                "viper_clear" -> PlaybackQualityPreference.ViperClear
+                "viper_tape" -> PlaybackQualityPreference.ViperTape
+                else -> null
+            }
+
         internal companion object {
             val THEME = stringPreferencesKey("theme_mode_v1")
+            val PLAYBACK_QUALITY = stringPreferencesKey("playback_quality_v1")
             val AUTO_SKIP_FAILED_PLAYBACK = booleanPreferencesKey("auto_skip_failed_playback_v1")
             val DYNAMIC_COVER_COLORS = booleanPreferencesKey("dynamic_cover_colors_v1")
             val SHOW_LYRICS_SUPPLEMENTAL_TEXT = booleanPreferencesKey("show_lyrics_supplemental_text_v1")

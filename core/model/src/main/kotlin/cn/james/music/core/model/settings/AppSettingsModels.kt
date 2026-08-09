@@ -9,6 +9,16 @@ enum class AppThemePreference {
     Amoled,
 }
 
+enum class PlaybackQualityPreference {
+    Standard,
+    High,
+    Lossless,
+    HiRes,
+    ViperAtmos,
+    ViperClear,
+    ViperTape,
+}
+
 enum class LyricsTextSizePreference {
     Standard,
     Large,
@@ -17,6 +27,7 @@ enum class LyricsTextSizePreference {
 
 data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
+    val playbackQuality: PlaybackQualityPreference = PlaybackQualityPreference.Standard,
     val autoSkipFailedPlayback: Boolean = true,
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
@@ -46,6 +57,8 @@ interface AppSettingsRepository {
     val settings: Flow<AppSettingsSnapshot>
 
     suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult
+
+    suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult
 
     suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult
 

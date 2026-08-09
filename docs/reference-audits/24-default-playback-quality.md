@@ -54,7 +54,7 @@ PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/componen
 
 ## 原子实施顺序与测试矩阵
 
-1. 领域：`PlaybackQualityPreference`、`AppSettings`、Repository setter、独立 v1 string key；覆盖 default/round-trip/unknown/read/write/cancellation。
+1. 领域：`PlaybackQualityPreference`、`AppSettings`、Repository setter、独立 v1 string key；已完成。core 只定义七档语义顺序；data 私有地映射稳定 storage value。default/round-trip/unknown/read/write/cancellation、每档 raw storage value 及与既有偏好互不覆盖均由 core/data JVM 测试覆盖；尚未开放设置 UI 或消费解析偏好。协议字符串到 `KugouPlaybackQuality` 的映射留给下一协议切片。
 2. 协议与数据：类型化候选计划、client 质量参数、登录/匿名分支、逐档回退、停止边界、取消和迟到结果；用固定虚构 DTO/Transport，不碰真实服务。
 3. 播放：resolved-source/runtime-state 只携带实际质量；覆盖地址刷新后质量替换、不持久化 URI/质量及本地/演示不展示角标。
 4. 设置：真实选择行、复用确认 Dialog、独立保存代际、回滚和精确 Retry；在写入中仅禁用该行/Dialog。

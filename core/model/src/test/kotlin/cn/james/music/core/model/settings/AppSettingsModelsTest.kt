@@ -8,4 +8,21 @@ class AppSettingsModelsTest {
     fun lyricsTextSizeDefaultsToStandard() {
         assertEquals(LyricsTextSizePreference.Standard, AppSettings().lyricsTextSize)
     }
+
+    @Test
+    fun playbackQualityDefaultsToStandardAndUsesStableQualityOrder() {
+        assertEquals(PlaybackQualityPreference.Standard, AppSettings().playbackQuality)
+        assertEquals(
+            listOf(
+                PlaybackQualityPreference.Standard,
+                PlaybackQualityPreference.High,
+                PlaybackQualityPreference.Lossless,
+                PlaybackQualityPreference.HiRes,
+                PlaybackQualityPreference.ViperAtmos,
+                PlaybackQualityPreference.ViperClear,
+                PlaybackQualityPreference.ViperTape,
+            ),
+            PlaybackQualityPreference.entries.toList(),
+        )
+    }
 }

@@ -7,6 +7,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -427,6 +428,8 @@ class SettingsViewModelTest {
             }
         }
 
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult = result
+
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
             autoSkipRequests += enabled
             return autoSkipResult.also {
@@ -482,6 +485,9 @@ class SettingsViewModelTest {
             return AppSettingsUpdateResult.Success
         }
 
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
+            AppSettingsUpdateResult.Success
+
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
 
         override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
@@ -527,6 +533,9 @@ class SettingsViewModelTest {
                 AppSettingsUpdateResult.Success
             }
         }
+
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
+            AppSettingsUpdateResult.Success
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
             autoSkipRequests += enabled

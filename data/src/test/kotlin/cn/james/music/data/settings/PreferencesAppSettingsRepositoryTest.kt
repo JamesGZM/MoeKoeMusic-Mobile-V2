@@ -11,6 +11,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +68,31 @@ class PreferencesAppSettingsRepositoryTest {
                     .first()
                     .settings.autoSkipFailedPlayback,
             )
+        }
+
+    @Test
+    fun playbackQualityDefaultsToStandardAndEveryValueRoundTrips() =
+        withFixture {
+            assertEquals(
+                PlaybackQualityPreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.playbackQuality,
+            )
+
+            PlaybackQualityPreference.entries
+                .zip(
+                    listOf("128", "320", "flac", "high", "viper_atmos", "viper_clear", "viper_tape"),
+                ).forEach { (quality, storageValue) ->
+                    assertEquals(AppSettingsUpdateResult.Success, repository.setPlaybackQuality(quality))
+                    assertEquals(storageValue, dataStore.data.first()[PreferencesAppSettingsRepository.PLAYBACK_QUALITY])
+                    assertEquals(
+                        quality,
+                        repository.settings
+                            .first()
+                            .settings.playbackQuality,
+                    )
+                }
         }
 
     @Test
@@ -154,6 +180,20 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun unknownPlaybackQualityFallsBackToStandardAndReportsReadProblem() =
+        withFixture {
+            dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.PLAYBACK_QUALITY] = "future-quality" }
+
+            assertEquals(
+                PlaybackQualityPreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.playbackQuality,
+            )
+            assertEquals(AppSettingsProblem.Read, repository.settings.first().problem)
+        }
+
+    @Test
     fun readFailureUsesSafeDefaultAndReportsProblem() =
         runBlocking {
             val repository = PreferencesAppSettingsRepository(FailingDataStore(readError = IOException("fixture")))
@@ -161,6 +201,12 @@ class PreferencesAppSettingsRepositoryTest {
             assertEquals(
                 AppSettingsSnapshot(problem = AppSettingsProblem.Read),
                 repository.settings.first(),
+            )
+            assertEquals(
+                PlaybackQualityPreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.playbackQuality,
             )
         }
 
@@ -191,6 +237,23 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.autoSkipFailedPlayback,
+            )
+        }
+
+    @Test
+    fun playbackQualityWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setPlaybackQuality(PlaybackQualityPreference.High),
+            )
+            assertEquals(
+                PlaybackQualityPreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.playbackQuality,
             )
         }
 
@@ -271,6 +334,32 @@ class PreferencesAppSettingsRepositoryTest {
             runBlocking { repository.setLyricsTextSize(LyricsTextSizePreference.Large) }
         }
     }
+
+    @Test
+    fun playbackQualityCancellationIsNotMappedToWriteFailure() {
+        val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { repository.setPlaybackQuality(PlaybackQualityPreference.High) }
+        }
+    }
+
+    @Test
+    fun playbackQualityWriteDoesNotOverwriteExistingPreferences() =
+        withFixture {
+            assertEquals(AppSettingsUpdateResult.Success, repository.setTheme(AppThemePreference.Dark))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setAutoSkipFailedPlayback(false))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setPlaybackQuality(PlaybackQualityPreference.ViperTape))
+
+            assertEquals(
+                AppSettings(
+                    theme = AppThemePreference.Dark,
+                    playbackQuality = PlaybackQualityPreference.ViperTape,
+                    autoSkipFailedPlayback = false,
+                ),
+                repository.settings.first().settings,
+            )
+        }
 
     private fun withFixture(block: suspend Fixture.() -> Unit) {
         val file = temporaryFolder.newFile("settings-${UUID.randomUUID()}.preferences_pb")
