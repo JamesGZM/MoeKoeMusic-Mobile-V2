@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: macos-15
     timeout-minutes: 30
 
     steps:
@@ -23,10 +23,10 @@ jobs:
       - name: Configure deterministic runner locale and timezone
         shell: bash
         run: |
-          locale -a | grep -Eiq '^C\.utf-?8$'
-          test "$(LC_ALL=C.UTF-8 locale charmap)" = "UTF-8"
+          locale -a | grep -Eiq '^en_US\.UTF-8$'
+          test "$(LC_ALL=en_US.UTF-8 locale charmap)" = "UTF-8"
           test "$(TZ=UTC date +%Z)" = "UTC"
-          printf '%s\n' 'LANG=C.UTF-8' 'LC_ALL=C.UTF-8' 'TZ=UTC' >> "$GITHUB_ENV"
+          printf '%s\n' 'LANG=en_US.UTF-8' 'LC_ALL=en_US.UTF-8' 'TZ=UTC' >> "$GITHUB_ENV"
 
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
