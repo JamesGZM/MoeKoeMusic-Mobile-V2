@@ -46,8 +46,10 @@ abstract class VerifyUiImpactTask : DefaultTask() {
             }
         val entries = UiImpactPolicy.parse(registry, contracts.mapTo(linkedSetOf(), UiContract::id))
         entries.forEach { entry ->
-            val source = File(root, entry.source)
-            if (!source.isFile) throw GradleException("UI impact registry: source 不存在 ${entry.source}")
+            entry.sources.forEach { sourcePath ->
+                val source = File(root, sourcePath)
+                if (!source.isFile) throw GradleException("UI impact registry: source 不存在 $sourcePath")
+            }
         }
         val affected = UiImpactPolicy.affectedContracts(entries, changedFiles(root).keys)
         val failures =

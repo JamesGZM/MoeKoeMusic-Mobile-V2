@@ -23,13 +23,7 @@ class ArchitecturePolicyTest {
 
     @Test
     fun `拒绝 Feature 之间和 Feature 到 data 的依赖`() {
-        val violations =
-            ArchitecturePolicy.validateEdges(
-                listOf(
-                    ":feature:home -> :feature:login",
-                    ":feature:home -> :data",
-                ),
-            )
+        val violations = ArchitecturePolicy.validateEdges(listOf(":feature:home -> :feature:login", ":feature:home -> :data"))
 
         assertEquals(listOf(":feature:home -> :data", ":feature:home -> :feature:login"), violations)
     }
@@ -37,9 +31,8 @@ class ArchitecturePolicyTest {
     @Test
     fun `拒绝 Feature 直接导入网络和数据库`() {
         val root = createTempDirectory("moekoe-architecture-").toFile()
-        val source = File(root, "feature/home/src/main/kotlin/HomeScreen.kt")
-        source.parentFile.mkdirs()
-        source.writeText("import androidx.room.Room\nimport io.ktor.client.HttpClient\n")
+        val source =
+            writeSource(root, "feature/home/src/main/kotlin/HomeScreen.kt", "import androidx.room.Room\nimport io.ktor.client.HttpClient\n")
 
         val violations = ArchitecturePolicy.validateImports(root, listOf(source))
 
@@ -51,14 +44,12 @@ class ArchitecturePolicyTest {
     @Test
     fun `Feature 必须使用受控分隔线和 Switch`() {
         val root = createTempDirectory("moekoe-visual-primitives-").toFile()
-        val source = File(root, "feature/settings/src/main/kotlin/SettingsScreen.kt")
-        source.parentFile.mkdirs()
-        source.writeText(
-            """
-            import androidx.compose.material3.HorizontalDivider
-            import androidx.compose.material3.Switch
-            """.trimIndent(),
-        )
+        val source =
+            writeSource(
+                root,
+                "feature/settings/src/main/kotlin/SettingsScreen.kt",
+                "import androidx.compose.material3.HorizontalDivider\nimport androidx.compose.material3.Switch\n",
+            )
 
         val violations = ArchitecturePolicy.validateImports(root, listOf(source))
 
@@ -67,18 +58,187 @@ class ArchitecturePolicyTest {
     }
 
     @Test
-    fun `歌曲型页面适配器必须委托唯一母组件`() {
-        val root = createTempDirectory("moekoe-song-item-").toFile()
-        val valid = File(root, "feature/search/src/main/kotlin/SearchScreen.kt")
-        val invalid = File(root, "feature/playlist/src/main/kotlin/PlaylistScreen.kt")
-        valid.parentFile.mkdirs()
-        invalid.parentFile.mkdirs()
-        valid.writeText("fun SearchSongRow() { MoeSongRow(title = \"fixture\") }")
-        invalid.writeText("fun PlaylistTrackRow() { Row { } }")
+    fun `legacy MoeSongRow 路径数量与视觉参数必须精确冻结`() {
+        val root = createTempDirectory("moekoe-legacy-song-row-").toFile()
+        val path = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeSections.kt"
+        val valid =
+            writeSource(root, path, "fun HomeSongRow() { MoeSongRow(style = value, artwork = {}, trailing = {}) }")
 
-        val violations = ArchitecturePolicy.validateSongItems(root, listOf(valid, invalid))
+        assertTrue(ArchitecturePolicy.validateLegacySongRowCalls(legacySources(root, path, valid)).isEmpty())
 
-        assertEquals(1, violations.size)
-        assertTrue(violations.single().contains("PlaylistTrackRow"))
+        valid.writeText("fun HomeSongRow() = Unit")
+        assertTrue(ArchitecturePolicy.validateLegacySongRowCalls(legacySources(root, path, valid)).single().contains("调用数量"))
+
+        valid.writeText("fun HomeSongRow() { MoeSongRow(artwork = {}, trailing = {}) }")
+        assertTrue(ArchitecturePolicy.validateLegacySongRowCalls(legacySources(root, path, valid)).single().contains("删除 style"))
+
+        valid.writeText("fun HomeSongRow() { MoeSongRow(style = value, artwork = {}, trailing = {}, shape = value) }")
+        assertTrue(ArchitecturePolicy.validateLegacySongRowCalls(legacySources(root, path, valid)).single().contains("新增 shape"))
+
+        valid.writeText("fun HomeSongRow() { MoeSongRow(style = value, artwork = {}, trailing = {}, unregisteredSlot = {}) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateLegacySongRowCalls(legacySources(root, path, valid))
+                .single()
+                .contains("新增 unregisteredSlot"),
+        )
+
+        val newPath = "feature/discover/src/main/kotlin/cn/james/music/feature/discover/DiscoverSongRow.kt"
+        val newCall = writeSource(root, newPath, "fun DiscoverSongRow() { MoeSongRow(title = value) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateLegacySongRowCalls(legacySources(root) + (newPath to newCall))
+                .single()
+                .contains("不允许新增"),
+        )
+    }
+
+    @Test
+    fun `冻结 MoeSongRowStyle enum entry`() {
+        val root = createTempDirectory("moekoe-song-style-").toFile()
+        val valid =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt",
+                "enum class MoeSongRowStyle { Standard, Comfortable, Compact, Playlist, PlaylistCurrent, Queue, QueueCurrent }",
+            )
+
+        assertTrue(ArchitecturePolicy.validateMoeSongRowStyle(valid).isEmpty())
+
+        valid.writeText(
+            "enum class MoeSongRowStyle { Standard, Comfortable, Compact, Playlist, PlaylistCurrent, Queue, QueueCurrent, Experimental }",
+        )
+        assertTrue(ArchitecturePolicy.validateMoeSongRowStyle(valid).single().contains("entry"))
+    }
+
+    @Test
+    fun `preview UI property 只检查 UI model 主构造属性`() {
+        val root = createTempDirectory("moekoe-preview-property-").toFile()
+        val allowedPath = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt"
+        val allowed =
+            writeSource(
+                root,
+                allowedPath,
+                "data class HomeContentUi(val previewArtworkRes: Int?, val previewBadge: String?, val previewBadgeIsError: Boolean, val previewArtworkRes: Int?, val previewSubtitle: String?)",
+            )
+
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(allowedPath to allowed)).isEmpty())
+
+        val invalidPath = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
+        val invalid = writeSource(root, invalidPath, "data class SearchUiState(val previewSong: String)")
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(invalidPath to invalid)).single().contains("previewSong"))
+
+        invalid.writeText("fun mapper() { val previewUrl = value }\ndata class ProtocolPreview(val previewSong: String)")
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(invalidPath to invalid)).isEmpty())
+    }
+
+    @Test
+    fun `Search 并行 Map 只检查 UI model 主构造属性`() {
+        val root = createTempDirectory("moekoe-search-parallel-map-").toFile()
+        val allowedPath = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
+        val allowed =
+            writeSource(
+                root,
+                allowedPath,
+                "data class SearchUiState(val songBadges: Map<String, String>, val songArtwork: Map<String, Int>)",
+            )
+
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(allowedPath to allowed)).isEmpty())
+
+        val invalidPath = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt"
+        val invalid = writeSource(root, invalidPath, "data class HomeUiModel(val songBadges: Map<String, String>)")
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(invalidPath to invalid)).single().contains("songBadges"))
+
+        invalid.writeText(
+            "fun mapper() { val songBadges = emptyMap<String, String>() }\ndata class SearchCache(val songArtwork: Map<String, Int>)",
+        )
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(invalidPath to invalid)).isEmpty())
+    }
+
+    @Test
+    fun `数据驱动组件要求具名 model onEvent 且 modifier 可选`() {
+        val root = createTempDirectory("moekoe-data-driven-component-").toFile()
+        val owner =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/MoeDataSongRow.kt",
+                "fun MoeDataSongRow(model: Any, onEvent: () -> Unit, modifier: Any) = Unit",
+            )
+        val valid =
+            writeSource(
+                root,
+                "feature/home/src/main/kotlin/Home.kt",
+                "fun Screen() { MoeDataSongRow(model = model, onEvent = {}, modifier = modifier) }",
+            )
+        val spec = DataDrivenUiComponentSpec("MoeDataSongRow", owner.relativeTo(root).invariantSeparatorsPath)
+
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).isEmpty())
+
+        valid.writeText("fun Screen() { MoeDataSongRow(model = model, onEvent = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).isEmpty())
+
+        valid.writeText("fun Screen() { MoeDataSongRow(model = model, onEvent = {}, trailing = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).single().contains("只允许"))
+
+        valid.writeText("fun Screen() { MoeDataSongRow(model, onEvent = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).single().contains("命名参数"))
+
+        valid.writeText("fun Screen() { MoeDataSongRow(onEvent = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).single().contains("model"))
+
+        valid.writeText("fun Screen() { MoeDataSongRow(model = model) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).single().contains("onEvent"))
+    }
+
+    @Test
+    fun `非歌曲行 MoeMediaBadge 不受冻结规则误伤`() {
+        val root = createTempDirectory("moekoe-non-song-badge-").toFile()
+        val path = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchArtistHero.kt"
+        val source = writeSource(root, path, "fun SearchArtistHero() { MoeMediaBadge(text = badge) }")
+        assertTrue(ArchitecturePolicy.validateLegacySongRowCalls(legacySources(root) + (path to source)).isEmpty())
+    }
+
+    private fun writeSource(
+        root: File,
+        path: String,
+        text: String,
+    ): File =
+        File(root, path).apply {
+            parentFile.mkdirs()
+            writeText(text)
+        }
+
+    private fun legacySources(
+        root: File,
+        overridePath: String? = null,
+        overrideFile: File? = null,
+    ): Map<String, File> {
+        val calls =
+            mapOf(
+                "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeSections.kt" to
+                    listOf("MoeSongRow(style = value, artwork = {}, trailing = {})"),
+                "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchSongItem.kt" to
+                    listOf("MoeSongRow(modifier = value, style = value, titleLeading = {}, artwork = {}, badges = {}, trailing = {})"),
+                "feature/localmusic/src/main/kotlin/cn/james/music/feature/localmusic/LocalMusicComponents.kt" to
+                    listOf(
+                        "MoeSongRow(modifier = value, style = value, showPlayingIndicator = value, artwork = {}, badges = {}, trailing = {})",
+                    ),
+                "feature/localmusic/src/main/kotlin/cn/james/music/feature/localmusic/DeviceScanScreen.kt" to
+                    listOf(
+                        "MoeSongRow(modifier = value, style = value, artwork = {})",
+                        "MoeSongRow(style = value, artwork = {}, trailing = {})",
+                    ),
+                "feature/playlist/src/main/kotlin/cn/james/music/feature/playlist/PlaylistTrackItem.kt" to
+                    listOf(
+                        "MoeSongRow(modifier = value, style = value, showPlayingIndicator = value, highlightTitleWhenPlaying = value, shape = value, containerColor = value, titleFontWeight = value, leading = {}, artwork = {}, contentTrailing = {}, trailing = {})",
+                    ),
+                "feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerQueueItem.kt" to
+                    listOf(
+                        "MoeSongRow(modifier = value, style = value, showPlayingIndicator = value, highlightTitleWhenPlaying = value, shape = value, containerColor = value, titleColor = value, subtitleColor = value, metadataColor = value, playingColor = value, titleFontWeight = value, artwork = {}, artworkTrailing = {}, trailing = {})",
+                    ),
+            )
+        return calls.mapValues { (path, sourceCalls) ->
+            if (path == overridePath) requireNotNull(overrideFile) else writeSource(root, path, sourceCalls.joinToString(separator = "\n"))
+        }
     }
 }

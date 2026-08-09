@@ -125,6 +125,16 @@ class MoeKoeQualityGatesPlugin : Plugin<Project> {
             evalFiles.from(target.fileTree(".agents/evals") { include("*.properties") })
             skillFiles.from(target.fileTree(".agents/skills") { include("*/SKILL.md", "*/agents/openai.yaml") })
         }
+        target.tasks.register("verifyAgentExecutionGovernance", VerifyAgentExecutionGovernanceTask::class.java) {
+            group = "verification"
+            description = "校验子智能体执行记录与 worktree、暂存或提交变更的一致性；不将记录视为身份强证明。"
+            repositoryRoot.set(target.layout.projectDirectory)
+            phase.convention(target.providers.gradleProperty("moekoe.agentExecutionPhase").orElse("worktree"))
+            receiptDirectory.set(target.layout.buildDirectory.dir("reports/agent-execution"))
+            target.providers.gradleProperty("moekoe.agentExecutionRecord").orNull?.let { path ->
+                recordFile.set(target.layout.projectDirectory.file(path))
+            }
+        }
         target.tasks.register("checkAgentUpstreamUpdates", CheckAgentUpstreamUpdatesTask::class.java) {
             group = "help"
             description = "只读检查已固定 Android/Compose skill 上游是否出现新 HEAD。"
