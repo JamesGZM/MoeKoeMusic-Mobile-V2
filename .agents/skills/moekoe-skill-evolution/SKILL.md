@@ -9,10 +9,10 @@ description: 将 MoeKoe 开发流程中的重复漏检转成可评审的 skill �
 
 1. 保存原始失败证据，不先写预期答案；按 [`references/incident-fields.md`](references/incident-fields.md) 新建 incident。
 2. 区分知识缺失、触发失败、流程缺口、不可执行门禁、错误阈值和验证覆盖不足。
-3. 为同类问题增加最小回归任务与客观断言；单次偶发问题先登记，不立即膨胀正式 skill。
+3. 为同类问题增加最小回归任务与客观断言；每条拟晋级断言使用稳定 `assertionIds`，incident 与 eval 必须一一对应，防止问题描述更新后回归集仍停留在旧规则。单次偶发问题先登记，不立即膨胀正式 skill。
 4. 在候选目录修改 skill 或门禁，使用当前正式版本与候选版本分别运行相同隔离任务，比较漏检率、误报、耗时和关键安全门禁。
 5. 候选只有在目标回归通过且现有关键案例不退化时才可请求人工批准；正式 skill、阈值和锁文件不得自动改写或提交。
-6. 批准后形成独立原子提交，把 incident 标记为 resolved 并保留对应 eval。
+6. 批准后形成独立原子提交；只有候选规则和全部 assertion ID 都已由可执行证据覆盖时才把 incident 标记为 resolved，否则保留为 approved open，并明确剩余缺口。
 
 ## 隔离评测
 

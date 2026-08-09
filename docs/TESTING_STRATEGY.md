@@ -125,7 +125,7 @@ Intent 解析使用独立纯函数配合 Robolectric/Android 测试验证平台�
 3. 受影响模块单元测试。
 4. 全部 Debug 单元测试。
 5. Lint。
-6. 全量 screenshot 回归、设计符合度和 screenshot reference 变更门禁。
+6. 全量 screenshot 回归、设计符合度、公共组件消费者影响面和 screenshot reference 变更门禁。
 7. Debug 构建。
 
 页面开发期先运行单 contract 快循环：
@@ -136,7 +136,7 @@ Intent 解析使用独立纯函数配合 Robolectric/Android 测试验证平台�
   --no-configuration-cache
 ```
 
-PR 通过 `git diff --name-status` 把真实变更范围交给 `verifyUiGoldenChange`。新增 active debt 只允许在 contract 首次登记时建立；以后触碰其生产源码、设计源、证据或 golden，或者到期未清理，门禁立即失败。
+PR 通过 `git diff --name-status` 把真实变更范围交给 `verifyUiImpact` 与 `verifyUiGoldenChange`。新增 active debt 只允许在 contract 首次登记时建立；以后触碰其生产源码、设计源、证据或 golden，或者到期未清理，门禁立即失败。
 
 设备矩阵和真实接口验证可在专用工作流运行，但合并前必须有对应结果。签名、导入、队列或播放模式测试失败时不得跳过合并。
 

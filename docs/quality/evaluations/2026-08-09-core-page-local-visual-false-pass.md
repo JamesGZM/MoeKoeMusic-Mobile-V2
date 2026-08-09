@@ -21,3 +21,9 @@
 候选评测新增两条客观断言：长查询与尾部清除操作必须同屏且不裁切；业务开启态必须同时满足 `checked=true`、`enabled=true` 和主题强调色，尚未开放能力必须展示明确占位文案，不能伪装成禁用开关。
 
 候选规则需要让以上历史版本失败，并保持以下反例：动态封面内容仍可 mask；页面专属布局不因此进入公共组件；全页失败不能被局部通过覆盖；未获人工批准前不接入正式 Skill 或全局构建门禁。
+
+## 已批准落地与剩余项
+
+用户于 2026-08-09 批准将本轮建议落为开发系统规则。已实现：contract 的 `strict/migration` 档位、strict core-page 最少三个局部 region、单行输入到 regression golden 的压力态绑定、公共组件消费者影响面门禁、受控 Switch 与 Divider 静态规则、Switch 开启/关闭语义 AndroidTest，以及 incident/eval 稳定断言 ID 对齐门禁。
+
+全量 20 个 UI contract 与 11 个公共组件消费者已通过。该 incident 保持 `open` 而非 `resolved`：现有 migration 页面仍需在 2026-09-30 前补齐语义准确的局部 region/probe；Switch AndroidTest 本轮只完成编译，必须在用户指定真机后执行 connected 验收。不得因为核心门禁已经启用而把这两项未完成证据写成已验证。

@@ -44,6 +44,9 @@ abstract class VerifySkillGovernanceTask : DefaultTask() {
             requireFields(file, properties, INCIDENT_FIELDS, failures)
             if (properties.getProperty("id") != file.nameWithoutExtension) failures += "${file.name}: id 必须与文件名一致"
             if (properties.getProperty("evalCase") !in evals) failures += "${file.name}: evalCase 不存在"
+            evals[properties.getProperty("evalCase")]?.let { evalFile ->
+                failures += verifyAssertionLink(file.name, properties, evalFile.loadProperties())
+            }
             if (properties.getProperty("status") == "resolved") {
                 listOf("approvedBy", "resolvedCommit").forEach { key ->
                     if (properties.getProperty(key).isNullOrBlank()) failures += "${file.name}: resolved 缺少 $key"
@@ -121,3 +124,36 @@ abstract class VerifySkillGovernanceTask : DefaultTask() {
         val EVAL_FIELDS = setOf("schemaVersion", "id", "skill", "kind", "task", "fixture", "assertions", "status")
     }
 }
+
+internal fun verifyAssertionLink(
+    incidentName: String,
+    incident: Properties,
+    evaluation: Properties,
+): List<String> {
+    val incidentIds = incident.csvValues("assertionIds")
+    if (incidentIds.isEmpty()) return emptyList()
+    val failures = mutableListOf<String>()
+    val evaluationIds = evaluation.csvValues("assertionIds")
+    if (incidentIds.size != incidentIds.toSet().size || incidentIds.any { !ASSERTION_ID.matches(it) }) {
+        failures += "$incidentName: assertionIds 必须唯一且使用稳定 ID"
+    }
+    if (evaluationIds != incidentIds) failures += "$incidentName: eval assertionIds 必须与 incident 完全一致"
+    val assertions =
+        evaluation
+            .getProperty("assertions")
+            .orEmpty()
+            .split(';')
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+    if (assertions.size != incidentIds.size) failures += "$incidentName: eval assertions 数量必须与 assertionIds 一致"
+    return failures
+}
+
+private fun Properties.csvValues(key: String): List<String> =
+    getProperty(key)
+        .orEmpty()
+        .split(',')
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+
+private val ASSERTION_ID = Regex("[a-z][a-z0-9-]*")
