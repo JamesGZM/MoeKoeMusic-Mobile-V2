@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -19,7 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarActionUiModel
 
 @Composable
 internal fun PlaylistDetailScreen(
@@ -42,23 +42,34 @@ internal fun PlaylistDetailScreen(
         modifier = modifier,
         topBar = {
             MoeStandardTopBar(
-                title = title,
-                navigationContentDescription = stringResource(R.string.playlist_detail_back),
-                onNavigateBack = onBack,
-                modifier = Modifier.playlistDetailLayoutProbe(PLAYLIST_PROBE_TOOLBAR),
-                actions = {
-                    MoeStandardTopBarAction(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = stringResource(R.string.playlist_detail_search),
-                        onClick = onSearch,
-                        horizontalVisualOffset = 8.dp,
-                    )
-                    MoeStandardTopBarAction(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.playlist_detail_more),
-                        onClick = onMore,
-                    )
+                model =
+                    MoeStandardTopBarUiModel(
+                        title = title,
+                        navigationContentDescription = stringResource(R.string.playlist_detail_back),
+                        actions =
+                            listOf(
+                                MoeTopBarActionUiModel(
+                                    action = MoeTopBarAction.Search,
+                                    contentDescription = stringResource(R.string.playlist_detail_search),
+                                ),
+                                MoeTopBarActionUiModel(
+                                    action = MoeTopBarAction.More,
+                                    contentDescription = stringResource(R.string.playlist_detail_more),
+                                ),
+                            ),
+                    ),
+                onEvent = { event ->
+                    when (event) {
+                        MoeStandardTopBarEvent.NavigateBack -> onBack()
+                        is MoeStandardTopBarEvent.Action ->
+                            when (event.action) {
+                                MoeTopBarAction.Search -> onSearch()
+                                MoeTopBarAction.More -> onMore()
+                                else -> Unit
+                            }
+                    }
                 },
+                modifier = Modifier.playlistDetailLayoutProbe(PLAYLIST_PROBE_TOOLBAR),
             )
         },
         containerColor = MaterialTheme.colorScheme.background,

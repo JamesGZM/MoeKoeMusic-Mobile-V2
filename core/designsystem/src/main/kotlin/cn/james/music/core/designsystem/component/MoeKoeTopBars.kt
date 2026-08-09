@@ -8,25 +8,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import cn.james.music.core.designsystem.component.navigation.MoeImmersiveIconButton
 import cn.james.music.core.designsystem.component.navigation.MoeImmersiveTopBar
-import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-
-@Deprecated("Use MoeStandardTopBar from component.navigation")
-@Composable
-fun MoeKoeStandardTopBar(
-    title: String,
-    navigationContentDescription: String,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    MoeStandardTopBar(
-        title = title,
-        navigationContentDescription = navigationContentDescription,
-        onNavigateBack = onNavigateBack,
-        modifier = modifier,
-        actions = actions,
-    )
-}
 
 @Deprecated("Use MoeImmersiveTopBar from component.navigation")
 @Composable

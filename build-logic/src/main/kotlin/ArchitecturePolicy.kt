@@ -43,6 +43,8 @@ internal object ArchitecturePolicy {
             addAll(validateImmutableFeatureModels(rootDir, sourceFiles))
             addAll(validateMoeMiniPlayerBoundary(sources[MOE_MINI_PLAYER_OWNER]))
             addAll(validateMoeFeedbackModelBoundaries(sources))
+            addAll(validateMoeTopBarModelBoundaries(sources[MOE_TOP_BAR_MODELS]))
+            addAll(validateDeletedMoeKoeStandardTopBarFacade(rootDir, sourceFiles))
             addAll(validateDataDrivenUiComponents(rootDir, sourceFiles, DATA_DRIVEN_UI_COMPONENTS))
         }
     }
@@ -361,6 +363,58 @@ internal object ArchitecturePolicy {
             }
         }
 
+    internal fun validateMoeTopBarModelBoundaries(models: File?): List<String> {
+        if (models == null) return listOf("$MOE_TOP_BAR_MODELS: TopBar UI model 文件不存在")
+        val code = maskNonCode(models.readText())
+        val modelNames = setOf("MoeStandardTopBarUiModel", "MoeSearchTopBarUiModel", "MoeTopBarActionUiModel")
+        return buildList {
+            modelNames.forEach { name ->
+                val constructor = namedConstructor(code, Regex("data\\s+class\\s+${Regex.escape(name)}\\b"))
+                if (constructor == null) {
+                    add("$MOE_TOP_BAR_MODELS: 缺少 $name")
+                } else {
+                    if (!hasImmediateImmutableUiAnnotation(code, name)) {
+                        add("$MOE_TOP_BAR_MODELS: $name 必须紧邻 @Immutable")
+                    }
+                    TOP_BAR_MODEL_FORBIDDEN_TYPES.forEach { type ->
+                        if (Regex("\\b${Regex.escape(type)}\\b").containsMatchIn(constructor)) {
+                            add("$MOE_TOP_BAR_MODELS: $name 不得持有 $type")
+                        }
+                    }
+                    if (TOP_BAR_MODEL_FORBIDDEN_FUNCTION_TYPE.containsMatchIn(constructor)) {
+                        add("$MOE_TOP_BAR_MODELS: $name 不得持有 callback 或 visual Slot")
+                    }
+                    if (name == "MoeTopBarActionUiModel" && !isFrozenTopBarActionModelConstructor(constructor)) {
+                        add(
+                            "$MOE_TOP_BAR_MODELS: MoeTopBarActionUiModel 构造器必须冻结为 " +
+                                "action: MoeTopBarAction, contentDescription: String",
+                        )
+                    }
+                }
+            }
+            addAll(validateFrozenTopBarEnum(code, MOE_TOP_BAR_ACTION_ENUM, FROZEN_TOP_BAR_ACTIONS, "MoeTopBarAction"))
+            addAll(validateFrozenTopBarEnum(code, MOE_TOP_BAR_NAVIGATION_ENUM, FROZEN_TOP_BAR_NAVIGATIONS, "MoeTopBarNavigation"))
+            TOP_BAR_EVENT_DECLARATIONS.forEach { eventName ->
+                if (!Regex("sealed\\s+interface\\s+${Regex.escape(eventName)}\\b").containsMatchIn(code)) {
+                    add("$MOE_TOP_BAR_MODELS: 缺少 typed event $eventName")
+                }
+            }
+        }
+    }
+
+    internal fun validateDeletedMoeKoeStandardTopBarFacade(
+        rootDir: File,
+        sourceFiles: Iterable<File>,
+    ): List<String> =
+        sourceFiles.mapNotNull { file ->
+            val relative = file.relativeTo(rootDir).invariantSeparatorsPath
+            if (DELETED_MOEKOE_STANDARD_TOP_BAR_FACADE.containsMatchIn(maskNonCode(file.readText()))) {
+                "$relative: 已删除的 MoeKoeStandardTopBar facade 不得重新声明或调用"
+            } else {
+                null
+            }
+        }
+
     private fun forbiddenUiConstructorTypes(
         relative: String,
         code: String,
@@ -376,6 +430,29 @@ internal object ArchitecturePolicy {
 
     private fun Regex.flatMapConstructors(code: String): Sequence<String> =
         findAll(code).map { match -> extractDelimited(code, match.range.last, '(', ')').orEmpty() }
+
+    private fun validateFrozenTopBarEnum(
+        code: String,
+        declaration: Regex,
+        expectedEntries: Set<String>,
+        name: String,
+    ): List<String> {
+        val match = declaration.find(code) ?: return listOf("$MOE_TOP_BAR_MODELS: 缺少 $name enum")
+        val opening = code.indexOf('{', match.range.last)
+        val body = extractDelimited(code, opening, '{', '}') ?: return listOf("$MOE_TOP_BAR_MODELS: $name enum 未闭合")
+        val entries = body.split(',').mapNotNull { segment -> IDENTIFIER.find(segment)?.value }.toSet()
+        return if (entries ==
+            expectedEntries
+        ) {
+            emptyList()
+        } else {
+            listOf("$MOE_TOP_BAR_MODELS: $name entry 必须冻结为 ${expectedEntries.joinToString()}")
+        }
+    }
+
+    private fun isFrozenTopBarActionModelConstructor(constructor: String): Boolean =
+        constructor.replace(Regex("\\s+"), "").removeSuffix(",") ==
+            "valaction:MoeTopBarAction,valcontentDescription:String"
 
     private fun namedConstructor(
         code: String,
@@ -823,6 +900,20 @@ internal object ArchitecturePolicy {
         )
     private val FEEDBACK_MODEL_RAW_BOOLEAN_STATE =
         Regex("\\bval\\s+(loading|destructive|dismissOnBackPress|dismissOnClickOutside)\\s*:\\s*Boolean\\b")
+    private const val MOE_TOP_BAR_MODELS =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/navigation/MoeTopBarModels.kt"
+    private val MOE_TOP_BAR_ACTION_ENUM = Regex("enum\\s+class\\s+MoeTopBarAction\\s*")
+    private val MOE_TOP_BAR_NAVIGATION_ENUM = Regex("enum\\s+class\\s+MoeTopBarNavigation\\s*")
+    private val FROZEN_TOP_BAR_ACTIONS = setOf("Import", "Search", "Share", "More", "Voice")
+    private val FROZEN_TOP_BAR_NAVIGATIONS = setOf("Back", "CaptchaClose")
+    private val TOP_BAR_EVENT_DECLARATIONS = setOf("MoeStandardTopBarEvent", "MoeSearchTopBarEvent")
+    private val TOP_BAR_MODEL_FORBIDDEN_TYPES =
+        setOf("Dp", "Shape", "Color", "ImageVector", "Painter", "TextStyle", "PaddingValues", "Modifier")
+    private val TOP_BAR_MODEL_FORBIDDEN_FUNCTION_TYPE =
+        Regex(
+            "(?:\\b(?:suspend\\s+)?[A-Za-z_][A-Za-z0-9_?.<>]*\\s*->|(?:\\bsuspend\\s+)?\\([^)]*\\)\\s*->|\\bFunction\\d*\\s*<|@Composable)",
+        )
+    private val DELETED_MOEKOE_STANDARD_TOP_BAR_FACADE = Regex("(?:fun\\s+)?MoeKoeStandardTopBar\\s*\\(")
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")
     private const val SONG_ROW_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
@@ -909,6 +1000,14 @@ internal object ArchitecturePolicy {
             DataDrivenUiComponentSpec(
                 name = "MoeAlertDialog",
                 ownerSource = MOE_DIALOG_OWNER,
+            ),
+            DataDrivenUiComponentSpec(
+                name = "MoeStandardTopBar",
+                ownerSource = "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/navigation/MoeTopBars.kt",
+            ),
+            DataDrivenUiComponentSpec(
+                name = "MoeSearchTopBar",
+                ownerSource = "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/navigation/MoeTopBars.kt",
             ),
         )
     private val DATA_DRIVEN_COMPONENT_ARGUMENTS = setOf("model", "onEvent", "modifier")

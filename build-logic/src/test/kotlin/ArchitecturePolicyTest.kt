@@ -650,6 +650,133 @@ class ArchitecturePolicyTest {
     }
 
     @Test
+    fun `TopBar 只接受 model onEvent modifier 且模型冻结语义枚举`() {
+        val root = createTempDirectory("moekoe-top-bar-").toFile()
+        val owner =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/navigation/MoeTopBars.kt",
+                "fun MoeStandardTopBar(model: Any, onEvent: () -> Unit, modifier: Any) = Unit\n" +
+                    "fun MoeSearchTopBar(model: Any, onEvent: () -> Unit, modifier: Any) = Unit\n" +
+                    "fun MoeImmersiveTopBar(navigationContentDescription: String, onNavigateBack: () -> Unit, actions: () -> Unit) = Unit",
+            )
+        val consumer =
+            writeSource(
+                root,
+                "feature/search/src/main/kotlin/SearchScreen.kt",
+                "fun Screen() { MoeStandardTopBar(model = model, onEvent = {})\nMoeSearchTopBar(model = model, onEvent = {}) }",
+            )
+        val facade =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeKoeTopBars.kt",
+                "",
+            )
+        val models =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/navigation/MoeTopBarModels.kt",
+                "@Immutable\ndata class MoeStandardTopBarUiModel(val title: String)\n" +
+                    "@Immutable\ndata class MoeSearchTopBarUiModel(val query: String)\n" +
+                    "@Immutable\ndata class MoeTopBarActionUiModel(val action: MoeTopBarAction, val contentDescription: String,)\n" +
+                    "enum class MoeTopBarAction { Import, Search, Share, More, Voice }\n" +
+                    "enum class MoeTopBarNavigation { Back, CaptchaClose }\n" +
+                    "sealed interface MoeStandardTopBarEvent\nsealed interface MoeSearchTopBarEvent",
+            )
+        val specs =
+            listOf(
+                DataDrivenUiComponentSpec("MoeStandardTopBar", owner.relativeTo(root).invariantSeparatorsPath),
+                DataDrivenUiComponentSpec("MoeSearchTopBar", owner.relativeTo(root).invariantSeparatorsPath),
+            )
+
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs).isEmpty())
+        assertTrue(ArchitecturePolicy.validateMoeTopBarModelBoundaries(models).isEmpty())
+        assertTrue(ArchitecturePolicy.validateDeletedMoeKoeStandardTopBarFacade(root, listOf(owner, consumer, facade)).isEmpty())
+
+        consumer.writeText("fun Hero() { MoeImmersiveTopBar(navigationContentDescription = value, onNavigateBack = {}, actions = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs).isEmpty())
+
+        facade.writeText("fun MoeKoeStandardTopBar() = Unit")
+        val redeclaredFacade = ArchitecturePolicy.validateDeletedMoeKoeStandardTopBarFacade(root, listOf(owner, consumer, facade))
+        assertTrue(redeclaredFacade.any { it.contains("MoeKoeStandardTopBar facade") })
+
+        facade.writeText("")
+        consumer.writeText("fun Screen() { MoeKoeStandardTopBar() }")
+        val calledFacade = ArchitecturePolicy.validateDeletedMoeKoeStandardTopBarFacade(root, listOf(owner, consumer, facade))
+        assertTrue(calledFacade.any { it.contains("MoeKoeStandardTopBar facade") })
+
+        consumer.writeText("fun Screen() { MoeStandardTopBar(model, {}) }")
+        val standardPositional = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(standardPositional.any { it.contains("MoeStandardTopBar 只能使用命名参数") })
+
+        consumer.writeText("fun Screen() { MoeSearchTopBar(model, {}) }")
+        val searchPositional = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(searchPositional.any { it.contains("MoeSearchTopBar 只能使用命名参数") })
+
+        consumer.writeText(
+            "fun Screen() { MoeStandardTopBar(model = model, onEvent = {}, actions = {}) }",
+        )
+        val oldActions = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(oldActions.any { it.contains("actions") })
+
+        consumer.writeText("fun Screen() { MoeSearchTopBar(model = model, onEvent = {}, trailingAction = {}) }")
+        val trailingAction = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(trailingAction.any { it.contains("trailingAction") })
+
+        consumer.writeText("fun Screen() { MoeStandardTopBar(model = model, onEvent = {}, onNavigateBack = {}) }")
+        val navigateBack = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(navigateBack.any { it.contains("onNavigateBack") })
+
+        consumer.writeText("fun Screen() { MoeSearchTopBar(model = model, onEvent = {}, onQueryChange = {}) }")
+        val queryChange = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(queryChange.any { it.contains("onQueryChange") })
+
+        consumer.writeText("fun Screen() { MoeStandardTopBar(model = model, onEvent = {}, horizontalVisualOffset = value) }")
+        val visualOffset = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), specs)
+        assertTrue(visualOffset.any { it.contains("horizontalVisualOffset") })
+
+        models.writeText(
+            "@Immutable\ndata class MoeStandardTopBarUiModel(val title: String)\n" +
+                "@Immutable\ndata class MoeSearchTopBarUiModel(val query: String)\n" +
+                "@Immutable\ndata class MoeTopBarActionUiModel(val actionKey: String)\n" +
+                "enum class MoeTopBarAction { Import, Search, Share, More, Voice }\n" +
+                "enum class MoeTopBarNavigation { Back, CaptchaClose }\n" +
+                "sealed interface MoeStandardTopBarEvent\nsealed interface MoeSearchTopBarEvent",
+        )
+        val actionKey = ArchitecturePolicy.validateMoeTopBarModelBoundaries(models)
+        assertTrue(actionKey.any { it.contains("MoeTopBarActionUiModel 构造器必须冻结") })
+
+        models.writeText(
+            "@Immutable\ndata class MoeStandardTopBarUiModel(val title: String)\n" +
+                "@Immutable\ndata class MoeSearchTopBarUiModel(val query: String)\n" +
+                "@Immutable\ndata class MoeTopBarActionUiModel(val action: MoeTopBarAction, " +
+                "val contentDescription: String, val debug: Boolean)\n" +
+                "enum class MoeTopBarAction { Import, Search, Share, More, Voice }\n" +
+                "enum class MoeTopBarNavigation { Back, CaptchaClose }\n" +
+                "sealed interface MoeStandardTopBarEvent\nsealed interface MoeSearchTopBarEvent",
+        )
+        val extraActionField = ArchitecturePolicy.validateMoeTopBarModelBoundaries(models)
+        assertTrue(extraActionField.any { it.contains("MoeTopBarActionUiModel 构造器必须冻结") })
+
+        models.writeText(
+            "@Immutable\ndata class MoeStandardTopBarUiModel(val title: String, val modifier: Modifier, " +
+                "val slot: @Composable () -> Unit)\n" +
+                "@Immutable\ndata class MoeSearchTopBarUiModel(val query: String, val tint: Color)\n" +
+                "@Immutable\ndata class MoeTopBarActionUiModel(val action: MoeTopBarAction, " +
+                "val contentDescription: String)\n" +
+                "enum class MoeTopBarAction { Import, Search, Share, More, Voice, Custom }\n" +
+                "enum class MoeTopBarNavigation { Back, CaptchaClose, Close }\n" +
+                "sealed interface MoeStandardTopBarEvent\nsealed interface MoeSearchTopBarEvent",
+        )
+        val invalidModels = ArchitecturePolicy.validateMoeTopBarModelBoundaries(models)
+        assertTrue(invalidModels.any { it.contains("Modifier") })
+        assertTrue(invalidModels.any { it.contains("Color") })
+        assertTrue(invalidModels.any { it.contains("visual Slot") })
+        assertTrue(invalidModels.any { it.contains("MoeTopBarAction entry") })
+        assertTrue(invalidModels.any { it.contains("MoeTopBarNavigation entry") })
+    }
+
+    @Test
     fun `非歌曲行 MoeMediaBadge 不受冻结规则误伤`() {
         val root = createTempDirectory("moekoe-non-song-badge-").toFile()
         val path = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchArtistHero.kt"

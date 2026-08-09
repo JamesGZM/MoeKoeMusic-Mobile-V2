@@ -1,9 +1,6 @@
 package cn.james.music.core.designsystem.component.navigation
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -21,8 +18,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,15 +36,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
@@ -52,15 +50,9 @@ import cn.james.music.core.designsystem.component.input.MoeSearchField
 
 @Composable
 fun MoeSearchTopBar(
-    query: String,
-    placeholder: String,
-    navigationContentDescription: String,
-    clearContentDescription: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onNavigateBack: () -> Unit,
+    model: MoeSearchTopBarUiModel,
+    onEvent: (MoeSearchTopBarEvent) -> Unit,
     modifier: Modifier = Modifier,
-    trailingAction: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier =
@@ -72,23 +64,27 @@ fun MoeSearchTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
-            onClick = onNavigateBack,
+            onClick = { onEvent(MoeSearchTopBarEvent.NavigateBack) },
             modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget).offset { IntOffset(0, 4.dp.roundToPx()) },
         ) {
             MoeNavigateBackIcon(
-                contentDescription = navigationContentDescription,
+                contentDescription = model.navigationContentDescription,
                 modifier = Modifier.size(18.dp),
             )
         }
         MoeSearchField(
-            value = query,
-            placeholder = placeholder,
-            onValueChange = onQueryChange,
+            value = model.query,
+            placeholder = model.placeholder,
+            onValueChange = { onEvent(MoeSearchTopBarEvent.QueryChanged(it)) },
             modifier = Modifier.weight(1f).offset { IntOffset(0, 4.dp.roundToPx()) },
-            clearContentDescription = clearContentDescription,
-            onSearch = onSearch,
+            clearContentDescription = model.clearContentDescription,
+            onSearch = { onEvent(MoeSearchTopBarEvent.Submit) },
         )
-        Box(Modifier.offset { IntOffset(0, 4.dp.roundToPx()) }) { trailingAction?.invoke() }
+        Row(Modifier.offset { IntOffset(0, 4.dp.roundToPx()) }) {
+            model.actions.forEach { action ->
+                MoeSearchTopBarAction(action = action, onEvent = onEvent)
+            }
+        }
     }
 }
 
@@ -100,21 +96,12 @@ enum class MoeTopBarTitleEmphasis {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoeStandardTopBar(
-    title: String,
-    navigationContentDescription: String,
-    onNavigateBack: () -> Unit,
+    model: MoeStandardTopBarUiModel,
+    onEvent: (MoeStandardTopBarEvent) -> Unit,
     modifier: Modifier = Modifier,
-    titleEmphasis: MoeTopBarTitleEmphasis = MoeTopBarTitleEmphasis.Standard,
-    navigationIcon: @Composable () -> Unit = {
-        MoeNavigateBackIcon(
-            contentDescription = navigationContentDescription,
-            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSmall),
-        )
-    },
-    actions: @Composable RowScope.() -> Unit = {},
 ) {
     val titleStyle: TextStyle =
-        when (titleEmphasis) {
+        when (model.titleEmphasis) {
             MoeTopBarTitleEmphasis.Standard ->
                 MaterialTheme.typography.titleSmall.copy(
                     fontSize = 15.sp,
@@ -130,7 +117,7 @@ fun MoeStandardTopBar(
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = title,
+                text = model.title,
                 modifier = Modifier.offset(y = (-4).dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -139,16 +126,27 @@ fun MoeStandardTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = onNavigateBack,
+                onClick = { onEvent(MoeStandardTopBarEvent.NavigateBack) },
                 modifier =
                     Modifier
                         .size(MoeKoeTheme.dimensions.minimumTouchTarget)
                         .offset(y = (-2).dp),
             ) {
-                navigationIcon()
+                MoeStandardTopBarNavigation(
+                    navigation = model.navigation,
+                    contentDescription = model.navigationContentDescription,
+                )
             }
         },
-        actions = actions,
+        actions = {
+            model.actions.forEachIndexed { index, action ->
+                MoeStandardTopBarAction(
+                    action = action,
+                    hasLeadingAction = model.actions.size == 2 && index == 0,
+                    onEvent = onEvent,
+                )
+            }
+        },
         colors =
             TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -158,32 +156,83 @@ fun MoeStandardTopBar(
     )
 }
 
-/** A standard Toolbar action with the product's fixed visible size and touch target. */
 @Composable
-fun MoeStandardTopBarAction(
-    imageVector: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    horizontalVisualOffset: Dp = 0.dp,
+private fun MoeStandardTopBarAction(
+    action: MoeTopBarActionUiModel,
+    hasLeadingAction: Boolean,
+    onEvent: (MoeStandardTopBarEvent) -> Unit,
 ) {
     IconButton(
-        onClick = onClick,
+        onClick = { onEvent(MoeStandardTopBarEvent.Action(action.action)) },
         modifier =
-            modifier
+            Modifier
                 .size(MoeKoeTheme.dimensions.minimumTouchTarget)
                 .offset(y = (-3).dp),
     ) {
         Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
+            imageVector = action.action.imageVector(),
+            contentDescription = action.contentDescription,
             modifier =
                 Modifier
                     .size(MoeKoeTheme.dimensions.iconSupporting)
-                    .graphicsLayer { translationX = horizontalVisualOffset.toPx() },
+                    .offset(x = if (hasLeadingAction) 8.dp else 0.dp),
         )
     }
 }
+
+@Composable
+private fun MoeSearchTopBarAction(
+    action: MoeTopBarActionUiModel,
+    onEvent: (MoeSearchTopBarEvent) -> Unit,
+) {
+    IconButton(onClick = { onEvent(MoeSearchTopBarEvent.Action(action.action)) }) {
+        Icon(
+            imageVector = action.action.imageVector(),
+            contentDescription = action.contentDescription,
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}
+
+@Composable
+private fun MoeStandardTopBarNavigation(
+    navigation: MoeTopBarNavigation,
+    contentDescription: String,
+) {
+    when (navigation) {
+        MoeTopBarNavigation.Back ->
+            MoeNavigateBackIcon(
+                contentDescription = contentDescription,
+                modifier = Modifier.size(MoeKoeTheme.dimensions.iconSmall),
+            )
+
+        MoeTopBarNavigation.CaptchaClose ->
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
+                shadowElevation = 2.dp,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = contentDescription,
+                        modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
+                    )
+                }
+            }
+    }
+}
+
+private fun MoeTopBarAction.imageVector(): ImageVector =
+    when (this) {
+        MoeTopBarAction.Import -> Icons.Default.SystemUpdateAlt
+        MoeTopBarAction.Search -> Icons.Default.Search
+        MoeTopBarAction.Share -> Icons.Default.Share
+        MoeTopBarAction.More -> Icons.Default.MoreVert
+        MoeTopBarAction.Voice -> Icons.Default.Mic
+    }
 
 @Composable
 fun MoeImmersiveTopBar(

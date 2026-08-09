@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -42,7 +41,10 @@ import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.input.MoeSearchField
 import cn.james.music.core.designsystem.component.input.MoeSearchFieldStyle
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarActionUiModel
 import cn.james.music.core.designsystem.component.navigation.MoeTopBarTitleEmphasis
 import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
 import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogEvent
@@ -57,16 +59,29 @@ internal fun LocalMusicScreen(
 ) {
     Column(Modifier.fillMaxSize()) {
         MoeStandardTopBar(
-            title = stringResource(R.string.local_music_title),
-            navigationContentDescription = stringResource(R.string.local_music_back),
-            onNavigateBack = { onAction(LocalMusicAction.Back) },
-            titleEmphasis = MoeTopBarTitleEmphasis.Strong,
-            actions = {
-                MoeStandardTopBarAction(
-                    imageVector = Icons.Default.SystemUpdateAlt,
-                    contentDescription = stringResource(R.string.local_music_open_import),
-                    onClick = { onAction(LocalMusicAction.OpenImporter) },
-                )
+            model =
+                MoeStandardTopBarUiModel(
+                    title = stringResource(R.string.local_music_title),
+                    navigationContentDescription = stringResource(R.string.local_music_back),
+                    titleEmphasis = MoeTopBarTitleEmphasis.Strong,
+                    actions =
+                        listOf(
+                            MoeTopBarActionUiModel(
+                                action = MoeTopBarAction.Import,
+                                contentDescription = stringResource(R.string.local_music_open_import),
+                            ),
+                        ),
+                ),
+            onEvent = { event ->
+                when (event) {
+                    MoeStandardTopBarEvent.NavigateBack -> {
+                        onAction(LocalMusicAction.Back)
+                    }
+
+                    is MoeStandardTopBarEvent.Action -> {
+                        if (event.action == MoeTopBarAction.Import) onAction(LocalMusicAction.OpenImporter)
+                    }
+                }
             },
         )
         state.activeImport?.let { progress ->

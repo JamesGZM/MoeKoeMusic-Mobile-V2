@@ -1,6 +1,5 @@
 package cn.james.music.feature.login
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -10,14 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarNavigation
 
 /** User-visible chrome for the isolated Tencent captcha Activity. */
 @Composable
@@ -42,25 +41,14 @@ fun TencentCaptchaScreen(
 ) {
     Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         MoeStandardTopBar(
-            title = stringResource(R.string.login_tencent_page_title),
-            navigationContentDescription = stringResource(R.string.login_tencent_page_close),
-            onNavigateBack = onClose,
-            navigationIcon = {
-                Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
-                    shadowElevation = 2.dp,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.login_tencent_page_close),
-                            modifier = Modifier.size(MoeKoeTheme.dimensions.iconSupporting),
-                        )
-                    }
-                }
+            model =
+                MoeStandardTopBarUiModel(
+                    title = stringResource(R.string.login_tencent_page_title),
+                    navigationContentDescription = stringResource(R.string.login_tencent_page_close),
+                    navigation = MoeTopBarNavigation.CaptchaClose,
+                ),
+            onEvent = { event ->
+                if (event == MoeStandardTopBarEvent.NavigateBack) onClose()
             },
         )
         TencentCaptchaBody(captchaContent = captchaContent)

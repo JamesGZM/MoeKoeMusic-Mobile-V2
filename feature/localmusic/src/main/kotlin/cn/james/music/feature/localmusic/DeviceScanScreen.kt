@@ -38,6 +38,8 @@ import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
 
 @Composable
 internal fun LocalMusicImportScreen(
@@ -46,9 +48,14 @@ internal fun LocalMusicImportScreen(
 ) {
     Column(Modifier.fillMaxSize()) {
         MoeStandardTopBar(
-            title = stringResource(R.string.local_music_import_title),
-            navigationContentDescription = stringResource(R.string.local_music_back),
-            onNavigateBack = { onAction(DeviceImportAction.Back) },
+            model =
+                MoeStandardTopBarUiModel(
+                    title = stringResource(R.string.local_music_import_title),
+                    navigationContentDescription = stringResource(R.string.local_music_back),
+                ),
+            onEvent = { event ->
+                if (event == MoeStandardTopBarEvent.NavigateBack) onAction(DeviceImportAction.Back)
+            },
         )
         when (state) {
             DeviceImportUiState.PermissionRequired ->

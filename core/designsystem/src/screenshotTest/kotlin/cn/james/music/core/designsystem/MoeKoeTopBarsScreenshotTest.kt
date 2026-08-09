@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.navigation.MoeImmersiveTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeNavigateBackIcon
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarActionUiModel
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -51,29 +53,41 @@ fun MoeKoeTopBarsScreenshot() {
                 )
             }
             MoeStandardTopBar(
-                title = "设置",
-                navigationContentDescription = "返回",
-                onNavigateBack = {},
+                model = MoeStandardTopBarUiModel(title = "设置", navigationContentDescription = "返回"),
+                onEvent = {},
             )
-            MoeStandardTopBar(
-                title = "选择歌曲",
-                navigationContentDescription = "关闭",
-                onNavigateBack = {},
-                navigationIcon = {
+            Box {
+                MoeStandardTopBar(
+                    model =
+                        MoeStandardTopBarUiModel(
+                            title = "选择歌曲",
+                            navigationContentDescription = "关闭",
+                            actions =
+                                listOf(
+                                    MoeTopBarActionUiModel(
+                                        action = MoeTopBarAction.More,
+                                        contentDescription = "更多",
+                                    ),
+                                ),
+                        ),
+                    onEvent = {},
+                )
+                // Test-only legacy baseline reconstruction; it is not a MoeStandardTopBar override.
+                Box(
+                    modifier =
+                        Modifier
+                            .padding(start = 4.dp, top = 6.dp)
+                            .size(48.dp)
+                            .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "关闭",
                         modifier = Modifier.size(24.dp),
                     )
-                },
-                actions = {
-                    MoeStandardTopBarAction(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "更多",
-                        onClick = {},
-                    )
-                },
-            )
+                }
+            }
         }
     }
 }

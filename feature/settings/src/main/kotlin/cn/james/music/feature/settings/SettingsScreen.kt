@@ -16,6 +16,8 @@ import cn.james.music.core.designsystem.component.MoeSnackbarEvent
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
 
 @Composable
 internal fun SettingsScreen(
@@ -25,9 +27,14 @@ internal fun SettingsScreen(
     Scaffold(
         topBar = {
             MoeStandardTopBar(
-                title = stringResource(R.string.settings_title),
-                navigationContentDescription = stringResource(R.string.settings_back),
-                onNavigateBack = { onAction(SettingsAction.Back) },
+                model =
+                    MoeStandardTopBarUiModel(
+                        title = stringResource(R.string.settings_title),
+                        navigationContentDescription = stringResource(R.string.settings_back),
+                    ),
+                onEvent = { event ->
+                    if (event == MoeStandardTopBarEvent.NavigateBack) onAction(SettingsAction.Back)
+                },
                 modifier = Modifier.settingsLayoutProbe(SETTINGS_PROBE_TOOLBAR),
             )
         },

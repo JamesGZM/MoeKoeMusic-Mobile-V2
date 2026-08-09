@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -19,7 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarActionUiModel
 
 @Composable
 internal fun UserProfileScreen(
@@ -33,21 +33,32 @@ internal fun UserProfileScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             MoeStandardTopBar(
-                title = stringResource(R.string.profile_title),
-                navigationContentDescription = stringResource(R.string.profile_back),
-                onNavigateBack = onBack,
-                actions = {
-                    MoeStandardTopBarAction(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = stringResource(R.string.profile_share),
-                        onClick = { onAction(UserProfileAction.Share) },
-                        horizontalVisualOffset = 8.dp,
-                    )
-                    MoeStandardTopBarAction(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.profile_more),
-                        onClick = { onAction(UserProfileAction.More) },
-                    )
+                model =
+                    MoeStandardTopBarUiModel(
+                        title = stringResource(R.string.profile_title),
+                        navigationContentDescription = stringResource(R.string.profile_back),
+                        actions =
+                            listOf(
+                                MoeTopBarActionUiModel(
+                                    action = MoeTopBarAction.Share,
+                                    contentDescription = stringResource(R.string.profile_share),
+                                ),
+                                MoeTopBarActionUiModel(
+                                    action = MoeTopBarAction.More,
+                                    contentDescription = stringResource(R.string.profile_more),
+                                ),
+                            ),
+                    ),
+                onEvent = { event ->
+                    when (event) {
+                        MoeStandardTopBarEvent.NavigateBack -> onBack()
+                        is MoeStandardTopBarEvent.Action ->
+                            when (event.action) {
+                                MoeTopBarAction.Share -> onAction(UserProfileAction.Share)
+                                MoeTopBarAction.More -> onAction(UserProfileAction.More)
+                                else -> Unit
+                            }
+                    }
                 },
             )
         },

@@ -16,11 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +32,10 @@ import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.MoeDividerEmphasis
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.navigation.MoeSearchTopBar
+import cn.james.music.core.designsystem.component.navigation.MoeSearchTopBarEvent
+import cn.james.music.core.designsystem.component.navigation.MoeSearchTopBarUiModel
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarActionUiModel
 
 @Composable
 internal fun SearchScreen(
@@ -44,23 +44,32 @@ internal fun SearchScreen(
 ) {
     Column(Modifier.fillMaxSize()) {
         MoeSearchTopBar(
-            query = state.query,
-            placeholder = stringResource(R.string.search_placeholder),
-            navigationContentDescription = stringResource(R.string.search_back),
-            clearContentDescription = stringResource(R.string.search_clear),
-            onQueryChange = { value -> onAction(if (value.isEmpty()) SearchAction.ClearQuery else SearchAction.QueryChanged(value)) },
-            onSearch = { onAction(SearchAction.Submit) },
-            onNavigateBack = { onAction(SearchAction.Back) },
-            modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_TOOLBAR),
-            trailingAction = {
-                IconButton(onClick = { onAction(SearchAction.Voice) }) {
-                    Icon(
-                        Icons.Default.Mic,
-                        contentDescription = stringResource(R.string.search_voice),
-                        modifier = Modifier.size(18.dp),
-                    )
+            model =
+                MoeSearchTopBarUiModel(
+                    query = state.query,
+                    placeholder = stringResource(R.string.search_placeholder),
+                    navigationContentDescription = stringResource(R.string.search_back),
+                    clearContentDescription = stringResource(R.string.search_clear),
+                    actions =
+                        listOf(
+                            MoeTopBarActionUiModel(
+                                action = MoeTopBarAction.Voice,
+                                contentDescription = stringResource(R.string.search_voice),
+                            ),
+                        ),
+                ),
+            onEvent = { event ->
+                when (event) {
+                    MoeSearchTopBarEvent.NavigateBack -> onAction(SearchAction.Back)
+                    is MoeSearchTopBarEvent.QueryChanged ->
+                        onAction(if (event.value.isEmpty()) SearchAction.ClearQuery else SearchAction.QueryChanged(event.value))
+
+                    MoeSearchTopBarEvent.Submit -> onAction(SearchAction.Submit)
+                    is MoeSearchTopBarEvent.Action ->
+                        if (event.action == MoeTopBarAction.Voice) onAction(SearchAction.Voice)
                 }
             },
+            modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_TOOLBAR),
         )
         SearchTabs(state.selectedCategory) { onAction(SearchAction.SelectCategory(it)) }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {

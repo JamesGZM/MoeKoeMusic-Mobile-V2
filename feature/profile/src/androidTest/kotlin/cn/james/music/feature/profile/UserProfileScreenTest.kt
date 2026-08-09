@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,6 +51,33 @@ class UserProfileScreenTest {
         composeRule.onNodeWithTag(USER_PROFILE_EDIT_TOUCH_TAG).assertHeightIsEqualTo(48.dp)
         composeRule.onNodeWithTag(USER_PROFILE_EDIT_VISUAL_TAG).assertHeightIsEqualTo(38.dp)
         composeRule.onNodeWithTag(USER_PROFILE_OVERVIEW_TITLE_TAG).assertHeightIsEqualTo(24.dp)
+    }
+
+    @Test
+    fun toolbarForwardsBackShareAndMoreEvents() {
+        val events = mutableListOf<String>()
+        composeRule.setContent {
+            MoeKoeTheme(themeMode = ThemeMode.Light) {
+                UserProfileScreen(
+                    state = UserProfileUiState.Content(userProfileDesignPreview),
+                    onBack = { events += "back" },
+                    onAction = { action ->
+                        when (action) {
+                            UserProfileAction.Share -> events += "share"
+                            UserProfileAction.More -> events += "more"
+                            else -> Unit
+                        }
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("个人主页").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("返回").performClick()
+        composeRule.onNodeWithContentDescription("分享个人主页").performClick()
+        composeRule.onNodeWithContentDescription("更多个人主页操作").performClick()
+
+        assertEquals(listOf("back", "share", "more"), events)
     }
 
     @Test
