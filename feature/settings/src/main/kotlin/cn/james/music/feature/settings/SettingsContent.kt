@@ -96,6 +96,15 @@ private fun SettingsRow(
                 loading = row.loading,
                 onClick = { onAction(SettingsAction.OpenPlaybackQuality) },
             )
+        is SettingsRowUi.BrandThemeColorValue ->
+            SettingsActionItem(
+                icon = visual.icon,
+                iconColor = visual.color,
+                title = stringResource(visual.titleRes),
+                value = row.value.displayName(),
+                loading = row.loading,
+                onClick = { onAction(SettingsAction.OpenBrandThemeColor) },
+            )
         is SettingsRowUi.Unavailable ->
             SettingsUnavailableItem(
                 icon = visual.icon,
@@ -215,5 +224,18 @@ internal fun SettingsPlaybackQualityUi.fullDisplayName(): String =
             SettingsPlaybackQualityUi.ViperAtmos -> R.string.settings_quality_viper_atmos_full
             SettingsPlaybackQualityUi.ViperClear -> R.string.settings_quality_viper_clear_full
             SettingsPlaybackQualityUi.ViperTape -> R.string.settings_quality_viper_tape_full
+        },
+    )
+
+@Composable
+internal fun SettingsBrandThemeColorUi.displayName(): String =
+    stringResource(
+        when (this) {
+            SettingsBrandThemeColorUi.SkyBlue -> R.string.settings_theme_color_sky
+            SettingsBrandThemeColorUi.SakuraPink -> R.string.settings_theme_color_sakura
+            SettingsBrandThemeColorUi.StarPurple -> R.string.settings_theme_color_star
+            SettingsBrandThemeColorUi.MintGreen -> R.string.settings_theme_color_mint
+            SettingsBrandThemeColorUi.LakeCyan -> R.string.settings_theme_color_lake
+            SettingsBrandThemeColorUi.SunsetOrange -> R.string.settings_theme_color_sunset
         },
     )

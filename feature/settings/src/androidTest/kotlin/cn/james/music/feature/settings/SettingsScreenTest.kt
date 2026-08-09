@@ -336,6 +336,80 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun brandThemeColorDialogUsesSixRadioOptionsAndDisablesWhileSaving() {
+        var selected: SettingsBrandThemeColorUi? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(overlay = SettingsOverlay.BrandThemeColorSelection),
+                        onAction = { action ->
+                            if (action is SettingsAction.SelectBrandThemeColor) selected = action.color
+                        },
+                    )
+                }
+            }
+        }
+
+        listOf("天空蓝", "樱花粉", "星紫", "薄荷绿", "湖水青", "落日橙").forEach { label ->
+            composeRule.onNodeWithText(label).assertIsDisplayed()
+        }
+        composeRule.onNodeWithText("湖水青").performClick()
+        assertEquals(SettingsBrandThemeColorUi.LakeCyan, selected)
+
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                brandThemeColor = SettingsBrandThemeColorUi.LakeCyan,
+                                savingBrandThemeColor = SettingsBrandThemeColorUi.LakeCyan,
+                                overlay = SettingsOverlay.BrandThemeColorSelection,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        brandThemeColor = SettingsBrandThemeColorUi.LakeCyan,
+                                        savingBrandThemeColor = SettingsBrandThemeColorUi.LakeCyan,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("湖水青").assertIsNotEnabled()
+    }
+
+    @Test
+    fun savingBrandThemeColorDisablesOnlyItsRow() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                savingBrandThemeColor = SettingsBrandThemeColorUi.SkyBlue,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        savingBrandThemeColor = SettingsBrandThemeColorUi.SkyBlue,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("主题色").assertIsNotEnabled()
+        composeRule.onNodeWithText("主题模式").assertIsEnabled()
+    }
+
+    @Test
     fun savingPlaybackQualityDisablesOnlyItsRow() {
         composeRule.setContent {
             MoeKoeTheme {

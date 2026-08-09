@@ -107,6 +107,12 @@ internal fun SettingsScreen(
                 saving = state.savingPlaybackQuality,
                 onAction = onAction,
             )
+        SettingsOverlay.BrandThemeColorSelection ->
+            BrandThemeColorSelectionDialog(
+                selected = state.brandThemeColor,
+                saving = state.savingBrandThemeColor,
+                onAction = onAction,
+            )
         SettingsOverlay.About -> AboutDialog(onAction = onAction)
         null -> Unit
     }

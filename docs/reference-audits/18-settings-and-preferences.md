@@ -107,7 +107,7 @@
 7. “翻译与音译”：把 `Translation` 接入真实 Toggle、独立持久化与 Player 渲染层；关闭只隐藏 secondary，不重新读取歌词。已完成。
 8. “歌词字体大小”：把 `LyricsFontSize` 接入真实选择行、统一 Radio Dialog、独立枚举持久化与 Player 纯字号输入；不把字号写入歌词文档。已完成。
 9. “默认音质”：core 仅含七档语义 enum，data 私有映射稳定 storage value；`AppSettings` Repository setter、独立 v1 DataStore key、登录态候选回退、`KugouPlaybackQuality` 映射与真实 resolved-quality 运行时状态已完成。设置行现已接入真实七档选择 Dialog，并拥有独立保存代际、失败回滚最后持久值和精确 Retry；Player 与 MiniPlayer 现仅从 resolved runtime quality 显示实际角标，null（本地、演示、未解析或错误）不显示。它仍只改变下一次在线地址解析的偏好上限；真实服务和真机验证继续独立。
-10. “主题色”：按 [`25-brand-theme-color`](25-brand-theme-color.md) 依次完成领域/DataStore、六档 Design System primary 角色变体、app 组合根和 Settings 选择 Dialog；默认天空蓝不得改变既有 Light/Dark/AMOLED 基线，真实消费者是全局 Material primary 角色组，不把色值下沉到页面或播放器。
+10. “主题色”：领域/DataStore、六档 Design System primary 角色变体、app 组合根和 Settings 选择 Dialog 的代码/语义已于 030-032 完成；默认天空蓝不得改变既有 Light/Dark/AMOLED 基线，真实消费者是全局 Material primary 角色组，不把色值下沉到页面或播放器。032 已受限更新主题色行及五种非蓝/主题色 Dialog 截图基线，最终视觉与治理验收仍待完成。
 11. 后续缓存及其余播放能力分别在真实消费者完成时增加对应设置 Item。
 
 每个切片独立提交、推送并恢复干净工作区。

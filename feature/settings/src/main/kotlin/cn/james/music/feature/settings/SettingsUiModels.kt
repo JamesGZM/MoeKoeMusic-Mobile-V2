@@ -29,6 +29,16 @@ internal enum class SettingsPlaybackQualityUi {
 }
 
 @Immutable
+internal enum class SettingsBrandThemeColorUi {
+    SkyBlue,
+    SakuraPink,
+    StarPurple,
+    MintGreen,
+    LakeCyan,
+    SunsetOrange,
+}
+
+@Immutable
 internal enum class SettingsProblemUi {
     Read,
     Write,
@@ -41,6 +51,8 @@ internal sealed interface SettingsOverlay {
     data object LyricsTextSizeSelection : SettingsOverlay
 
     data object PlaybackQualitySelection : SettingsOverlay
+
+    data object BrandThemeColorSelection : SettingsOverlay
 
     data object About : SettingsOverlay
 }
@@ -98,6 +110,12 @@ internal sealed interface SettingsRowUi {
         val loading: Boolean,
     ) : SettingsRowUi
 
+    data class BrandThemeColorValue(
+        override val id: SettingsRowId,
+        val value: SettingsBrandThemeColorUi,
+        val loading: Boolean,
+    ) : SettingsRowUi
+
     data class Unavailable(
         override val id: SettingsRowId,
     ) : SettingsRowUi
@@ -123,12 +141,14 @@ internal data class SettingsUiState(
     val showLyricsSupplementalText: Boolean = true,
     val lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
     val playbackQuality: SettingsPlaybackQualityUi = SettingsPlaybackQualityUi.Standard,
+    val brandThemeColor: SettingsBrandThemeColorUi = SettingsBrandThemeColorUi.SkyBlue,
     val savingTheme: SettingsThemeUi? = null,
     val savingAutoSkipFailedPlayback: Boolean? = null,
     val savingDynamicCoverColors: Boolean? = null,
     val savingLyricsSupplementalText: Boolean? = null,
     val savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
     val savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
+    val savingBrandThemeColor: SettingsBrandThemeColorUi? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
@@ -166,9 +186,15 @@ internal sealed interface SettingsAction {
         val quality: SettingsPlaybackQualityUi,
     ) : SettingsAction
 
+    data class SelectBrandThemeColor(
+        val color: SettingsBrandThemeColorUi,
+    ) : SettingsAction
+
     data object OpenLyricsTextSize : SettingsAction
 
     data object OpenPlaybackQuality : SettingsAction
+
+    data object OpenBrandThemeColor : SettingsAction
 
     data object DismissOverlay : SettingsAction
 
@@ -184,12 +210,14 @@ internal fun settingsGroups(
     showLyricsSupplementalText: Boolean = true,
     lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
     playbackQuality: SettingsPlaybackQualityUi = SettingsPlaybackQualityUi.Standard,
+    brandThemeColor: SettingsBrandThemeColorUi = SettingsBrandThemeColorUi.SkyBlue,
     savingTheme: SettingsThemeUi? = null,
     savingAutoSkipFailedPlayback: Boolean? = null,
     savingDynamicCoverColors: Boolean? = null,
     savingLyricsSupplementalText: Boolean? = null,
     savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
     savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
+    savingBrandThemeColor: SettingsBrandThemeColorUi? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -197,7 +225,11 @@ internal fun settingsGroups(
             rows =
                 listOf(
                     SettingsRowUi.Value(SettingsRowId.ThemeMode, theme, savingTheme != null),
-                    SettingsRowUi.Unavailable(SettingsRowId.ThemeColor),
+                    SettingsRowUi.BrandThemeColorValue(
+                        id = SettingsRowId.ThemeColor,
+                        value = brandThemeColor,
+                        loading = savingBrandThemeColor != null,
+                    ),
                     SettingsRowUi.Toggle(
                         id = SettingsRowId.DynamicColor,
                         checked = dynamicCoverColors,

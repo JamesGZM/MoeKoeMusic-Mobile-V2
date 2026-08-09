@@ -72,6 +72,23 @@ internal fun PlaybackQualitySelectionDialog(
 }
 
 @Composable
+internal fun BrandThemeColorSelectionDialog(
+    selected: SettingsBrandThemeColorUi,
+    saving: SettingsBrandThemeColorUi?,
+    onAction: (SettingsAction) -> Unit,
+) {
+    SettingsSelectionDialog(
+        title = stringResource(R.string.settings_choose_theme_color),
+        options = SettingsBrandThemeColorUi.entries,
+        selected = selected,
+        saving = saving != null,
+        optionLabel = { color -> color.displayName() },
+        onSelected = { color -> onAction(SettingsAction.SelectBrandThemeColor(color)) },
+        onDismiss = { onAction(SettingsAction.DismissOverlay) },
+    )
+}
+
+@Composable
 private fun <T> SettingsSelectionDialog(
     title: String,
     options: List<T>,

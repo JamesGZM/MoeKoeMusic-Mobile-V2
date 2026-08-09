@@ -507,6 +507,135 @@ class SettingsViewModelTest {
             )
         }
 
+    @Test
+    fun repositorySnapshotMapsBrandThemeColorToTheSettingsRow() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.settingsState.value =
+                AppSettingsSnapshot(
+                    settings = AppSettings(brandThemeColor = BrandThemeColorPreference.SunsetOrange),
+                )
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            assertEquals(SettingsBrandThemeColorUi.SunsetOrange, viewModel.state.value.brandThemeColor)
+        }
+
+    @Test
+    fun brandThemeColorSelectionPersistsIndependently() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.MintGreen))
+            advanceUntilIdle()
+
+            assertEquals(SettingsBrandThemeColorUi.MintGreen, viewModel.state.value.brandThemeColor)
+            assertFalse(viewModel.state.value.dynamicCoverColors)
+            assertEquals(listOf(BrandThemeColorPreference.MintGreen), repository.brandThemeColorRequests)
+        }
+
+    @Test
+    fun brandThemeColorDoesNotCancelAnyOtherSettingsWrite() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Large))
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.High))
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.MintGreen))
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertEquals(listOf(false), repository.autoSkipRequests)
+            assertEquals(listOf(false), repository.dynamicCoverColorsRequests)
+            assertEquals(listOf(false), repository.lyricsSupplementalTextRequests)
+            assertEquals(listOf(LyricsTextSizePreference.Large), repository.lyricsTextSizeRequests)
+            assertEquals(listOf(PlaybackQualityPreference.High), repository.playbackQualityRequests)
+            assertEquals(listOf(BrandThemeColorPreference.MintGreen), repository.brandThemeColorRequests)
+        }
+
+    @Test
+    fun failedBrandThemeColorSelectionRollsBackAndRetriesItsOwnRequest() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.brandThemeColorResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.StarPurple))
+            advanceUntilIdle()
+
+            assertEquals(SettingsBrandThemeColorUi.SkyBlue, viewModel.state.value.brandThemeColor)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.brandThemeColorResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(SettingsBrandThemeColorUi.StarPurple, viewModel.state.value.brandThemeColor)
+            assertEquals(
+                listOf(BrandThemeColorPreference.StarPurple, BrandThemeColorPreference.StarPurple),
+                repository.brandThemeColorRequests,
+            )
+        }
+
+    @Test
+    fun staleBrandThemeColorWriteCannotOverrideNewerSelection() =
+        runTest(dispatcher) {
+            val repository = OutOfOrderRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.SakuraPink))
+            runCurrent()
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.LakeCyan))
+            runCurrent()
+
+            repository.completeBrandThemeColor(BrandThemeColorPreference.SakuraPink)
+            runCurrent()
+            assertEquals(SettingsBrandThemeColorUi.SkyBlue, viewModel.state.value.brandThemeColor)
+            assertEquals(SettingsBrandThemeColorUi.LakeCyan, viewModel.state.value.savingBrandThemeColor)
+
+            repository.completeBrandThemeColor(BrandThemeColorPreference.LakeCyan)
+            advanceUntilIdle()
+            assertEquals(SettingsBrandThemeColorUi.LakeCyan, viewModel.state.value.brandThemeColor)
+            assertEquals(null, viewModel.state.value.savingBrandThemeColor)
+        }
+
+    @Test
+    fun retryTargetsBrandThemeColorWhenItsFailureFinishesLast() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.HiRes))
+            viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.SunsetOrange))
+            runCurrent()
+
+            repository.failPlaybackQuality()
+            runCurrent()
+            repository.failBrandThemeColor()
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(PlaybackQualityPreference.HiRes), repository.playbackQualityRequests)
+            assertEquals(
+                listOf(BrandThemeColorPreference.SunsetOrange, BrandThemeColorPreference.SunsetOrange),
+                repository.brandThemeColorRequests,
+            )
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -518,12 +647,14 @@ class SettingsViewModelTest {
         var lyricsSupplementalTextResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var lyricsTextSizeResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var playbackQualityResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        var brandThemeColorResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
         val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
         val playbackQualityRequests = mutableListOf<PlaybackQualityPreference>()
+        val brandThemeColorRequests = mutableListOf<BrandThemeColorPreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -534,8 +665,14 @@ class SettingsViewModelTest {
             }
         }
 
-        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
-            error("Unexpected brand theme color write")
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult {
+            brandThemeColorRequests += color
+            return brandThemeColorResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(brandThemeColor = color))
+                }
+            }
+        }
 
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             playbackQualityRequests += quality
@@ -596,6 +733,8 @@ class SettingsViewModelTest {
             LyricsTextSizePreference.entries.associateWith { CompletableDeferred<Unit>() }
         private val playbackQualityCompletions =
             PlaybackQualityPreference.entries.associateWith { CompletableDeferred<Unit>() }
+        private val brandThemeColorCompletions =
+            BrandThemeColorPreference.entries.associateWith { CompletableDeferred<Unit>() }
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             withContext(NonCancellable) { completions.getValue(theme).await() }
@@ -603,8 +742,11 @@ class SettingsViewModelTest {
             return AppSettingsUpdateResult.Success
         }
 
-        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
-            error("Unexpected brand theme color write")
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult {
+            withContext(NonCancellable) { brandThemeColorCompletions.getValue(color).await() }
+            settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(brandThemeColor = color))
+            return AppSettingsUpdateResult.Success
+        }
 
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             withContext(NonCancellable) { playbackQualityCompletions.getValue(quality).await() }
@@ -635,6 +777,10 @@ class SettingsViewModelTest {
         fun completePlaybackQuality(quality: PlaybackQualityPreference) {
             playbackQualityCompletions.getValue(quality).complete(Unit)
         }
+
+        fun completeBrandThemeColor(color: BrandThemeColorPreference) {
+            brandThemeColorCompletions.getValue(color).complete(Unit)
+        }
     }
 
     private class ConcurrentFailureRepository(
@@ -648,12 +794,14 @@ class SettingsViewModelTest {
         private val lyricsSupplementalTextCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val lyricsTextSizeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val playbackQualityCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val brandThemeColorCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
         val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
         val playbackQualityRequests = mutableListOf<PlaybackQualityPreference>()
+        val brandThemeColorRequests = mutableListOf<BrandThemeColorPreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -664,8 +812,14 @@ class SettingsViewModelTest {
             }
         }
 
-        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
-            error("Unexpected brand theme color write")
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult {
+            brandThemeColorRequests += color
+            return if (brandThemeColorRequests.size == 1) {
+                withContext(NonCancellable) { brandThemeColorCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
 
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             playbackQualityRequests += quality
@@ -734,6 +888,10 @@ class SettingsViewModelTest {
 
         fun failPlaybackQuality() {
             playbackQualityCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failBrandThemeColor() {
+            brandThemeColorCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }
