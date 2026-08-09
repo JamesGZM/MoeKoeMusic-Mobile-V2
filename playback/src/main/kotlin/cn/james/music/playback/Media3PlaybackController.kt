@@ -97,20 +97,19 @@ internal class Media3PlaybackController
 
         override suspend fun playNext(item: PlaybackItem): PlaybackCommandResult =
             withController { controller ->
-                val currentIndex = controller.currentMediaItemIndex
-                val existingIndex = controller.currentTimelineItems().indexOfFirst { it.id == item.id }
-                when {
-                    existingIndex == currentIndex -> {
-                        Unit
-                    }
-
-                    existingIndex >= 0 -> {
-                        val target = if (existingIndex < currentIndex) currentIndex else currentIndex + 1
-                        controller.moveMediaItem(existingIndex, target.coerceAtMost(controller.mediaItemCount - 1))
+                val placement =
+                    QueuePolicy.placeAfterCurrent(
+                        queue = controller.currentTimelineItems(),
+                        currentIndex = controller.currentMediaItemIndex,
+                        itemId = item.id,
+                    )
+                when (val existingIndex = placement.existingIndex) {
+                    null -> {
+                        controller.addMediaItem(placement.targetIndex, PlaybackMediaItemMapper.toRequest(item))
                     }
 
                     else -> {
-                        controller.addMediaItem((currentIndex + 1).coerceAtLeast(0), PlaybackMediaItemMapper.toRequest(item))
+                        if (placement.requiresMove) controller.moveMediaItem(existingIndex, placement.targetIndex)
                     }
                 }
                 PlaybackCommandResult.Accepted
@@ -134,19 +133,23 @@ internal class Media3PlaybackController
                     controller.play()
                     return@withController PlaybackCommandResult.Accepted
                 }
-                val insertionIndex = (controller.currentMediaItemIndex + 1).coerceAtMost(controller.mediaItemCount)
-                val existingIndex = controller.currentTimelineItems().indexOfFirst { it.id == item.id }
-                val targetIndex =
-                    if (existingIndex >= 0) {
-                        controller.moveMediaItem(existingIndex, insertionIndex.coerceAtMost(controller.mediaItemCount - 1))
-                        val movedIndex = if (existingIndex < insertionIndex) insertionIndex - 1 else insertionIndex
-                        controller.replaceMediaItem(movedIndex, request)
-                        movedIndex
-                    } else {
-                        controller.addMediaItem(insertionIndex, request)
-                        insertionIndex
+                val placement =
+                    QueuePolicy.placeAfterCurrent(
+                        queue = controller.currentTimelineItems(),
+                        currentIndex = controller.currentMediaItemIndex,
+                        itemId = item.id,
+                    )
+                when (val existingIndex = placement.existingIndex) {
+                    null -> {
+                        controller.addMediaItem(placement.targetIndex, request)
                     }
-                controller.seekToDefaultPosition(targetIndex)
+
+                    else -> {
+                        if (placement.requiresMove) controller.moveMediaItem(existingIndex, placement.targetIndex)
+                        controller.replaceMediaItem(placement.targetIndex, request)
+                    }
+                }
+                controller.seekToDefaultPosition(placement.targetIndex)
                 controller.prepare()
                 controller.play()
                 PlaybackCommandResult.Accepted

@@ -18,12 +18,48 @@ internal object QueuePolicy {
         currentIndex: Int,
         item: PlaybackItem,
     ): List<PlaybackItem> {
-        val withoutItem = queue.filterNot { it.id == item.id }.toMutableList()
-        val currentId = queue.getOrNull(currentIndex)?.id
-        val adjustedCurrent = withoutItem.indexOfFirst { it.id == currentId }
-        val insertionIndex = (adjustedCurrent + 1).coerceIn(0, withoutItem.size)
-        withoutItem.add(insertionIndex, item)
-        return withoutItem
+        val placement = placeAfterCurrent(queue, currentIndex, item.id)
+        return queue.toMutableList().apply {
+            when (val existingIndex = placement.existingIndex) {
+                null -> {
+                    add(placement.targetIndex, item)
+                }
+
+                else -> {
+                    if (placement.requiresMove) add(placement.targetIndex, removeAt(existingIndex))
+                    this[placement.targetIndex] = item
+                }
+            }
+        }
+    }
+
+    /**
+     * Plans an insertion immediately after the current item. [targetIndex] is the final Media3
+     * index after an existing item has been removed, so Media3 can use it without a
+     * direction-dependent adjustment.
+     */
+    fun placeAfterCurrent(
+        queue: List<PlaybackItem>,
+        currentIndex: Int,
+        itemId: String,
+    ): QueuePlacement {
+        val existingIndex = queue.indexOfFirst { it.id == itemId }.takeIf { it >= 0 }
+        if (existingIndex == currentIndex) {
+            return QueuePlacement(existingIndex = existingIndex, targetIndex = currentIndex)
+        }
+
+        val queueWithoutItem = queue.toMutableList().apply { existingIndex?.let(::removeAt) }
+        val currentItemId = queue.getOrNull(currentIndex)?.id
+        val targetIndex =
+            currentItemId
+                ?.let { currentId -> queueWithoutItem.indexOfFirst { it.id == currentId } }
+                ?.takeIf { it >= 0 }
+                ?.plus(1)
+                ?: 0
+        return QueuePlacement(
+            existingIndex = existingIndex,
+            targetIndex = targetIndex.coerceIn(0, queueWithoutItem.size),
+        )
     }
 
     fun indexAfterRemoval(
@@ -39,4 +75,12 @@ internal object QueuePolicy {
             else -> currentIndex
         }
     }
+}
+
+internal data class QueuePlacement(
+    val existingIndex: Int?,
+    val targetIndex: Int,
+) {
+    val requiresMove: Boolean
+        get() = existingIndex != null && existingIndex != targetIndex
 }
