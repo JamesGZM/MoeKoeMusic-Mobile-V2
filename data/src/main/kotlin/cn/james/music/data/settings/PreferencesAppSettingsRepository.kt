@@ -13,6 +13,7 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.BrandThemeColorPreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,9 @@ class PreferencesAppSettingsRepository
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult =
             update { preferences -> preferences[THEME] = theme.storageValue }
 
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
+            update { preferences -> preferences[BRAND_THEME_COLOR] = color.storageValue }
+
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
             update { preferences -> preferences[PLAYBACK_QUALITY] = quality.storageValue }
 
@@ -59,6 +63,9 @@ class PreferencesAppSettingsRepository
         private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
             val storedTheme = preferences[THEME]
             val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
+            val storedBrandThemeColor = preferences[BRAND_THEME_COLOR]
+            val brandThemeColor =
+                storedBrandThemeColor?.let(::brandThemeColorFromStorageValue)
             val storedPlaybackQuality = preferences[PLAYBACK_QUALITY]
             val playbackQuality =
                 storedPlaybackQuality?.let { stored ->
@@ -73,6 +80,7 @@ class PreferencesAppSettingsRepository
                 settings =
                     AppSettings(
                         theme = theme ?: AppThemePreference.System,
+                        brandThemeColor = brandThemeColor ?: BrandThemeColorPreference.SkyBlue,
                         playbackQuality = playbackQuality ?: PlaybackQualityPreference.Standard,
                         autoSkipFailedPlayback = preferences[AUTO_SKIP_FAILED_PLAYBACK] ?: true,
                         dynamicCoverColors = preferences[DYNAMIC_COVER_COLORS] ?: true,
@@ -82,6 +90,7 @@ class PreferencesAppSettingsRepository
                 problem =
                     if (
                         (storedTheme != null && theme == null) ||
+                        (storedBrandThemeColor != null && brandThemeColor == null) ||
                         (storedPlaybackQuality != null && playbackQuality == null) ||
                         (storedLyricsTextSize != null && lyricsTextSize == null)
                     ) {
@@ -108,6 +117,17 @@ class PreferencesAppSettingsRepository
         private val LyricsTextSizePreference.storageValue: String
             get() = name.lowercase()
 
+        private val BrandThemeColorPreference.storageValue: String
+            get() =
+                when (this) {
+                    BrandThemeColorPreference.SkyBlue -> "sky_blue"
+                    BrandThemeColorPreference.SakuraPink -> "sakura_pink"
+                    BrandThemeColorPreference.StarPurple -> "star_purple"
+                    BrandThemeColorPreference.MintGreen -> "mint_green"
+                    BrandThemeColorPreference.LakeCyan -> "lake_cyan"
+                    BrandThemeColorPreference.SunsetOrange -> "sunset_orange"
+                }
+
         private val PlaybackQualityPreference.storageValue: String
             get() =
                 when (this) {
@@ -132,8 +152,20 @@ class PreferencesAppSettingsRepository
                 else -> null
             }
 
+        private fun brandThemeColorFromStorageValue(value: String): BrandThemeColorPreference? =
+            when (value) {
+                "sky_blue" -> BrandThemeColorPreference.SkyBlue
+                "sakura_pink" -> BrandThemeColorPreference.SakuraPink
+                "star_purple" -> BrandThemeColorPreference.StarPurple
+                "mint_green" -> BrandThemeColorPreference.MintGreen
+                "lake_cyan" -> BrandThemeColorPreference.LakeCyan
+                "sunset_orange" -> BrandThemeColorPreference.SunsetOrange
+                else -> null
+            }
+
         internal companion object {
             val THEME = stringPreferencesKey("theme_mode_v1")
+            val BRAND_THEME_COLOR = stringPreferencesKey("brand_theme_color_v1")
             val PLAYBACK_QUALITY = stringPreferencesKey("playback_quality_v1")
             val AUTO_SKIP_FAILED_PLAYBACK = booleanPreferencesKey("auto_skip_failed_playback_v1")
             val DYNAMIC_COVER_COLORS = booleanPreferencesKey("dynamic_cover_colors_v1")

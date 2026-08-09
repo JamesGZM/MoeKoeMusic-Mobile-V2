@@ -9,6 +9,15 @@ enum class AppThemePreference {
     Amoled,
 }
 
+enum class BrandThemeColorPreference {
+    SkyBlue,
+    SakuraPink,
+    StarPurple,
+    MintGreen,
+    LakeCyan,
+    SunsetOrange,
+}
+
 enum class PlaybackQualityPreference {
     Standard,
     High,
@@ -32,6 +41,7 @@ data class AppSettings(
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
     val lyricsTextSize: LyricsTextSizePreference = LyricsTextSizePreference.Standard,
+    val brandThemeColor: BrandThemeColorPreference = BrandThemeColorPreference.SkyBlue,
 )
 
 sealed interface AppSettingsProblem {
@@ -57,6 +67,8 @@ interface AppSettingsRepository {
     val settings: Flow<AppSettingsSnapshot>
 
     suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult
+
+    suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult
 
     suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult
 

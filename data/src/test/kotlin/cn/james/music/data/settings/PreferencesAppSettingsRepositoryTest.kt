@@ -1,5 +1,6 @@
 package cn.james.music.data.settings
 
+import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -10,6 +11,7 @@ import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.BrandThemeColorPreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CancellationException
@@ -49,6 +51,38 @@ class PreferencesAppSettingsRepositoryTest {
                     repository.settings.first(),
                 )
             }
+        }
+
+    @Test
+    fun brandThemeColorDefaultsToSkyBlueAndEveryValueUsesStableStorageValue() =
+        withFixture {
+            assertEquals(
+                BrandThemeColorPreference.SkyBlue,
+                repository.settings
+                    .first()
+                    .settings.brandThemeColor,
+            )
+
+            BrandThemeColorPreference.entries
+                .zip(
+                    listOf(
+                        "sky_blue",
+                        "sakura_pink",
+                        "star_purple",
+                        "mint_green",
+                        "lake_cyan",
+                        "sunset_orange",
+                    ),
+                ).forEach { (color, storageValue) ->
+                    assertEquals(AppSettingsUpdateResult.Success, repository.setBrandThemeColor(color))
+                    assertEquals(storageValue, dataStore.data.first()[PreferencesAppSettingsRepository.BRAND_THEME_COLOR])
+                    assertEquals(
+                        color,
+                        repository.settings
+                            .first()
+                            .settings.brandThemeColor,
+                    )
+                }
         }
 
     @Test
@@ -166,6 +200,22 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun unknownBrandThemeColorFallsBackToSkyBlueAndReportsReadProblem() =
+        withFixture {
+            dataStore.edit { preferences ->
+                preferences[PreferencesAppSettingsRepository.BRAND_THEME_COLOR] = "future-brand-color"
+            }
+
+            assertEquals(
+                BrandThemeColorPreference.SkyBlue,
+                repository.settings
+                    .first()
+                    .settings.brandThemeColor,
+            )
+            assertEquals(AppSettingsProblem.Read, repository.settings.first().problem)
+        }
+
+    @Test
     fun unknownLyricsTextSizeFallsBackToStandardAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.LYRICS_TEXT_SIZE] = "future-size" }
@@ -207,6 +257,23 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.playbackQuality,
+            )
+            assertEquals(
+                BrandThemeColorPreference.SkyBlue,
+                repository.settings
+                    .first()
+                    .settings.brandThemeColor,
+            )
+        }
+
+    @Test
+    fun corruptionReadFailureUsesSkyBlueAndReportsProblem() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(readError = CorruptionException("fixture")))
+
+            assertEquals(
+                AppSettingsSnapshot(problem = AppSettingsProblem.Read),
+                repository.settings.first(),
             )
         }
 
@@ -254,6 +321,23 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.playbackQuality,
+            )
+        }
+
+    @Test
+    fun brandThemeColorWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setBrandThemeColor(BrandThemeColorPreference.SakuraPink),
+            )
+            assertEquals(
+                BrandThemeColorPreference.SkyBlue,
+                repository.settings
+                    .first()
+                    .settings.brandThemeColor,
             )
         }
 
@@ -345,17 +429,28 @@ class PreferencesAppSettingsRepositoryTest {
     }
 
     @Test
+    fun brandThemeColorCancellationIsNotMappedToWriteFailure() {
+        val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { repository.setBrandThemeColor(BrandThemeColorPreference.SakuraPink) }
+        }
+    }
+
+    @Test
     fun playbackQualityWriteDoesNotOverwriteExistingPreferences() =
         withFixture {
             assertEquals(AppSettingsUpdateResult.Success, repository.setTheme(AppThemePreference.Dark))
             assertEquals(AppSettingsUpdateResult.Success, repository.setAutoSkipFailedPlayback(false))
             assertEquals(AppSettingsUpdateResult.Success, repository.setPlaybackQuality(PlaybackQualityPreference.ViperTape))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setBrandThemeColor(BrandThemeColorPreference.StarPurple))
 
             assertEquals(
                 AppSettings(
                     theme = AppThemePreference.Dark,
                     playbackQuality = PlaybackQualityPreference.ViperTape,
                     autoSkipFailedPlayback = false,
+                    brandThemeColor = BrandThemeColorPreference.StarPurple,
                 ),
                 repository.settings.first().settings,
             )

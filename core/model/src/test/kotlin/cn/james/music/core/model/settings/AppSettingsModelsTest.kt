@@ -5,6 +5,22 @@ import org.junit.Test
 
 class AppSettingsModelsTest {
     @Test
+    fun brandThemeColorDefaultsToSkyBlueAndUsesStablePresetOrder() {
+        assertEquals(BrandThemeColorPreference.SkyBlue, AppSettings().brandThemeColor)
+        assertEquals(
+            listOf(
+                BrandThemeColorPreference.SkyBlue,
+                BrandThemeColorPreference.SakuraPink,
+                BrandThemeColorPreference.StarPurple,
+                BrandThemeColorPreference.MintGreen,
+                BrandThemeColorPreference.LakeCyan,
+                BrandThemeColorPreference.SunsetOrange,
+            ),
+            BrandThemeColorPreference.entries.toList(),
+        )
+    }
+
+    @Test
     fun lyricsTextSizeDefaultsToStandard() {
         assertEquals(LyricsTextSizePreference.Standard, AppSettings().lyricsTextSize)
     }

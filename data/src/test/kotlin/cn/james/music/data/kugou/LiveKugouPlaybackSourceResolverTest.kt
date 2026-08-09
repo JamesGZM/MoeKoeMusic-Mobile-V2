@@ -4,6 +4,7 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.BrandThemeColorPreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import cn.james.music.kugou.api.endpoint.KugouApiResult
@@ -93,6 +94,8 @@ class LiveKugouPlaybackSourceResolverTest {
             override val settings: Flow<AppSettingsSnapshot> = flowOf(AppSettingsSnapshot())
 
             override suspend fun setTheme(theme: AppThemePreference) = AppSettingsUpdateResult.Success
+
+            override suspend fun setBrandThemeColor(color: BrandThemeColorPreference) = error("Unexpected brand theme color write")
 
             override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference) = AppSettingsUpdateResult.Success
 

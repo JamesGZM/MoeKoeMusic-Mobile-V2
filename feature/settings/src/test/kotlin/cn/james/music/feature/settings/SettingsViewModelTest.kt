@@ -6,6 +6,7 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.BrandThemeColorPreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CompletableDeferred
@@ -533,6 +534,9 @@ class SettingsViewModelTest {
             }
         }
 
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
+            error("Unexpected brand theme color write")
+
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             playbackQualityRequests += quality
             return playbackQualityResult.also {
@@ -599,6 +603,9 @@ class SettingsViewModelTest {
             return AppSettingsUpdateResult.Success
         }
 
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
+            error("Unexpected brand theme color write")
+
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             withContext(NonCancellable) { playbackQualityCompletions.getValue(quality).await() }
             settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(playbackQuality = quality))
@@ -656,6 +663,9 @@ class SettingsViewModelTest {
                 AppSettingsUpdateResult.Success
             }
         }
+
+        override suspend fun setBrandThemeColor(color: BrandThemeColorPreference): AppSettingsUpdateResult =
+            error("Unexpected brand theme color write")
 
         override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
             playbackQualityRequests += quality
