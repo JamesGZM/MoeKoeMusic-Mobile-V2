@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,9 +33,13 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeMiniPlayer
+import cn.james.music.core.designsystem.component.MoeMiniPlayerArtworkRenderer
+import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
+import cn.james.music.core.designsystem.component.MoeMiniPlayerUiModel
 import cn.james.music.core.designsystem.component.MoeSectionHeader
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
+import cn.james.music.core.designsystem.component.LocalMoeMiniPlayerArtworkRenderer
 import cn.james.music.core.designsystem.test.R as ScreenshotTestR
 import com.android.tools.screenshot.PreviewTest
 
@@ -138,24 +143,8 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
                 artwork = artwork(2),
                 badges = badge("HQ", MoeMediaBadgeTone.Neutral),
             )
-            MoeMiniPlayer(
-                title = "コレカラ（从今以后）",
-                artist = "Machico",
-                isPlaying = true,
-                progress = 0.38f,
-                positionLabel = "1:24",
-                durationLabel = "4:28",
-                badgeLabel = "标准",
-                playContentDescription = "播放",
-                pauseContentDescription = "暂停",
-                previousContentDescription = "上一首",
-                nextContentDescription = "下一首",
-                queueContentDescription = "播放队列",
-                onTogglePlayback = {},
-                onPrevious = {},
-                onNext = {},
-                onOpenQueue = {},
-                artwork = artwork(0),
+            ScreenshotMiniPlayer(
+                model = previewMiniPlayerModel(canOpenPlayer = false, artworkKey = "music-content-artwork-0"),
             )
             MoeSongRow(
                 title = "コレカラ（从今以后）",
@@ -258,34 +247,75 @@ private fun MiniPlayerPreview(themeMode: ThemeMode) {
 
 @Composable
 private fun PreviewMiniPlayer() {
-    MoeMiniPlayer(
+    ScreenshotMiniPlayer(model = previewMiniPlayerModel(canOpenPlayer = false, artworkKey = "mini-player-artwork"))
+}
+
+@Composable
+private fun ScreenshotMiniPlayer(model: MoeMiniPlayerUiModel) {
+    CompositionLocalProvider(LocalMoeMiniPlayerArtworkRenderer provides ScreenshotMiniPlayerArtworkRenderer) {
+        MoeMiniPlayer(
+            model = model,
+            onEvent = {},
+        )
+    }
+}
+
+private fun previewMiniPlayerModel(
+    canOpenPlayer: Boolean,
+    artworkKey: String,
+) =
+    MoeMiniPlayerUiModel(
         title = "コレカラ（从今以后）",
         artist = "Machico",
+        artworkKey = artworkKey,
+        artworkContentDescription = null,
         isPlaying = true,
-        progress = 0.38f,
+        progressFraction = 0.38f,
         positionLabel = "1:24",
         durationLabel = "4:28",
         badgeLabel = "标准",
-        playContentDescription = "播放",
-        pauseContentDescription = "暂停",
-        previousContentDescription = "上一首",
-        nextContentDescription = "下一首",
-        queueContentDescription = "播放队列",
-        onTogglePlayback = {},
-        onPrevious = {},
-        onNext = {},
-        onOpenQueue = {},
-        artwork = miniPlayerArtwork(),
+        canOpenPlayer = canOpenPlayer,
+        semantics =
+            MoeMiniPlayerSemanticsUi(
+                play = "播放",
+                pause = "暂停",
+                previous = "上一首",
+                next = "下一首",
+                queue = "播放队列",
+            ),
     )
-}
 
-private fun miniPlayerArtwork(): @Composable BoxScope.() -> Unit = {
-    Image(
-        painter = painterResource(ScreenshotTestR.drawable.mini_player_artwork),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-    )
+private object ScreenshotMiniPlayerArtworkRenderer : MoeMiniPlayerArtworkRenderer {
+    @Composable
+    override fun Render(
+        artworkKey: String?,
+        contentDescription: String?,
+    ) {
+        when (artworkKey) {
+            "mini-player-artwork" ->
+                Image(
+                    painter = painterResource(ScreenshotTestR.drawable.mini_player_artwork),
+                    contentDescription = contentDescription,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+
+            "music-content-artwork-0" ->
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        MoeKoeTheme.extraColors.accentPink.copy(alpha = 0.72f),
+                                    ),
+                                ),
+                            ),
+                )
+        }
+    }
 }
 
 private fun artwork(index: Int): @Composable BoxScope.() -> Unit = {

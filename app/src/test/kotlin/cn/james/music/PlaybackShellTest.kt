@@ -1,5 +1,6 @@
 package cn.james.music
 
+import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
 import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
@@ -71,6 +72,60 @@ class PlaybackShellTest {
         val queue = state.toPlayerQueueUiState(currentDurationMs = 65_000)
 
         assertEquals(listOf(null, "1:05", null), queue.items.map { it.durationLabel })
+    }
+
+    @Test
+    fun miniPlayerMapsCurrentPlaybackToOpaqueArtworkKeyAndCompletePresentationModel() {
+        val current = item("current", artwork = PlaybackArtwork.Remote("https://example.test/cover.webp"))
+        val state = PlaybackState(queue = listOf(current), currentIndex = 0, isPlaying = true)
+        val semantics =
+            MoeMiniPlayerSemanticsUi(
+                play = "播放",
+                pause = "暂停",
+                previous = "上一首",
+                next = "下一首",
+                queue = "播放队列",
+            )
+
+        val model =
+            state.toMoeMiniPlayerUiModel(
+                positionMs = 84_000,
+                durationMs = 248_000,
+                badgeLabel = "标准",
+                semantics = semantics,
+            )
+
+        requireNotNull(model)
+        assertEquals(current.id, model.artworkKey)
+        assertEquals("Title current", model.title)
+        assertEquals("Artist current", model.artist)
+        assertEquals("Title current 封面", model.artworkContentDescription)
+        assertEquals("1:24", model.positionLabel)
+        assertEquals("4:08", model.durationLabel)
+        assertEquals(84_000f / 248_000f, model.progressFraction)
+        assertTrue(model.isPlaying)
+        assertTrue(model.canOpenPlayer)
+        assertEquals("标准", model.badgeLabel)
+        assertEquals(semantics, model.semantics)
+    }
+
+    @Test
+    fun miniPlayerIsAbsentWhenPlaybackHasNoCurrentItem() {
+        assertNull(
+            PlaybackState().toMoeMiniPlayerUiModel(
+                positionMs = 0,
+                durationMs = 0,
+                badgeLabel = "标准",
+                semantics =
+                    MoeMiniPlayerSemanticsUi(
+                        play = "播放",
+                        pause = "暂停",
+                        previous = "上一首",
+                        next = "下一首",
+                        queue = "播放队列",
+                    ),
+            ),
+        )
     }
 
     @Test

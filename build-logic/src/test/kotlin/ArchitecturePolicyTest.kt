@@ -413,6 +413,110 @@ class ArchitecturePolicyTest {
     }
 
     @Test
+    fun `MoeMiniPlayer 登记后只接受 model onEvent 和可选 modifier`() {
+        val root = createTempDirectory("moekoe-mini-player-component-").toFile()
+        val owner =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeMiniPlayer.kt",
+                "fun MoeMiniPlayer(model: Any, onEvent: (Any) -> Unit, modifier: Any) = Unit",
+            )
+        val consumer =
+            writeSource(
+                root,
+                "app/src/main/kotlin/cn/james/music/PlaybackShell.kt",
+                "fun Mini() { MoeMiniPlayer(model = model, onEvent = onEvent, modifier = modifier) }",
+            )
+        val spec = DataDrivenUiComponentSpec("MoeMiniPlayer", owner.relativeTo(root).invariantSeparatorsPath)
+
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec)).isEmpty())
+
+        consumer.writeText("fun Mini() { MoeMiniPlayer(model = model, onEvent = onEvent, artwork = {}) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+                .single()
+                .contains("只允许"),
+        )
+
+        consumer.writeText("fun Mini() { MoeMiniPlayer(model, onEvent) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+                .single()
+                .contains("命名参数"),
+        )
+
+        consumer.writeText("fun Mini() { MoeMiniPlayer(model = model, onEvent = onEvent, onNext = {}) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+                .single()
+                .contains("只允许"),
+        )
+
+        consumer.writeText("fun Mini() { MoeMiniPlayer(onEvent = onEvent) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+                .single()
+                .contains("model"),
+        )
+
+        consumer.writeText("fun Mini() { MoeMiniPlayer(model = model) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+                .single()
+                .contains("onEvent"),
+        )
+    }
+
+    @Test
+    fun `MoeMiniPlayer 模型和 artwork renderer 拒绝领域视觉与几何泄漏`() {
+        val root = createTempDirectory("moekoe-mini-player-boundary-").toFile()
+        val path = "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeMiniPlayer.kt"
+        val source =
+            writeSource(
+                root,
+                path,
+                "@Immutable\n" +
+                    "data class MoeMiniPlayerUiModel(val artworkKey: String?, val title: String)\n" +
+                    "@Immutable\n" +
+                    "data class MoeMiniPlayerSemanticsUi(val play: String)\n" +
+                    "interface MoeMiniPlayerArtworkRenderer { fun Render(artworkKey: String?, contentDescription: String?) }",
+            )
+
+        assertTrue(ArchitecturePolicy.validateMoeMiniPlayerBoundary(source).isEmpty())
+
+        source.writeText(
+            "data class MoeMiniPlayerUiModel(" +
+                "val item: PlaybackItem, val artworkUrl: String, val padding: Dp, val modifier: Modifier, " +
+                "val slot: @Composable () -> Unit" +
+                ")\n" +
+                "@Immutable\n" +
+                "data class MoeMiniPlayerSemanticsUi(val icon: ImageVector, val callback: () -> Unit)\n" +
+                "interface MoeMiniPlayerArtworkRenderer { " +
+                "fun Render(artworkKey: String?, contentDescription: String?) " +
+                "fun Render(artworkKey: String?, contentDescription: String?, modifier: Modifier) " +
+                "fun RenderWithModifier(modifier: Modifier) " +
+                "}",
+        )
+        val violations = ArchitecturePolicy.validateMoeMiniPlayerBoundary(source)
+        assertTrue(violations.any { it.contains("MoeMiniPlayerUiModel 必须紧邻 @Immutable") })
+        assertTrue(violations.any { it.contains("PlaybackItem") })
+        assertTrue(violations.any { it.contains("artworkUrl") })
+        assertTrue(violations.any { it.contains("Dp") })
+        assertTrue(violations.any { it.contains("Modifier") })
+        assertTrue(violations.any { it.contains("MoeMiniPlayerSemanticsUi 不得持有 ImageVector") })
+        assertTrue(violations.any { it.contains("MoeMiniPlayerSemanticsUi 不得持有 callback 或 function type") })
+        assertTrue(violations.any { it.contains("@Composable") })
+        assertTrue(violations.any { it.contains("必须且只能声明一个函数 Render") })
+        assertTrue(violations.any { it.contains("只能声明 Render") })
+        assertTrue(violations.any { it.contains("只能接收") })
+    }
+
+    @Test
     fun `非歌曲行 MoeMediaBadge 不受冻结规则误伤`() {
         val root = createTempDirectory("moekoe-non-song-badge-").toFile()
         val path = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchArtistHero.kt"

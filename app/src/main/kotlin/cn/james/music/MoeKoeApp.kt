@@ -31,6 +31,8 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import cn.james.music.core.designsystem.component.MoeMiniPlayerEvent
+import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
 import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.feature.discover.discoverGraph
@@ -109,27 +111,37 @@ fun MoeKoeApp(
                         },
                 ) {
                     state.currentItem?.takeUnless { isPlayer || isSettings }?.let { item ->
-                    val currentProgress = progress.value
-                    MoeKoeMiniPlayer(
-                        item = item,
-                        isPlaying = state.isPlaying,
-                        progress =
-                            if (currentProgress.durationMs > 0) {
-                                currentProgress.positionMs.toFloat() / currentProgress.durationMs
-                            } else {
-                                0f
+                        val currentProgress = progress.value
+                        val model =
+                            state.toMoeMiniPlayerUiModel(
+                                positionMs = currentProgress.positionMs,
+                                durationMs = currentProgress.durationMs,
+                                badgeLabel = stringResource(R.string.mini_player_quality_standard),
+                                semantics =
+                                    MoeMiniPlayerSemanticsUi(
+                                        play = stringResource(R.string.mini_player_play),
+                                        pause = stringResource(R.string.mini_player_pause),
+                                        previous = stringResource(R.string.mini_player_previous),
+                                        next = stringResource(R.string.mini_player_next),
+                                        queue = stringResource(R.string.mini_player_queue),
+                                    ),
+                            ) ?: return@let
+                        MoeKoeMiniPlayer(
+                            model = model,
+                            item = item,
+                            onEvent = { event ->
+                                when (event) {
+                                    MoeMiniPlayerEvent.TogglePlayback -> viewModel.togglePlayback()
+                                    MoeMiniPlayerEvent.Previous -> viewModel.skipPrevious()
+                                    MoeMiniPlayerEvent.Next -> viewModel.skipNext()
+                                    MoeMiniPlayerEvent.OpenQueue -> queueVisible = true
+                                    MoeMiniPlayerEvent.OpenPlayer -> {
+                                        navController.navigate(PlayerDestination) { launchSingleTop = true }
+                                    }
+                                }
                             },
-                        positionMs = currentProgress.positionMs,
-                        durationMs = currentProgress.durationMs,
-                        onToggle = viewModel::togglePlayback,
-                        onPrevious = viewModel::skipPrevious,
-                        onNext = viewModel::skipNext,
-                        onQueue = { queueVisible = true },
-                        onOpenPlayer = {
-                            navController.navigate(PlayerDestination) { launchSingleTop = true }
-                        },
-                    )
-                }
+                        )
+                    }
                     if (showBottomNavigation) {
                         NavigationBar {
                             appState.topLevelDestinations.forEach { destination ->

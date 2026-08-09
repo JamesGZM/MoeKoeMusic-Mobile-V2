@@ -2,12 +2,17 @@ package cn.james.music
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import coil3.compose.AsyncImage
+import cn.james.music.core.designsystem.component.LocalMoeMiniPlayerArtworkRenderer
 import cn.james.music.core.designsystem.component.MoeMiniPlayer
+import cn.james.music.core.designsystem.component.MoeMiniPlayerArtworkRenderer
+import cn.james.music.core.designsystem.component.MoeMiniPlayerEvent
+import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
+import cn.james.music.core.designsystem.component.MoeMiniPlayerUiModel
 import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
@@ -25,37 +30,22 @@ import java.io.File
 
 @Composable
 internal fun MoeKoeMiniPlayer(
+    model: MoeMiniPlayerUiModel,
     item: PlaybackItem,
-    isPlaying: Boolean,
-    progress: Float,
-    positionMs: Long,
-    durationMs: Long,
-    onToggle: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onQueue: () -> Unit,
-    onOpenPlayer: () -> Unit,
+    onEvent: (MoeMiniPlayerEvent) -> Unit,
 ) {
-    MoeMiniPlayer(
-        title = item.title,
-        artist = item.artist,
-        isPlaying = isPlaying,
-        progress = progress,
-        positionLabel = formatMiniPlayerTime(positionMs),
-        durationLabel = formatMiniPlayerTime(durationMs),
-        badgeLabel = stringResource(R.string.mini_player_quality_standard),
-        playContentDescription = stringResource(R.string.mini_player_play),
-        pauseContentDescription = stringResource(R.string.mini_player_pause),
-        previousContentDescription = stringResource(R.string.mini_player_previous),
-        nextContentDescription = stringResource(R.string.mini_player_next),
-        queueContentDescription = stringResource(R.string.mini_player_queue),
-        onTogglePlayback = onToggle,
-        onPrevious = onPrevious,
-        onNext = onNext,
-        onOpenQueue = onQueue,
-        onOpenPlayer = onOpenPlayer,
-        artwork = { PlaybackArtworkImage(item) },
-    )
+    CompositionLocalProvider(
+        LocalMoeMiniPlayerArtworkRenderer provides
+            CurrentPlaybackArtworkRenderer(
+                itemId = item.id,
+                artwork = item.artwork,
+            ),
+    ) {
+        MoeMiniPlayer(
+            model = model,
+            onEvent = onEvent,
+        )
+    }
 }
 
 internal fun formatMiniPlayerTime(millis: Long): String {
@@ -84,6 +74,33 @@ internal fun PlaybackState.toPlayerUiState(): PlayerUiState =
         controlsEnabled = connection == cn.james.music.playback.PlaybackConnectionState.Connected,
         mode = mode.toPlayerPlaybackModeUi(),
     )
+
+internal fun PlaybackState.toMoeMiniPlayerUiModel(
+    positionMs: Long,
+    durationMs: Long,
+    badgeLabel: String,
+    semantics: MoeMiniPlayerSemanticsUi,
+): MoeMiniPlayerUiModel? {
+    val item = currentItem ?: return null
+    return MoeMiniPlayerUiModel(
+        title = item.title,
+        artist = item.artist,
+        artworkKey = item.id,
+        artworkContentDescription = "${item.title} 封面",
+        isPlaying = isPlaying,
+        progressFraction =
+            if (durationMs > 0) {
+                positionMs.toFloat() / durationMs
+            } else {
+                0f
+            },
+        positionLabel = formatMiniPlayerTime(positionMs),
+        durationLabel = formatMiniPlayerTime(durationMs),
+        badgeLabel = badgeLabel,
+        canOpenPlayer = true,
+        semantics = semantics,
+    )
+}
 
 internal fun PlaybackState.toPlayerQueueUiState(currentDurationMs: Long): PlayerQueueUiState =
     PlayerQueueUiState(
@@ -161,19 +178,28 @@ internal fun PlaybackState.resolvePlayerQueueAction(action: PlayerQueueAction): 
         PlayerQueueAction.ChangeMode -> ResolvedPlayerQueueAction.ChangeMode
     }
 
-@Composable
-private fun PlaybackArtworkImage(item: PlaybackItem) {
-    val context = LocalContext.current
-    val model =
-        when (val artwork = item.artwork) {
-            is PlaybackArtwork.Remote -> artwork.value
-            is PlaybackArtwork.AppFile -> File(context.filesDir, artwork.value)
-            null -> null
-        }
-    AsyncImage(
-        model = model,
-        contentDescription = "${item.title} 封面",
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-    )
+private class CurrentPlaybackArtworkRenderer(
+    private val itemId: String,
+    private val artwork: PlaybackArtwork?,
+) : MoeMiniPlayerArtworkRenderer {
+    @Composable
+    override fun Render(
+        artworkKey: String?,
+        contentDescription: String?,
+    ) {
+        if (artworkKey != itemId) return
+        val context = LocalContext.current
+        val model =
+            when (artwork) {
+                is PlaybackArtwork.Remote -> artwork.value
+                is PlaybackArtwork.AppFile -> File(context.filesDir, artwork.value)
+                null -> null
+            }
+        AsyncImage(
+            model = model,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+    }
 }

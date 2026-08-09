@@ -41,6 +41,7 @@ internal object ArchitecturePolicy {
             addAll(validatePlayerFeatureBoundary(rootDir, sourceFiles))
             addAll(validateFeatureEntryModels(rootDir, sourceFiles))
             addAll(validateImmutableFeatureModels(rootDir, sourceFiles))
+            addAll(validateMoeMiniPlayerBoundary(sources[MOE_MINI_PLAYER_OWNER]))
             addAll(validateDataDrivenUiComponents(rootDir, sourceFiles, DATA_DRIVEN_UI_COMPONENTS))
         }
     }
@@ -256,6 +257,53 @@ internal object ArchitecturePolicy {
         }
     }
 
+    internal fun validateMoeMiniPlayerBoundary(owner: File?): List<String> {
+        if (owner == null) return listOf("$MOE_MINI_PLAYER_OWNER: MoeMiniPlayer 所有者文件不存在")
+        val code = maskNonCode(owner.readText())
+        val models =
+            listOf(
+                MOE_MINI_PLAYER_UI_MODEL_NAME to namedConstructor(code, MOE_MINI_PLAYER_UI_MODEL),
+                MOE_MINI_PLAYER_SEMANTICS_UI_MODEL_NAME to namedConstructor(code, MOE_MINI_PLAYER_SEMANTICS_UI_MODEL),
+            )
+        val rendererFunctions = miniPlayerRendererFunctions(code)
+        return buildList {
+            models.forEach { (name, constructor) ->
+                if (constructor == null) {
+                    add("$MOE_MINI_PLAYER_OWNER: 缺少 $name")
+                } else {
+                    if (!hasImmediateImmutableAnnotation(code, name)) {
+                        add("$MOE_MINI_PLAYER_OWNER: $name 必须紧邻 @Immutable")
+                    }
+                    MINI_PLAYER_MODEL_FORBIDDEN_TYPES.forEach { type ->
+                        if (Regex("\\b${Regex.escape(type)}\\b").containsMatchIn(constructor)) {
+                            add("$MOE_MINI_PLAYER_OWNER: $name 不得持有 $type")
+                        }
+                    }
+                    MINI_PLAYER_MODEL_FORBIDDEN_MEMBER.findAll(constructor).forEach { member ->
+                        add("$MOE_MINI_PLAYER_OWNER: $name 不得持有路径或 URL 字段 ${member.value}")
+                    }
+                    if (MINI_PLAYER_MODEL_FORBIDDEN_FUNCTION_TYPE.containsMatchIn(constructor)) {
+                        add("$MOE_MINI_PLAYER_OWNER: $name 不得持有 callback 或 function type")
+                    }
+                }
+            }
+            if (rendererFunctions.size != 1) {
+                add("$MOE_MINI_PLAYER_OWNER: MoeMiniPlayerArtworkRenderer 必须且只能声明一个函数 Render")
+            }
+            rendererFunctions.forEach { (name, parameters) ->
+                if (name != "Render") {
+                    add("$MOE_MINI_PLAYER_OWNER: MoeMiniPlayerArtworkRenderer 只能声明 Render")
+                }
+                MINI_PLAYER_RENDERER_FORBIDDEN_PARAMETER.findAll(parameters).forEach { parameter ->
+                    add("$MOE_MINI_PLAYER_OWNER: MiniPlayer artwork renderer 不得接收几何参数 ${parameter.value}")
+                }
+                if (parameters.replace(Regex("\\s+"), "").removeSuffix(",") != MINI_PLAYER_RENDERER_EXPECTED_PARAMETERS) {
+                    add("$MOE_MINI_PLAYER_OWNER: MiniPlayer artwork renderer 只能接收 artworkKey: String?、contentDescription: String?")
+                }
+            }
+        }
+    }
+
     private fun forbiddenUiConstructorTypes(
         relative: String,
         code: String,
@@ -271,6 +319,34 @@ internal object ArchitecturePolicy {
 
     private fun Regex.flatMapConstructors(code: String): Sequence<String> =
         findAll(code).map { match -> extractDelimited(code, match.range.last, '(', ')').orEmpty() }
+
+    private fun namedConstructor(
+        code: String,
+        declaration: Regex,
+    ): String? {
+        val match = declaration.find(code) ?: return null
+        val opening = code.indexOf('(', match.range.last)
+        return extractDelimited(code, opening, '(', ')')
+    }
+
+    private fun miniPlayerRendererFunctions(code: String): List<Pair<String, String>> {
+        val renderer = MOE_MINI_PLAYER_RENDERER_INTERFACE.find(code) ?: return emptyList()
+        val opening = code.indexOf('{', renderer.range.last)
+        val body = extractDelimited(code, opening, '{', '}') ?: return emptyList()
+        return MOE_MINI_PLAYER_RENDER_FUNCTION_DECLARATION
+            .findAll(body)
+            .mapNotNull { match ->
+                val parameterOpening = body.indexOf('(', match.range.last)
+                extractDelimited(body, parameterOpening, '(', ')')?.let { match.groupValues[1] to it }
+            }.toList()
+    }
+
+    private fun hasImmediateImmutableAnnotation(
+        code: String,
+        declarationName: String,
+    ): Boolean =
+        Regex("@Immutable[\\t ]*\\r?\\n[\\t ]*(?:internal\\s+)?data\\s+class\\s+$declarationName\\b")
+            .containsMatchIn(code)
 
     private fun uiModelMainConstructorProperties(
         source: String,
@@ -584,6 +660,39 @@ internal object ArchitecturePolicy {
             DISCOVER_MODELS_SOURCE,
         )
     private val MOE_SONG_ROW_STYLE_ENUM = Regex("enum\\s+class\\s+MoeSongRowStyle\\s*")
+    private const val MOE_MINI_PLAYER_OWNER =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeMiniPlayer.kt"
+    private const val MOE_MINI_PLAYER_UI_MODEL_NAME = "MoeMiniPlayerUiModel"
+    private const val MOE_MINI_PLAYER_SEMANTICS_UI_MODEL_NAME = "MoeMiniPlayerSemanticsUi"
+    private val MOE_MINI_PLAYER_UI_MODEL = Regex("data\\s+class\\s+MoeMiniPlayerUiModel\\b")
+    private val MOE_MINI_PLAYER_SEMANTICS_UI_MODEL = Regex("data\\s+class\\s+MoeMiniPlayerSemanticsUi\\b")
+    private val MOE_MINI_PLAYER_RENDERER_INTERFACE = Regex("interface\\s+MoeMiniPlayerArtworkRenderer\\b")
+    private val MOE_MINI_PLAYER_RENDER_FUNCTION_DECLARATION = Regex("fun\\s+([A-Za-z][A-Za-z0-9_]*)\\s*\\(")
+    private val MINI_PLAYER_MODEL_FORBIDDEN_TYPES =
+        setOf(
+            "PlaybackItem",
+            "PlaybackState",
+            "PlaybackArtwork",
+            "PlaybackController",
+            "File",
+            "Uri",
+            "Painter",
+            "Color",
+            "Dp",
+            "Shape",
+            "TextStyle",
+            "PaddingValues",
+            "BoxScope",
+            "Modifier",
+            "ImageVector",
+        )
+    private val MINI_PLAYER_MODEL_FORBIDDEN_MEMBER =
+        Regex("(?i)\\b(?:val|var)\\s+[A-Za-z0-9_]*(?:path|url)[A-Za-z0-9_]*\\b|@Composable")
+    private val MINI_PLAYER_MODEL_FORBIDDEN_FUNCTION_TYPE =
+        Regex("(?:\\b(?:suspend\\s+)?[A-Za-z_][A-Za-z0-9_?.<>]*\\s*->|(?:\\bsuspend\\s+)?\\([^)]*\\)\\s*->|\\bFunction\\d*\\s*<)")
+    private val MINI_PLAYER_RENDERER_FORBIDDEN_PARAMETER =
+        Regex("\\b(?:Modifier|BoxScope|Dp|Shape|Color|PaddingValues)\\b")
+    private const val MINI_PLAYER_RENDERER_EXPECTED_PARAMETERS = "artworkKey:String?,contentDescription:String?"
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")
     private const val SONG_ROW_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
@@ -658,6 +767,10 @@ internal object ArchitecturePolicy {
             DataDrivenUiComponentSpec(
                 name = "PlayerQueueSheet",
                 ownerSource = "feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerQueueSheet.kt",
+            ),
+            DataDrivenUiComponentSpec(
+                name = "MoeMiniPlayer",
+                ownerSource = MOE_MINI_PLAYER_OWNER,
             ),
         )
     private val DATA_DRIVEN_COMPONENT_ARGUMENTS = setOf("model", "onEvent", "modifier")
