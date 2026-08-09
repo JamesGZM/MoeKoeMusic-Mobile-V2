@@ -1,6 +1,6 @@
 # 开发计划
 
-状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 与阶段 5A/5B 进行中。更新日期：2026-08-08。
+状态：阶段 0、阶段 1、阶段 2、阶段 3 已完成，阶段 4 与阶段 5A/5B 进行中。更新日期：2026-08-10。
 
 本文是 MoeKoeMusic Mobile V2 的总开发路线。仓库已具备 Android 工程基础、原生播放内核和阶段 3 的本地音乐纵向切片；阶段 4 已完成酷狗协议基础、匿名加密会话、正式搜索页面与在线播放纵向闭环。阶段 5 固定的“我的首页 → 通用播放组件 → 首页 → 发现页 → 播放页”确认稿 UI 顺序已经完成，歌单详情与用户主页确认稿纯 UI 也已独立落地；页面视觉不等待对应业务能力，协议与真实行为继续按纵向切片接入。
 
@@ -56,7 +56,7 @@
 
 用户主页确认稿 UI 已按 [`design/USER_PROFILE_LAYOUT_SPEC.md`](design/USER_PROFILE_LAYOUT_SPEC.md) 落入独立 `:feature:profile`，由已登录“我的”资料区进入类型安全子页面；标准 Toolbar、资料 Hero、关系统计、编辑资料、听歌概览、公开歌单、空态、离线、长文本、宽屏与两档大字体重排均已覆盖，`user-profile.content.light` 结构 contract、三锚点 probe、13 组截图及归一化并排、叠加和差异证据均已通过。页面数据为设计预览，真实关系、听歌统计、编辑、分享与公开歌单协议继续独立接入。
 
-设置页确认稿 UI 已按 `09-settings.png` 完整恢复外观、播放与音质、歌词、存储、其他五个分组及 14 个 Item，并使用统一最小触控高度和单一长页面滚动；主题、关于与默认开启的“播放失败时自动跳过”保持真实交互。自动跳过在下一次不可恢复播放错误生效，关闭时暂停且不取消已开始的地址刷新或已排队恢复；“默认音质”已完成 [`24-default-playback-quality`](reference-audits/24-default-playback-quality.md) 的规格准入，但尚未接入消费者，仍保持静态。其余尚无消费者的能力只呈现静态视觉，不持久化假值或展示假缓存容量。Light、Dark、AMOLED、两档大字体与完整长内容截图及归一化设计证据均已建立。
+设置页确认稿 UI 已按 `09-settings.png` 完整恢复外观、播放与音质、歌词、存储、其他五个分组及 14 个 Item，并使用统一最小触控高度和单一长页面滚动；主题、关于与默认开启的“播放失败时自动跳过”保持真实交互。自动跳过在下一次不可恢复播放错误生效，关闭时暂停且不取消已开始的地址刷新或已排队恢复；“默认音质”已完成 [`24-default-playback-quality`](reference-audits/24-default-playback-quality.md) 的领域偏好、登录态候选回退、短期 resolved-quality runtime state、真实 Settings Dialog 和 Player/MiniPlayer 实际角标闭环，真实服务与真机验证仍独立。下一条 Accepted 设置能力是 [`25-brand-theme-color`](reference-audits/25-brand-theme-color.md)：六档全局品牌色预设，默认天空蓝严格保持当前 Light/Dark/AMOLED 基线；其余尚无消费者的能力只呈现静态视觉，不持久化假值或展示假缓存容量。Light、Dark、AMOLED、两档大字体与完整长内容截图及归一化设计证据均已建立。
 
 ## UI 实现基线
 

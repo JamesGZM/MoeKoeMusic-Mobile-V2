@@ -14,6 +14,7 @@
 - `翻译与音译` 是第三个已有真实消费者的应用偏好：`showLyricsSupplementalText` 默认开启，旧 PC 的 `lyricsTranslation` 同时控制翻译与音译。V2 只在播放器渲染层隐藏 secondary，保留当前已加载的歌词内容，重新开启立即恢复；不影响歌词请求、解析、缓存、逐字 timing 或点击 seek。读取失败回退开启，写失败回滚最后持久值并精确重试。
 - `歌词字体大小` 是第四个已有真实消费者的应用偏好：`lyricsTextSize` 为独立 v1 枚举，默认“标准”；“150%”与“200%”分别复用已确认 `23g` / `23h` 的 Large / Largest 几何。旧 PC 的 `20 / 24 / 32` 只证明小/中/大三档语义，不复制为 Android px。切换只改变播放器既有歌词视窗的字号、行高和内容 offset，不改变已加载文档、请求、解析、缓存、逐字 timing、点击 seek 或翻译与音译的显隐。缺失、读取失败和未知值安全回退“标准”并报告既有读取问题；写失败回滚最后持久值并精确重试。
 - `默认音质` 的协议、回退、显示真值与实施边界已由 [`24-default-playback-quality`](24-default-playback-quality.md) Accepted：默认 `128`，匿名固定 `free_part=1` 且不查询候选；登录态只在下一次在线地址解析中使用已保存偏好并向低档回退。设置行显示简短当前值，Dialog 以“选择默认音质”列出 `标准音质 · 128 Kbps`、`高品音质 · 320 Kbps`、`FLAC 无损`、`Hi-Res 无损`、`蝰蛇全景`、`蝰蛇超清`、`蝰蛇母带`。它只写偏好上限，绝不把偏好伪装为当前实际质量。
+- `主题色` 的产品真值、六档预设、模块边界与失败恢复已由 [`25-brand-theme-color`](25-brand-theme-color.md) Accepted：默认“天空蓝”精确保留当前 `#1677F2 / #8EC4FF / AMOLED` 基线，且只改变 Material `primary` 角色组（含 on/container/inverse）；secondary / tertiary、Surface、error 和 MoeKoe extra semantic colors 保持固定。它独立于 ThemeMode、系统 Monet 和播放器封面动态色；缺失/未知/读取失败回退天空蓝，写失败回滚最后持久值并精确 Retry，快速选择使用独立 generation，不取消其余设置写入。
 
 ## 平台与系统约束
 
@@ -106,7 +107,8 @@
 7. “翻译与音译”：把 `Translation` 接入真实 Toggle、独立持久化与 Player 渲染层；关闭只隐藏 secondary，不重新读取歌词。已完成。
 8. “歌词字体大小”：把 `LyricsFontSize` 接入真实选择行、统一 Radio Dialog、独立枚举持久化与 Player 纯字号输入；不把字号写入歌词文档。已完成。
 9. “默认音质”：core 仅含七档语义 enum，data 私有映射稳定 storage value；`AppSettings` Repository setter、独立 v1 DataStore key、登录态候选回退、`KugouPlaybackQuality` 映射与真实 resolved-quality 运行时状态已完成。设置行现已接入真实七档选择 Dialog，并拥有独立保存代际、失败回滚最后持久值和精确 Retry；Player 与 MiniPlayer 现仅从 resolved runtime quality 显示实际角标，null（本地、演示、未解析或错误）不显示。它仍只改变下一次在线地址解析的偏好上限；真实服务和真机验证继续独立。
-10. 后续缓存及其余播放能力分别在真实消费者完成时增加对应设置 Item。
+10. “主题色”：按 [`25-brand-theme-color`](25-brand-theme-color.md) 依次完成领域/DataStore、六档 Design System primary 角色变体、app 组合根和 Settings 选择 Dialog；默认天空蓝不得改变既有 Light/Dark/AMOLED 基线，真实消费者是全局 Material primary 角色组，不把色值下沉到页面或播放器。
+11. 后续缓存及其余播放能力分别在真实消费者完成时增加对应设置 Item。
 
 每个切片独立提交、推送并恢复干净工作区。
 
