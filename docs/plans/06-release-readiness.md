@@ -7,7 +7,7 @@
 ## 实现范围
 
 - 歌词时间偏移与发布级长时间同步校准；KRC 逐字、翻译和音译主体前移到阶段 5 播放器完整链路。
-- 音质选择、探测、受控降级和 VIP/版权反馈。
+- 音质选择、探测、受控降级和 VIP/版权反馈；默认音质的具体准入、匿名/登录边界和七档回退见已 Accepted 的 [`24-default-playback-quality`](../reference-audits/24-default-playback-quality.md)，实现与真实兼容/设备验收仍待完成。
 - 用户云盘、MV、听歌识曲和深层链接。
 - 平板、横屏和折叠屏的 Navigation Rail、双栏与 Supporting Pane。
 - 启动、滚动、播放页动态背景和数据库的性能优化；品牌启动页和播放页动态色主体前移到阶段 5。

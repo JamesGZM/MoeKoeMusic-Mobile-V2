@@ -108,6 +108,7 @@ interface SearchRepository {
 - 搜索页面已建立未搜索、加载、综合内容、浅色/深色/AMOLED、空结果、首次错误、分页错误及 `1.5×`/`2.0×` 字体截图基准，并生成同画布并排、叠加与差异证据；ViewModel 继续覆盖空关键词、成功状态、分页和旧请求隔离。2026-08-05 在 Huawei API 29 真机实际搜索并显示标题、歌手、时长与封面语义。
 - `privilege_lite` 的基础资源与 `relate_goods`、`song_url` 的主/备 URL、时长、格式及无版权/VIP 分支已按 PC API、PC 播放队列和 Mobile `song-url.ts` 实现，未通过真实响应猜测业务格式。
 - 匿名播放沿用 Mobile 已验证路径，使用 `song_url(free_part=1)`；`privilege_lite` 作为登录后音质候选能力保留，不让匿名播放多依赖一次账号相关请求。返回的 HTTP CDN 候选只升级为 HTTPS，不开放明文流量，短期地址不写入 Room。
+- 默认音质的下一实施切片已由 [`24-default-playback-quality`](../reference-audits/24-default-playback-quality.md) 完成 Accepted 准入：偏好默认 128、匿名仍固定 128，登录态才查询候选并向低档回退；实际解析质量是运行时 source 元数据而非队列/设置值。当前仅完成规格，尚未改变 resolver 或 UI。
 - 2026-08-05 真实服务验收通过 `privilege_lite` 结构解码和安全播放地址解析；Huawei API 29 真机点击搜索结果后 Media3 进入 Playing，播放位置持续增长、缓冲与系统媒体元数据正常。
 - 已保留上游 MIT NOTICE 与完整许可证。
 - 播放源不再用 `null` 抹平失败：无版权、VIP、离线、超时、连接、风控、登录要求、服务、协议、会话初始化和无效来源均映射为稳定的 `PlaybackSourceError`；首次 `playNow` 在入队前完成解析，失败会同步返回类型化拒绝。
