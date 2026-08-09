@@ -40,7 +40,7 @@
 - 播放页仅消费 `:app` 映射的不可变 UI 状态和事件，不直接依赖 `:playback`；高频进度由独立 `State` 交给进度子组合读取。标准视口不依赖尺寸分档，只有内容实际溢出时允许纵向滚动。
 - 全屏封面已覆盖正常、暂停、缓冲、控制器未连接、封面失败、未知时长、空播放项及 `1.5×`/`2.0×` 字体截图基准；真机导航、手势、队列返回优先级和播放命令仍待用户手动验收。
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；`07-player-lyrics.png` 与 `23a` 至 `23h` 加载、空、离线、错误和大字体状态均已确认，并已形成独立 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md) 视觉合同。歌词 Compose 先按全部确认稿完成纯 UI 和截图，再单独接入歌词状态与交互。
-- 全屏歌词页已按 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md)、`07-player-lyrics.png` 与 `23a` 至 `23h` 完成同画布复刻并由 app-side `AppPlayerLyricsViewModel` 接入真实歌词：仅歌词页 visible 时加载，切歌/离页取消，成功文档复用，点击行仍由 `AppPlaybackViewModel` seek。加载、空、离线、错误、原文、翻译、音译及 `150%` / `200%` 均有逐状态设计并排证据；手动滚动暂停自动跟随和真机同步滚动仍保留后续切片。
+- 全屏歌词页已按 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md)、`07-player-lyrics.png` 与 `23a` 至 `23h` 完成同画布复刻并由 app-side `AppPlayerLyricsViewModel` 接入真实歌词：仅歌词页 visible 时加载，切歌/离页取消，成功文档复用，点击行仍由 `AppPlaybackViewModel` seek。加载、空、离线、错误、原文、翻译、音译及 `150%` / `200%` 均有逐状态设计并排证据；长歌词自动跟随当前行，用户纵向拖动后暂停 `3500ms` 并在恢复时使用最新当前行。真机同步、惯性与横纵手势仍待验。
 - “翻译与音译”设置已接入同一已加载歌词内容的纯 Boolean 渲染输入：关闭仅隐藏每行 secondary，重新开启即时复用，不触发 Repository、解析或缓存；`:feature:player` 仍不依赖设置领域或 DataStore。
 - “歌词字体大小”设置已将“标准 / 150% / 200%”作为 app 注入的纯 Player 输入；它复用 `23g / 23h` 的既有三档排版，不属于歌词文档或 Repository 状态，切换不触发请求或缓存变化。
 - Room v4 已新增脱敏键控的 KRC 成功缓存表；`3→4`、完整 `1→4` 与 DAO 覆盖已随本轮数据库回归在用户指定真机通过。

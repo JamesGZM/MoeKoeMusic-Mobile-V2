@@ -1,5 +1,6 @@
 package cn.james.music.feature.player
 
+import android.os.SystemClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +28,39 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.action.MoeButton
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlin.math.abs
 
 @Composable
 internal fun PlayerLyricsPage(
@@ -279,11 +300,105 @@ private fun LyricsContent(
     val palette = LocalPlayerPalette.current
     val textSizes = lyricsTextSizes(lyricsTextSize)
     val timing = progress.value
+    val scrollState = rememberScrollState()
+    val coordinator = remember { PlayerLyricsAutoFollowCoordinator() }
+    val userDragObserver = remember { PlayerLyricsUserDragObserver(coordinator) }
+    val geometryKey = remember(state.lines, showSupplementalText, lyricsTextSize) { Any() }
+    val lineLayouts = remember(geometryKey) { mutableStateMapOf<Int, LyricsLineLayout>() }
+    var viewportHeightPx by remember { mutableIntStateOf(0) }
+    var layoutVersion by remember { mutableIntStateOf(0) }
+    var interactionVersion by remember { mutableIntStateOf(0) }
+    var reserveFollowSpace by remember(geometryKey) { mutableStateOf(false) }
+    val followPadding = with(LocalDensity.current) { (viewportHeightPx * LYRICS_AUTO_FOLLOW_VIEWPORT_FRACTION).toInt().toDp() }
+    val dragObserver =
+        remember {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    if (
+                        source == NestedScrollSource.UserInput &&
+                            abs(available.y) > abs(available.x) &&
+                            available.y != 0f &&
+                            userDragObserver.onUserVerticalScroll(SystemClock.elapsedRealtime())
+                    ) {
+                        interactionVersion += 1
+                    }
+                    return Offset.Zero
+                }
+            }
+        }
+
+    LaunchedEffect(scrollState, userDragObserver) {
+        var wasScrolling = scrollState.isScrollInProgress
+        snapshotFlow { scrollState.isScrollInProgress }.collect { isScrolling ->
+            if (wasScrolling && !isScrolling) {
+                userDragObserver.onScrollIdle()
+            }
+            wasScrolling = isScrolling
+        }
+    }
+
+    DisposableEffect(state.lines) {
+        coordinator.onDocumentChanged()
+        onDispose {
+            coordinator.onDisposed()
+        }
+    }
+
+    DisposableEffect(geometryKey) {
+        coordinator.onLayoutChanged()
+        layoutVersion += 1
+        onDispose {}
+    }
+
+    LaunchedEffect(state.lines) {
+        scrollState.scrollTo(0)
+    }
+
+    LaunchedEffect(geometryKey, interactionVersion) {
+        val remainingMs = coordinator.resumeDelayRemainingMs(SystemClock.elapsedRealtime())
+        if (remainingMs > 0L) {
+            delay(remainingMs)
+            interactionVersion += 1
+        }
+    }
+
+    LaunchedEffect(
+        geometryKey,
+        timing.activeLineIndex,
+        interactionVersion,
+        layoutVersion,
+        viewportHeightPx,
+        scrollState.maxValue,
+    ) {
+        val request =
+            coordinator.request(
+                activeIndex = timing.activeLineIndex,
+                lineCount = state.lines.size,
+                nowMs = SystemClock.elapsedRealtime(),
+            ) ?: return@LaunchedEffect
+        val lineLayout = lineLayouts[request.activeIndex] ?: return@LaunchedEffect
+        if (viewportHeightPx == 0 || scrollState.maxValue == 0 || !coordinator.isCurrent(request)) return@LaunchedEffect
+
+        val target =
+            (lineLayout.topPx + lineLayout.heightPx / 2f - viewportHeightPx * LYRICS_AUTO_FOLLOW_VIEWPORT_FRACTION)
+                .toInt()
+                .coerceIn(0, scrollState.maxValue)
+        scrollState.animateScrollTo(target)
+    }
+
     Column(
-        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .onSizeChanged { viewportHeightPx = it.height }
+                .nestedScroll(dragObserver)
+                .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        if (reserveFollowSpace) {
+            Spacer(Modifier.height(followPadding))
+        }
         state.lines.forEachIndexed { index, line ->
             val isActive = index == timing.activeLineIndex
             val original =
@@ -303,6 +418,18 @@ private fun LyricsContent(
                     Modifier
                         .fillMaxWidth()
                         .padding(bottom = if (isActive) textSizes.activeBottomPadding else textSizes.bottomPadding)
+                        .onPlaced { coordinates ->
+                            // The row's direct parent is this scrolling Column, so this is stable
+                            // content space; verticalScroll translates the Column relative to its viewport.
+                            val layout = LyricsLineLayout(coordinates.positionInParent().y.toInt(), coordinates.size.height)
+                            if (lineLayouts[index] != layout) {
+                                lineLayouts[index] = layout
+                                layoutVersion += 1
+                            }
+                            if (!reserveFollowSpace && shouldReserveLyricsAutoFollowSpace(layout.bottomPx, viewportHeightPx)) {
+                                reserveFollowSpace = true
+                            }
+                        }
                         .clickable { onLyricClick(line.startTimeMs) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -331,8 +458,25 @@ private fun LyricsContent(
                 }
             }
         }
+        if (reserveFollowSpace) {
+            Spacer(Modifier.height(followPadding))
+        }
     }
 }
+
+private data class LyricsLineLayout(
+    val topPx: Int,
+    val heightPx: Int,
+) {
+    val bottomPx: Int get() = topPx + heightPx
+}
+
+private const val LYRICS_AUTO_FOLLOW_VIEWPORT_FRACTION = 0.42f
+
+internal fun shouldReserveLyricsAutoFollowSpace(
+    lineBottomPx: Int,
+    viewportHeightPx: Int,
+): Boolean = viewportHeightPx > 0 && lineBottomPx > viewportHeightPx
 
 private data class LyricsTextSizes(
     val fontSize: androidx.compose.ui.unit.TextUnit,
