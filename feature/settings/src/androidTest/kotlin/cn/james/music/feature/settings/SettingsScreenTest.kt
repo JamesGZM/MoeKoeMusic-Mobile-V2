@@ -435,6 +435,103 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("主题模式").assertIsEnabled()
     }
 
+    @Test
+    fun clearCacheRowForwardsConfirmationRequestAndDialogUsesDestructiveActions() {
+        var action: SettingsAction? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(),
+                        onAction = { action = it },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("清理缓存").performClick()
+        assertEquals(SettingsAction.OpenClearCache, action)
+
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(overlay = SettingsOverlay.ClearCacheConfirmation),
+                        onAction = { action = it },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("清理缓存").assertIsDisplayed()
+        composeRule.onNodeWithText("取消").assertIsDisplayed()
+        composeRule.onNodeWithText("清理").performClick()
+        assertEquals(SettingsAction.ConfirmClearCache, action)
+    }
+
+    @Test
+    fun submittingClearCacheDialogDisablesActionsAndFeedbackUsesExpectedToneActions() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                clearingCache = true,
+                                overlay = SettingsOverlay.ClearCacheConfirmation,
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("取消").assertIsNotEnabled()
+        composeRule.onNodeWithText("清理").assertIsNotEnabled()
+
+        var retryRequested = false
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(cacheClearFeedback = SettingsCacheClearFeedbackUi.PartiallyCleared, canRetry = true),
+                        onAction = { if (it == SettingsAction.Retry) retryRequested = true },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("部分缓存未清理完成，请重试").assertIsDisplayed()
+        composeRule.onNodeWithText("重试").performClick()
+        assertTrue(retryRequested)
+    }
+
+    @Test
+    fun successfulClearCacheFeedbackIsConsumedAfterItsShortLifecycle() {
+        var feedbackDismissed = false
+        composeRule.mainClock.autoAdvance = false
+        try {
+            composeRule.setContent {
+                MoeKoeTheme {
+                    Surface {
+                        SettingsScreen(
+                            state = SettingsUiState(cacheClearFeedback = SettingsCacheClearFeedbackUi.Cleared),
+                            onAction = { if (it == SettingsAction.DismissCacheClearFeedback) feedbackDismissed = true },
+                        )
+                    }
+                }
+            }
+
+            composeRule.onNodeWithText("缓存已清理").assertIsDisplayed()
+            composeRule.mainClock.advanceTimeBy(4_001)
+            composeRule.waitForIdle()
+
+            assertTrue(feedbackDismissed)
+        } finally {
+            composeRule.mainClock.autoAdvance = true
+        }
+    }
+
     private fun setSettingsContent(theme: SettingsThemeUi) {
         composeRule.setContent {
             MoeKoeTheme {

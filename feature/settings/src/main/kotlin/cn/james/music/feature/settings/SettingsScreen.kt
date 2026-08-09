@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -13,11 +14,15 @@ import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarActionId
 import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
 import cn.james.music.core.designsystem.component.MoeSnackbarEvent
+import cn.james.music.core.designsystem.component.MoeSnackbarIcon
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
 import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarEvent
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarUiModel
+import kotlinx.coroutines.delay
+
+private const val CACHE_CLEAR_SUCCESS_FEEDBACK_DURATION_MILLIS = 4_000L
 
 @Composable
 internal fun SettingsScreen(
@@ -39,7 +44,52 @@ internal fun SettingsScreen(
             )
         },
         snackbarHost = {
-            state.problem?.let { problem ->
+            when (val feedback = state.cacheClearFeedback) {
+                SettingsCacheClearFeedbackUi.Cleared -> {
+                    LaunchedEffect(feedback) {
+                        delay(CACHE_CLEAR_SUCCESS_FEEDBACK_DURATION_MILLIS)
+                        onAction(SettingsAction.DismissCacheClearFeedback)
+                    }
+                    MoeSnackbar(
+                        model =
+                            MoeSnackbarUiModel(
+                                message = stringResource(R.string.settings_clear_cache_success),
+                                tone = MoeSnackbarTone.Success,
+                                icon = MoeSnackbarIcon.Confirmation,
+                            ),
+                        onEvent = {},
+                        modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
+                    )
+                }
+
+                SettingsCacheClearFeedbackUi.PartiallyCleared,
+                SettingsCacheClearFeedbackUi.Failed,
+                ->
+                    MoeSnackbar(
+                        model =
+                            MoeSnackbarUiModel(
+                                message =
+                                    stringResource(
+                                        when (feedback) {
+                                            SettingsCacheClearFeedbackUi.PartiallyCleared -> R.string.settings_clear_cache_partial_failed
+                                            SettingsCacheClearFeedbackUi.Failed -> R.string.settings_clear_cache_failed
+                                            SettingsCacheClearFeedbackUi.Cleared -> error("Handled above")
+                                        },
+                                    ),
+                                tone = MoeSnackbarTone.Error,
+                                icon = MoeSnackbarIcon.Warning,
+                                action = MoeSnackbarActionUiModel(MoeSnackbarActionId.Retry, stringResource(R.string.settings_retry)),
+                            ),
+                        onEvent = { event ->
+                            if (event is MoeSnackbarEvent.Action && event.id == MoeSnackbarActionId.Retry) {
+                                onAction(SettingsAction.Retry)
+                            }
+                        },
+                        modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
+                    )
+
+                null ->
+                    state.problem?.let { problem ->
                 MoeSnackbar(
                     model =
                         MoeSnackbarUiModel(
@@ -74,6 +124,7 @@ internal fun SettingsScreen(
                     },
                     modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
                 )
+            }
             }
         },
     ) { contentPadding ->
@@ -111,6 +162,11 @@ internal fun SettingsScreen(
             BrandThemeColorSelectionDialog(
                 selected = state.brandThemeColor,
                 saving = state.savingBrandThemeColor,
+                onAction = onAction,
+            )
+        SettingsOverlay.ClearCacheConfirmation ->
+            ClearCacheConfirmationDialog(
+                clearing = state.clearingCache,
                 onAction = onAction,
             )
         SettingsOverlay.About -> AboutDialog(onAction = onAction)

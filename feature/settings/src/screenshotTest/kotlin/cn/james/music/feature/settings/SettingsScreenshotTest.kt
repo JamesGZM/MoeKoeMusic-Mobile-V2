@@ -139,6 +139,20 @@ fun SettingsBrandThemeColorDialogLargeText20Screenshot() {
     BrandThemeColorDialogScreenshotContent()
 }
 
+@PreviewTest
+@Preview(name = "ClearCacheConfirmationDialog", widthDp = 390, heightDp = 844)
+@Composable
+fun SettingsClearCacheConfirmationDialogScreenshot() {
+    ClearCacheConfirmationDialogScreenshotContent()
+}
+
+@PreviewTest
+@Preview(name = "ClearCacheConfirmationDialogLargeText20", widthDp = 390, heightDp = 844, fontScale = 2.0f)
+@Composable
+fun SettingsClearCacheConfirmationDialogLargeText20Screenshot() {
+    ClearCacheConfirmationDialogScreenshotContent()
+}
+
 @Composable
 private fun PlaybackQualityDialogScreenshotContent() {
     MoeKoeTheme(themeMode = ThemeMode.Light) {
@@ -165,6 +179,18 @@ private fun BrandThemeColorDialogScreenshotContent() {
                         overlay = SettingsOverlay.BrandThemeColorSelection,
                         groups = settingsGroups(SettingsThemeUi.System, autoSkipFailedPlayback = true),
                     ),
+                onAction = {},
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClearCacheConfirmationDialogScreenshotContent() {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        Surface {
+            SettingsScreen(
+                state = SettingsUiState(overlay = SettingsOverlay.ClearCacheConfirmation),
                 onAction = {},
             )
         }

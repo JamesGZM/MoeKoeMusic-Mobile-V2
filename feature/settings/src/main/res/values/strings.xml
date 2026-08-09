@@ -43,6 +43,12 @@
     <string name="settings_cache_limit">缓存上限</string>
     <string name="settings_unavailable">尚未开放</string>
     <string name="settings_clear_cache">清理缓存</string>
+    <string name="settings_clear_cache_confirmation_title">清理缓存</string>
+    <string name="settings_clear_cache_confirmation_message">将清理首页、歌词和图片缓存。本地音乐、账号和播放记录不会删除，之后使用相关内容时会重新下载。</string>
+    <string name="settings_clear_cache_confirm">清理</string>
+    <string name="settings_clear_cache_success">缓存已清理</string>
+    <string name="settings_clear_cache_partial_failed">部分缓存未清理完成，请重试</string>
+    <string name="settings_clear_cache_failed">缓存清理失败，请重试</string>
     <string name="settings_other">其他</string>
     <string name="settings_language">语言</string>
     <string name="settings_language_zh_cn">简体中文</string>

@@ -2,6 +2,8 @@ package cn.james.music.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.james.music.core.model.cache.CacheMaintenanceRepository
+import cn.james.music.core.model.cache.CacheMaintenanceResult
 import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
@@ -23,6 +25,7 @@ internal class SettingsViewModel
     @Inject
     constructor(
         private val repository: AppSettingsRepository,
+        private val cacheMaintenanceRepository: CacheMaintenanceRepository,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(SettingsUiState())
         val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
@@ -34,6 +37,7 @@ internal class SettingsViewModel
         private var lyricsTextSizeUpdateJob: Job? = null
         private var playbackQualityUpdateJob: Job? = null
         private var brandThemeColorUpdateJob: Job? = null
+        private var clearCacheJob: Job? = null
         private var retryRequest: RetryRequest? = null
         private var themeUpdateGeneration = 0L
         private var autoSkipUpdateGeneration = 0L
@@ -150,10 +154,79 @@ internal class SettingsViewModel
                 SettingsAction.OpenPlaybackQuality -> mutableState.update { it.copy(overlay = SettingsOverlay.PlaybackQualitySelection) }
                 is SettingsAction.SelectBrandThemeColor -> selectBrandThemeColor(action.color)
                 SettingsAction.OpenBrandThemeColor -> mutableState.update { it.copy(overlay = SettingsOverlay.BrandThemeColorSelection) }
-                SettingsAction.DismissOverlay -> mutableState.update { it.copy(overlay = null) }
+                SettingsAction.OpenClearCache -> openClearCacheConfirmation()
+                SettingsAction.ConfirmClearCache -> clearCaches()
+                SettingsAction.DismissOverlay -> dismissOverlay()
                 SettingsAction.Retry -> retry()
+                SettingsAction.DismissCacheClearFeedback -> dismissCacheClearFeedback()
                 SettingsAction.DismissProblem -> dismissProblem()
             }
+        }
+
+        private fun openClearCacheConfirmation() {
+            if (clearCacheJob?.isActive == true) return
+            mutableState.update { it.copy(overlay = SettingsOverlay.ClearCacheConfirmation) }
+        }
+
+        private fun dismissOverlay() {
+            mutableState.update { current ->
+                if (current.overlay == SettingsOverlay.ClearCacheConfirmation && current.clearingCache) {
+                    current
+                } else {
+                    current.copy(overlay = null)
+                }
+            }
+        }
+
+        private fun clearCaches() {
+            if (clearCacheJob?.isActive == true) return
+            clearCacheJob =
+                viewModelScope.launch {
+                    retryRequest = null
+                    mutableState.update { current ->
+                        current.withGroups(
+                            clearingCache = true,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
+                    }
+                    when (cacheMaintenanceRepository.clearCaches()) {
+                        is CacheMaintenanceResult.Cleared -> {
+                            mutableState.update { current ->
+                                current.withGroups(
+                                    clearingCache = false,
+                                    overlay = null,
+                                    cacheClearFeedback = SettingsCacheClearFeedbackUi.Cleared,
+                                )
+                            }
+                        }
+
+                        is CacheMaintenanceResult.PartiallyCleared -> {
+                            retryRequest = RetryRequest.CacheClear
+                            mutableState.update { current ->
+                                current.withGroups(
+                                    clearingCache = false,
+                                    overlay = null,
+                                    cacheClearFeedback = SettingsCacheClearFeedbackUi.PartiallyCleared,
+                                    canRetry = true,
+                                )
+                            }
+                        }
+
+                        is CacheMaintenanceResult.FailedBeforeAnyClear -> {
+                            retryRequest = RetryRequest.CacheClear
+                            mutableState.update { current ->
+                                current.withGroups(
+                                    clearingCache = false,
+                                    overlay = null,
+                                    cacheClearFeedback = SettingsCacheClearFeedbackUi.Failed,
+                                    canRetry = true,
+                                )
+                            }
+                        }
+                    }
+                }
         }
 
         private fun selectTheme(theme: SettingsThemeUi) {
@@ -165,7 +238,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingTheme = theme, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingTheme = theme,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setTheme(theme.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
@@ -182,6 +260,7 @@ internal class SettingsViewModel
                                         theme = persistedTheme.toUi(),
                                         savingTheme = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -199,7 +278,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingAutoSkipFailedPlayback = enabled, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingAutoSkipFailedPlayback = enabled,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setAutoSkipFailedPlayback(enabled)) {
                         AppSettingsUpdateResult.Success -> {
@@ -218,6 +302,7 @@ internal class SettingsViewModel
                                         autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
                                         savingAutoSkipFailedPlayback = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -235,7 +320,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingDynamicCoverColors = enabled, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingDynamicCoverColors = enabled,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setDynamicCoverColors(enabled)) {
                         AppSettingsUpdateResult.Success -> {
@@ -254,6 +344,7 @@ internal class SettingsViewModel
                                         dynamicCoverColors = persistedDynamicCoverColors,
                                         savingDynamicCoverColors = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -271,7 +362,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingLyricsSupplementalText = enabled, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingLyricsSupplementalText = enabled,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setShowLyricsSupplementalText(enabled)) {
                         AppSettingsUpdateResult.Success -> {
@@ -290,6 +386,7 @@ internal class SettingsViewModel
                                         showLyricsSupplementalText = persistedLyricsSupplementalText,
                                         savingLyricsSupplementalText = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -308,7 +405,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingLyricsTextSize = size, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingLyricsTextSize = size,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setLyricsTextSize(size.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
@@ -327,6 +429,7 @@ internal class SettingsViewModel
                                         lyricsTextSize = persistedLyricsTextSize.toUi(),
                                         savingLyricsTextSize = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -345,7 +448,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingPlaybackQuality = quality, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingPlaybackQuality = quality,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setPlaybackQuality(quality.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
@@ -364,6 +472,7 @@ internal class SettingsViewModel
                                         playbackQuality = persistedPlaybackQuality.toUi(),
                                         savingPlaybackQuality = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -382,7 +491,12 @@ internal class SettingsViewModel
                 viewModelScope.launch {
                     retryRequest = null
                     mutableState.update { current ->
-                        current.withGroups(savingBrandThemeColor = color, problem = null, canRetry = false)
+                        current.withGroups(
+                            savingBrandThemeColor = color,
+                            problem = null,
+                            cacheClearFeedback = null,
+                            canRetry = false,
+                        )
                     }
                     when (repository.setBrandThemeColor(color.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
@@ -401,6 +515,7 @@ internal class SettingsViewModel
                                         brandThemeColor = persistedBrandThemeColor.toUi(),
                                         savingBrandThemeColor = null,
                                         problem = SettingsProblemUi.Write,
+                                        cacheClearFeedback = null,
                                         canRetry = true,
                                     )
                                 }
@@ -420,12 +535,23 @@ internal class SettingsViewModel
                 is RetryRequest.LyricsTextSize -> selectLyricsTextSize(request.size)
                 is RetryRequest.PlaybackQuality -> selectPlaybackQuality(request.quality)
                 is RetryRequest.BrandThemeColor -> selectBrandThemeColor(request.color)
+                RetryRequest.CacheClear -> clearCaches()
             }
         }
 
         private fun dismissProblem() {
             retryRequest = null
-            mutableState.update { it.copy(problem = null, canRetry = false) }
+            mutableState.update { it.copy(problem = null, cacheClearFeedback = null, canRetry = false) }
+        }
+
+        private fun dismissCacheClearFeedback() {
+            mutableState.update { current ->
+                if (current.cacheClearFeedback == SettingsCacheClearFeedbackUi.Cleared) {
+                    current.copy(cacheClearFeedback = null)
+                } else {
+                    current
+                }
+            }
         }
 
         private sealed interface RetryRequest {
@@ -456,6 +582,8 @@ internal class SettingsViewModel
             data class BrandThemeColor(
                 val color: SettingsBrandThemeColorUi,
             ) : RetryRequest
+
+            data object CacheClear : RetryRequest
         }
 
         private fun SettingsUiState.withGroups(
@@ -473,7 +601,9 @@ internal class SettingsViewModel
             savingLyricsTextSize: SettingsLyricsTextSizeUi? = this.savingLyricsTextSize,
             savingPlaybackQuality: SettingsPlaybackQualityUi? = this.savingPlaybackQuality,
             savingBrandThemeColor: SettingsBrandThemeColorUi? = this.savingBrandThemeColor,
+            clearingCache: Boolean = this.clearingCache,
             problem: SettingsProblemUi? = this.problem,
+            cacheClearFeedback: SettingsCacheClearFeedbackUi? = this.cacheClearFeedback,
             canRetry: Boolean = this.canRetry,
             overlay: SettingsOverlay? = this.overlay,
         ): SettingsUiState =
@@ -492,7 +622,9 @@ internal class SettingsViewModel
                 savingLyricsTextSize = savingLyricsTextSize,
                 savingPlaybackQuality = savingPlaybackQuality,
                 savingBrandThemeColor = savingBrandThemeColor,
+                clearingCache = clearingCache,
                 problem = problem,
+                cacheClearFeedback = cacheClearFeedback,
                 canRetry = canRetry,
                 overlay = overlay,
                 groups =
@@ -511,6 +643,7 @@ internal class SettingsViewModel
                         savingLyricsTextSize = savingLyricsTextSize,
                         savingPlaybackQuality = savingPlaybackQuality,
                         savingBrandThemeColor = savingBrandThemeColor,
+                        clearingCache = clearingCache,
                     ),
             )
 

@@ -67,7 +67,14 @@ private fun SettingsRow(
                 icon = visual.icon,
                 iconColor = visual.color,
                 title = stringResource(visual.titleRes),
-                onClick = { onAction(SettingsAction.OpenAbout) },
+                loading = row.loading,
+                onClick = {
+                    when (row.id) {
+                        SettingsRowId.ClearCache -> onAction(SettingsAction.OpenClearCache)
+                        SettingsRowId.About -> onAction(SettingsAction.OpenAbout)
+                        else -> Unit
+                    }
+                },
             )
         is SettingsRowUi.Value ->
             SettingsActionItem(

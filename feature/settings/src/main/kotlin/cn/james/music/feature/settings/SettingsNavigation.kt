@@ -31,9 +31,12 @@ fun NavGraphBuilder.settingsDestination(onBack: () -> Unit) {
                     SettingsAction.OpenLyricsTextSize,
                     SettingsAction.OpenPlaybackQuality,
                     SettingsAction.OpenBrandThemeColor,
+                    SettingsAction.OpenClearCache,
+                    SettingsAction.ConfirmClearCache,
                     SettingsAction.OpenAbout,
                     SettingsAction.DismissOverlay,
                     SettingsAction.Retry,
+                    SettingsAction.DismissCacheClearFeedback,
                     SettingsAction.DismissProblem,
                     -> viewModel.onAction(action)
                 }

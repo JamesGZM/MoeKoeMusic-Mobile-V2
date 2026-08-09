@@ -18,7 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeTextButton
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogEvent
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogIcon
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogTone
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogUiModel
 import cn.james.music.core.designsystem.component.overlay.MoeDialog
+import cn.james.music.core.designsystem.component.overlay.MoeDialogActionsUiModel
+import cn.james.music.core.designsystem.component.overlay.MoeDialogConfirmState
 
 @Composable
 internal fun ThemeSelectionDialog(
@@ -85,6 +92,34 @@ internal fun BrandThemeColorSelectionDialog(
         optionLabel = { color -> color.displayName() },
         onSelected = { color -> onAction(SettingsAction.SelectBrandThemeColor(color)) },
         onDismiss = { onAction(SettingsAction.DismissOverlay) },
+    )
+}
+
+@Composable
+internal fun ClearCacheConfirmationDialog(
+    clearing: Boolean,
+    onAction: (SettingsAction) -> Unit,
+) {
+    MoeAlertDialog(
+        model =
+            MoeAlertDialogUiModel(
+                title = stringResource(R.string.settings_clear_cache_confirmation_title),
+                message = stringResource(R.string.settings_clear_cache_confirmation_message),
+                icon = MoeAlertDialogIcon.Warning,
+                actions =
+                    MoeDialogActionsUiModel(
+                        confirmLabel = stringResource(R.string.settings_clear_cache_confirm),
+                        dismissLabel = stringResource(R.string.settings_cancel),
+                        confirmState = if (clearing) MoeDialogConfirmState.Loading else MoeDialogConfirmState.Enabled,
+                        tone = MoeAlertDialogTone.Destructive,
+                    ),
+            ),
+        onEvent = { event ->
+            when (event) {
+                MoeAlertDialogEvent.Confirm -> onAction(SettingsAction.ConfirmClearCache)
+                MoeAlertDialogEvent.Dismiss -> onAction(SettingsAction.DismissOverlay)
+            }
+        },
     )
 }
 

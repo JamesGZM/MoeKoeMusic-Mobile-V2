@@ -1,5 +1,8 @@
 package cn.james.music.feature.settings
 
+import cn.james.music.core.model.cache.CacheMaintenanceRepository
+import cn.james.music.core.model.cache.CacheMaintenanceResult
+import cn.james.music.core.model.cache.CacheMaintenanceScope
 import cn.james.music.core.model.settings.AppSettings
 import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppSettingsRepository
@@ -32,10 +35,12 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
+    private lateinit var cacheMaintenanceRepository: FakeCacheMaintenanceRepository
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        cacheMaintenanceRepository = FakeCacheMaintenanceRepository()
     }
 
     @After
@@ -47,7 +52,7 @@ class SettingsViewModelTest {
     fun repositorySnapshotDrivesThemeAndReadProblem() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.Dark)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             assertEquals(SettingsThemeUi.Dark, viewModel.state.value.theme)
@@ -66,7 +71,7 @@ class SettingsViewModelTest {
     fun successfulSelectionCommitsRepositoryValue() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Amoled))
@@ -82,7 +87,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.Dark)
             repository.result = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Light))
@@ -104,7 +109,7 @@ class SettingsViewModelTest {
     fun overlaysAreOwnedByViewModelAndSelectingThemeDismissesThem() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.OpenTheme)
@@ -124,7 +129,7 @@ class SettingsViewModelTest {
     fun staleWriteCannotOverrideNewerThemeSelection() =
         runTest(dispatcher) {
             val repository = OutOfOrderRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
@@ -147,7 +152,7 @@ class SettingsViewModelTest {
     fun autoSkipFailedPlaybackPersistsAndDoesNotCancelThemeUpdate() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
@@ -165,7 +170,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.autoSkipResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
@@ -188,7 +193,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.dynamicCoverColorsResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
@@ -210,7 +215,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.lyricsSupplementalTextResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
@@ -231,7 +236,7 @@ class SettingsViewModelTest {
     fun lyricsTextSizeSelectionPersistsAndDoesNotCancelOtherSettings() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
@@ -249,7 +254,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.lyricsTextSizeResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Largest))
@@ -273,7 +278,7 @@ class SettingsViewModelTest {
     fun staleLyricsTextSizeWriteCannotOverrideNewerSelection() =
         runTest(dispatcher) {
             val repository = OutOfOrderRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Large))
@@ -296,7 +301,7 @@ class SettingsViewModelTest {
     fun retryTargetsTheLastFailureWhenThemeAndAutoSkipWritesBothFail() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
@@ -323,7 +328,7 @@ class SettingsViewModelTest {
     fun retryTargetsDynamicCoverColorsWhenItsFailureFinishesLast() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
@@ -353,7 +358,7 @@ class SettingsViewModelTest {
     fun retryTargetsLyricsSupplementalTextWhenItsFailureFinishesLast() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
@@ -379,7 +384,7 @@ class SettingsViewModelTest {
     fun retryTargetsLyricsTextSizeWhenItsFailureFinishesLast() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
@@ -412,7 +417,7 @@ class SettingsViewModelTest {
                 AppSettingsSnapshot(
                     settings = AppSettings(playbackQuality = PlaybackQualityPreference.ViperTape),
                 )
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             assertEquals(SettingsPlaybackQualityUi.ViperTape, viewModel.state.value.playbackQuality)
@@ -422,7 +427,7 @@ class SettingsViewModelTest {
     fun playbackQualitySelectionPersistsIndependently() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.HiRes))
@@ -438,7 +443,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.playbackQualityResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.Lossless))
@@ -462,7 +467,7 @@ class SettingsViewModelTest {
     fun stalePlaybackQualityWriteCannotOverrideNewerSelection() =
         runTest(dispatcher) {
             val repository = OutOfOrderRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.High))
@@ -485,7 +490,7 @@ class SettingsViewModelTest {
     fun retryTargetsPlaybackQualityWhenItsFailureFinishesLast() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
@@ -515,7 +520,7 @@ class SettingsViewModelTest {
                 AppSettingsSnapshot(
                     settings = AppSettings(brandThemeColor = BrandThemeColorPreference.SunsetOrange),
                 )
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             assertEquals(SettingsBrandThemeColorUi.SunsetOrange, viewModel.state.value.brandThemeColor)
@@ -525,7 +530,7 @@ class SettingsViewModelTest {
     fun brandThemeColorSelectionPersistsIndependently() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
@@ -541,7 +546,7 @@ class SettingsViewModelTest {
     fun brandThemeColorDoesNotCancelAnyOtherSettingsWrite() =
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
@@ -567,7 +572,7 @@ class SettingsViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository(AppThemePreference.System)
             repository.brandThemeColorResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.StarPurple))
@@ -591,7 +596,7 @@ class SettingsViewModelTest {
     fun staleBrandThemeColorWriteCannotOverrideNewerSelection() =
         runTest(dispatcher) {
             val repository = OutOfOrderRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectBrandThemeColor(SettingsBrandThemeColorUi.SakuraPink))
@@ -614,7 +619,7 @@ class SettingsViewModelTest {
     fun retryTargetsBrandThemeColorWhenItsFailureFinishesLast() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
-            val viewModel = SettingsViewModel(repository)
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
             runCurrent()
 
             viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.HiRes))
@@ -634,6 +639,177 @@ class SettingsViewModelTest {
                 listOf(BrandThemeColorPreference.SunsetOrange, BrandThemeColorPreference.SunsetOrange),
                 repository.brandThemeColorRequests,
             )
+        }
+
+    @Test
+    fun clearCacheConfirmationCancelsBeforeSubmitAndLocksWhileSubmitting() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            cacheMaintenanceRepository.pendingResult = CompletableDeferred()
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            assertEquals(SettingsOverlay.ClearCacheConfirmation, viewModel.state.value.overlay)
+            viewModel.onAction(SettingsAction.DismissOverlay)
+            assertEquals(null, viewModel.state.value.overlay)
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            runCurrent()
+
+            assertTrue(viewModel.state.value.clearingCache)
+            assertEquals(SettingsOverlay.ClearCacheConfirmation, viewModel.state.value.overlay)
+            assertEquals(1, cacheMaintenanceRepository.requests)
+            viewModel.onAction(SettingsAction.DismissOverlay)
+            assertEquals(SettingsOverlay.ClearCacheConfirmation, viewModel.state.value.overlay)
+
+            cacheMaintenanceRepository.pendingResult?.complete(CacheMaintenanceResult.Cleared(CacheMaintenanceScope.entries.toSet()))
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.clearingCache)
+            assertEquals(null, viewModel.state.value.overlay)
+            assertEquals(SettingsCacheClearFeedbackUi.Cleared, viewModel.state.value.cacheClearFeedback)
+            assertFalse(viewModel.state.value.canRetry)
+        }
+
+    @Test
+    fun partialClearClosesDialogAndRetriesTheWholeCacheClearOperation() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            cacheMaintenanceRepository.result =
+                CacheMaintenanceResult.PartiallyCleared(
+                    clearedScopes = setOf(CacheMaintenanceScope.HomeContentSnapshots),
+                    failedScopes = setOf(CacheMaintenanceScope.ImageDisk),
+                )
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            advanceUntilIdle()
+
+            assertEquals(null, viewModel.state.value.overlay)
+            assertEquals(SettingsCacheClearFeedbackUi.PartiallyCleared, viewModel.state.value.cacheClearFeedback)
+            assertTrue(viewModel.state.value.canRetry)
+
+            cacheMaintenanceRepository.result = CacheMaintenanceResult.Cleared(CacheMaintenanceScope.entries.toSet())
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(2, cacheMaintenanceRepository.requests)
+            assertEquals(SettingsCacheClearFeedbackUi.Cleared, viewModel.state.value.cacheClearFeedback)
+            assertFalse(viewModel.state.value.canRetry)
+        }
+
+    @Test
+    fun failedClearUsesCacheRetryAndDoesNotCancelAnotherSettingsWrite() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            cacheMaintenanceRepository.pendingResult = CompletableDeferred()
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            runCurrent()
+
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertTrue(viewModel.state.value.clearingCache)
+
+            cacheMaintenanceRepository.pendingResult?.complete(
+                CacheMaintenanceResult.FailedBeforeAnyClear(setOf(CacheMaintenanceScope.ImageMemory)),
+            )
+            advanceUntilIdle()
+
+            assertEquals(SettingsThemeUi.Dark, viewModel.state.value.theme)
+            assertEquals(SettingsCacheClearFeedbackUi.Failed, viewModel.state.value.cacheClearFeedback)
+            assertTrue(viewModel.state.value.canRetry)
+        }
+
+    @Test
+    fun cacheClearSuccessFeedbackCanBeConsumedWithoutChangingRetryState() =
+        runTest(dispatcher) {
+            val viewModel = SettingsViewModel(FakeRepository(AppThemePreference.System), cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            advanceUntilIdle()
+            assertEquals(SettingsCacheClearFeedbackUi.Cleared, viewModel.state.value.cacheClearFeedback)
+
+            viewModel.onAction(SettingsAction.DismissCacheClearFeedback)
+
+            assertEquals(null, viewModel.state.value.cacheClearFeedback)
+            assertFalse(viewModel.state.value.canRetry)
+        }
+
+    @Test
+    fun startingAnotherSettingWriteClearsPartialCacheFeedbackAndRetryNeverReplaysCache() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            cacheMaintenanceRepository.result =
+                CacheMaintenanceResult.PartiallyCleared(
+                    clearedScopes = setOf(CacheMaintenanceScope.HomeContentSnapshots),
+                    failedScopes = setOf(CacheMaintenanceScope.ImageDisk),
+                )
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            advanceUntilIdle()
+            assertEquals(SettingsCacheClearFeedbackUi.PartiallyCleared, viewModel.state.value.cacheClearFeedback)
+
+            repository.result = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            advanceUntilIdle()
+
+            assertEquals(null, viewModel.state.value.cacheClearFeedback)
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+
+            repository.result = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(1, cacheMaintenanceRepository.requests)
+            assertEquals(listOf(AppThemePreference.Dark, AppThemePreference.Dark), repository.themeRequests)
+        }
+
+    @Test
+    fun cacheFeedbackThatCompletesAfterAnotherWriteRemainsAlignedWithCacheRetry() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.result = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            cacheMaintenanceRepository.pendingResult = CompletableDeferred()
+            val viewModel = SettingsViewModel(repository, cacheMaintenanceRepository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.OpenClearCache)
+            viewModel.onAction(SettingsAction.ConfirmClearCache)
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            runCurrent()
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+
+            cacheMaintenanceRepository.pendingResult?.complete(
+                CacheMaintenanceResult.PartiallyCleared(
+                    clearedScopes = setOf(CacheMaintenanceScope.HomeContentSnapshots),
+                    failedScopes = setOf(CacheMaintenanceScope.ImageDisk),
+                ),
+            )
+            advanceUntilIdle()
+
+            assertEquals(SettingsCacheClearFeedbackUi.PartiallyCleared, viewModel.state.value.cacheClearFeedback)
+            repository.result = AppSettingsUpdateResult.Success
+            cacheMaintenanceRepository.pendingResult = null
+            cacheMaintenanceRepository.result = CacheMaintenanceResult.Cleared(CacheMaintenanceScope.entries.toSet())
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertEquals(2, cacheMaintenanceRepository.requests)
         }
 
     private class FakeRepository(
@@ -720,6 +896,17 @@ class SettingsViewModelTest {
                     settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(lyricsTextSize = size))
                 }
             }
+        }
+    }
+
+    private class FakeCacheMaintenanceRepository : CacheMaintenanceRepository {
+        var result: CacheMaintenanceResult = CacheMaintenanceResult.Cleared(CacheMaintenanceScope.entries.toSet())
+        var pendingResult: CompletableDeferred<CacheMaintenanceResult>? = null
+        var requests = 0
+
+        override suspend fun clearCaches(): CacheMaintenanceResult {
+            requests += 1
+            return pendingResult?.await() ?: result
         }
     }
 

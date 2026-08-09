@@ -54,6 +54,8 @@ internal sealed interface SettingsOverlay {
 
     data object BrandThemeColorSelection : SettingsOverlay
 
+    data object ClearCacheConfirmation : SettingsOverlay
+
     data object About : SettingsOverlay
 }
 
@@ -90,6 +92,7 @@ internal sealed interface SettingsRowUi {
 
     data class Action(
         override val id: SettingsRowId,
+        val loading: Boolean = false,
     ) : SettingsRowUi
 
     data class Value(
@@ -149,11 +152,20 @@ internal data class SettingsUiState(
     val savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
     val savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
     val savingBrandThemeColor: SettingsBrandThemeColorUi? = null,
+    val clearingCache: Boolean = false,
     val problem: SettingsProblemUi? = null,
+    val cacheClearFeedback: SettingsCacheClearFeedbackUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
     val groups: List<SettingsGroupUi> = settingsGroups(SettingsThemeUi.System, autoSkipFailedPlayback = true),
 )
+
+@Immutable
+internal enum class SettingsCacheClearFeedbackUi {
+    Cleared,
+    PartiallyCleared,
+    Failed,
+}
 
 internal sealed interface SettingsAction {
     data object Back : SettingsAction
@@ -196,9 +208,15 @@ internal sealed interface SettingsAction {
 
     data object OpenBrandThemeColor : SettingsAction
 
+    data object OpenClearCache : SettingsAction
+
+    data object ConfirmClearCache : SettingsAction
+
     data object DismissOverlay : SettingsAction
 
     data object Retry : SettingsAction
+
+    data object DismissCacheClearFeedback : SettingsAction
 
     data object DismissProblem : SettingsAction
 }
@@ -218,6 +236,7 @@ internal fun settingsGroups(
     savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
     savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
     savingBrandThemeColor: SettingsBrandThemeColorUi? = null,
+    clearingCache: Boolean = false,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -277,7 +296,7 @@ internal fun settingsGroups(
             rows =
                 listOf(
                     SettingsRowUi.Unavailable(SettingsRowId.CacheLimit),
-                    SettingsRowUi.Unavailable(SettingsRowId.ClearCache),
+                    SettingsRowUi.Action(SettingsRowId.ClearCache, loading = clearingCache),
                 ),
         ),
         SettingsGroupUi(
