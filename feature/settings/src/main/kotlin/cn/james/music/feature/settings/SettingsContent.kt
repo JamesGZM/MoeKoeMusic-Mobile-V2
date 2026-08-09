@@ -78,6 +78,15 @@ private fun SettingsRow(
                 loading = row.loading,
                 onClick = { onAction(SettingsAction.OpenTheme) },
             )
+        is SettingsRowUi.TextValue ->
+            SettingsActionItem(
+                icon = visual.icon,
+                iconColor = visual.color,
+                title = stringResource(visual.titleRes),
+                value = row.value.displayName(),
+                loading = row.loading,
+                onClick = { onAction(SettingsAction.OpenLyricsTextSize) },
+            )
         is SettingsRowUi.Unavailable ->
             SettingsUnavailableItem(
                 icon = visual.icon,
@@ -159,5 +168,15 @@ internal fun SettingsThemeUi.displayName(): String =
             SettingsThemeUi.Light -> R.string.settings_theme_light
             SettingsThemeUi.Dark -> R.string.settings_theme_dark
             SettingsThemeUi.Amoled -> R.string.settings_theme_amoled
+        },
+    )
+
+@Composable
+internal fun SettingsLyricsTextSizeUi.displayName(): String =
+    stringResource(
+        when (this) {
+            SettingsLyricsTextSizeUi.Standard -> R.string.settings_standard
+            SettingsLyricsTextSizeUi.Large -> R.string.settings_lyrics_text_size_large
+            SettingsLyricsTextSizeUi.Largest -> R.string.settings_lyrics_text_size_largest
         },
     )

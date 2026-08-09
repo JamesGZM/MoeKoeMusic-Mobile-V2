@@ -10,6 +10,7 @@ import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +108,27 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsTextSizeDefaultsToStandardAndEveryValueRoundTrips() =
+        withFixture {
+            assertEquals(
+                LyricsTextSizePreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.lyricsTextSize,
+            )
+
+            LyricsTextSizePreference.entries.forEach { size ->
+                assertEquals(AppSettingsUpdateResult.Success, repository.setLyricsTextSize(size))
+                assertEquals(
+                    size,
+                    repository.settings
+                        .first()
+                        .settings.lyricsTextSize,
+                )
+            }
+        }
+
+    @Test
     fun unknownStoredThemeFallsBackToSystemAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.THEME] = "future-theme" }
@@ -115,6 +137,20 @@ class PreferencesAppSettingsRepositoryTest {
                 AppSettingsSnapshot(problem = AppSettingsProblem.Read),
                 repository.settings.first(),
             )
+        }
+
+    @Test
+    fun unknownLyricsTextSizeFallsBackToStandardAndReportsReadProblem() =
+        withFixture {
+            dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.LYRICS_TEXT_SIZE] = "future-size" }
+
+            assertEquals(
+                LyricsTextSizePreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.lyricsTextSize,
+            )
+            assertEquals(AppSettingsProblem.Read, repository.settings.first().problem)
         }
 
     @Test
@@ -193,6 +229,23 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsTextSizeWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setLyricsTextSize(LyricsTextSizePreference.Large),
+            )
+            assertEquals(
+                LyricsTextSizePreference.Standard,
+                repository.settings
+                    .first()
+                    .settings.lyricsTextSize,
+            )
+        }
+
+    @Test
     fun cancellationIsNotMappedToWriteFailure() {
         val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
 
@@ -207,6 +260,15 @@ class PreferencesAppSettingsRepositoryTest {
 
         assertThrows(CancellationException::class.java) {
             runBlocking { repository.setShowLyricsSupplementalText(false) }
+        }
+    }
+
+    @Test
+    fun lyricsTextSizeCancellationIsNotMappedToWriteFailure() {
+        val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { repository.setLyricsTextSize(LyricsTextSizePreference.Large) }
         }
     }
 

@@ -95,6 +95,12 @@ internal fun SettingsScreen(
                 saving = state.savingTheme,
                 onAction = onAction,
             )
+        SettingsOverlay.LyricsTextSizeSelection ->
+            LyricsTextSizeSelectionDialog(
+                selected = state.lyricsTextSize,
+                saving = state.savingLyricsTextSize,
+                onAction = onAction,
+            )
         SettingsOverlay.About -> AboutDialog(onAction = onAction)
         null -> Unit
     }

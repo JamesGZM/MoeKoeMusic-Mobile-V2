@@ -56,6 +56,24 @@ fun SettingsLargeText20Screenshot() = SettingsScreenshotContent(ThemeMode.Light,
 @Composable
 fun SettingsLongContentScreenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
 
+@PreviewTest
+@Preview(name = "LyricsTextSizeDialog", widthDp = 390, heightDp = 844)
+@Composable
+fun SettingsLyricsTextSizeDialogScreenshot() {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        Surface {
+            SettingsScreen(
+                state =
+                    SettingsUiState(
+                        overlay = SettingsOverlay.LyricsTextSizeSelection,
+                        groups = settingsGroups(SettingsThemeUi.System, autoSkipFailedPlayback = true),
+                    ),
+                onAction = {},
+            )
+        }
+    }
+}
+
 @Composable
 private fun SettingsScreenshotContent(
     themeMode: ThemeMode,

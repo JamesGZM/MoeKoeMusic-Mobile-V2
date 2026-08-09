@@ -26,33 +26,67 @@ internal fun ThemeSelectionDialog(
     saving: SettingsThemeUi?,
     onAction: (SettingsAction) -> Unit,
 ) {
-    MoeDialog(onDismissRequest = { onAction(SettingsAction.DismissOverlay) }) {
-        Text(
-            text = stringResource(R.string.settings_choose_theme),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-        )
+    SettingsSelectionDialog(
+        title = stringResource(R.string.settings_choose_theme),
+        options = SettingsThemeUi.entries,
+        selected = selected,
+        saving = saving != null,
+        optionLabel = { theme -> theme.displayName() },
+        onSelected = { theme -> onAction(SettingsAction.SelectTheme(theme)) },
+        onDismiss = { onAction(SettingsAction.DismissOverlay) },
+    )
+}
+
+@Composable
+internal fun LyricsTextSizeSelectionDialog(
+    selected: SettingsLyricsTextSizeUi,
+    saving: SettingsLyricsTextSizeUi?,
+    onAction: (SettingsAction) -> Unit,
+) {
+    SettingsSelectionDialog(
+        title = stringResource(R.string.settings_choose_lyrics_text_size),
+        options = SettingsLyricsTextSizeUi.entries,
+        selected = selected,
+        saving = saving != null,
+        optionLabel = { size -> size.displayName() },
+        onSelected = { size -> onAction(SettingsAction.SelectLyricsTextSize(size)) },
+        onDismiss = { onAction(SettingsAction.DismissOverlay) },
+    )
+}
+
+@Composable
+private fun <T> SettingsSelectionDialog(
+    title: String,
+    options: List<T>,
+    selected: T,
+    saving: Boolean,
+    optionLabel: @Composable (T) -> String,
+    onSelected: (T) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    MoeDialog(onDismissRequest = onDismiss) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Column(Modifier.padding(top = MoeKoeTheme.spacing.space12).selectableGroup()) {
-            SettingsThemeUi.entries.forEach { theme ->
+            options.forEach { option ->
                 Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .selectable(
-                                selected = theme == selected,
-                                enabled = saving == null,
+                                selected = option == selected,
+                                enabled = !saving,
                                 role = Role.RadioButton,
-                                onClick = { onAction(SettingsAction.SelectTheme(theme)) },
+                                onClick = { onSelected(option) },
                             )
                             .padding(vertical = MoeKoeTheme.spacing.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = theme == selected, onClick = null, enabled = saving == null)
-                    Text(theme.displayName(), modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8))
+                    RadioButton(selected = option == selected, onClick = null, enabled = !saving)
+                    Text(optionLabel(option), modifier = Modifier.padding(start = MoeKoeTheme.spacing.space8))
                 }
             }
         }
-        MoeTextButton(onClick = { onAction(SettingsAction.DismissOverlay) }, modifier = Modifier.align(Alignment.End)) {
+        MoeTextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
             Text(stringResource(R.string.settings_cancel))
         }
     }

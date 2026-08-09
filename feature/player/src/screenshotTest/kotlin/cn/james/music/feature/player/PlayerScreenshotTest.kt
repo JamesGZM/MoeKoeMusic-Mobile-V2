@@ -227,14 +227,22 @@ fun PlayerLyricsPhoneticScreenshot() {
 @Preview(name = "LyricsFont150", widthDp = 390, heightDp = 844)
 @Composable
 fun PlayerLyricsFont150Screenshot() {
-    PlayerScreenshotContent(initialPage = PlayerPage.Lyrics, lyricsState = largeTextLyricsState())
+    PlayerScreenshotContent(
+        initialPage = PlayerPage.Lyrics,
+        lyricsState = largeTextLyricsState(),
+        lyricsTextSize = PlayerLyricsTextSize.Large,
+    )
 }
 
 @PreviewTest
 @Preview(name = "LyricsFont200", widthDp = 390, heightDp = 844)
 @Composable
 fun PlayerLyricsFont200Screenshot() {
-    PlayerScreenshotContent(initialPage = PlayerPage.Lyrics, lyricsState = largestTextLyricsState())
+    PlayerScreenshotContent(
+        initialPage = PlayerPage.Lyrics,
+        lyricsState = largestTextLyricsState(),
+        lyricsTextSize = PlayerLyricsTextSize.Largest,
+    )
 }
 
 @Composable
@@ -246,6 +254,7 @@ private fun PlayerScreenshotContent(
     showArtwork: Boolean = false,
     initialPage: PlayerPage = PlayerPage.Cover,
     lyricsState: PlayerLyricsUiState = PlayerLyricsUiState.Loading,
+    lyricsTextSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
     lyricsProgress: PlayerLyricsProgressUiState = PlayerLyricsProgressUiState(activeLineIndex = 2, highlightedPrefixCharacterCount = 3),
     dynamicCoverColors: Boolean = true,
     paletteOverride: PlayerPalette? = null,
@@ -289,6 +298,7 @@ private fun PlayerScreenshotContent(
         onOpenQueue = {},
         initialPage = initialPage,
         lyricsState = lyricsState,
+        lyricsTextSize = lyricsTextSize,
         lyricsProgress = remember { mutableStateOf(lyricsProgress) },
         paletteOverride = paletteOverride,
     )
@@ -335,13 +345,11 @@ private fun phoneticLyricsState() =
 private fun largeTextLyricsState() =
     PlayerLyricsUiState.Content(
         lines = translationLyricsState().lines.drop(1).take(4),
-        textSize = PlayerLyricsTextSize.Large,
     )
 
 private fun largestTextLyricsState() =
     PlayerLyricsUiState.Content(
         lines = translationLyricsState().lines.drop(1).take(3),
-        textSize = PlayerLyricsTextSize.Largest,
     )
 
 @Composable

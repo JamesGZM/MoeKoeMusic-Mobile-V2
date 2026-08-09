@@ -59,6 +59,8 @@ runtimeSize = designSize × s
 - 背景行与对唱对齐信息在确认稿没有稳定视觉承载，本切片不展示，不能将其宣称为已完成。
 - 内容按歌词行整体居中；原文、翻译和音译不得拆成互不关联的滚动项。
 - `1.5×` / `2.0×` 是歌词显示设置中的独立字号档位，只放大歌词视窗内的原文和附加文本；顶部栏、分页点、歌曲信息与播放控制保持同一尺寸，不随该设置放大。确认稿允许歌词视窗只显示更少行。
+- 字号偏好仅以 app 注入的纯 `PlayerLyricsTextSize` 输入生效，必须与 `PlayerLyricsUiState.Content` 的文档行列表分离；切换不重新请求、映射或缓存歌词，也不影响逐字 timing、点击 seek 或“翻译与音译”显隐。
+- `showLyricsSupplementalText=false` 时，Standard 档歌词视窗采用已确认 Original-only 的内容 offset；它只根据渲染可见密度调整布局，不丢弃 secondary 文档数据。Large / Largest 保持各自已确认 offset。
 
 ## 状态矩阵
 

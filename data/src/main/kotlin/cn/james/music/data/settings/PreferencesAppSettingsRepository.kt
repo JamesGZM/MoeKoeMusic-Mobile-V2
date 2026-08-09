@@ -13,6 +13,7 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -48,10 +49,17 @@ class PreferencesAppSettingsRepository
         override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult =
             update { preferences -> preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] = enabled }
 
+        override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult =
+            update { preferences -> preferences[LYRICS_TEXT_SIZE] = size.storageValue }
+
         private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
             val storedTheme = preferences[THEME]
             val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
-            if (storedTheme != null && theme == null) return AppSettingsSnapshot(problem = AppSettingsProblem.Read)
+            val storedLyricsTextSize = preferences[LYRICS_TEXT_SIZE]
+            val lyricsTextSize =
+                storedLyricsTextSize?.let { stored ->
+                    LyricsTextSizePreference.entries.firstOrNull { it.storageValue == stored }
+                }
             return AppSettingsSnapshot(
                 settings =
                     AppSettings(
@@ -59,7 +67,14 @@ class PreferencesAppSettingsRepository
                         autoSkipFailedPlayback = preferences[AUTO_SKIP_FAILED_PLAYBACK] ?: true,
                         dynamicCoverColors = preferences[DYNAMIC_COVER_COLORS] ?: true,
                         showLyricsSupplementalText = preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] ?: true,
+                        lyricsTextSize = lyricsTextSize ?: LyricsTextSizePreference.Standard,
                     ),
+                problem =
+                    if ((storedTheme != null && theme == null) || (storedLyricsTextSize != null && lyricsTextSize == null)) {
+                        AppSettingsProblem.Read
+                    } else {
+                        null
+                    },
             )
         }
 
@@ -76,10 +91,14 @@ class PreferencesAppSettingsRepository
         private val AppThemePreference.storageValue: String
             get() = name.lowercase()
 
+        private val LyricsTextSizePreference.storageValue: String
+            get() = name.lowercase()
+
         internal companion object {
             val THEME = stringPreferencesKey("theme_mode_v1")
             val AUTO_SKIP_FAILED_PLAYBACK = booleanPreferencesKey("auto_skip_failed_playback_v1")
             val DYNAMIC_COVER_COLORS = booleanPreferencesKey("dynamic_cover_colors_v1")
             val SHOW_LYRICS_SUPPLEMENTAL_TEXT = booleanPreferencesKey("show_lyrics_supplemental_text_v1")
+            val LYRICS_TEXT_SIZE = stringPreferencesKey("lyrics_text_size_v1")
         }
     }

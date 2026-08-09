@@ -6,6 +6,7 @@ import cn.james.music.core.model.settings.AppSettingsProblem
 import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,15 +29,18 @@ internal class SettingsViewModel
         private var autoSkipUpdateJob: Job? = null
         private var dynamicCoverColorsUpdateJob: Job? = null
         private var lyricsSupplementalTextUpdateJob: Job? = null
+        private var lyricsTextSizeUpdateJob: Job? = null
         private var retryRequest: RetryRequest? = null
         private var themeUpdateGeneration = 0L
         private var autoSkipUpdateGeneration = 0L
         private var dynamicCoverColorsUpdateGeneration = 0L
         private var lyricsSupplementalTextUpdateGeneration = 0L
+        private var lyricsTextSizeUpdateGeneration = 0L
         private var persistedTheme = AppThemePreference.System
         private var persistedAutoSkipFailedPlayback = true
         private var persistedDynamicCoverColors = true
         private var persistedLyricsSupplementalText = true
+        private var persistedLyricsTextSize = LyricsTextSizePreference.Standard
 
         init {
             viewModelScope.launch {
@@ -45,6 +49,7 @@ internal class SettingsViewModel
                     persistedAutoSkipFailedPlayback = snapshot.settings.autoSkipFailedPlayback
                     persistedDynamicCoverColors = snapshot.settings.dynamicCoverColors
                     persistedLyricsSupplementalText = snapshot.settings.showLyricsSupplementalText
+                    persistedLyricsTextSize = snapshot.settings.lyricsTextSize
                     mutableState.update { current ->
                         val theme =
                             if (current.savingTheme == null || current.savingTheme.toDomain() == snapshot.settings.theme) {
@@ -78,11 +83,21 @@ internal class SettingsViewModel
                             } else {
                                 current.showLyricsSupplementalText
                             }
+                        val lyricsTextSize =
+                            if (
+                                current.savingLyricsTextSize == null ||
+                                current.savingLyricsTextSize.toDomain() == snapshot.settings.lyricsTextSize
+                            ) {
+                                snapshot.settings.lyricsTextSize.toUi()
+                            } else {
+                                current.lyricsTextSize
+                            }
                         current.withGroups(
                             theme = theme,
                             autoSkipFailedPlayback = autoSkip,
                             dynamicCoverColors = dynamicColors,
                             showLyricsSupplementalText = supplementalText,
+                            lyricsTextSize = lyricsTextSize,
                             problem = if (current.problem == SettingsProblemUi.Write) current.problem else snapshot.problem?.toUi(),
                         )
                     }
@@ -99,6 +114,8 @@ internal class SettingsViewModel
                 is SettingsAction.SetAutoSkipFailedPlayback -> setAutoSkipFailedPlayback(action.enabled)
                 is SettingsAction.SetDynamicCoverColors -> setDynamicCoverColors(action.enabled)
                 is SettingsAction.SetShowLyricsSupplementalText -> setShowLyricsSupplementalText(action.enabled)
+                is SettingsAction.SelectLyricsTextSize -> selectLyricsTextSize(action.size)
+                SettingsAction.OpenLyricsTextSize -> mutableState.update { it.copy(overlay = SettingsOverlay.LyricsTextSizeSelection) }
                 SettingsAction.DismissOverlay -> mutableState.update { it.copy(overlay = null) }
                 SettingsAction.Retry -> retry()
                 SettingsAction.DismissProblem -> dismissProblem()
@@ -248,6 +265,43 @@ internal class SettingsViewModel
                 }
         }
 
+        private fun selectLyricsTextSize(size: SettingsLyricsTextSizeUi) {
+            mutableState.update { it.copy(overlay = null) }
+            if (size == mutableState.value.lyricsTextSize && mutableState.value.savingLyricsTextSize == null) return
+            val generation = ++lyricsTextSizeUpdateGeneration
+            lyricsTextSizeUpdateJob?.cancel()
+            lyricsTextSizeUpdateJob =
+                viewModelScope.launch {
+                    retryRequest = null
+                    mutableState.update { current ->
+                        current.withGroups(savingLyricsTextSize = size, problem = null, canRetry = false)
+                    }
+                    when (repository.setLyricsTextSize(size.toDomain())) {
+                        AppSettingsUpdateResult.Success -> {
+                            if (generation == lyricsTextSizeUpdateGeneration) {
+                                mutableState.update { current ->
+                                    current.withGroups(lyricsTextSize = size, savingLyricsTextSize = null)
+                                }
+                            }
+                        }
+
+                        is AppSettingsUpdateResult.Failure -> {
+                            if (generation == lyricsTextSizeUpdateGeneration) {
+                                retryRequest = RetryRequest.LyricsTextSize(size)
+                                mutableState.update { current ->
+                                    current.withGroups(
+                                        lyricsTextSize = persistedLyricsTextSize.toUi(),
+                                        savingLyricsTextSize = null,
+                                        problem = SettingsProblemUi.Write,
+                                        canRetry = true,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+
         private fun retry() {
             when (val request = retryRequest) {
                 null -> Unit
@@ -255,6 +309,7 @@ internal class SettingsViewModel
                 is RetryRequest.AutoSkipFailedPlayback -> setAutoSkipFailedPlayback(request.enabled)
                 is RetryRequest.DynamicCoverColors -> setDynamicCoverColors(request.enabled)
                 is RetryRequest.LyricsSupplementalText -> setShowLyricsSupplementalText(request.enabled)
+                is RetryRequest.LyricsTextSize -> selectLyricsTextSize(request.size)
             }
         }
 
@@ -279,6 +334,10 @@ internal class SettingsViewModel
             data class LyricsSupplementalText(
                 val enabled: Boolean,
             ) : RetryRequest
+
+            data class LyricsTextSize(
+                val size: SettingsLyricsTextSizeUi,
+            ) : RetryRequest
         }
 
         private fun SettingsUiState.withGroups(
@@ -286,10 +345,12 @@ internal class SettingsViewModel
             autoSkipFailedPlayback: Boolean = this.autoSkipFailedPlayback,
             dynamicCoverColors: Boolean = this.dynamicCoverColors,
             showLyricsSupplementalText: Boolean = this.showLyricsSupplementalText,
+            lyricsTextSize: SettingsLyricsTextSizeUi = this.lyricsTextSize,
             savingTheme: SettingsThemeUi? = this.savingTheme,
             savingAutoSkipFailedPlayback: Boolean? = this.savingAutoSkipFailedPlayback,
             savingDynamicCoverColors: Boolean? = this.savingDynamicCoverColors,
             savingLyricsSupplementalText: Boolean? = this.savingLyricsSupplementalText,
+            savingLyricsTextSize: SettingsLyricsTextSizeUi? = this.savingLyricsTextSize,
             problem: SettingsProblemUi? = this.problem,
             canRetry: Boolean = this.canRetry,
             overlay: SettingsOverlay? = this.overlay,
@@ -299,10 +360,12 @@ internal class SettingsViewModel
                 autoSkipFailedPlayback = autoSkipFailedPlayback,
                 dynamicCoverColors = dynamicCoverColors,
                 showLyricsSupplementalText = showLyricsSupplementalText,
+                lyricsTextSize = lyricsTextSize,
                 savingTheme = savingTheme,
                 savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
                 savingDynamicCoverColors = savingDynamicCoverColors,
                 savingLyricsSupplementalText = savingLyricsSupplementalText,
+                savingLyricsTextSize = savingLyricsTextSize,
                 problem = problem,
                 canRetry = canRetry,
                 overlay = overlay,
@@ -312,10 +375,12 @@ internal class SettingsViewModel
                         autoSkipFailedPlayback = autoSkipFailedPlayback,
                         dynamicCoverColors = dynamicCoverColors,
                         showLyricsSupplementalText = showLyricsSupplementalText,
+                        lyricsTextSize = lyricsTextSize,
                         savingTheme = savingTheme,
                         savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
                         savingDynamicCoverColors = savingDynamicCoverColors,
                         savingLyricsSupplementalText = savingLyricsSupplementalText,
+                        savingLyricsTextSize = savingLyricsTextSize,
                     ),
             )
 
@@ -333,6 +398,20 @@ internal class SettingsViewModel
                 SettingsThemeUi.Light -> AppThemePreference.Light
                 SettingsThemeUi.Dark -> AppThemePreference.Dark
                 SettingsThemeUi.Amoled -> AppThemePreference.Amoled
+            }
+
+        private fun LyricsTextSizePreference.toUi(): SettingsLyricsTextSizeUi =
+            when (this) {
+                LyricsTextSizePreference.Standard -> SettingsLyricsTextSizeUi.Standard
+                LyricsTextSizePreference.Large -> SettingsLyricsTextSizeUi.Large
+                LyricsTextSizePreference.Largest -> SettingsLyricsTextSizeUi.Largest
+            }
+
+        private fun SettingsLyricsTextSizeUi.toDomain(): LyricsTextSizePreference =
+            when (this) {
+                SettingsLyricsTextSizeUi.Standard -> LyricsTextSizePreference.Standard
+                SettingsLyricsTextSizeUi.Large -> LyricsTextSizePreference.Large
+                SettingsLyricsTextSizeUi.Largest -> LyricsTextSizePreference.Largest
             }
 
         private fun AppSettingsProblem.toUi(): SettingsProblemUi =

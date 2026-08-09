@@ -9,11 +9,18 @@ enum class AppThemePreference {
     Amoled,
 }
 
+enum class LyricsTextSizePreference {
+    Standard,
+    Large,
+    Largest,
+}
+
 data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
     val autoSkipFailedPlayback: Boolean = true,
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
+    val lyricsTextSize: LyricsTextSizePreference = LyricsTextSizePreference.Standard,
 )
 
 sealed interface AppSettingsProblem {
@@ -45,4 +52,6 @@ interface AppSettingsRepository {
     suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult
 
     suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult
+
+    suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult
 }

@@ -122,7 +122,6 @@ sealed interface PlayerLyricsUiState {
 
     data class Content(
         val lines: List<PlayerLyricLineUi>,
-        val textSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
     ) : PlayerLyricsUiState
 }
 

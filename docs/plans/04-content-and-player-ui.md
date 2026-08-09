@@ -42,6 +42,7 @@
 - 歌词协议、KRC 解包、成熟解析库、成功缓存、取消和失败恢复已完成独立 [`12-kugou-lyrics`](../reference-audits/12-kugou-lyrics.md) 审计；`07-player-lyrics.png` 与 `23a` 至 `23h` 加载、空、离线、错误和大字体状态均已确认，并已形成独立 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md) 视觉合同。歌词 Compose 先按全部确认稿完成纯 UI 和截图，再单独接入歌词状态与交互。
 - 全屏歌词页已按 [`PLAYER_LYRICS_LAYOUT_SPEC.md`](../design/PLAYER_LYRICS_LAYOUT_SPEC.md)、`07-player-lyrics.png` 与 `23a` 至 `23h` 完成同画布复刻并由 app-side `AppPlayerLyricsViewModel` 接入真实歌词：仅歌词页 visible 时加载，切歌/离页取消，成功文档复用，点击行仍由 `AppPlaybackViewModel` seek。加载、空、离线、错误、原文、翻译、音译及 `150%` / `200%` 均有逐状态设计并排证据；手动滚动暂停自动跟随和真机同步滚动仍保留后续切片。
 - “翻译与音译”设置已接入同一已加载歌词内容的纯 Boolean 渲染输入：关闭仅隐藏每行 secondary，重新开启即时复用，不触发 Repository、解析或缓存；`:feature:player` 仍不依赖设置领域或 DataStore。
+- “歌词字体大小”设置已将“标准 / 150% / 200%”作为 app 注入的纯 Player 输入；它复用 `23g / 23h` 的既有三档排版，不属于歌词文档或 Repository 状态，切换不触发请求或缓存变化。
 - Room v4 已新增脱敏键控的 KRC 成功缓存表；`3→4`、完整 `1→4` 与 DAO 覆盖已随本轮数据库回归在用户指定真机通过。
 - 首页缓存已将 Room 升至 v5，新增按 `home:v1:anonymous` / `home:v1:user:<userid>` 分区的可观察完整快照 DAO；`4→5`、完整 `1→5`、DAO 覆盖与既有数据库回归已在 ELE-AL00 / API 29 真机 13/13 通过。
 - 首页 Repository 已完成 Room stale-while-revalidate、15 分钟 TTL、匿名/用户分区自动切换与刷新、完整快照提交、部分失败保护、single-flight、强制刷新和会话双代际隔离；15 项 JVM 测试覆盖旧缓存首发、自动刷新问题、取消、缓存损坏和并发竞态。

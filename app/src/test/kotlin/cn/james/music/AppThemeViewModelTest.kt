@@ -6,6 +6,8 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.feature.player.PlayerLyricsTextSize
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,6 +88,17 @@ class AppThemeViewModelTest {
         }
 
     @Test
+    fun lyricsTextSizeMapsToPurePlayerInputWithoutChangingTheme() =
+        runTest(dispatcher) {
+            val repository = FakeAppSettingsRepository(AppThemePreference.Dark, lyricsTextSize = LyricsTextSizePreference.Largest)
+            val viewModel = AppThemeViewModel(repository)
+            runCurrent()
+
+            assertEquals(ThemeMode.Dark, viewModel.themeMode.value)
+            assertEquals(PlayerLyricsTextSize.Largest, viewModel.lyricsTextSize.value)
+        }
+
+    @Test
     fun newerSelectionCancelsPendingOlderWrite() =
         runTest(dispatcher) {
             val repository = FakeAppSettingsRepository(AppThemePreference.System)
@@ -108,6 +121,7 @@ class AppThemeViewModelTest {
         initialTheme: AppThemePreference,
         dynamicCoverColors: Boolean = true,
         showLyricsSupplementalText: Boolean = true,
+        lyricsTextSize: LyricsTextSizePreference = LyricsTextSizePreference.Standard,
     ) : AppSettingsRepository {
         private val mutableSettings =
             MutableStateFlow(
@@ -117,6 +131,7 @@ class AppThemeViewModelTest {
                             initialTheme,
                             dynamicCoverColors = dynamicCoverColors,
                             showLyricsSupplementalText = showLyricsSupplementalText,
+                            lyricsTextSize = lyricsTextSize,
                         ),
                 ),
             )
@@ -140,6 +155,8 @@ class AppThemeViewModelTest {
         override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = updateResult
 
         override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult = updateResult
+
+        override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult = updateResult
     }
 
     private val AppThemePreference.expectedThemeMode: ThemeMode

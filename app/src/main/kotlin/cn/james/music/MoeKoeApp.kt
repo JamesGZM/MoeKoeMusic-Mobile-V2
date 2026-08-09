@@ -50,6 +50,7 @@ import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.player.PlayerDestination
 import cn.james.music.feature.player.PlayerProgressUiState
+import cn.james.music.feature.player.PlayerLyricsTextSize
 import cn.james.music.feature.player.toPlayerLyricsProgressUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.playlist.PlaylistDetailDestination
@@ -66,6 +67,7 @@ import kotlinx.coroutines.delay
 fun MoeKoeApp(
     dynamicCoverColors: Boolean = true,
     showLyricsSupplementalText: Boolean = true,
+    lyricsTextSize: PlayerLyricsTextSize = PlayerLyricsTextSize.Standard,
     hasMediaPermission: () -> Boolean,
     onRequestMediaPermission: ((Boolean) -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
@@ -252,6 +254,7 @@ fun MoeKoeApp(
                 playerDestination(
                     dynamicCoverColors = dynamicCoverColors,
                     showLyricsSupplementalText = showLyricsSupplementalText,
+                    lyricsTextSize = lyricsTextSize,
                     state = playerUiState,
                     progress = playerProgressUiState,
                     lyricsState = playerLyricsUiState,

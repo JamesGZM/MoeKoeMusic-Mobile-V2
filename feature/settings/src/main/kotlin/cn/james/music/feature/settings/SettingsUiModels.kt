@@ -11,6 +11,13 @@ internal enum class SettingsThemeUi {
 }
 
 @Immutable
+internal enum class SettingsLyricsTextSizeUi {
+    Standard,
+    Large,
+    Largest,
+}
+
+@Immutable
 internal enum class SettingsProblemUi {
     Read,
     Write,
@@ -19,6 +26,8 @@ internal enum class SettingsProblemUi {
 @Immutable
 internal sealed interface SettingsOverlay {
     data object ThemeSelection : SettingsOverlay
+
+    data object LyricsTextSizeSelection : SettingsOverlay
 
     data object About : SettingsOverlay
 }
@@ -64,6 +73,12 @@ internal sealed interface SettingsRowUi {
         val loading: Boolean,
     ) : SettingsRowUi
 
+    data class TextValue(
+        override val id: SettingsRowId,
+        val value: SettingsLyricsTextSizeUi,
+        val loading: Boolean,
+    ) : SettingsRowUi
+
     data class Unavailable(
         override val id: SettingsRowId,
     ) : SettingsRowUi
@@ -87,10 +102,12 @@ internal data class SettingsUiState(
     val autoSkipFailedPlayback: Boolean = true,
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
+    val lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
     val savingTheme: SettingsThemeUi? = null,
     val savingAutoSkipFailedPlayback: Boolean? = null,
     val savingDynamicCoverColors: Boolean? = null,
     val savingLyricsSupplementalText: Boolean? = null,
+    val savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
@@ -120,6 +137,12 @@ internal sealed interface SettingsAction {
         val enabled: Boolean,
     ) : SettingsAction
 
+    data class SelectLyricsTextSize(
+        val size: SettingsLyricsTextSizeUi,
+    ) : SettingsAction
+
+    data object OpenLyricsTextSize : SettingsAction
+
     data object DismissOverlay : SettingsAction
 
     data object Retry : SettingsAction
@@ -132,10 +155,12 @@ internal fun settingsGroups(
     autoSkipFailedPlayback: Boolean,
     dynamicCoverColors: Boolean = true,
     showLyricsSupplementalText: Boolean = true,
+    lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
     savingTheme: SettingsThemeUi? = null,
     savingAutoSkipFailedPlayback: Boolean? = null,
     savingDynamicCoverColors: Boolean? = null,
     savingLyricsSupplementalText: Boolean? = null,
+    savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -175,7 +200,11 @@ internal fun settingsGroups(
                         checked = showLyricsSupplementalText,
                         loading = savingLyricsSupplementalText != null,
                     ),
-                    SettingsRowUi.Unavailable(SettingsRowId.LyricsFontSize),
+                    SettingsRowUi.TextValue(
+                        id = SettingsRowId.LyricsFontSize,
+                        value = lyricsTextSize,
+                        loading = savingLyricsTextSize != null,
+                    ),
                 ),
         ),
         SettingsGroupUi(

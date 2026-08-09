@@ -239,6 +239,48 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("翻译与音译").assertIsNotEnabled()
     }
 
+    @Test
+    fun lyricsTextSizeDialogUsesRadioSelectionAndDisablesWhileSaving() {
+        var selected: SettingsLyricsTextSizeUi? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                lyricsTextSize = SettingsLyricsTextSizeUi.Standard,
+                                overlay = SettingsOverlay.LyricsTextSizeSelection,
+                            ),
+                        onAction = { action ->
+                            if (action is SettingsAction.SelectLyricsTextSize) selected = action.size
+                        },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("150%").performClick()
+        assertEquals(SettingsLyricsTextSizeUi.Large, selected)
+
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                lyricsTextSize = SettingsLyricsTextSizeUi.Large,
+                                savingLyricsTextSize = SettingsLyricsTextSizeUi.Large,
+                                overlay = SettingsOverlay.LyricsTextSizeSelection,
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("150%").assertIsNotEnabled()
+    }
+
     private fun setSettingsContent(theme: SettingsThemeUi) {
         composeRule.setContent {
             MoeKoeTheme {

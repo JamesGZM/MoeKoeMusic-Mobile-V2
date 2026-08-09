@@ -6,6 +6,7 @@ import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -225,6 +226,71 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun lyricsTextSizeSelectionPersistsAndDoesNotCancelOtherSettings() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            viewModel.onAction(SettingsAction.OpenLyricsTextSize)
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Large))
+            advanceUntilIdle()
+
+            assertEquals(SettingsLyricsTextSizeUi.Large, viewModel.state.value.lyricsTextSize)
+            assertFalse(viewModel.state.value.dynamicCoverColors)
+            assertEquals(listOf(LyricsTextSizePreference.Large), repository.lyricsTextSizeRequests)
+        }
+
+    @Test
+    fun failedLyricsTextSizeSelectionRollsBackAndRetriesItsOwnRequest() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.lyricsTextSizeResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Largest))
+            advanceUntilIdle()
+
+            assertEquals(SettingsLyricsTextSizeUi.Standard, viewModel.state.value.lyricsTextSize)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.lyricsTextSizeResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(SettingsLyricsTextSizeUi.Largest, viewModel.state.value.lyricsTextSize)
+            assertEquals(
+                listOf(LyricsTextSizePreference.Largest, LyricsTextSizePreference.Largest),
+                repository.lyricsTextSizeRequests,
+            )
+        }
+
+    @Test
+    fun staleLyricsTextSizeWriteCannotOverrideNewerSelection() =
+        runTest(dispatcher) {
+            val repository = OutOfOrderRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Large))
+            runCurrent()
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Largest))
+            runCurrent()
+
+            repository.completeLyricsTextSize(LyricsTextSizePreference.Large)
+            runCurrent()
+            assertEquals(SettingsLyricsTextSizeUi.Standard, viewModel.state.value.lyricsTextSize)
+            assertEquals(SettingsLyricsTextSizeUi.Largest, viewModel.state.value.savingLyricsTextSize)
+
+            repository.completeLyricsTextSize(LyricsTextSizePreference.Largest)
+            advanceUntilIdle()
+            assertEquals(SettingsLyricsTextSizeUi.Largest, viewModel.state.value.lyricsTextSize)
+            assertEquals(null, viewModel.state.value.savingLyricsTextSize)
+        }
+
+    @Test
     fun retryTargetsTheLastFailureWhenThemeAndAutoSkipWritesBothFail() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
@@ -307,6 +373,35 @@ class SettingsViewModelTest {
             assertEquals(listOf(false, false), repository.lyricsSupplementalTextRequests)
         }
 
+    @Test
+    fun retryTargetsLyricsTextSizeWhenItsFailureFinishesLast() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
+            viewModel.onAction(SettingsAction.SelectLyricsTextSize(SettingsLyricsTextSizeUi.Largest))
+            runCurrent()
+
+            repository.failLyricsSupplementalText()
+            runCurrent()
+            repository.failLyricsTextSize()
+            runCurrent()
+
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+            assertTrue(viewModel.state.value.canRetry)
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(false), repository.lyricsSupplementalTextRequests)
+            assertEquals(
+                listOf(LyricsTextSizePreference.Largest, LyricsTextSizePreference.Largest),
+                repository.lyricsTextSizeRequests,
+            )
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -316,10 +411,12 @@ class SettingsViewModelTest {
         var autoSkipResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var dynamicCoverColorsResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var lyricsSupplementalTextResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        var lyricsTextSizeResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
+        val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -359,6 +456,15 @@ class SettingsViewModelTest {
                 }
             }
         }
+
+        override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult {
+            lyricsTextSizeRequests += size
+            return lyricsTextSizeResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(lyricsTextSize = size))
+                }
+            }
+        }
     }
 
     private class OutOfOrderRepository(
@@ -367,6 +473,8 @@ class SettingsViewModelTest {
         private val settingsState = MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme)))
         override val settings: Flow<AppSettingsSnapshot> = settingsState
         private val completions = AppThemePreference.entries.associateWith { CompletableDeferred<Unit>() }
+        private val lyricsTextSizeCompletions =
+            LyricsTextSizePreference.entries.associateWith { CompletableDeferred<Unit>() }
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             withContext(NonCancellable) { completions.getValue(theme).await() }
@@ -380,8 +488,18 @@ class SettingsViewModelTest {
 
         override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
 
+        override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult {
+            withContext(NonCancellable) { lyricsTextSizeCompletions.getValue(size).await() }
+            settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(lyricsTextSize = size))
+            return AppSettingsUpdateResult.Success
+        }
+
         fun complete(theme: AppThemePreference) {
             completions.getValue(theme).complete(Unit)
+        }
+
+        fun completeLyricsTextSize(size: LyricsTextSizePreference) {
+            lyricsTextSizeCompletions.getValue(size).complete(Unit)
         }
     }
 
@@ -394,10 +512,12 @@ class SettingsViewModelTest {
         private val autoSkipCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val dynamicCoverColorsCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val lyricsSupplementalTextCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val lyricsTextSizeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
+        val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -435,6 +555,15 @@ class SettingsViewModelTest {
             }
         }
 
+        override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult {
+            lyricsTextSizeRequests += size
+            return if (lyricsTextSizeRequests.size == 1) {
+                withContext(NonCancellable) { lyricsTextSizeCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
+
         fun failTheme() {
             themeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
@@ -449,6 +578,10 @@ class SettingsViewModelTest {
 
         fun failLyricsSupplementalText() {
             lyricsSupplementalTextCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failLyricsTextSize() {
+            lyricsTextSizeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }

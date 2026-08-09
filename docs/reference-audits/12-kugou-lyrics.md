@@ -167,7 +167,7 @@
 - 离线无缓存；
 - 协议/服务失败与明确重试；
 - 只有原文、原文+翻译、原文+音译三种内容密度；`showLyricsSupplementalText` 关闭仅隐藏后两类附加行，不触发 Repository、解析或缓存变化。
-- `1.5×`/`2.0×` 字体下的歌词与核心控制。
+- `1.5×`/`2.0×` 字体下的歌词与核心控制；`lyricsTextSize` 由 app 组合根作为纯 Player 输入控制这三个已确认档位，不写入 `LyricsDocument` 或触发 Repository。
 
 `07` 与 `23a` 至 `23h` 已经完成静态设计和确认，可直接实现 `HorizontalPager` 与歌词 Compose。只有未来出现现有图片未覆盖的新状态时，才使用 `frontend-design` 以确认基座生成单状态图并等待确认。
 

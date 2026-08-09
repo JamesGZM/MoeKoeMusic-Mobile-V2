@@ -12,6 +12,7 @@
 - `player-lyrics-2026-08-08-diff.png`：主态像素差异辅助图。
 - `player-lyrics-2026-08-08-status-states.png`：加载、空、离线、错误四组逐状态并排。
 - `player-lyrics-2026-08-08-content-states.png`：翻译、原文、音译、150% 和 200% 五组逐状态并排。
+- 2026-08-10 `player.lyrics.translation` 当轮机器符合度为 `mean=0.05550727055694857`、`changed=0.25975058044467275`，在既有阈值 `0.14 / 0.45` 内；字号输入保持既有 Translation 基线。
 
 ## 结论
 
@@ -25,5 +26,6 @@
 - 原文、翻译、音译及当前行分段强调已覆盖；150% / 200% 是歌词显示档位，只改变歌词视窗字号和密度，不错误放大顶部栏与播放控制。
 - 2026-08-10 业务接线已由 app-side `AppPlayerLyricsViewModel` 完成：Pager settled 到歌词页才读取 Repository，离页/切歌取消并隔离迟到结果，成功文档复用；逐字强调改为从行首到当前播放位置的前缀，点击行经既有 `AppPlaybackViewModel` seek。Feature 仍只接收纯 UI 状态和 timing 输入。
 - 2026-08-10 “翻译与音译”偏好仅以 app 注入的纯 Boolean 控制 secondary 渲染：关闭态复用确认的 Original-only 视觉，不改变歌词文档、Repository 请求或 timing；默认开启的 Translation/Phonetic 截图基线保持不变。
+- 2026-08-10 歌词字体大小同样只以 app 注入的纯 `PlayerLyricsTextSize` 输入控制既有歌词视窗的字号、行高与已确认内容偏移；`PlayerLyricsUiState.Content` 不再持有伪文档字号，切换不重建文档、不读取 Repository，也不改变 timing、seek 或 secondary 设置。Standard、150% 与 200% 分别复用已确认的现有排版像素。
 - 背景行、对唱对齐以及手动滚动暂停自动跟随没有确认稿承载或本切片交互设计，仍明确保留后续；本次未启动模拟器、ADB、真机或真实服务。
 - `git diff --check`、`spotlessCheck`、播放器 JVM 单测、9 组截图校验、播放器 lint、Debug App 构建与 AndroidTest 编译均通过；指定 ELE-AL00 / API 29 的 App instrumentation 回归 25/25 通过，未创建或启动模拟器。

@@ -11,6 +11,7 @@ data object PlayerDestination
 fun NavGraphBuilder.playerDestination(
     dynamicCoverColors: Boolean,
     showLyricsSupplementalText: Boolean,
+    lyricsTextSize: PlayerLyricsTextSize,
     state: State<PlayerUiState>,
     progress: State<PlayerProgressUiState>,
     lyricsState: State<PlayerLyricsUiState>,
@@ -30,6 +31,7 @@ fun NavGraphBuilder.playerDestination(
         PlayerScreen(
             dynamicCoverColors = dynamicCoverColors,
             showLyricsSupplementalText = showLyricsSupplementalText,
+            lyricsTextSize = lyricsTextSize,
             state = state.value,
             progress = progress,
             lyricsState = lyricsState.value,

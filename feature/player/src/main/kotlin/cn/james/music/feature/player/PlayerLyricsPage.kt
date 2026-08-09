@@ -48,6 +48,7 @@ internal fun PlayerLyricsPage(
     item: PlayerItemUiModel,
     lyricsState: PlayerLyricsUiState,
     showSupplementalText: Boolean,
+    lyricsTextSize: PlayerLyricsTextSize,
     lyricsProgress: State<PlayerLyricsProgressUiState>,
     activePage: Int,
     onTogglePlayback: () -> Unit,
@@ -67,6 +68,7 @@ internal fun PlayerLyricsPage(
                 state = lyricsState,
                 progress = lyricsProgress,
                 showSupplementalText = showSupplementalText,
+                lyricsTextSize = lyricsTextSize,
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -131,6 +133,7 @@ private fun LyricsViewport(
     state: PlayerLyricsUiState,
     progress: State<PlayerLyricsProgressUiState>,
     showSupplementalText: Boolean,
+    lyricsTextSize: PlayerLyricsTextSize,
     onRetry: () -> Unit,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -172,8 +175,16 @@ private fun LyricsViewport(
                     state = state,
                     progress = progress,
                     showSupplementalText = showSupplementalText,
+                    lyricsTextSize = lyricsTextSize,
                     onLyricClick = onLyricClick,
-                    modifier = Modifier.offset(y = lyricsContentOffset(state)),
+                    modifier =
+                        Modifier.offset(
+                            y =
+                                lyricsTextSize.contentOffsetFor(
+                                    lines = state.lines,
+                                    showSupplementalText = showSupplementalText,
+                                ),
+                        ),
                 )
         }
     }
@@ -261,11 +272,12 @@ private fun LyricsContent(
     state: PlayerLyricsUiState.Content,
     progress: State<PlayerLyricsProgressUiState>,
     showSupplementalText: Boolean,
+    lyricsTextSize: PlayerLyricsTextSize,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPlayerPalette.current
-    val textSizes = lyricsTextSizes(state.textSize)
+    val textSizes = lyricsTextSizes(lyricsTextSize)
     val timing = progress.value
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -341,12 +353,15 @@ private fun lyricsTextSizes(size: PlayerLyricsTextSize): LyricsTextSizes =
         PlayerLyricsTextSize.Largest -> LyricsTextSizes(22.sp, 30.sp, 28.sp, 37.sp, 18.sp, 26.sp, 6.dp, 28.dp, 31.dp)
     }
 
-private fun lyricsContentOffset(state: PlayerLyricsUiState.Content) =
-    when (state.textSize) {
+internal fun PlayerLyricsTextSize.contentOffsetFor(
+    lines: List<PlayerLyricLineUi>,
+    showSupplementalText: Boolean,
+) =
+    when (this) {
         PlayerLyricsTextSize.Standard ->
             when {
-                state.lines.all { it.secondary == null } -> (-65).dp
-                state.lines.size <= 4 -> (-58).dp
+                !showSupplementalText || lines.all { it.secondary == null } -> (-65).dp
+                lines.size <= 4 -> (-58).dp
                 else -> 18.dp
             }
 

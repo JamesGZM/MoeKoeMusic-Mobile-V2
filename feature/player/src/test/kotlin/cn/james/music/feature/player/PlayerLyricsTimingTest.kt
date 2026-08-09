@@ -1,5 +1,6 @@
 package cn.james.music.feature.player
 
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -49,5 +50,34 @@ class PlayerLyricsTimingTest {
         assertEquals("translation", line.secondaryForDisplay(showSupplementalText = true))
         assertEquals(null, line.secondaryForDisplay(showSupplementalText = false))
         assertEquals("translation", line.secondary)
+    }
+
+    @Test
+    fun textSizeIsIndependentFromLyricsDocumentAndPreservesConfirmedOffsets() {
+        val document = PlayerLyricsUiState.Content(lines = content.lines)
+
+        assertEquals((-29).dp, PlayerLyricsTextSize.Large.contentOffsetFor(document.lines, showSupplementalText = true))
+        assertEquals((-44).dp, PlayerLyricsTextSize.Largest.contentOffsetFor(document.lines, showSupplementalText = true))
+        assertEquals((-65).dp, PlayerLyricsTextSize.Standard.contentOffsetFor(document.lines, showSupplementalText = true))
+        assertEquals(content.lines, document.lines)
+    }
+
+    @Test
+    fun standardOffsetUsesOriginalOnlyGeometryWhenSupplementalTextIsHidden() {
+        val lines =
+            List(5) { index ->
+                PlayerLyricLineUi(
+                    original = "原文$index",
+                    secondary = "translation$index",
+                    startTimeMs = index * 1_000L,
+                    endTimeMs = (index + 1) * 1_000L,
+                )
+            }
+        val document = PlayerLyricsUiState.Content(lines = lines)
+
+        assertEquals(18.dp, PlayerLyricsTextSize.Standard.contentOffsetFor(document.lines, showSupplementalText = true))
+        assertEquals((-65).dp, PlayerLyricsTextSize.Standard.contentOffsetFor(document.lines, showSupplementalText = false))
+        assertEquals(lines, document.lines)
+        assertEquals("translation0", document.lines.first().secondary)
     }
 }

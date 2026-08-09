@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.LyricsTextSizePreference
+import cn.james.music.feature.player.PlayerLyricsTextSize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -47,6 +49,15 @@ internal class AppThemeViewModel
                     initialValue = true,
                 )
 
+        val lyricsTextSize: StateFlow<PlayerLyricsTextSize> =
+            repository.settings
+                .map { snapshot -> snapshot.settings.lyricsTextSize.toPlayerLyricsTextSize() }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = PlayerLyricsTextSize.Standard,
+                )
+
         private var updateJob: Job? = null
 
         fun updateTheme(themeMode: ThemeMode) {
@@ -68,5 +79,12 @@ internal class AppThemeViewModel
                 ThemeMode.Light -> AppThemePreference.Light
                 ThemeMode.Dark -> AppThemePreference.Dark
                 ThemeMode.Amoled -> AppThemePreference.Amoled
+            }
+
+        private fun LyricsTextSizePreference.toPlayerLyricsTextSize(): PlayerLyricsTextSize =
+            when (this) {
+                LyricsTextSizePreference.Standard -> PlayerLyricsTextSize.Standard
+                LyricsTextSizePreference.Large -> PlayerLyricsTextSize.Large
+                LyricsTextSizePreference.Largest -> PlayerLyricsTextSize.Largest
             }
     }
