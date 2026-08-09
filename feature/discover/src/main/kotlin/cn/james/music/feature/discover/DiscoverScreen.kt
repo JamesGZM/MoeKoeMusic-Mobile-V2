@@ -1,7 +1,6 @@
 package cn.james.music.feature.discover
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -37,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 
 @Composable
 internal fun DiscoverRoute(onPlaylist: () -> Unit = {}) {
@@ -117,43 +117,45 @@ private fun DiscoverTabs(
             stringResource(R.string.discover_tab_ranking),
         )
     val largeText = LocalDensity.current.fontScale >= 1.3f
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .heightIn(min = DiscoverDimensions.tabsHeight)
-                .then(if (largeText) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
-                .border(width = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        labels.forEachIndexed { index, label ->
-            val selected = selectedIndex == index
-            Box(
-                modifier =
-                    Modifier
-                        .then(if (largeText) Modifier.width(88.dp) else Modifier.weight(1f))
-                        .heightIn(min = DiscoverDimensions.tabsHeight)
-                        .clickable { onSelected(index) },
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                Text(
-                    text = label,
-                    modifier = Modifier.align(Alignment.Center).offset(y = 8.dp),
-                    fontSize = 12.sp,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-                if (selected) {
-                    Box(
+    Box(modifier = modifier.fillMaxWidth().heightIn(min = DiscoverDimensions.tabsHeight)) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = DiscoverDimensions.tabsHeight)
+                    .then(if (largeText) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+        ) {
+            labels.forEachIndexed { index, label ->
+                val selected = selectedIndex == index
+                Box(
+                    modifier =
                         Modifier
-                            .width(40.dp)
-                            .height(3.dp)
-                            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
-                            .background(MaterialTheme.colorScheme.primary),
+                            .then(if (largeText) Modifier.width(88.dp) else Modifier.weight(1f))
+                            .heightIn(min = DiscoverDimensions.tabsHeight)
+                            .clickable { onSelected(index) },
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    Text(
+                        text = label,
+                        modifier = Modifier.align(Alignment.Center).offset(y = 8.dp),
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
+                    if (selected) {
+                        Box(
+                            Modifier
+                                .width(40.dp)
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+                    }
                 }
             }
         }
+        MoeHorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 

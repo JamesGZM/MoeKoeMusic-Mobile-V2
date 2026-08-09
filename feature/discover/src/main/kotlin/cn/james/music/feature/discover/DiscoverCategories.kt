@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cn.james.music.core.designsystem.component.MoePassiveOutline
 
 @Composable
 internal fun CategoryChips(
@@ -51,7 +52,7 @@ internal fun CategoryChips(
                 shape = RoundedCornerShape(24.dp),
                 color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                 contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                border = if (selected) null else MoePassiveOutline(),
             ) {
                 Box(
                     modifier = Modifier.padding(horizontal = if (selected) 11.dp else 14.dp),

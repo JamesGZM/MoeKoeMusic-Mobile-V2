@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.james.music.core.designsystem.component.MoePassiveOutline
 
 @Composable
 internal fun DiscoverSectionTitle(
@@ -145,7 +146,7 @@ internal fun RankingGrid(
                         modifier = Modifier.size(18.dp),
                         shape = CircleShape,
                         color = Color.Transparent,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        border = MoePassiveOutline(),
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
