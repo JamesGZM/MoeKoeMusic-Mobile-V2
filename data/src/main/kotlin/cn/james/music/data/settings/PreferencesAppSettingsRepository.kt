@@ -45,6 +45,9 @@ class PreferencesAppSettingsRepository
         override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult =
             update { preferences -> preferences[DYNAMIC_COVER_COLORS] = enabled }
 
+        override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult =
+            update { preferences -> preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] = enabled }
+
         private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
             val storedTheme = preferences[THEME]
             val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
@@ -55,6 +58,7 @@ class PreferencesAppSettingsRepository
                         theme = theme ?: AppThemePreference.System,
                         autoSkipFailedPlayback = preferences[AUTO_SKIP_FAILED_PLAYBACK] ?: true,
                         dynamicCoverColors = preferences[DYNAMIC_COVER_COLORS] ?: true,
+                        showLyricsSupplementalText = preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] ?: true,
                     ),
             )
         }
@@ -76,5 +80,6 @@ class PreferencesAppSettingsRepository
             val THEME = stringPreferencesKey("theme_mode_v1")
             val AUTO_SKIP_FAILED_PLAYBACK = booleanPreferencesKey("auto_skip_failed_playback_v1")
             val DYNAMIC_COVER_COLORS = booleanPreferencesKey("dynamic_cover_colors_v1")
+            val SHOW_LYRICS_SUPPLEMENTAL_TEXT = booleanPreferencesKey("show_lyrics_supplemental_text_v1")
         }
     }

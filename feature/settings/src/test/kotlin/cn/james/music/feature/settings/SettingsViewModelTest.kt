@@ -203,6 +203,28 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun failedLyricsSupplementalTextSelectionRollsBackAndRetriesItsOwnRequest() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.lyricsSupplementalTextResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
+            advanceUntilIdle()
+
+            assertTrue(viewModel.state.value.showLyricsSupplementalText)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.lyricsSupplementalTextResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.showLyricsSupplementalText)
+            assertEquals(listOf(false, false), repository.lyricsSupplementalTextRequests)
+        }
+
+    @Test
     fun retryTargetsTheLastFailureWhenThemeAndAutoSkipWritesBothFail() =
         runTest(dispatcher) {
             val repository = ConcurrentFailureRepository(AppThemePreference.System)
@@ -259,6 +281,32 @@ class SettingsViewModelTest {
             assertEquals(listOf(false, false), repository.dynamicCoverColorsRequests)
         }
 
+    @Test
+    fun retryTargetsLyricsSupplementalTextWhenItsFailureFinishesLast() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            viewModel.onAction(SettingsAction.SetShowLyricsSupplementalText(false))
+            runCurrent()
+
+            repository.failDynamicCoverColors()
+            runCurrent()
+            repository.failLyricsSupplementalText()
+            runCurrent()
+
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+            assertTrue(viewModel.state.value.canRetry)
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(false), repository.dynamicCoverColorsRequests)
+            assertEquals(listOf(false, false), repository.lyricsSupplementalTextRequests)
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -267,9 +315,11 @@ class SettingsViewModelTest {
         var result: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var autoSkipResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var dynamicCoverColorsResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        var lyricsSupplementalTextResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
+        val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -299,6 +349,16 @@ class SettingsViewModelTest {
                 }
             }
         }
+
+        override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult {
+            lyricsSupplementalTextRequests += enabled
+            return lyricsSupplementalTextResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value =
+                        settingsState.value.copy(settings = settingsState.value.settings.copy(showLyricsSupplementalText = enabled))
+                }
+            }
+        }
     }
 
     private class OutOfOrderRepository(
@@ -318,6 +378,8 @@ class SettingsViewModelTest {
 
         override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
 
+        override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+
         fun complete(theme: AppThemePreference) {
             completions.getValue(theme).complete(Unit)
         }
@@ -331,9 +393,11 @@ class SettingsViewModelTest {
         private val themeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val autoSkipCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val dynamicCoverColorsCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val lyricsSupplementalTextCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
+        val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -362,6 +426,15 @@ class SettingsViewModelTest {
             }
         }
 
+        override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult {
+            lyricsSupplementalTextRequests += enabled
+            return if (lyricsSupplementalTextRequests.size == 1) {
+                withContext(NonCancellable) { lyricsSupplementalTextCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
+
         fun failTheme() {
             themeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
@@ -372,6 +445,10 @@ class SettingsViewModelTest {
 
         fun failDynamicCoverColors() {
             dynamicCoverColorsCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failLyricsSupplementalText() {
+            lyricsSupplementalTextCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }

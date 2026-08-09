@@ -87,6 +87,8 @@ data class PlayerLyricLineUi(
     val syllables: List<PlayerLyricSyllableUi> = emptyList(),
 )
 
+internal fun PlayerLyricLineUi.secondaryForDisplay(showSupplementalText: Boolean): String? = secondary?.takeIf { showSupplementalText }
+
 @Immutable
 data class PlayerLyricSyllableUi(
     val content: String,

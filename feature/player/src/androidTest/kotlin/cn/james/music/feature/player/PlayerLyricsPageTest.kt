@@ -2,7 +2,9 @@ package cn.james.music.feature.player
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
@@ -55,5 +57,34 @@ class PlayerLyricsPageTest {
         }
         composeRule.onNodeWithText("歌词行").performClick()
         assertEquals(1_234L, seek)
+    }
+
+    @Test
+    fun supplementalTextVisibilityOnlyAffectsSecondaryRendering() {
+        val lyrics = PlayerLyricsUiState.Content(listOf(PlayerLyricLineUi("原文", secondary = "translation")))
+
+        composeRule.setContent {
+            PlayerScreenContent(
+                state = PlayerUiState(item = PlayerItemUiModel("id", "title", "artist")),
+                progress = remember { mutableStateOf(PlayerProgressUiState()) },
+                lyricsState = lyrics,
+                lyricsProgress = remember { mutableStateOf(PlayerLyricsProgressUiState()) },
+                initialPage = PlayerPage.Lyrics,
+                showLyricsSupplementalText = false,
+                onBack = {},
+                onTogglePlayback = {},
+                onSeek = {},
+                onPrevious = {},
+                onNext = {},
+                onChangeMode = {},
+                onOpenQueue = {},
+                onRetryLyrics = {},
+                onLyricClick = {},
+            )
+        }
+
+        composeRule.onNodeWithText("原文").performClick()
+        composeRule.onAllNodesWithText("translation").assertCountEquals(0)
+        assertEquals("translation", (lyrics.lines.single()).secondary)
     }
 }

@@ -75,6 +75,17 @@ class AppThemeViewModelTest {
         }
 
     @Test
+    fun lyricsSupplementalTextMapsFromAppSettingsWithoutChangingTheme() =
+        runTest(dispatcher) {
+            val repository = FakeAppSettingsRepository(AppThemePreference.Dark, showLyricsSupplementalText = false)
+            val viewModel = AppThemeViewModel(repository)
+            runCurrent()
+
+            assertEquals(ThemeMode.Dark, viewModel.themeMode.value)
+            assertEquals(false, viewModel.showLyricsSupplementalText.value)
+        }
+
+    @Test
     fun newerSelectionCancelsPendingOlderWrite() =
         runTest(dispatcher) {
             val repository = FakeAppSettingsRepository(AppThemePreference.System)
@@ -96,9 +107,19 @@ class AppThemeViewModelTest {
     private class FakeAppSettingsRepository(
         initialTheme: AppThemePreference,
         dynamicCoverColors: Boolean = true,
+        showLyricsSupplementalText: Boolean = true,
     ) : AppSettingsRepository {
         private val mutableSettings =
-            MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme, dynamicCoverColors = dynamicCoverColors)))
+            MutableStateFlow(
+                AppSettingsSnapshot(
+                    settings =
+                        AppSettings(
+                            initialTheme,
+                            dynamicCoverColors = dynamicCoverColors,
+                            showLyricsSupplementalText = showLyricsSupplementalText,
+                        ),
+                ),
+            )
         override val settings: Flow<AppSettingsSnapshot> = mutableSettings
         var updateResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var nextWriteGate: CompletableDeferred<Unit>? = null
@@ -117,6 +138,8 @@ class AppThemeViewModelTest {
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = updateResult
 
         override suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult = updateResult
+
+        override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult = updateResult
     }
 
     private val AppThemePreference.expectedThemeMode: ThemeMode

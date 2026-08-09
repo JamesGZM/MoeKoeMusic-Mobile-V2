@@ -65,6 +65,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun MoeKoeApp(
     dynamicCoverColors: Boolean = true,
+    showLyricsSupplementalText: Boolean = true,
     hasMediaPermission: () -> Boolean,
     onRequestMediaPermission: ((Boolean) -> Unit) -> Unit,
     onImportCandidates: (List<Long>) -> Unit,
@@ -250,6 +251,7 @@ fun MoeKoeApp(
                 )
                 playerDestination(
                     dynamicCoverColors = dynamicCoverColors,
+                    showLyricsSupplementalText = showLyricsSupplementalText,
                     state = playerUiState,
                     progress = playerProgressUiState,
                     lyricsState = playerLyricsUiState,

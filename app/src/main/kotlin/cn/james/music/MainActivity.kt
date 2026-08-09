@@ -70,9 +70,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
             val dynamicCoverColors by themeViewModel.dynamicCoverColors.collectAsStateWithLifecycle()
+            val showLyricsSupplementalText by themeViewModel.showLyricsSupplementalText.collectAsStateWithLifecycle()
             MoeKoeTheme(themeMode = themeMode) {
                 MoeKoeApp(
                     dynamicCoverColors = dynamicCoverColors,
+                    showLyricsSupplementalText = showLyricsSupplementalText,
                     hasMediaPermission = ::hasMediaPermission,
                     onRequestMediaPermission = ::requestMediaPermission,
                     onImportCandidates = ::enqueueMediaStore,

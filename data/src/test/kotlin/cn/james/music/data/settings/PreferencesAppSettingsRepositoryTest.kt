@@ -88,6 +88,25 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsSupplementalTextDefaultsToTrueAndRoundTrips() =
+        withFixture {
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.showLyricsSupplementalText,
+            )
+
+            assertEquals(AppSettingsUpdateResult.Success, repository.setShowLyricsSupplementalText(false))
+            assertEquals(
+                false,
+                repository.settings
+                    .first()
+                    .settings.showLyricsSupplementalText,
+            )
+        }
+
+    @Test
     fun unknownStoredThemeFallsBackToSystemAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.THEME] = "future-theme" }
@@ -157,11 +176,37 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsSupplementalTextWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setShowLyricsSupplementalText(false),
+            )
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.showLyricsSupplementalText,
+            )
+        }
+
+    @Test
     fun cancellationIsNotMappedToWriteFailure() {
         val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
 
         assertThrows(CancellationException::class.java) {
             runBlocking { repository.setTheme(AppThemePreference.Dark) }
+        }
+    }
+
+    @Test
+    fun lyricsSupplementalTextCancellationIsNotMappedToWriteFailure() {
+        val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { repository.setShowLyricsSupplementalText(false) }
         }
     }
 

@@ -27,13 +27,16 @@ internal class SettingsViewModel
         private var themeUpdateJob: Job? = null
         private var autoSkipUpdateJob: Job? = null
         private var dynamicCoverColorsUpdateJob: Job? = null
+        private var lyricsSupplementalTextUpdateJob: Job? = null
         private var retryRequest: RetryRequest? = null
         private var themeUpdateGeneration = 0L
         private var autoSkipUpdateGeneration = 0L
         private var dynamicCoverColorsUpdateGeneration = 0L
+        private var lyricsSupplementalTextUpdateGeneration = 0L
         private var persistedTheme = AppThemePreference.System
         private var persistedAutoSkipFailedPlayback = true
         private var persistedDynamicCoverColors = true
+        private var persistedLyricsSupplementalText = true
 
         init {
             viewModelScope.launch {
@@ -41,6 +44,7 @@ internal class SettingsViewModel
                     persistedTheme = snapshot.settings.theme
                     persistedAutoSkipFailedPlayback = snapshot.settings.autoSkipFailedPlayback
                     persistedDynamicCoverColors = snapshot.settings.dynamicCoverColors
+                    persistedLyricsSupplementalText = snapshot.settings.showLyricsSupplementalText
                     mutableState.update { current ->
                         val theme =
                             if (current.savingTheme == null || current.savingTheme.toDomain() == snapshot.settings.theme) {
@@ -66,10 +70,19 @@ internal class SettingsViewModel
                             } else {
                                 current.dynamicCoverColors
                             }
+                        val supplementalText =
+                            if (current.savingLyricsSupplementalText == null ||
+                                current.savingLyricsSupplementalText == snapshot.settings.showLyricsSupplementalText
+                            ) {
+                                snapshot.settings.showLyricsSupplementalText
+                            } else {
+                                current.showLyricsSupplementalText
+                            }
                         current.withGroups(
                             theme = theme,
                             autoSkipFailedPlayback = autoSkip,
                             dynamicCoverColors = dynamicColors,
+                            showLyricsSupplementalText = supplementalText,
                             problem = if (current.problem == SettingsProblemUi.Write) current.problem else snapshot.problem?.toUi(),
                         )
                     }
@@ -85,6 +98,7 @@ internal class SettingsViewModel
                 SettingsAction.OpenAbout -> mutableState.update { it.copy(overlay = SettingsOverlay.About) }
                 is SettingsAction.SetAutoSkipFailedPlayback -> setAutoSkipFailedPlayback(action.enabled)
                 is SettingsAction.SetDynamicCoverColors -> setDynamicCoverColors(action.enabled)
+                is SettingsAction.SetShowLyricsSupplementalText -> setShowLyricsSupplementalText(action.enabled)
                 SettingsAction.DismissOverlay -> mutableState.update { it.copy(overlay = null) }
                 SettingsAction.Retry -> retry()
                 SettingsAction.DismissProblem -> dismissProblem()
@@ -198,12 +212,49 @@ internal class SettingsViewModel
                 }
         }
 
+        private fun setShowLyricsSupplementalText(enabled: Boolean) {
+            if (enabled == mutableState.value.showLyricsSupplementalText && mutableState.value.savingLyricsSupplementalText == null) return
+            val generation = ++lyricsSupplementalTextUpdateGeneration
+            lyricsSupplementalTextUpdateJob?.cancel()
+            lyricsSupplementalTextUpdateJob =
+                viewModelScope.launch {
+                    retryRequest = null
+                    mutableState.update { current ->
+                        current.withGroups(savingLyricsSupplementalText = enabled, problem = null, canRetry = false)
+                    }
+                    when (repository.setShowLyricsSupplementalText(enabled)) {
+                        AppSettingsUpdateResult.Success -> {
+                            if (generation == lyricsSupplementalTextUpdateGeneration) {
+                                mutableState.update { current ->
+                                    current.withGroups(showLyricsSupplementalText = enabled, savingLyricsSupplementalText = null)
+                                }
+                            }
+                        }
+
+                        is AppSettingsUpdateResult.Failure -> {
+                            if (generation == lyricsSupplementalTextUpdateGeneration) {
+                                retryRequest = RetryRequest.LyricsSupplementalText(enabled)
+                                mutableState.update { current ->
+                                    current.withGroups(
+                                        showLyricsSupplementalText = persistedLyricsSupplementalText,
+                                        savingLyricsSupplementalText = null,
+                                        problem = SettingsProblemUi.Write,
+                                        canRetry = true,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+
         private fun retry() {
             when (val request = retryRequest) {
                 null -> Unit
                 is RetryRequest.Theme -> selectTheme(request.theme)
                 is RetryRequest.AutoSkipFailedPlayback -> setAutoSkipFailedPlayback(request.enabled)
                 is RetryRequest.DynamicCoverColors -> setDynamicCoverColors(request.enabled)
+                is RetryRequest.LyricsSupplementalText -> setShowLyricsSupplementalText(request.enabled)
             }
         }
 
@@ -224,15 +275,21 @@ internal class SettingsViewModel
             data class DynamicCoverColors(
                 val enabled: Boolean,
             ) : RetryRequest
+
+            data class LyricsSupplementalText(
+                val enabled: Boolean,
+            ) : RetryRequest
         }
 
         private fun SettingsUiState.withGroups(
             theme: SettingsThemeUi = this.theme,
             autoSkipFailedPlayback: Boolean = this.autoSkipFailedPlayback,
             dynamicCoverColors: Boolean = this.dynamicCoverColors,
+            showLyricsSupplementalText: Boolean = this.showLyricsSupplementalText,
             savingTheme: SettingsThemeUi? = this.savingTheme,
             savingAutoSkipFailedPlayback: Boolean? = this.savingAutoSkipFailedPlayback,
             savingDynamicCoverColors: Boolean? = this.savingDynamicCoverColors,
+            savingLyricsSupplementalText: Boolean? = this.savingLyricsSupplementalText,
             problem: SettingsProblemUi? = this.problem,
             canRetry: Boolean = this.canRetry,
             overlay: SettingsOverlay? = this.overlay,
@@ -241,9 +298,11 @@ internal class SettingsViewModel
                 theme = theme,
                 autoSkipFailedPlayback = autoSkipFailedPlayback,
                 dynamicCoverColors = dynamicCoverColors,
+                showLyricsSupplementalText = showLyricsSupplementalText,
                 savingTheme = savingTheme,
                 savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
                 savingDynamicCoverColors = savingDynamicCoverColors,
+                savingLyricsSupplementalText = savingLyricsSupplementalText,
                 problem = problem,
                 canRetry = canRetry,
                 overlay = overlay,
@@ -252,9 +311,11 @@ internal class SettingsViewModel
                         theme = theme,
                         autoSkipFailedPlayback = autoSkipFailedPlayback,
                         dynamicCoverColors = dynamicCoverColors,
+                        showLyricsSupplementalText = showLyricsSupplementalText,
                         savingTheme = savingTheme,
                         savingAutoSkipFailedPlayback = savingAutoSkipFailedPlayback,
                         savingDynamicCoverColors = savingDynamicCoverColors,
+                        savingLyricsSupplementalText = savingLyricsSupplementalText,
                     ),
             )
 

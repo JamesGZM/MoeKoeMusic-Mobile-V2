@@ -139,6 +139,27 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun lyricsSupplementalTextForwardsItsOwnToggleAction() {
+        var enabled: Boolean? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(),
+                        onAction = { action ->
+                            if (action is SettingsAction.SetShowLyricsSupplementalText) enabled = action.enabled
+                        },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("翻译与音译").performClick()
+
+        assertEquals(false, enabled)
+    }
+
+    @Test
     fun savingDynamicCoverColorsDisablesItsRow() {
         composeRule.setContent {
             MoeKoeTheme {
@@ -189,6 +210,33 @@ class SettingsScreenTest {
         }
 
         composeRule.onNodeWithText("播放失败时自动跳过").assertIsNotEnabled()
+    }
+
+    @Test
+    fun savingLyricsSupplementalTextDisablesItsRow() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                showLyricsSupplementalText = true,
+                                savingLyricsSupplementalText = false,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        showLyricsSupplementalText = true,
+                                        savingLyricsSupplementalText = false,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("翻译与音译").assertIsNotEnabled()
     }
 
     private fun setSettingsContent(theme: SettingsThemeUi) {

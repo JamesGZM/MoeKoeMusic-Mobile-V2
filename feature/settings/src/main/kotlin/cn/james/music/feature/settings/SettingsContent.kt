@@ -97,6 +97,7 @@ private fun SettingsRow(
                         SettingsRowId.AmoledMode -> onAction(SettingsAction.OpenTheme)
                         SettingsRowId.SkipFailed -> onAction(SettingsAction.SetAutoSkipFailedPlayback(enabled))
                         SettingsRowId.DynamicColor -> onAction(SettingsAction.SetDynamicCoverColors(enabled))
+                        SettingsRowId.Translation -> onAction(SettingsAction.SetShowLyricsSupplementalText(enabled))
                         else -> Unit
                     }
                 },

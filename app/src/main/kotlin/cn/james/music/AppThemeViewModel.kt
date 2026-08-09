@@ -38,6 +38,15 @@ internal class AppThemeViewModel
                     initialValue = true,
                 )
 
+        val showLyricsSupplementalText: StateFlow<Boolean> =
+            repository.settings
+                .map { snapshot -> snapshot.settings.showLyricsSupplementalText }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = true,
+                )
+
         private var updateJob: Job? = null
 
         fun updateTheme(themeMode: ThemeMode) {

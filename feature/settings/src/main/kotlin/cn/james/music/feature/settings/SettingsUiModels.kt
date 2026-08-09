@@ -86,9 +86,11 @@ internal data class SettingsUiState(
     val theme: SettingsThemeUi = SettingsThemeUi.System,
     val autoSkipFailedPlayback: Boolean = true,
     val dynamicCoverColors: Boolean = true,
+    val showLyricsSupplementalText: Boolean = true,
     val savingTheme: SettingsThemeUi? = null,
     val savingAutoSkipFailedPlayback: Boolean? = null,
     val savingDynamicCoverColors: Boolean? = null,
+    val savingLyricsSupplementalText: Boolean? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
@@ -114,6 +116,10 @@ internal sealed interface SettingsAction {
         val enabled: Boolean,
     ) : SettingsAction
 
+    data class SetShowLyricsSupplementalText(
+        val enabled: Boolean,
+    ) : SettingsAction
+
     data object DismissOverlay : SettingsAction
 
     data object Retry : SettingsAction
@@ -125,9 +131,11 @@ internal fun settingsGroups(
     theme: SettingsThemeUi,
     autoSkipFailedPlayback: Boolean,
     dynamicCoverColors: Boolean = true,
+    showLyricsSupplementalText: Boolean = true,
     savingTheme: SettingsThemeUi? = null,
     savingAutoSkipFailedPlayback: Boolean? = null,
     savingDynamicCoverColors: Boolean? = null,
+    savingLyricsSupplementalText: Boolean? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -162,7 +170,11 @@ internal fun settingsGroups(
             rows =
                 listOf(
                     SettingsRowUi.Unavailable(SettingsRowId.LyricsDisplay),
-                    SettingsRowUi.Unavailable(SettingsRowId.Translation),
+                    SettingsRowUi.Toggle(
+                        id = SettingsRowId.Translation,
+                        checked = showLyricsSupplementalText,
+                        loading = savingLyricsSupplementalText != null,
+                    ),
                     SettingsRowUi.Unavailable(SettingsRowId.LyricsFontSize),
                 ),
         ),

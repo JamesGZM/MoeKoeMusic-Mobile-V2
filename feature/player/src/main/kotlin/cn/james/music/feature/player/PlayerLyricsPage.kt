@@ -47,6 +47,7 @@ internal fun PlayerLyricsPage(
     progress: State<PlayerProgressUiState>,
     item: PlayerItemUiModel,
     lyricsState: PlayerLyricsUiState,
+    showSupplementalText: Boolean,
     lyricsProgress: State<PlayerLyricsProgressUiState>,
     activePage: Int,
     onTogglePlayback: () -> Unit,
@@ -65,6 +66,7 @@ internal fun PlayerLyricsPage(
             LyricsViewport(
                 state = lyricsState,
                 progress = lyricsProgress,
+                showSupplementalText = showSupplementalText,
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -128,6 +130,7 @@ internal fun PlayerLyricsPage(
 private fun LyricsViewport(
     state: PlayerLyricsUiState,
     progress: State<PlayerLyricsProgressUiState>,
+    showSupplementalText: Boolean,
     onRetry: () -> Unit,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -168,6 +171,7 @@ private fun LyricsViewport(
                 LyricsContent(
                     state = state,
                     progress = progress,
+                    showSupplementalText = showSupplementalText,
                     onLyricClick = onLyricClick,
                     modifier = Modifier.offset(y = lyricsContentOffset(state)),
                 )
@@ -256,6 +260,7 @@ private fun LyricsMessageState(
 private fun LyricsContent(
     state: PlayerLyricsUiState.Content,
     progress: State<PlayerLyricsProgressUiState>,
+    showSupplementalText: Boolean,
     onLyricClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -302,7 +307,7 @@ private fun LyricsContent(
                     fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
                     textAlign = TextAlign.Center,
                 )
-                line.secondary?.let { secondary ->
+                line.secondaryForDisplay(showSupplementalText)?.let { secondary ->
                     Text(
                         text = secondary,
                         modifier = Modifier.padding(top = textSizes.secondaryTopPadding),

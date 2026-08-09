@@ -13,6 +13,7 @@ data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
     val autoSkipFailedPlayback: Boolean = true,
     val dynamicCoverColors: Boolean = true,
+    val showLyricsSupplementalText: Boolean = true,
 )
 
 sealed interface AppSettingsProblem {
@@ -42,4 +43,6 @@ interface AppSettingsRepository {
     suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult
 
     suspend fun setDynamicCoverColors(enabled: Boolean): AppSettingsUpdateResult
+
+    suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult
 }

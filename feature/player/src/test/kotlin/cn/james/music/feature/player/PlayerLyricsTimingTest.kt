@@ -41,4 +41,13 @@ class PlayerLyricsTimingTest {
         assertEquals(false, coordinator.onDisposed())
         assertEquals(null, coordinator.onDisposed())
     }
+
+    @Test
+    fun supplementalTextVisibilityOnlyChangesTheRenderedSecondaryText() {
+        val line = PlayerLyricLineUi(original = "原文", secondary = "translation")
+
+        assertEquals("translation", line.secondaryForDisplay(showSupplementalText = true))
+        assertEquals(null, line.secondaryForDisplay(showSupplementalText = false))
+        assertEquals("translation", line.secondary)
+    }
 }
