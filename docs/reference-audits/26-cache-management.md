@@ -91,11 +91,11 @@ PC 与旧 Mobile 均没有此功能可迁移。固定 `../MoeKoeMusic@52c9833afe
 
 1. **数据库与 data 失效边界**：已完成（034）。两 DAO 增加无参数 `deleteAll`，`RegenerableContentCache` 通过同一 Room transaction 清除两表，并在 transaction 成功后推进 generation；Home/Lyrics 在写入前持有同一 generation，迟到 Home 返回 `Superseded`、迟到 Lyrics 只返回调用者且不写盘。JVM 覆盖白名单 scope、串行、Room failure、取消和迟到写入；DAO AndroidTest 增加 all-key 删除断言（本切片只编译，未运行设备）。清除本身没有调用 Home/Lyrics 网络 API。
 2. **typed maintenance port + Coil composition**：已完成（035）。`:core:model` 公开纯 `CacheMaintenanceRepository`、结果和 scope，以及供 `:app` 实现的纯 `ImageCacheClearer` 端口；`:app` 的 `CoilImageCacheClearer` 在可注入的 `Dispatchers.IO` 上只从 `SingletonImageLoader.get(applicationContext)` 取得当前 singleton，并依序调用其 memory / disk clear，不 reset、不新建 loader、不删除目录。singleton 获取的普通失败会如实报告 memory / disk 均未清除；`CancellationException` 原样传播。`:data` 的 `AndroidCacheMaintenanceRepository` 单飞组合 Room 白名单 clear 与 image port；除 `CancellationException` 外两侧均尝试，按已完成与失败 scope 返回 `Cleared` / `PartiallyCleared` / `FailedBeforeAnyClear`。JVM 覆盖全成功、Room/image 各种部分失败、全失败、同飞、取消、singleton 获取失败和同一 Coil operations 实例的 memory→disk 顺序；不会产生容量或持久化清除历史。
-3. **Settings 真实闭环**：静态 `ClearCache` 行改为确认 action，独立 saving/retry；JVM 覆盖重复点击单飞、partial/retry、dismiss、其他设置写入不互相取消；Compose 覆盖确认/禁用/错误语义与取消。
+3. **Settings 真实闭环**：036 已完成编码前契约。`ClearCache` 是不展示容量或历史值、保留 Chevron 的 Action；以同一 Settings 页面与约 32% 黑色遮罩呈现 `MoeAlertDialog` 危险操作。正文只列首页、歌词、图片和重新下载后果，并明确排除本地音乐、账号、播放记录。提交前 Back/遮罩可关闭，提交中两个按钮禁用、主按钮加载且不允许关闭；成功关闭 Dialog 并显示无 action 的成功 Snackbar，Partial/Failed 关闭 Dialog 并显示带 Retry 的错误 Snackbar，取消不显示普通失败。清理与 CacheLimit 不共用动态区域：前者有独立局部 region，后者继续 Deferred / Unavailable。下一代码切片接入独立 saving/retry；JVM 覆盖重复点击单飞、partial/retry、dismiss、其他设置写入不互相取消；Compose 覆盖确认/禁用/错误语义与取消。
 4. **视觉与门禁**：补确认/保存/部分失败设计 contract、截图和局部 fidelity；不改 CacheLimit 行，也不放宽阈值或遮罩。最后运行受影响 core/data/app/settings 的 unit/compile/lint、contracts/fidelity/impact/golden、architecture/skill/agent governance 与 diff check。
 
 必测竞态：Home refresh A 在 clear 前发起、clear 后 A 返回不得回写；lyrics fetch A 同理；清除时当前歌词仍显示、离开后下一次请求不读旧 disk；Coil disk 失败但 Room 成功的 Partial 和幂等 retry；取消前/后各 scope；播放队列、本地音乐、会话、DataStore 与 Room 非白名单表均保持不变。
 
 ## 未验证项
 
-本审计未创建 UI/contract、未运行 Gradle、模拟器、ADB、真机或真实服务；Coil 默认 disk 目录在目标设备上的实际大小、系统低空间回收、图片 request 与 clear 同时发生的厂家文件系统表现，均留给实现后的指定真机验收。当前唯一实现前设计工作是把“确认清理缓存/进行中/部分失败”的状态写入 Settings contract；不存在需要用户重新决定的产品或依赖阻塞。
+036 已建立 Settings 确认/进行中/成功/Partial/Failed 的编码前契约，但没有创建 Compose、测试、截图或 golden。本审计与契约未运行模拟器、ADB、真机或真实服务；Coil 默认 disk 目录在目标设备上的实际大小、系统低空间回收、图片 request 与 clear 同时发生的厂家文件系统表现，均留给实现后的指定真机验收。下一切片必须在编码后补 Dialog 与行为测试、截图、fidelity 和完整门禁；不存在需要用户重新决定的产品或依赖阻塞。
