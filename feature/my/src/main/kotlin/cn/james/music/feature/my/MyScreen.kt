@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -19,6 +16,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogEvent
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogIcon
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogUiModel
+import cn.james.music.core.designsystem.component.overlay.MoeDialogActionsUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,13 +102,23 @@ internal fun MyScreen(
 
     if (state.showLogoutConfirmation) {
         MoeAlertDialog(
-            title = stringResource(R.string.my_logout_title),
-            message = stringResource(R.string.my_logout_message),
-            confirmLabel = stringResource(R.string.my_logout_confirm),
-            dismissLabel = stringResource(R.string.my_cancel),
-            onConfirm = { onAction(MyAction.ConfirmLogout) },
-            onDismissRequest = { onAction(MyAction.DismissLogout) },
-            icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+            model =
+                MoeAlertDialogUiModel(
+                    title = stringResource(R.string.my_logout_title),
+                    message = stringResource(R.string.my_logout_message),
+                    icon = MoeAlertDialogIcon.Account,
+                    actions =
+                        MoeDialogActionsUiModel(
+                            confirmLabel = stringResource(R.string.my_logout_confirm),
+                            dismissLabel = stringResource(R.string.my_cancel),
+                        ),
+                ),
+            onEvent = { event ->
+                when (event) {
+                    MoeAlertDialogEvent.Confirm -> onAction(MyAction.ConfirmLogout)
+                    MoeAlertDialogEvent.Dismiss -> onAction(MyAction.DismissLogout)
+                }
+            },
         )
     }
 }

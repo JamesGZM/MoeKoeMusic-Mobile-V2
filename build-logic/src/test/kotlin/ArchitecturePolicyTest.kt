@@ -517,6 +517,139 @@ class ArchitecturePolicyTest {
     }
 
     @Test
+    fun `MoeSnackbar 和 MoeAlertDialog 只接受数据模型与 typed event`() {
+        val root = createTempDirectory("moekoe-feedback-components-").toFile()
+        val snackbarOwner =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSnackbar.kt",
+                "fun MoeSnackbar(model: Any, onEvent: (Any) -> Unit, modifier: Any) = Unit",
+            )
+        val dialogOwner =
+            writeSource(
+                root,
+                "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/overlay/MoeDialogs.kt",
+                "fun MoeAlertDialog(model: Any, onEvent: (Any) -> Unit, modifier: Any) = Unit\n" +
+                    "fun MoeDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit) = Unit",
+            )
+        val consumer =
+            writeSource(
+                root,
+                "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeScreen.kt",
+                "fun Screen() { MoeSnackbar(model = snackbar, onEvent = {}, modifier = modifier); " +
+                    "MoeAlertDialog(model = alert, onEvent = {}) }",
+            )
+        val specs =
+            listOf(
+                DataDrivenUiComponentSpec("MoeSnackbar", snackbarOwner.relativeTo(root).invariantSeparatorsPath),
+                DataDrivenUiComponentSpec("MoeAlertDialog", dialogOwner.relativeTo(root).invariantSeparatorsPath),
+            )
+
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs).isEmpty())
+
+        consumer.writeText("fun Screen() { MoeSnackbar(snackbar, onEvent = {}) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs)
+                .any { it.contains("命名参数") },
+        )
+
+        consumer.writeText("fun Screen() { MoeAlertDialog(title = title, message = message, onConfirm = {}) }")
+        val legacyViolations =
+            ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs)
+        assertTrue(legacyViolations.any { it.contains("只允许") })
+        assertTrue(legacyViolations.any { it.contains("model") })
+        assertTrue(legacyViolations.any { it.contains("onEvent") })
+
+        consumer.writeText("fun Screen() { MoeSnackbar(model = snackbar) }")
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs)
+                .any { it.contains("onEvent") },
+        )
+
+        snackbarOwner.writeText(
+            "fun MoeSnackbar(model: Any, onEvent: (Any) -> Unit, modifier: Any, icon: @Composable () -> Unit) = Unit",
+        )
+        assertTrue(
+            ArchitecturePolicy
+                .validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs)
+                .any { it.contains("声明只允许") },
+        )
+
+        snackbarOwner.writeText("fun MoeSnackbar(model: Any, onEvent: (Any) -> Unit, modifier: Any) = Unit")
+        consumer.writeText("fun Screen() { MoeDialog(onDismissRequest = {}, content = {}) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(snackbarOwner, dialogOwner, consumer), specs).isEmpty())
+    }
+
+    @Test
+    fun `Snackbar Alert 模型要求 Immutable 且拒绝视觉回调与 raw boolean 状态`() {
+        val root = createTempDirectory("moekoe-feedback-models-").toFile()
+        val snackbarPath =
+            "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSnackbarModels.kt"
+        val dialogPath =
+            "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/overlay/MoeDialogModels.kt"
+        val snackbar =
+            writeSource(
+                root,
+                snackbarPath,
+                "@Immutable\nenum class MoeSnackbarTone { Info }\n" +
+                    "@Immutable\nenum class MoeSnackbarIcon { ToneDefault }\n" +
+                    "@Immutable\nenum class MoeSnackbarActionId { Retry }\n" +
+                    "@Immutable\ndata class MoeSnackbarActionUiModel(val id: MoeSnackbarActionId)\n" +
+                    "@Immutable\ndata class MoeSnackbarUiModel(val message: String)\n" +
+                    "sealed interface MoeSnackbarEvent",
+            )
+        val dialog =
+            writeSource(
+                root,
+                dialogPath,
+                "@Immutable\nenum class MoeDialogDismissPolicy { Locked }\n" +
+                    "@Immutable\nenum class MoeAlertDialogIcon { None }\n" +
+                    "@Immutable\nenum class MoeAlertDialogTone { Standard }\n" +
+                    "@Immutable\nenum class MoeDialogConfirmState { Enabled }\n" +
+                    "@Immutable\ndata class MoeDialogActionsUiModel(val confirmLabel: String)\n" +
+                    "@Immutable\ndata class MoeAlertDialogUiModel(val title: String)\n" +
+                    "sealed interface MoeAlertDialogEvent",
+            )
+        val sources = mapOf(snackbarPath to snackbar, dialogPath to dialog)
+
+        assertTrue(ArchitecturePolicy.validateMoeFeedbackModelBoundaries(sources).isEmpty())
+
+        snackbar.writeText(
+            "@Immutable\nenum class MoeSnackbarTone { Info }\n" +
+                "@Immutable\nenum class MoeSnackbarIcon { ToneDefault }\n" +
+                "@Immutable\nenum class MoeSnackbarActionId { Retry }\n" +
+                "@Immutable\ndata class MoeSnackbarActionUiModel(val callback: () -> Unit)\n" +
+                "data class MoeSnackbarUiModel(" +
+                "val padding: Dp, val icon: ImageVector, val slot: @Composable () -> Unit, val loading: Boolean)\n" +
+                "interface MoeSnackbarEvent",
+        )
+        dialog.writeText(
+            "@Immutable\nenum class MoeDialogDismissPolicy { Locked }\n" +
+                "@Immutable\nenum class MoeAlertDialogIcon { None }\n" +
+                "@Immutable\nenum class MoeAlertDialogTone { Standard }\n" +
+                "@Immutable\nenum class MoeDialogConfirmState { Enabled }\n" +
+                "@Immutable\ndata class MoeDialogActionsUiModel(" +
+                "val loading: Boolean, val destructive: Boolean, val dismissOnBackPress: Boolean, val dismissOnClickOutside: Boolean)\n" +
+                "@Immutable\ndata class MoeAlertDialogUiModel(val tint: Color)\n" +
+                "interface MoeAlertDialogEvent",
+        )
+        val violations = ArchitecturePolicy.validateMoeFeedbackModelBoundaries(sources)
+        assertTrue(violations.any { it.contains("MoeSnackbarUiModel 必须紧邻 @Immutable") })
+        assertTrue(violations.any { it.contains("Dp") })
+        assertTrue(violations.any { it.contains("ImageVector") })
+        assertTrue(violations.any { it.contains("callback 或 function type") })
+        assertTrue(violations.any { it.contains("loading") })
+        assertTrue(violations.any { it.contains("destructive") })
+        assertTrue(violations.any { it.contains("dismissOnBackPress") })
+        assertTrue(violations.any { it.contains("dismissOnClickOutside") })
+        assertTrue(violations.any { it.contains("Color") })
+        assertTrue(violations.any { it.contains("typed event MoeSnackbarEvent") })
+        assertTrue(violations.any { it.contains("typed event MoeAlertDialogEvent") })
+    }
+
+    @Test
     fun `非歌曲行 MoeMediaBadge 不受冻结规则误伤`() {
         val root = createTempDirectory("moekoe-non-song-badge-").toFile()
         val path = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchArtistHero.kt"

@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.overlay.MoeDialog
 import cn.james.music.core.designsystem.component.overlay.MoeDialogActions
+import cn.james.music.core.designsystem.component.overlay.MoeDialogActionsUiModel
+import cn.james.music.core.designsystem.component.overlay.MoeDialogConfirmState
+import cn.james.music.core.designsystem.component.overlay.MoeDialogDismissPolicy
 import cn.james.music.core.designsystem.component.overlay.MoeDialogSize
 
 @Composable
@@ -55,8 +58,7 @@ internal fun LoginRiskDialog(
             ),
         onDismissRequest = { if (!state.isBusy) onCancel() },
         size = if (risk is PasswordRiskUiState.Sms) MoeDialogSize.Input else MoeDialogSize.Confirm,
-        dismissOnBackPress = !state.isBusy,
-        dismissOnClickOutside = false,
+        dismissPolicy = if (state.isBusy) MoeDialogDismissPolicy.Locked else MoeDialogDismissPolicy.BackOnly,
     ) {
         when (risk) {
             is PasswordRiskUiState.Required ->
@@ -211,12 +213,19 @@ private fun RiskDialogActions(
     onCancel: () -> Unit,
 ) {
     MoeDialogActions(
-        confirmLabel = primaryLabel,
-        dismissLabel = stringResource(R.string.login_risk_cancel_short),
+        model =
+            MoeDialogActionsUiModel(
+                confirmLabel = primaryLabel,
+                dismissLabel = stringResource(R.string.login_risk_cancel_short),
+                confirmState =
+                    when {
+                        busy -> MoeDialogConfirmState.Loading
+                        primaryEnabled -> MoeDialogConfirmState.Enabled
+                        else -> MoeDialogConfirmState.Disabled
+                    },
+            ),
         onConfirm = onPrimary,
         onDismiss = onCancel,
-        confirmEnabled = primaryEnabled,
-        loading = busy,
     )
 }
 

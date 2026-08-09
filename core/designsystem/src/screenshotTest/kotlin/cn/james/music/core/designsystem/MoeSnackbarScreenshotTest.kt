@@ -6,17 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarActionId
+import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
+import cn.james.music.core.designsystem.component.MoeSnackbarIcon
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -29,26 +28,42 @@ fun MoeSnackbarScreenshot() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MoeSnackbar(
-                message = "签到成功，已获得 3 小时 VIP",
-                tone = MoeSnackbarTone.Success,
-                icon = Icons.Outlined.CheckCircle,
+                model =
+                    MoeSnackbarUiModel(
+                        message = "签到成功，已获得 3 小时 VIP",
+                        tone = MoeSnackbarTone.Success,
+                        icon = MoeSnackbarIcon.Confirmation,
+                    ),
+                onEvent = {},
             )
             MoeSnackbar(
-                message = "已从歌单移除",
-                tone = MoeSnackbarTone.Info,
-                icon = Icons.Outlined.Delete,
-                actionLabel = "撤销",
+                model =
+                    MoeSnackbarUiModel(
+                        message = "已从歌单移除",
+                        tone = MoeSnackbarTone.Info,
+                        icon = MoeSnackbarIcon.Removal,
+                        action = MoeSnackbarActionUiModel(MoeSnackbarActionId.Undo, "撤销"),
+                    ),
+                onEvent = {},
             )
             MoeSnackbar(
-                message = "网络异常，请稍后重试",
-                tone = MoeSnackbarTone.Error,
-                icon = Icons.Outlined.Warning,
-                actionLabel = "重试",
+                model =
+                    MoeSnackbarUiModel(
+                        message = "网络异常，请稍后重试",
+                        tone = MoeSnackbarTone.Error,
+                        icon = MoeSnackbarIcon.Warning,
+                        action = MoeSnackbarActionUiModel(MoeSnackbarActionId.Retry, "重试"),
+                    ),
+                onEvent = {},
             )
             MoeSnackbar(
-                message = "今天已经领取过了",
-                tone = MoeSnackbarTone.Warning,
-                icon = Icons.Outlined.Info,
+                model =
+                    MoeSnackbarUiModel(
+                        message = "今天已经领取过了",
+                        tone = MoeSnackbarTone.Warning,
+                        icon = MoeSnackbarIcon.Information,
+                    ),
+                onEvent = {},
             )
         }
     }

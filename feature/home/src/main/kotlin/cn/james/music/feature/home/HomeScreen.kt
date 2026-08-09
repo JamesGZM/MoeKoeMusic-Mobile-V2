@@ -16,7 +16,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarActionId
+import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 
 @Composable
 internal fun HomeScreen(
@@ -50,16 +53,23 @@ internal fun HomeScreen(
         }
         state.refreshProblem?.let { problem ->
             MoeSnackbar(
-                message =
-                    if (problem == HomeProblemUi.Offline) {
-                        stringResource(R.string.home_refresh_offline)
-                    } else {
-                        homeProblemMessage(problem)
-                    },
+                model =
+                    MoeSnackbarUiModel(
+                        message =
+                            if (problem == HomeProblemUi.Offline) {
+                                stringResource(R.string.home_refresh_offline)
+                            } else {
+                                homeProblemMessage(problem)
+                            },
+                        tone = MoeSnackbarTone.Warning,
+                        action =
+                            MoeSnackbarActionUiModel(
+                                id = MoeSnackbarActionId.Dismiss,
+                                label = stringResource(R.string.home_acknowledge),
+                            ),
+                    ),
+                onEvent = { onAction(HomeAction.DismissProblem) },
                 modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                tone = MoeSnackbarTone.Warning,
-                actionLabel = stringResource(R.string.home_acknowledge),
-                onAction = { onAction(HomeAction.DismissProblem) },
             )
         }
     }

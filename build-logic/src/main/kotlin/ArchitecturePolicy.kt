@@ -42,6 +42,7 @@ internal object ArchitecturePolicy {
             addAll(validateFeatureEntryModels(rootDir, sourceFiles))
             addAll(validateImmutableFeatureModels(rootDir, sourceFiles))
             addAll(validateMoeMiniPlayerBoundary(sources[MOE_MINI_PLAYER_OWNER]))
+            addAll(validateMoeFeedbackModelBoundaries(sources))
             addAll(validateDataDrivenUiComponents(rootDir, sourceFiles, DATA_DRIVEN_UI_COMPONENTS))
         }
     }
@@ -57,31 +58,47 @@ internal object ArchitecturePolicy {
         components: Iterable<DataDrivenUiComponentSpec>,
     ): List<String> {
         val specs = components.toList()
+        val files = sourceFiles.toList()
         val duplicateNames = specs.groupBy(DataDrivenUiComponentSpec::name).filterValues { it.size > 1 }.keys
         require(duplicateNames.isEmpty()) { "数据驱动组件登记重复：${duplicateNames.joinToString()}" }
         return specs.flatMap { spec ->
-            sourceFiles.flatMap { file ->
-                val relative = file.relativeTo(rootDir).invariantSeparatorsPath
-                if (relative == spec.ownerSource) {
-                    emptyList()
-                } else {
-                    findFunctionCalls(file.readText(), spec.name).mapNotNull { call ->
-                        val argumentNames = namedArgumentNames(call.arguments)
-                        when {
-                            call.hasPositionalArguments -> {
-                                "$relative: ${spec.name} 只能使用命名参数 model、onEvent、modifier"
-                            }
+            buildList {
+                val owner = files.firstOrNull { it.relativeTo(rootDir).invariantSeparatorsPath == spec.ownerSource }
+                val ownerArguments = owner?.let { functionDeclarationArguments(it.readText(), spec.name) }
+                when {
+                    owner == null -> {
+                        add("${spec.ownerSource}: ${spec.name} 所有者文件不存在")
+                    }
 
-                            argumentNames - DATA_DRIVEN_COMPONENT_ARGUMENTS != emptySet<String>() -> {
-                                "$relative: ${spec.name} 只允许 model、onEvent、modifier，实际为 ${argumentNames.joinToString()}"
-                            }
+                    ownerArguments == null -> {
+                        add("${spec.ownerSource}: 缺少 ${spec.name} 声明")
+                    }
 
-                            DATA_DRIVEN_REQUIRED_ARGUMENTS - argumentNames != emptySet<String>() -> {
-                                "$relative: ${spec.name} 必须具名传入 ${DATA_DRIVEN_REQUIRED_ARGUMENTS.joinToString()}"
-                            }
+                    functionParameterNames(ownerArguments) != DATA_DRIVEN_COMPONENT_ARGUMENTS -> {
+                        add("${spec.ownerSource}: ${spec.name} 声明只允许 model、onEvent、modifier")
+                    }
+                }
+                files.forEach { file ->
+                    val relative = file.relativeTo(rootDir).invariantSeparatorsPath
+                    if (relative != spec.ownerSource) {
+                        findFunctionCalls(file.readText(), spec.name).mapNotNullTo(this) { call ->
+                            val argumentNames = namedArgumentNames(call.arguments)
+                            when {
+                                call.hasPositionalArguments -> {
+                                    "$relative: ${spec.name} 只能使用命名参数 model、onEvent、modifier"
+                                }
 
-                            else -> {
-                                null
+                                argumentNames - DATA_DRIVEN_COMPONENT_ARGUMENTS != emptySet<String>() -> {
+                                    "$relative: ${spec.name} 只允许 model、onEvent、modifier，实际为 ${argumentNames.joinToString()}"
+                                }
+
+                                DATA_DRIVEN_REQUIRED_ARGUMENTS - argumentNames != emptySet<String>() -> {
+                                    "$relative: ${spec.name} 必须具名传入 ${DATA_DRIVEN_REQUIRED_ARGUMENTS.joinToString()}"
+                                }
+
+                                else -> {
+                                    null
+                                }
                             }
                         }
                     }
@@ -304,6 +321,46 @@ internal object ArchitecturePolicy {
         }
     }
 
+    internal fun validateMoeFeedbackModelBoundaries(sources: Map<String, File>): List<String> =
+        FEEDBACK_MODEL_DECLARATIONS.flatMap { (relative, declarations) ->
+            val file =
+                sources[relative]
+                    ?: return@flatMap listOf("$relative: feedback UI model 文件不存在")
+            val code = maskNonCode(file.readText())
+            buildList {
+                declarations.forEach { name ->
+                    val declaration = Regex("(?:data\\s+class|enum\\s+class)\\s+${Regex.escape(name)}\\b")
+                    if (!declaration.containsMatchIn(code)) {
+                        add("$relative: 缺少 $name")
+                    } else {
+                        val dataClassDeclaration = Regex("data\\s+class\\s+${Regex.escape(name)}\\b")
+                        val constructor = namedConstructor(code, dataClassDeclaration)
+                        if (!hasImmediateImmutableUiAnnotation(code, name)) {
+                            add("$relative: $name 必须紧邻 @Immutable")
+                        }
+                        if (constructor != null) {
+                            FEEDBACK_MODEL_FORBIDDEN_TYPES.forEach { type ->
+                                if (Regex("\\b${Regex.escape(type)}\\b").containsMatchIn(constructor)) {
+                                    add("$relative: $name 不得持有 $type")
+                                }
+                            }
+                            if (FEEDBACK_MODEL_FORBIDDEN_FUNCTION_TYPE.containsMatchIn(constructor)) {
+                                add("$relative: $name 不得持有 callback 或 function type")
+                            }
+                            FEEDBACK_MODEL_RAW_BOOLEAN_STATE.findAll(constructor).forEach { state ->
+                                add("$relative: $name 必须类型化状态 ${state.groupValues[1]}")
+                            }
+                        }
+                    }
+                }
+                FEEDBACK_EVENT_DECLARATIONS[relative].orEmpty().forEach { eventName ->
+                    if (!Regex("sealed\\s+interface\\s+${Regex.escape(eventName)}\\b").containsMatchIn(code)) {
+                        add("$relative: 缺少 typed event $eventName")
+                    }
+                }
+            }
+        }
+
     private fun forbiddenUiConstructorTypes(
         relative: String,
         code: String,
@@ -346,6 +403,13 @@ internal object ArchitecturePolicy {
         declarationName: String,
     ): Boolean =
         Regex("@Immutable[\\t ]*\\r?\\n[\\t ]*(?:internal\\s+)?data\\s+class\\s+$declarationName\\b")
+            .containsMatchIn(code)
+
+    private fun hasImmediateImmutableUiAnnotation(
+        code: String,
+        declarationName: String,
+    ): Boolean =
+        Regex("@Immutable[\\t ]*\\r?\\n[\\t ]*(?:internal\\s+)?(?:data\\s+class|enum\\s+class)\\s+$declarationName\\b")
             .containsMatchIn(code)
 
     private fun uiModelMainConstructorProperties(
@@ -474,6 +538,21 @@ internal object ArchitecturePolicy {
         }
         return calls
     }
+
+    private fun functionDeclarationArguments(
+        source: String,
+        functionName: String,
+    ): String? {
+        val code = maskNonCode(source)
+        val declaration = Regex("\\bfun\\s+${Regex.escape(functionName)}\\s*\\(").find(code) ?: return null
+        val opening = code.indexOf('(', declaration.range.first)
+        return extractDelimited(code, opening, '(', ')')
+    }
+
+    private fun functionParameterNames(arguments: String): Set<String> =
+        splitTopLevelArguments(arguments)
+            .mapNotNull { argument -> PARAMETER_NAME.find(argument)?.groupValues?.get(1) }
+            .toSet()
 
     private fun namedArgumentNames(arguments: String): Set<String> =
         splitTopLevelArguments(arguments).mapNotNull { argument -> NAMED_ARGUMENT.find(argument)?.groupValues?.get(1) }.toSet()
@@ -620,6 +699,7 @@ internal object ArchitecturePolicy {
             "androidx.compose.material3.Switch",
         )
     private val NAMED_ARGUMENT = Regex("^\\s*([A-Za-z][A-Za-z0-9_]*)\\s*=")
+    private val PARAMETER_NAME = Regex("^\\s*([A-Za-z][A-Za-z0-9_]*)\\s*:")
     private val PREVIEW_PROPERTY = Regex("\\b(?:val|var)\\s+(preview[A-Za-z0-9_]*)\\b")
     private val SEARCH_PARALLEL_MAP = Regex("\\b(?:val|var)\\s+(songBadges|songArtwork)\\b")
     private val PLAYER_PRIMARY_CONSTRUCTOR = Regex("(?:(?:data|value)\\s+)?class\\s+[A-Za-z][A-Za-z0-9_]*\\s*\\(")
@@ -693,6 +773,56 @@ internal object ArchitecturePolicy {
     private val MINI_PLAYER_RENDERER_FORBIDDEN_PARAMETER =
         Regex("\\b(?:Modifier|BoxScope|Dp|Shape|Color|PaddingValues)\\b")
     private const val MINI_PLAYER_RENDERER_EXPECTED_PARAMETERS = "artworkKey:String?,contentDescription:String?"
+    private const val MOE_SNACKBAR_OWNER =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSnackbar.kt"
+    private const val MOE_SNACKBAR_MODELS =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSnackbarModels.kt"
+    private const val MOE_DIALOG_OWNER =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/overlay/MoeDialogs.kt"
+    private const val MOE_DIALOG_MODELS =
+        "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/overlay/MoeDialogModels.kt"
+    private val FEEDBACK_MODEL_DECLARATIONS =
+        mapOf(
+            MOE_SNACKBAR_MODELS to
+                setOf(
+                    "MoeSnackbarTone",
+                    "MoeSnackbarIcon",
+                    "MoeSnackbarActionId",
+                    "MoeSnackbarActionUiModel",
+                    "MoeSnackbarUiModel",
+                ),
+            MOE_DIALOG_MODELS to
+                setOf(
+                    "MoeDialogDismissPolicy",
+                    "MoeAlertDialogIcon",
+                    "MoeAlertDialogTone",
+                    "MoeDialogConfirmState",
+                    "MoeDialogActionsUiModel",
+                    "MoeAlertDialogUiModel",
+                ),
+        )
+    private val FEEDBACK_EVENT_DECLARATIONS =
+        mapOf(
+            MOE_SNACKBAR_MODELS to setOf("MoeSnackbarEvent"),
+            MOE_DIALOG_MODELS to setOf("MoeAlertDialogEvent"),
+        )
+    private val FEEDBACK_MODEL_FORBIDDEN_TYPES =
+        setOf(
+            "Dp",
+            "Shape",
+            "Color",
+            "ImageVector",
+            "Painter",
+            "TextStyle",
+            "PaddingValues",
+            "Modifier",
+        )
+    private val FEEDBACK_MODEL_FORBIDDEN_FUNCTION_TYPE =
+        Regex(
+            "(?:\\b(?:suspend\\s+)?[A-Za-z_][A-Za-z0-9_?.<>]*\\s*->|(?:\\bsuspend\\s+)?\\([^)]*\\)\\s*->|\\bFunction\\d*\\s*<|@Composable)",
+        )
+    private val FEEDBACK_MODEL_RAW_BOOLEAN_STATE =
+        Regex("\\bval\\s+(loading|destructive|dismissOnBackPress|dismissOnClickOutside)\\s*:\\s*Boolean\\b")
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")
     private const val SONG_ROW_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
@@ -771,6 +901,14 @@ internal object ArchitecturePolicy {
             DataDrivenUiComponentSpec(
                 name = "MoeMiniPlayer",
                 ownerSource = MOE_MINI_PLAYER_OWNER,
+            ),
+            DataDrivenUiComponentSpec(
+                name = "MoeSnackbar",
+                ownerSource = MOE_SNACKBAR_OWNER,
+            ),
+            DataDrivenUiComponentSpec(
+                name = "MoeAlertDialog",
+                ownerSource = MOE_DIALOG_OWNER,
             ),
         )
     private val DATA_DRIVEN_COMPONENT_ARGUMENTS = setOf("model", "onEvent", "modifier")

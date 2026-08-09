@@ -45,6 +45,10 @@ import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
 import cn.james.music.core.designsystem.component.navigation.MoeTopBarTitleEmphasis
 import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogEvent
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogTone
+import cn.james.music.core.designsystem.component.overlay.MoeAlertDialogUiModel
+import cn.james.music.core.designsystem.component.overlay.MoeDialogActionsUiModel
 
 @Composable
 internal fun LocalMusicScreen(
@@ -189,13 +193,23 @@ internal fun LocalMusicScreen(
 
     state.pendingDeleteSongId?.let { id ->
         MoeAlertDialog(
-            title = stringResource(R.string.local_music_delete_title),
-            message = stringResource(R.string.local_music_delete_message),
-            confirmLabel = stringResource(R.string.local_music_delete),
-            dismissLabel = stringResource(R.string.local_music_cancel),
-            onDismissRequest = { onAction(LocalMusicAction.DismissDeleteSong) },
-            onConfirm = { onAction(LocalMusicAction.ConfirmDeleteSong(id)) },
-            destructive = true,
+            model =
+                MoeAlertDialogUiModel(
+                    title = stringResource(R.string.local_music_delete_title),
+                    message = stringResource(R.string.local_music_delete_message),
+                    actions =
+                        MoeDialogActionsUiModel(
+                            confirmLabel = stringResource(R.string.local_music_delete),
+                            dismissLabel = stringResource(R.string.local_music_cancel),
+                            tone = MoeAlertDialogTone.Destructive,
+                        ),
+                ),
+            onEvent = { event ->
+                when (event) {
+                    MoeAlertDialogEvent.Confirm -> onAction(LocalMusicAction.ConfirmDeleteSong(id))
+                    MoeAlertDialogEvent.Dismiss -> onAction(LocalMusicAction.DismissDeleteSong)
+                }
+            },
         )
     }
 }

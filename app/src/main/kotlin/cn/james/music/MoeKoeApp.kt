@@ -34,7 +34,11 @@ import androidx.navigation.compose.rememberNavController
 import cn.james.music.core.designsystem.component.MoeMiniPlayerEvent
 import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
 import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarActionId
+import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
+import cn.james.music.core.designsystem.component.MoeSnackbarEvent
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 import cn.james.music.feature.discover.discoverGraph
 import cn.james.music.feature.home.HomeGraph
 import cn.james.music.feature.home.homeGraph
@@ -165,14 +169,35 @@ fun MoeKoeApp(
         snackbarHost = {
             notice?.let { currentNotice ->
                 MoeSnackbar(
-                    message = currentNotice.message,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    tone = MoeSnackbarTone.Error,
-                    actionLabel = if (currentNotice.canRetry) "重试" else null,
-                    onAction = {
-                        viewModel.dismissNotice(currentNotice.id)
-                        viewModel.retryPlayback()
+                    model =
+                        MoeSnackbarUiModel(
+                            message = currentNotice.message,
+                            tone = MoeSnackbarTone.Error,
+                            action =
+                                if (currentNotice.canRetry) {
+                                    MoeSnackbarActionUiModel(
+                                        id = MoeSnackbarActionId.Retry,
+                                        label = "重试",
+                                    )
+                                } else {
+                                    null
+                                },
+                        ),
+                    onEvent = { event ->
+                        when (event) {
+                            is MoeSnackbarEvent.Action ->
+                                when (event.id) {
+                                    MoeSnackbarActionId.Retry -> {
+                                        viewModel.dismissNotice(currentNotice.id)
+                                        viewModel.retryPlayback()
+                                    }
+                                    MoeSnackbarActionId.Dismiss,
+                                    MoeSnackbarActionId.Undo,
+                                    -> Unit
+                                }
+                        }
                     },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
         },

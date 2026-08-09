@@ -10,7 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSnackbar
+import cn.james.music.core.designsystem.component.MoeSnackbarActionId
+import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
+import cn.james.music.core.designsystem.component.MoeSnackbarEvent
 import cn.james.music.core.designsystem.component.MoeSnackbarTone
+import cn.james.music.core.designsystem.component.MoeSnackbarUiModel
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 
 @Composable
@@ -30,19 +34,38 @@ internal fun SettingsScreen(
         snackbarHost = {
             state.problem?.let { problem ->
                 MoeSnackbar(
-                    message =
-                        stringResource(
-                            when (problem) {
-                                SettingsProblemUi.Read -> R.string.settings_read_failed
-                                SettingsProblemUi.Write -> R.string.settings_write_failed
-                            },
+                    model =
+                        MoeSnackbarUiModel(
+                            message =
+                                stringResource(
+                                    when (problem) {
+                                        SettingsProblemUi.Read -> R.string.settings_read_failed
+                                        SettingsProblemUi.Write -> R.string.settings_write_failed
+                                    },
+                                ),
+                            tone = MoeSnackbarTone.Error,
+                            action =
+                                MoeSnackbarActionUiModel(
+                                    id = if (state.canRetry) MoeSnackbarActionId.Retry else MoeSnackbarActionId.Dismiss,
+                                    label =
+                                        if (state.canRetry) {
+                                            stringResource(R.string.settings_retry)
+                                        } else {
+                                            stringResource(R.string.settings_dismiss)
+                                        },
+                                ),
                         ),
-                    modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
-                    tone = MoeSnackbarTone.Error,
-                    actionLabel = if (state.canRetry) stringResource(R.string.settings_retry) else stringResource(R.string.settings_dismiss),
-                    onAction = {
-                        onAction(if (state.canRetry) SettingsAction.Retry else SettingsAction.DismissProblem)
+                    onEvent = { event ->
+                        when (event) {
+                            is MoeSnackbarEvent.Action ->
+                                when (event.id) {
+                                    MoeSnackbarActionId.Retry -> onAction(SettingsAction.Retry)
+                                    MoeSnackbarActionId.Dismiss -> onAction(SettingsAction.DismissProblem)
+                                    MoeSnackbarActionId.Undo -> Unit
+                                }
+                        }
                     },
+                    modifier = Modifier.padding(MoeKoeTheme.spacing.space16),
                 )
             }
         },

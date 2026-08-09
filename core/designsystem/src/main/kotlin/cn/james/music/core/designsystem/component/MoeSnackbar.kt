@@ -12,6 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Info as OutlinedInfo
+import androidx.compose.material.icons.outlined.Warning as OutlinedWarning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,13 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 
-enum class MoeSnackbarTone {
-    Success,
-    Info,
-    Error,
-    Warning,
-}
-
 @Immutable
 private data class MoeSnackbarColors(
     val accent: Color,
@@ -46,14 +43,11 @@ private data class MoeSnackbarColors(
 
 @Composable
 fun MoeSnackbar(
-    message: String,
+    model: MoeSnackbarUiModel,
+    onEvent: (MoeSnackbarEvent) -> Unit,
     modifier: Modifier = Modifier,
-    tone: MoeSnackbarTone = MoeSnackbarTone.Info,
-    icon: ImageVector = tone.icon,
-    actionLabel: String? = null,
-    onAction: () -> Unit = {},
 ) {
-    val colors = tone.colors()
+    val colors = model.tone.colors()
     Surface(
         modifier =
             modifier
@@ -76,35 +70,41 @@ fun MoeSnackbar(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = model.icon.imageVector(model.tone),
                     contentDescription = null,
                     tint = colors.accent,
                     modifier = Modifier.size(24.dp),
                 )
             }
             Text(
-                text = message,
+                text = model.message,
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
             )
-            actionLabel?.let { label ->
-                TextButton(onClick = onAction) {
-                    Text(label, color = colors.accent, fontWeight = FontWeight.SemiBold)
+            model.action?.let { action ->
+                TextButton(onClick = { onEvent(MoeSnackbarEvent.Action(action.id)) }) {
+                    Text(action.label, color = colors.accent, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
     }
 }
 
-private val MoeSnackbarTone.icon: ImageVector
-    get() =
-        when (this) {
-            MoeSnackbarTone.Success -> Icons.Default.Check
-            MoeSnackbarTone.Info -> Icons.Default.Info
-            MoeSnackbarTone.Error -> Icons.Default.Warning
-            MoeSnackbarTone.Warning -> Icons.Default.Info
-        }
+private fun MoeSnackbarIcon.imageVector(tone: MoeSnackbarTone): ImageVector =
+    when (this) {
+        MoeSnackbarIcon.ToneDefault ->
+            when (tone) {
+                MoeSnackbarTone.Success -> Icons.Default.Check
+                MoeSnackbarTone.Info -> Icons.Default.Info
+                MoeSnackbarTone.Error -> Icons.Default.Warning
+                MoeSnackbarTone.Warning -> Icons.Default.Info
+            }
+        MoeSnackbarIcon.Confirmation -> Icons.Outlined.CheckCircle
+        MoeSnackbarIcon.Removal -> Icons.Outlined.Delete
+        MoeSnackbarIcon.Warning -> Icons.Outlined.OutlinedWarning
+        MoeSnackbarIcon.Information -> Icons.Outlined.OutlinedInfo
+    }
 
 @Composable
 private fun MoeSnackbarTone.colors(): MoeSnackbarColors =

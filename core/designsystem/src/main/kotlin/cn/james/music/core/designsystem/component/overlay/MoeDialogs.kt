@@ -13,6 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -42,16 +46,15 @@ fun MoeDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     size: MoeDialogSize = MoeDialogSize.Confirm,
-    dismissOnBackPress: Boolean = true,
-    dismissOnClickOutside: Boolean = true,
+    dismissPolicy: MoeDialogDismissPolicy = MoeDialogDismissPolicy.BackAndOutside,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
         properties =
             DialogProperties(
-                dismissOnBackPress = dismissOnBackPress,
-                dismissOnClickOutside = dismissOnClickOutside,
+                dismissOnBackPress = dismissPolicy.dismissOnBackPress,
+                dismissOnClickOutside = dismissPolicy.dismissOnClickOutside,
                 usePlatformDefaultWidth = false,
             ),
     ) {
@@ -70,52 +73,31 @@ fun MoeDialog(
 
 @Composable
 fun MoeAlertDialog(
-    title: String,
-    message: String,
-    confirmLabel: String,
-    dismissLabel: String,
-    onConfirm: () -> Unit,
-    onDismissRequest: () -> Unit,
+    model: MoeAlertDialogUiModel,
+    onEvent: (MoeAlertDialogEvent) -> Unit,
     modifier: Modifier = Modifier,
-    icon: (@Composable () -> Unit)? = null,
-    confirmEnabled: Boolean = true,
-    loading: Boolean = false,
-    destructive: Boolean = false,
-    dismissOnBackPress: Boolean = !loading,
-    dismissOnClickOutside: Boolean = !loading,
 ) {
     MoeDialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { onEvent(MoeAlertDialogEvent.Dismiss) },
         modifier = modifier,
-        dismissOnBackPress = dismissOnBackPress,
-        dismissOnClickOutside = dismissOnClickOutside,
+        dismissPolicy = model.actions.confirmState.alertDismissPolicy,
     ) {
         MoeAlertDialogContent(
-            title = title,
-            message = message,
-            confirmLabel = confirmLabel,
-            dismissLabel = dismissLabel,
-            onConfirm = onConfirm,
-            onDismiss = onDismissRequest,
-            icon = icon,
-            confirmEnabled = confirmEnabled,
-            loading = loading,
-            destructive = destructive,
+            model = model,
+            onEvent = onEvent,
         )
     }
 }
 
 @Composable
 fun MoeDialogActions(
-    confirmLabel: String,
-    dismissLabel: String,
+    model: MoeDialogActionsUiModel,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmEnabled: Boolean = true,
-    loading: Boolean = false,
-    destructive: Boolean = false,
 ) {
+    val loading = model.confirmState == MoeDialogConfirmState.Loading
+    val confirmEnabled = model.confirmState == MoeDialogConfirmState.Enabled
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.space12),
@@ -125,16 +107,16 @@ fun MoeDialogActions(
             enabled = !loading,
             modifier = Modifier.weight(1f),
         ) {
-            DialogActionLabel(dismissLabel)
+            DialogActionLabel(model.dismissLabel)
         }
-        if (destructive) {
+        if (model.tone == MoeAlertDialogTone.Destructive) {
             MoeDestructiveButton(
                 onClick = onConfirm,
                 enabled = confirmEnabled,
                 loading = loading,
                 modifier = Modifier.weight(1f),
             ) {
-                DialogActionLabel(confirmLabel)
+                DialogActionLabel(model.confirmLabel)
             }
         } else {
             MoeButton(
@@ -143,7 +125,7 @@ fun MoeDialogActions(
                 loading = loading,
                 modifier = Modifier.weight(1f),
             ) {
-                DialogActionLabel(confirmLabel)
+                DialogActionLabel(model.confirmLabel)
             }
         }
     }
@@ -169,54 +151,46 @@ internal fun MoeDialogSurface(
 
 @Composable
 internal fun MoeAlertDialogContent(
-    title: String,
-    message: String,
-    confirmLabel: String,
-    dismissLabel: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    icon: (@Composable () -> Unit)? = null,
-    confirmEnabled: Boolean = true,
-    loading: Boolean = false,
-    destructive: Boolean = false,
+    model: MoeAlertDialogUiModel,
+    onEvent: (MoeAlertDialogEvent) -> Unit,
 ) {
-    icon?.let {
+    if (model.icon != MoeAlertDialogIcon.None) {
         Box(
             modifier = Modifier.fillMaxWidth().padding(bottom = MoeKoeTheme.spacing.space16),
             contentAlignment = Alignment.Center,
         ) {
             CompositionLocalProvider(
                 LocalContentColor provides
-                    if (destructive) {
+                    if (model.actions.tone == MoeAlertDialogTone.Destructive) {
                         MaterialTheme.colorScheme.error
                     } else {
                         MaterialTheme.colorScheme.primary
                     },
             ) {
-                it()
+                when (model.icon) {
+                    MoeAlertDialogIcon.None -> Unit
+                    MoeAlertDialogIcon.Account -> Icon(Icons.Default.AccountCircle, contentDescription = null)
+                    MoeAlertDialogIcon.Warning -> Icon(Icons.Outlined.Warning, contentDescription = null)
+                }
             }
         }
     }
     Text(
-        text = title,
+        text = model.title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
     )
     Text(
-        text = message,
+        text = model.message,
         modifier = Modifier.padding(top = MoeKoeTheme.spacing.space16),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodyMedium,
     )
     MoeDialogActions(
-        confirmLabel = confirmLabel,
-        dismissLabel = dismissLabel,
-        onConfirm = onConfirm,
-        onDismiss = onDismiss,
+        model = model.actions,
+        onConfirm = { onEvent(MoeAlertDialogEvent.Confirm) },
+        onDismiss = { onEvent(MoeAlertDialogEvent.Dismiss) },
         modifier = Modifier.padding(top = MoeKoeTheme.spacing.space24),
-        confirmEnabled = confirmEnabled,
-        loading = loading,
-        destructive = destructive,
     )
 }
 
@@ -230,6 +204,20 @@ private val MoeDialogSize.maximumWidth: Dp
         when (this) {
             MoeDialogSize.Confirm -> 304.dp
             MoeDialogSize.Input -> 320.dp
+        }
+
+private val MoeDialogDismissPolicy.dismissOnBackPress: Boolean
+    get() = this == MoeDialogDismissPolicy.BackAndOutside || this == MoeDialogDismissPolicy.BackOnly
+
+private val MoeDialogDismissPolicy.dismissOnClickOutside: Boolean
+    get() = this == MoeDialogDismissPolicy.BackAndOutside || this == MoeDialogDismissPolicy.OutsideOnly
+
+private val MoeDialogConfirmState.alertDismissPolicy: MoeDialogDismissPolicy
+    get() =
+        if (this == MoeDialogConfirmState.Loading) {
+            MoeDialogDismissPolicy.Locked
+        } else {
+            MoeDialogDismissPolicy.BackAndOutside
         }
 
 private const val MOE_DIALOG_DIM_AMOUNT = 0.32f
