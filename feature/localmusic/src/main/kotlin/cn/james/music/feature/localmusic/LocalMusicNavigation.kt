@@ -27,33 +27,63 @@ fun NavGraphBuilder.localMusicDestinations(
         val state by viewModel.state.collectAsStateWithLifecycle()
         LocalMusicScreen(
             state = state,
-            onBack = navController::popBackStack,
-            onImport = { navController.navigate(DeviceScanDestination) },
-            onPlay = viewModel::play,
-            onDelete = viewModel::delete,
-            onCancelImport = viewModel::cancelImport,
+            onAction = { action ->
+                when (action) {
+                    LocalMusicAction.Back -> navController.popBackStack()
+
+                    LocalMusicAction.OpenImporter -> navController.navigate(DeviceScanDestination)
+
+                    is LocalMusicAction.QueryChanged,
+                    is LocalMusicAction.SelectSort,
+                    is LocalMusicAction.PlaySong,
+                    is LocalMusicAction.RequestDeleteSong,
+                    is LocalMusicAction.ConfirmDeleteSong,
+                    LocalMusicAction.DismissDeleteSong,
+                    is LocalMusicAction.CancelImport,
+                    -> viewModel.onAction(action)
+                }
+            },
         )
     }
     composable<DeviceScanDestination> {
         val viewModel: LocalMusicViewModel = hiltViewModel(navController.getBackStackEntry(LocalMusicDestination))
         val state by viewModel.state.collectAsStateWithLifecycle()
-        LaunchedEffect(viewModel) { viewModel.openImporter(hasMediaPermission()) }
+        LaunchedEffect(viewModel) {
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasMediaPermission()))
+        }
         DisposableEffect(viewModel) {
-            onDispose(viewModel::cancelDeviceScan)
+            onDispose { viewModel.onDeviceImportAction(DeviceImportAction.Cancel) }
         }
         LocalMusicImportScreen(
             state = state.deviceImport,
-            onBack = {
-                viewModel.cancelDeviceScan()
-                navController.popBackStack()
-            },
-            onGrantPermission = { onRequestMediaPermission(viewModel::onPermissionResult) },
-            onRetry = viewModel::retryDeviceScan,
-            onToggleCandidate = viewModel::toggleCandidate,
-            onToggleAll = viewModel::toggleAllCandidates,
-            onImport = {
-                onImportCandidates(it)
-                navController.popBackStack()
+            onAction = { action ->
+                when (action) {
+                    DeviceImportAction.Back -> {
+                        viewModel.onDeviceImportAction(action)
+                        navController.popBackStack()
+                    }
+
+                    DeviceImportAction.RequestPermission -> {
+                        onRequestMediaPermission { granted ->
+                            viewModel.onDeviceImportAction(DeviceImportAction.PermissionResult(granted))
+                        }
+                    }
+
+                    is DeviceImportAction.Import -> {
+                        onImportCandidates(action.ids)
+                        navController.popBackStack()
+                    }
+
+                    is DeviceImportAction.Open,
+                    is DeviceImportAction.PermissionResult,
+                    DeviceImportAction.Retry,
+                    is DeviceImportAction.ToggleCandidate,
+                    DeviceImportAction.ToggleAll,
+                    DeviceImportAction.Cancel,
+                    -> {
+                        viewModel.onDeviceImportAction(action)
+                    }
+                }
             },
         )
     }

@@ -38,35 +38,30 @@ import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
-import cn.james.music.core.model.local.DeviceAudioCandidate
 
 @Composable
 internal fun LocalMusicImportScreen(
     state: DeviceImportUiState,
-    onBack: () -> Unit,
-    onGrantPermission: () -> Unit,
-    onRetry: () -> Unit,
-    onToggleCandidate: (Long) -> Unit,
-    onToggleAll: () -> Unit,
-    onImport: (List<Long>) -> Unit,
+    onAction: (DeviceImportAction) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         MoeStandardTopBar(
             title = stringResource(R.string.local_music_import_title),
             navigationContentDescription = stringResource(R.string.local_music_back),
-            onNavigateBack = onBack,
+            onNavigateBack = { onAction(DeviceImportAction.Back) },
         )
         when (state) {
-            DeviceImportUiState.PermissionRequired -> PermissionRequiredContent(onGrantPermission)
+            DeviceImportUiState.PermissionRequired ->
+                PermissionRequiredContent(onGrantPermission = { onAction(DeviceImportAction.RequestPermission) })
             is DeviceImportUiState.Scanning -> ScanningContent(state.candidates)
             is DeviceImportUiState.Selection ->
                 SelectionContent(
                     state = state,
-                    onToggleCandidate = onToggleCandidate,
-                    onToggleAll = onToggleAll,
-                    onImport = onImport,
+                    onToggleCandidate = { id -> onAction(DeviceImportAction.ToggleCandidate(id)) },
+                    onToggleAll = { onAction(DeviceImportAction.ToggleAll) },
+                    onImport = { ids -> onAction(DeviceImportAction.Import(ids)) },
                 )
-            DeviceImportUiState.Failed -> ScanFailedContent(onRetry)
+            DeviceImportUiState.Failed -> ScanFailedContent(onRetry = { onAction(DeviceImportAction.Retry) })
         }
     }
 }
@@ -127,7 +122,7 @@ private fun PermissionRequiredContent(onGrantPermission: () -> Unit) {
 }
 
 @Composable
-private fun ScanningContent(candidates: List<DeviceAudioCandidate>) {
+private fun ScanningContent(candidates: List<DeviceCandidateRowUiModel>) {
     Column(Modifier.fillMaxSize().padding(top = 14.dp)) {
         Row(
             modifier =
@@ -238,7 +233,7 @@ private fun SelectionContent(
 
 @Composable
 private fun ScanningCandidateList(
-    candidates: List<DeviceAudioCandidate>,
+    candidates: List<DeviceCandidateRowUiModel>,
     modifier: Modifier = Modifier,
     probeName: String? = null,
     contentTopPadding: Dp = MoeKoeTheme.spacing.small,
@@ -253,11 +248,11 @@ private fun ScanningCandidateList(
                 bottom = MoeKoeTheme.spacing.small,
             ),
     ) {
-        itemsIndexed(candidates, key = { _, candidate -> candidate.mediaStoreId }) { index, candidate ->
+        itemsIndexed(candidates, key = { _, candidate -> candidate.id }) { index, candidate ->
             MoeSongRow(
-                title = candidate.displayName.substringBeforeLast('.'),
-                subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
-                metadata = formatDuration(candidate.durationMs),
+                title = candidate.title,
+                subtitle = candidate.artist.label(),
+                metadata = candidate.durationLabel,
                 onClick = null,
                 style = MoeSongRowStyle.Comfortable,
                 modifier = if (index == 0 && probeName != null) Modifier.localMusicLayoutProbe(probeName) else Modifier,
@@ -290,12 +285,12 @@ private fun SelectionCandidateList(
                 bottom = MoeKoeTheme.spacing.small,
             ),
     ) {
-        itemsIndexed(state.candidates, key = { _, candidate -> candidate.mediaStoreId }) { _, candidate ->
+        itemsIndexed(state.candidates, key = { _, candidate -> candidate.id }) { _, candidate ->
             MoeSongRow(
-                title = candidate.displayName.substringBeforeLast('.'),
-                subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
-                metadata = formatDuration(candidate.durationMs),
-                onClick = { onToggle(candidate.mediaStoreId) },
+                title = candidate.title,
+                subtitle = candidate.artist.label(),
+                metadata = candidate.durationLabel,
+                onClick = { onToggle(candidate.id) },
                 style = MoeSongRowStyle.Comfortable,
                 artwork = {
                     Icon(
@@ -306,8 +301,8 @@ private fun SelectionCandidateList(
                 },
                 trailing = {
                     Checkbox(
-                        checked = candidate.mediaStoreId in state.selectedIds,
-                        onCheckedChange = { onToggle(candidate.mediaStoreId) },
+                        checked = candidate.id in state.selectedIds,
+                        onCheckedChange = { onToggle(candidate.id) },
                     )
                 },
             )
@@ -315,6 +310,13 @@ private fun SelectionCandidateList(
         }
     }
 }
+
+@Composable
+private fun DeviceCandidateArtistUi.label(): String =
+    when (this) {
+        is DeviceCandidateArtistUi.Known -> value
+        DeviceCandidateArtistUi.Unknown -> stringResource(R.string.local_music_unknown_artist)
+    }
 
 @Composable
 private fun ScanFailedContent(onRetry: () -> Unit) {

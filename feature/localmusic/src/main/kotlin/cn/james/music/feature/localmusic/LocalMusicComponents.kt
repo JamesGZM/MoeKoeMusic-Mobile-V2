@@ -1,6 +1,5 @@
 package cn.james.music.feature.localmusic
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,39 +23,8 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongMoreAction
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
-import cn.james.music.core.model.local.LocalMusic
-import cn.james.music.core.model.local.LocalMusicSort
 import coil3.compose.AsyncImage
 import java.io.File
-
-internal fun filterAndSortMusic(
-    music: List<LocalMusic>,
-    query: String,
-    sort: LocalMusicSort,
-): List<LocalMusic> =
-    music
-        .filter { item ->
-            query.isBlank() ||
-                item.title.contains(query, ignoreCase = true) ||
-                item.artist.contains(query, ignoreCase = true)
-        }.let { filtered ->
-            when (sort) {
-                LocalMusicSort.Newest -> filtered.sortedByDescending(LocalMusic::importedAtEpochMs)
-                LocalMusicSort.Title -> filtered.sortedBy(LocalMusic::title)
-                LocalMusicSort.Artist -> filtered.sortedBy(LocalMusic::artist)
-                LocalMusicSort.Duration -> filtered.sortedByDescending(LocalMusic::durationMs)
-            }
-        }
-
-internal val LocalMusicSort.labelRes: Int
-    @StringRes
-    get() =
-        when (this) {
-            LocalMusicSort.Newest -> R.string.local_music_sort_newest
-            LocalMusicSort.Title -> R.string.local_music_sort_title
-            LocalMusicSort.Artist -> R.string.local_music_sort_artist
-            LocalMusicSort.Duration -> R.string.local_music_sort_duration
-        }
 
 @Composable
 internal fun LocalMusicMessage(
@@ -79,32 +47,25 @@ internal fun LocalMusicMessage(
 
 @Composable
 internal fun LocalMusicRow(
-    music: LocalMusic,
-    isPlaying: Boolean,
+    song: LocalSongRowUiModel,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     MoeSongRow(
-        title = music.title,
-        subtitle = music.artist,
-        metadata = formatDuration(music.durationMs),
+        title = song.title,
+        subtitle = song.artist,
+        metadata = song.durationLabel,
         onClick = onClick,
         modifier = modifier,
         style = MoeSongRowStyle.Comfortable,
-        isPlaying = isPlaying,
+        isPlaying = song.isPlaying,
         showPlayingIndicator = false,
         artwork = {
-            AsyncImage(
-                model = music.artworkKey?.let { File(context.filesDir, it) },
-                contentDescription = stringResource(R.string.local_music_artwork_description, music.title),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
+            LocalArtworkRenderer(artwork = song.artwork, title = song.title)
         },
         badges = {
-            if (isPlaying) {
+            if (song.isPlaying) {
                 Icon(
                     imageVector = Icons.Default.GraphicEq,
                     contentDescription = null,
@@ -115,15 +76,28 @@ internal fun LocalMusicRow(
         },
         trailing = {
             MoeSongMoreAction(
-                contentDescription = stringResource(R.string.local_music_more, music.title),
+                contentDescription = stringResource(R.string.local_music_more, song.title),
                 onClick = onDelete,
             )
         },
     )
 }
 
-internal fun formatDuration(durationMs: Long): String {
-    val totalSeconds = durationMs.coerceAtLeast(0) / 1_000
-    val seconds = (totalSeconds % 60).toString().padStart(2, '0')
-    return "${totalSeconds / 60}:$seconds"
+@Composable
+private fun LocalArtworkRenderer(
+    artwork: LocalArtworkUiModel,
+    title: String,
+) {
+    val context = LocalContext.current
+    val model =
+        when (artwork) {
+            is LocalArtworkUiModel.AppStorage -> File(context.filesDir, artwork.ref.key)
+            LocalArtworkUiModel.None -> null
+        }
+    AsyncImage(
+        model = model,
+        contentDescription = stringResource(R.string.local_music_artwork_description, title),
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop,
+    )
 }

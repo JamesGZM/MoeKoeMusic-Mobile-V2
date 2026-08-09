@@ -1,10 +1,10 @@
 package cn.james.music.feature.localmusic
 
 import cn.james.music.core.model.local.DeviceAudioCandidate
+import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalImportProgress
 import cn.james.music.core.model.local.LocalMusic
 import cn.james.music.core.model.local.LocalMusicRepository
-import cn.james.music.core.model.local.LocalMusicSort
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
 import cn.james.music.core.model.playback.PlaybackSource
@@ -19,9 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -29,6 +27,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -47,16 +47,257 @@ class LocalMusicViewModelTest {
     }
 
     @Test
-    fun scanResultBelongsToCompletedSelectionState() =
+    fun searchMatchesTitleAndArtistIgnoringCase() =
         runTest(dispatcher) {
-            val candidate = DeviceAudioCandidate(7, "fixture.mp3", "MoeKoe", 1_000, 2_000)
-            val viewModel = LocalMusicViewModel(FakeRepository(scanResult = listOf(candidate)), FakePlaybackController())
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
-
-            viewModel.openImporter(hasPermission = true)
+            val repository =
+                FakeRepository(
+                    initialMusic =
+                        listOf(
+                            music(id = "title", title = "Two Faced", artist = "Linkin Park"),
+                            music(id = "artist", title = "Numb", artist = "LINKIN PARK"),
+                            music(id = "other", title = "Whose Blue", artist = "Y 2025"),
+                        ),
+                )
+            val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
             advanceUntilIdle()
 
-            assertEquals(DeviceImportUiState.Selection(listOf(candidate)), viewModel.state.value.deviceImport)
+            viewModel.onAction(LocalMusicAction.QueryChanged("linkin"))
+            viewModel.onAction(LocalMusicAction.SelectSort(LocalMusicSortUi.Title))
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf("artist", "title"),
+                viewModel.state.value.songs
+                    .map(LocalSongRowUiModel::id),
+            )
+            assertEquals(LocalMusicContentUi.Songs, viewModel.state.value.content)
+            assertEquals("linkin", viewModel.state.value.query)
+            assertEquals(LocalMusicSortUi.Title, viewModel.state.value.sort)
+        }
+
+    @Test
+    fun sortOptionsAreDerivedByViewModel() =
+        runTest(dispatcher) {
+            val repository =
+                FakeRepository(
+                    initialMusic =
+                        listOf(
+                            music(id = "first", title = "C", artist = "B", durationMs = 2_000, importedAt = 1),
+                            music(id = "second", title = "A", artist = "C", durationMs = 3_000, importedAt = 3),
+                            music(id = "third", title = "B", artist = "A", durationMs = 1_000, importedAt = 2),
+                        ),
+                )
+            val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
+            advanceUntilIdle()
+
+            val expected =
+                mapOf(
+                    LocalMusicSortUi.Newest to listOf("second", "third", "first"),
+                    LocalMusicSortUi.Title to listOf("second", "third", "first"),
+                    LocalMusicSortUi.Artist to listOf("third", "first", "second"),
+                    LocalMusicSortUi.Duration to listOf("second", "first", "third"),
+                )
+            expected.forEach { (sort, ids) ->
+                viewModel.onAction(LocalMusicAction.SelectSort(sort))
+                advanceUntilIdle()
+                assertEquals(
+                    ids,
+                    viewModel.state.value.songs
+                        .map(LocalSongRowUiModel::id),
+                )
+            }
+        }
+
+    @Test
+    fun stableIdPlayBuildsQueueFromCurrentVisibleSnapshot() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController()
+            val repository =
+                FakeRepository(
+                    initialMusic =
+                        listOf(
+                            music(id = "hidden", title = "Hidden"),
+                            music(id = "second", title = "Match B"),
+                            music(id = "first", title = "Match A"),
+                        ),
+                )
+            val viewModel = LocalMusicViewModel(repository, playback)
+            advanceUntilIdle()
+
+            viewModel.onAction(LocalMusicAction.QueryChanged("match"))
+            viewModel.onAction(LocalMusicAction.SelectSort(LocalMusicSortUi.Title))
+            advanceUntilIdle()
+            viewModel.onAction(LocalMusicAction.PlaySong("second"))
+            advanceUntilIdle()
+
+            assertEquals(listOf("first", "second"), playback.replacedQueue.map(PlaybackItem::id))
+            assertEquals(1, playback.startIndex)
+        }
+
+    @Test
+    fun stableIdDeleteKeepsOnlyIdInDialogAndRemovesEveryQueueOccurrence() =
+        runTest(dispatcher) {
+            val playback =
+                FakePlaybackController(
+                    initialState =
+                        PlaybackState(
+                            queue =
+                                listOf(
+                                    playbackItem("target"),
+                                    playbackItem("other"),
+                                    playbackItem("target"),
+                                ),
+                            currentIndex = 0,
+                        ),
+                )
+            val repository = FakeRepository(initialMusic = listOf(music("target")))
+            val viewModel = LocalMusicViewModel(repository, playback)
+            advanceUntilIdle()
+
+            viewModel.onAction(LocalMusicAction.RequestDeleteSong("target"))
+            advanceUntilIdle()
+            assertEquals("target", viewModel.state.value.pendingDeleteSongId)
+
+            viewModel.onAction(LocalMusicAction.ConfirmDeleteSong("target"))
+            advanceUntilIdle()
+
+            assertEquals(listOf(2, 0), playback.removedIndices)
+            assertEquals(listOf("target"), repository.deletedIds)
+            assertEquals(null, viewModel.state.value.pendingDeleteSongId)
+        }
+
+    @Test
+    fun playbackCurrentItemMapsToPurePlayingState() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController()
+            val viewModel = LocalMusicViewModel(FakeRepository(initialMusic = listOf(music("playing"))), playback)
+            advanceUntilIdle()
+
+            playback.state.value =
+                PlaybackState(
+                    queue = listOf(playbackItem("playing")),
+                    currentIndex = 0,
+                    isPlaying = true,
+                )
+            advanceUntilIdle()
+
+            assertEquals("playing", viewModel.state.value.playingSongId)
+            assertTrue(
+                viewModel.state.value.songs
+                    .single()
+                    .isPlaying,
+            )
+        }
+
+    @Test
+    fun importProgressAndCancelAreMappedToStableId() =
+        runTest(dispatcher) {
+            val repository =
+                FakeRepository(
+                    initialImports =
+                        listOf(
+                            LocalImportProgress(
+                                batchId = "batch-7",
+                                state = LocalImportBatchState.Running,
+                                totalCount = 5,
+                                completedCount = 2,
+                                failedCount = 0,
+                                currentDisplayName = "source.mp3",
+                                copiedBytes = 1_000,
+                                totalBytes = 2_000,
+                            ),
+                        ),
+                )
+            val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
+            advanceUntilIdle()
+
+            assertEquals(LocalImportProgressUiModel("batch-7", 2, 5), viewModel.state.value.activeImport)
+
+            viewModel.onAction(LocalMusicAction.CancelImport("batch-7"))
+            advanceUntilIdle()
+            assertEquals(listOf("batch-7"), repository.cancelledIds)
+        }
+
+    @Test
+    fun localMusicUiStateDoesNotExposeDomainOrRuntimeTypes() {
+        val exposedTypes =
+            listOf(
+                LocalMusicUiState::class.java,
+                LocalSongRowUiModel::class.java,
+                LocalImportProgressUiModel::class.java,
+                DeviceCandidateRowUiModel::class.java,
+                DeviceImportUiState.Scanning::class.java,
+                DeviceImportUiState.Selection::class.java,
+            ).flatMap { type -> type.declaredFields.map { field -> field.genericType } }
+
+        val forbiddenNames =
+            listOf(
+                "cn.james.music.core.model.local.LocalMusic",
+                "cn.james.music.core.model.local.LocalImportProgress",
+                "cn.james.music.core.model.local.DeviceAudioCandidate",
+                "cn.james.music.playback.PlaybackState",
+                "cn.james.music.playback.PlaybackController",
+                "cn.james.music.core.model.playback.PlaybackItem",
+                "cn.james.music.core.model.local.LocalMusicRepository",
+                "java.io.File",
+                "android.net.Uri",
+                "androidx.compose.ui.unit.Dp",
+                "androidx.compose.ui.graphics.Color",
+                "androidx.compose.ui.graphics.Shape",
+            )
+        forbiddenNames.forEach { forbidden ->
+            assertFalse(
+                "$forbidden leaked through ${exposedTypes.joinToString { type -> type.typeName }}",
+                exposedTypes.any { type -> forbidden in type.typeName },
+            )
+        }
+    }
+
+    @Test
+    fun scanResultBelongsToCompletedSelectionState() =
+        runTest(dispatcher) {
+            val candidate = DeviceAudioCandidate(7, "fixture.mp3", "MoeKoe", 61_000, 2_000)
+            val viewModel = LocalMusicViewModel(FakeRepository(scanResult = listOf(candidate)), FakePlaybackController())
+
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = true))
+            advanceUntilIdle()
+
+            assertEquals(
+                DeviceImportUiState.Selection(
+                    candidates =
+                        listOf(
+                            DeviceCandidateRowUiModel(
+                                id = 7,
+                                title = "fixture",
+                                artist = DeviceCandidateArtistUi.Known("MoeKoe"),
+                                durationLabel = "1:01",
+                            ),
+                        ),
+                ),
+                viewModel.state.value.deviceImport,
+            )
+        }
+
+    @Test
+    fun candidateMapperOwnsTitleDurationAndArtistSemantics() =
+        runTest(dispatcher) {
+            val candidates =
+                listOf(
+                    DeviceAudioCandidate(1, "known.flac", "Artist", 218_000, 1),
+                    DeviceAudioCandidate(2, "unknown.mp3", null, -1, 1),
+                    DeviceAudioCandidate(3, "blank.ogg", "", 1_000, 1),
+                )
+            val viewModel = LocalMusicViewModel(FakeRepository(scanResult = candidates), FakePlaybackController())
+
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = true))
+            advanceUntilIdle()
+
+            val rows = (viewModel.state.value.deviceImport as DeviceImportUiState.Selection).candidates
+            assertEquals(listOf("known", "unknown", "blank"), rows.map(DeviceCandidateRowUiModel::title))
+            assertEquals(listOf("3:38", "0:00", "0:01"), rows.map(DeviceCandidateRowUiModel::durationLabel))
+            assertEquals(DeviceCandidateArtistUi.Known("Artist"), rows[0].artist)
+            assertEquals(DeviceCandidateArtistUi.Unknown, rows[1].artist)
+            assertEquals(DeviceCandidateArtistUi.Unknown, rows[2].artist)
         }
 
     @Test
@@ -75,21 +316,39 @@ class LocalMusicViewModelTest {
                         },
                 )
             val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
-            viewModel.openImporter(hasPermission = true)
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = true))
             runCurrent()
 
-            assertEquals(DeviceImportUiState.Scanning(listOf(first, second)), viewModel.state.value.deviceImport)
-            viewModel.toggleCandidate(first.mediaStoreId)
-            viewModel.toggleAllCandidates()
+            val scanning = viewModel.state.value.deviceImport as DeviceImportUiState.Scanning
+            assertEquals(listOf(7L, 9L), scanning.candidates.map(DeviceCandidateRowUiModel::id))
+            viewModel.onDeviceImportAction(DeviceImportAction.ToggleCandidate(7))
+            viewModel.onDeviceImportAction(DeviceImportAction.ToggleAll)
             runCurrent()
-            assertEquals(DeviceImportUiState.Scanning(listOf(first, second)), viewModel.state.value.deviceImport)
+            assertTrue(viewModel.state.value.deviceImport is DeviceImportUiState.Scanning)
 
             finishScan.complete(Unit)
             advanceUntilIdle()
+            assertTrue(viewModel.state.value.deviceImport is DeviceImportUiState.Selection)
+        }
 
-            assertEquals(DeviceImportUiState.Selection(listOf(first, second)), viewModel.state.value.deviceImport)
+    @Test
+    fun candidateSelectionLivesOnlyInCompletedSelectionState() =
+        runTest(dispatcher) {
+            val candidate = DeviceAudioCandidate(7, "fixture.mp3", "MoeKoe", 1_000, 2_000)
+            val viewModel = LocalMusicViewModel(FakeRepository(scanResult = listOf(candidate)), FakePlaybackController())
+
+            viewModel.onDeviceImportAction(DeviceImportAction.ToggleCandidate(7))
+            assertEquals(DeviceImportUiState.PermissionRequired, viewModel.state.value.deviceImport)
+
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = true))
+            advanceUntilIdle()
+            viewModel.onDeviceImportAction(DeviceImportAction.ToggleCandidate(7))
+            advanceUntilIdle()
+
+            val selection = viewModel.state.value.deviceImport as DeviceImportUiState.Selection
+            assertEquals(setOf(7L), selection.selectedIds)
+            assertEquals(listOf(7L), selection.candidates.map(DeviceCandidateRowUiModel::id))
         }
 
     @Test
@@ -97,13 +356,13 @@ class LocalMusicViewModelTest {
         runTest(dispatcher) {
             val repository = FakeRepository()
             val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
 
-            viewModel.openImporter(hasPermission = false)
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = false))
+            advanceUntilIdle()
             assertEquals(DeviceImportUiState.PermissionRequired, viewModel.state.value.deviceImport)
             assertEquals(0, repository.scanCount)
 
-            viewModel.onPermissionResult(granted = true)
+            viewModel.onDeviceImportAction(DeviceImportAction.PermissionResult(granted = true))
             advanceUntilIdle()
 
             assertEquals(1, repository.scanCount)
@@ -111,89 +370,17 @@ class LocalMusicViewModelTest {
         }
 
     @Test
-    fun localPlayBuildsQueueWithoutRootAppViewModel() =
+    fun deniedPermissionKeepsOriginalPermissionState() =
         runTest(dispatcher) {
-            val playback = FakePlaybackController()
-            val viewModel = LocalMusicViewModel(FakeRepository(), playback)
-            val first = music("first")
-            val second = music("second")
+            val repository = FakeRepository()
+            val viewModel = LocalMusicViewModel(repository, FakePlaybackController())
 
-            viewModel.play(second, listOf(first, second))
+            viewModel.onDeviceImportAction(DeviceImportAction.Open(hasPermission = false))
+            viewModel.onDeviceImportAction(DeviceImportAction.PermissionResult(granted = false))
             advanceUntilIdle()
 
-            assertEquals(listOf("first", "second"), playback.replacedQueue.map(PlaybackItem::id))
-            assertEquals(1, playback.startIndex)
-        }
-
-    @Test
-    fun playbackCurrentItemIsExposedAsTheSinglePlayingSong() =
-        runTest(dispatcher) {
-            val playback = FakePlaybackController()
-            val viewModel = LocalMusicViewModel(FakeRepository(), playback)
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
-
-            playback.state.value =
-                PlaybackState(
-                    queue =
-                        listOf(
-                            PlaybackItem(
-                                id = "playing",
-                                title = "Playing",
-                                artist = "Artist",
-                                source = PlaybackSource.ImportedLocal("playing"),
-                            ),
-                        ),
-                    currentIndex = 0,
-                    isPlaying = true,
-                )
-            runCurrent()
-
-            assertEquals("playing", viewModel.state.value.playingSongId)
-        }
-
-    @Test
-    fun searchMatchesTitleAndArtistIgnoringCase() {
-        val titleMatch = music(id = "title", title = "Two Faced", artist = "Linkin Park")
-        val artistMatch = music(id = "artist", title = "Numb", artist = "LINKIN PARK")
-        val unrelated = music(id = "other", title = "Whose Blue", artist = "Y 2025")
-
-        val result = filterAndSortMusic(listOf(titleMatch, artistMatch, unrelated), "linkin", LocalMusicSort.Title)
-
-        assertEquals(listOf("artist", "title"), result.map(LocalMusic::id))
-    }
-
-    @Test
-    fun sortOptionsKeepTheirDomainOrdering() {
-        val first = music(id = "first", title = "C", artist = "B", durationMs = 2_000, importedAt = 1)
-        val second = music(id = "second", title = "A", artist = "C", durationMs = 3_000, importedAt = 3)
-        val third = music(id = "third", title = "B", artist = "A", durationMs = 1_000, importedAt = 2)
-        val items = listOf(first, second, third)
-
-        assertEquals(listOf("second", "third", "first"), filterAndSortMusic(items, "", LocalMusicSort.Newest).map(LocalMusic::id))
-        assertEquals(listOf("second", "third", "first"), filterAndSortMusic(items, "", LocalMusicSort.Title).map(LocalMusic::id))
-        assertEquals(listOf("third", "first", "second"), filterAndSortMusic(items, "", LocalMusicSort.Artist).map(LocalMusic::id))
-        assertEquals(listOf("second", "first", "third"), filterAndSortMusic(items, "", LocalMusicSort.Duration).map(LocalMusic::id))
-    }
-
-    @Test
-    fun candidateSelectionLivesOnlyInCompletedSelectionState() =
-        runTest(dispatcher) {
-            val candidate = DeviceAudioCandidate(7, "fixture.mp3", "MoeKoe", 1_000, 2_000)
-            val viewModel = LocalMusicViewModel(FakeRepository(scanResult = listOf(candidate)), FakePlaybackController())
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
-
-            viewModel.toggleCandidate(candidate.mediaStoreId)
             assertEquals(DeviceImportUiState.PermissionRequired, viewModel.state.value.deviceImport)
-
-            viewModel.openImporter(hasPermission = true)
-            advanceUntilIdle()
-            viewModel.toggleCandidate(candidate.mediaStoreId)
-            runCurrent()
-
-            assertEquals(
-                DeviceImportUiState.Selection(listOf(candidate), setOf(candidate.mediaStoreId)),
-                viewModel.state.value.deviceImport,
-            )
+            assertEquals(0, repository.scanCount)
         }
 
     private fun music(
@@ -204,31 +391,52 @@ class LocalMusicViewModelTest {
         importedAt: Long = 1,
     ) = LocalMusic(id, title, artist, null, durationMs, 2_000, "audio/mpeg", null, importedAt)
 
+    private fun playbackItem(id: String) =
+        PlaybackItem(
+            id = id,
+            title = id,
+            artist = "artist",
+            source = PlaybackSource.ImportedLocal(id),
+        )
+
     private class FakeRepository(
+        initialMusic: List<LocalMusic> = emptyList(),
+        initialImports: List<LocalImportProgress> = emptyList(),
         scanResult: List<DeviceAudioCandidate> = emptyList(),
         private val scanFlow: Flow<DeviceAudioCandidate> = scanResult.asFlow(),
     ) : LocalMusicRepository {
+        private val music = MutableStateFlow(initialMusic)
+        private val imports = MutableStateFlow(initialImports)
         var scanCount: Int = 0
+        val cancelledIds = mutableListOf<String>()
+        val deletedIds = mutableListOf<String>()
 
-        override fun observeMusic(): Flow<List<LocalMusic>> = MutableStateFlow(emptyList())
+        override fun observeMusic(): Flow<List<LocalMusic>> = music
 
-        override fun observeImports(): Flow<List<LocalImportProgress>> = MutableStateFlow(emptyList())
+        override fun observeImports(): Flow<List<LocalImportProgress>> = imports
 
         override fun scanDevice(): Flow<DeviceAudioCandidate> {
             scanCount += 1
             return scanFlow
         }
 
-        override suspend fun cancelImport(batchId: String) = Unit
+        override suspend fun cancelImport(batchId: String) {
+            cancelledIds += batchId
+        }
 
-        override suspend fun delete(localMusicId: String) = Unit
+        override suspend fun delete(localMusicId: String) {
+            deletedIds += localMusicId
+        }
     }
 
-    private class FakePlaybackController : PlaybackController {
-        override val state = MutableStateFlow(PlaybackState())
+    private class FakePlaybackController(
+        initialState: PlaybackState = PlaybackState(),
+    ) : PlaybackController {
+        override val state = MutableStateFlow(initialState)
         override val progress = MutableStateFlow(PlaybackProgress())
         var replacedQueue: List<PlaybackItem> = emptyList()
         var startIndex: Int = -1
+        val removedIndices = mutableListOf<Int>()
 
         override suspend fun replaceQueue(
             items: List<PlaybackItem>,
@@ -237,7 +445,7 @@ class LocalMusicViewModelTest {
         ): PlaybackCommandResult {
             replacedQueue = items
             this.startIndex = startIndex
-            return PlaybackCommandResult.Accepted
+            return accepted()
         }
 
         override suspend fun append(items: List<PlaybackItem>) = accepted()
@@ -248,7 +456,10 @@ class LocalMusicViewModelTest {
 
         override suspend fun playAt(index: Int) = accepted()
 
-        override suspend fun remove(index: Int) = accepted()
+        override suspend fun remove(index: Int): PlaybackCommandResult {
+            removedIndices += index
+            return accepted()
+        }
 
         override suspend fun move(
             fromIndex: Int,
