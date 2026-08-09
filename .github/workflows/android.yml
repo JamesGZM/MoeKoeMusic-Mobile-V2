@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
@@ -19,6 +19,14 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Configure deterministic runner locale and timezone
+        shell: bash
+        run: |
+          locale -a | grep -Eiq '^C\.utf-?8$'
+          test "$(LC_ALL=C.UTF-8 locale charmap)" = "UTF-8"
+          test "$(TZ=UTC date +%Z)" = "UTC"
+          printf '%s\n' 'LANG=C.UTF-8' 'LC_ALL=C.UTF-8' 'TZ=UTC' >> "$GITHUB_ENV"
 
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
@@ -74,6 +82,19 @@ jobs:
           verifyUiImpact
           verifyUiGoldenChange
           -Pmoekoe.changedFilesFile=build/changed-files.txt
+
+      - name: Upload screenshot diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            **/build/reports/screenshotTest/**
+            **/build/test-results/validateDebugScreenshotTest/**
+            **/build/outputs/screenshotTest-results/**
+            build/reports/ui-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
