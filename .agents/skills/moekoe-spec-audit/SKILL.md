@@ -13,7 +13,7 @@ description: 在实现前审计 MoeKoeMusic 重大功能。新增模块、权限
 4. 明确产品目标、成功语义、非目标、Android 平台约束、模块与数据所有权、失败恢复和测试矩阵。
 5. 以决策点组织审计：先 Android 官方约束，再检查至少两个成熟开源项目的固定提交、具体文件、采用点、拒绝点和许可证。
 6. 涉及 Agent Skills 时读取 `.agents/upstreams/agent-skills.properties` 和 `docs/reference-audits/22-agent-skills-development-system.md`；只使用固定提交并记录项目覆盖规则。
-7. 把规格和审计写入仓库既有文档位置；不要把结论只留在聊天、Issue 或临时文件。
+7. 父智能体把规格和审计结论纳入计划；需要写入仓库既有文档位置时，必须委派给已分配路径所有权的子智能体，不把结论只留在聊天、Issue 或临时文件。
 
 ## 门禁
 
