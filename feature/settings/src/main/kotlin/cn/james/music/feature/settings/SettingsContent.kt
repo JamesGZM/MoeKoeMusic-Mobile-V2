@@ -65,7 +65,7 @@ internal fun SettingsContent(
                     icon = Icons.Default.AutoAwesome,
                     iconColor = MaterialTheme.colorScheme.tertiary,
                     title = stringResource(R.string.settings_dynamic_color),
-                    checked = true,
+                    value = unavailable,
                 )
                 SettingsDivider()
                 SettingsItem(
@@ -73,6 +73,7 @@ internal fun SettingsContent(
                     iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     title = stringResource(R.string.settings_amoled_mode),
                     checked = state.theme == AppThemePreference.Amoled,
+                    onClick = onThemeDialogRequest,
                 )
             }
         }
@@ -92,7 +93,7 @@ internal fun SettingsContent(
                     icon = Icons.Default.SkipNext,
                     iconColor = MaterialTheme.colorScheme.tertiary,
                     title = stringResource(R.string.settings_skip_failed),
-                    checked = true,
+                    value = unavailable,
                 )
                 SettingsDivider()
                 SettingsItem(
@@ -119,7 +120,7 @@ internal fun SettingsContent(
                     icon = Icons.Default.Translate,
                     iconColor = MaterialTheme.colorScheme.tertiary,
                     title = stringResource(R.string.settings_translation),
-                    checked = true,
+                    value = unavailable,
                 )
                 SettingsDivider()
                 SettingsItem(

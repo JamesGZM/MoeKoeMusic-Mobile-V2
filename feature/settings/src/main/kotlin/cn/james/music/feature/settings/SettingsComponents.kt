@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
+import cn.james.music.core.designsystem.component.MoePassiveOutline
 import cn.james.music.core.model.settings.AppThemePreference
 
 @Composable
@@ -51,7 +52,7 @@ internal fun SettingsGroup(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)),
+        border = MoePassiveOutline(),
     ) {
         Column {
             Text(
@@ -89,7 +90,7 @@ internal fun SettingsItem(
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
                 .then(interactionModifier)
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = if (checked == null) 6.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -110,9 +111,9 @@ internal fun SettingsItem(
         } else if (checked != null) {
             Switch(
                 checked = checked,
-                onCheckedChange = null,
-                enabled = false,
-                modifier = Modifier.graphicsLayer(scaleX = 0.8f, scaleY = 0.8f),
+                onCheckedChange = if (onClick == null) null else { _ -> onClick() },
+                enabled = enabled,
+                modifier = Modifier.graphicsLayer(scaleX = 0.7f, scaleY = 0.7f),
             )
         } else {
             value?.let {
@@ -140,10 +141,7 @@ internal fun SettingsItem(
 
 @Composable
 internal fun SettingsDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 14.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f),
-    )
+    MoeHorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
 }
 
 @Composable
