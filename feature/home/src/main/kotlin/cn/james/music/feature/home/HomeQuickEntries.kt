@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -41,14 +43,14 @@ internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 6.dp)
                 .then(modifier)
-                .heightIn(min = 64.dp)
+                .heightIn(min = 59.dp)
                 .testTag("home_quick_entries"),
         shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             QuickEntry(
@@ -57,7 +59,8 @@ internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
                 containerColor = Color(0xFFF1E7FF),
                 title = stringResource(R.string.home_quick_ranking),
                 supporting = stringResource(R.string.home_quick_ranking_supporting),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(258f),
+                contentStartPadding = 11.dp,
             )
             QuickDivider()
             QuickEntry(
@@ -66,7 +69,8 @@ internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 title = stringResource(R.string.home_quick_daily),
                 supporting = stringResource(R.string.home_quick_daily_supporting),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(276f),
+                contentStartPadding = 11.dp,
             )
             QuickDivider()
             QuickEntry(
@@ -75,7 +79,8 @@ internal fun HomeQuickEntries(modifier: Modifier = Modifier) {
                 containerColor = Color(0xFFE3F5EB),
                 title = stringResource(R.string.home_quick_playlists),
                 supporting = stringResource(R.string.home_quick_playlists_supporting),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(274f),
+                contentStartPadding = 15.dp,
             )
         }
     }
@@ -89,6 +94,7 @@ private fun QuickEntry(
     title: String,
     supporting: String,
     modifier: Modifier = Modifier,
+    contentStartPadding: Dp = 0.dp,
 ) {
     val largeText = LocalDensity.current.fontScale >= 1.5f
     if (largeText) {
@@ -114,13 +120,16 @@ private fun QuickEntry(
             )
         }
     } else {
-        Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = modifier.padding(start = contentStartPadding).offset(y = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             QuickEntryIcon(icon, iconColor, containerColor)
-            Column(Modifier.padding(start = 7.dp)) {
-                Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1)
+            Column(Modifier.padding(start = 11.dp)) {
+                Text(title, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium, maxLines = 1)
                 Text(
                     supporting,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 14.sp),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
@@ -136,12 +145,12 @@ private fun QuickEntryIcon(
     containerColor: Color,
 ) {
     Surface(shape = RoundedCornerShape(11.dp), color = containerColor) {
-        Icon(icon, contentDescription = null, modifier = Modifier.padding(8.dp).size(22.dp), tint = iconColor)
+        Icon(icon, contentDescription = null, modifier = Modifier.padding(8.dp).size(20.5.dp), tint = iconColor)
     }
 }
 
 @Composable
 private fun QuickDivider() {
     val height = if (LocalDensity.current.fontScale >= 1.5f) 80.dp else 32.dp
-    Box(Modifier.padding(horizontal = 5.dp).width(1.dp).height(height).background(MaterialTheme.colorScheme.outlineVariant))
+    Box(Modifier.width(1.dp).height(height).background(MaterialTheme.colorScheme.outlineVariant))
 }

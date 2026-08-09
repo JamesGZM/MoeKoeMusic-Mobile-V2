@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -30,10 +29,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 import cn.james.music.core.model.playback.PlaybackArtwork
 import cn.james.music.core.model.playback.PlaybackItem
 import java.io.File
@@ -52,19 +51,7 @@ internal fun QueueItem(
         subtitle = queueItem.item.artist,
         metadata = queueItem.durationLabel,
         onClick = onClick,
-        minimumHeight = if (isCurrent) 58.dp else 56.dp,
-        largeTextMinimumHeight = if (isCurrent) 58.dp else 56.dp,
-        fixedHeight = if (isCurrent) 58.dp else 56.dp,
-        artworkSize = 44.dp,
-        artworkShape = RoundedCornerShape(7.dp),
-        decorateArtwork = false,
-        contentStartPadding = 9.dp,
-        contentEndPadding = 0.dp,
-        verticalContentPadding = 0.dp,
-        textStartPadding = if (isCurrent) 9.dp else 15.dp,
-        textEndPadding = 8.dp,
-        metadataEndPadding = 0.dp,
-        metadataInSubtitleOnLargeText = false,
+        style = if (isCurrent) MoeSongRowStyle.QueueCurrent else MoeSongRowStyle.Queue,
         isPlaying = isCurrent,
         showPlayingIndicator = false,
         highlightTitleWhenPlaying = false,
@@ -74,11 +61,7 @@ internal fun QueueItem(
         subtitleColor = QueueOnSurfaceVariant,
         metadataColor = QueueOnSurfaceVariant,
         playingColor = QueueAccent,
-        titleStyle = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 19.sp),
-        subtitleStyle = LocalTextStyle.current.copy(fontSize = 12.sp, lineHeight = 16.sp),
-        metadataStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
         titleFontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
-        inlineTitleContent = false,
         modifier =
             Modifier
                 .padding(horizontal = 12.dp)

@@ -98,7 +98,7 @@ private fun HomeContent(
             }
         }
         if (content.playlists.isNotEmpty()) {
-            item { Spacer(Modifier.height(12.dp)) }
+            item { Spacer(Modifier.height(15.dp)) }
             item {
                 HomeSectionHeader(
                     title = stringResource(R.string.home_playlist_title),

@@ -7,6 +7,7 @@ import cn.james.music.core.model.local.LocalMusicRepository
 import cn.james.music.core.model.local.LocalMusicSort
 import cn.james.music.core.model.playback.PlaybackItem
 import cn.james.music.core.model.playback.PlaybackMode
+import cn.james.music.core.model.playback.PlaybackSource
 import cn.james.music.playback.PlaybackCommandResult
 import cn.james.music.playback.PlaybackController
 import cn.james.music.playback.PlaybackProgress
@@ -122,6 +123,32 @@ class LocalMusicViewModelTest {
 
             assertEquals(listOf("first", "second"), playback.replacedQueue.map(PlaybackItem::id))
             assertEquals(1, playback.startIndex)
+        }
+
+    @Test
+    fun playbackCurrentItemIsExposedAsTheSinglePlayingSong() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController()
+            val viewModel = LocalMusicViewModel(FakeRepository(), playback)
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect {} }
+
+            playback.state.value =
+                PlaybackState(
+                    queue =
+                        listOf(
+                            PlaybackItem(
+                                id = "playing",
+                                title = "Playing",
+                                artist = "Artist",
+                                source = PlaybackSource.ImportedLocal("playing"),
+                            ),
+                        ),
+                    currentIndex = 0,
+                    isPlaying = true,
+                )
+            runCurrent()
+
+            assertEquals("playing", viewModel.state.value.playingSongId)
         }
 
     @Test

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,7 +36,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
+import cn.james.music.core.designsystem.component.MoeSongMoreAction
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 
 @Composable
 internal fun HomeSectionHeader(
@@ -45,7 +46,7 @@ internal fun HomeSectionHeader(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 32.dp).padding(start = 14.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 33.dp).padding(start = 14.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -56,15 +57,15 @@ internal fun HomeSectionHeader(
         Text(
             text = title,
             modifier = Modifier.weight(1f).padding(start = 8.dp),
-            style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp, lineHeight = 20.sp),
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, lineHeight = 20.sp),
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
         )
-        Text(stringResource(R.string.home_more), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.home_more), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(16.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
     }
@@ -81,15 +82,7 @@ internal fun HomeSongRow(
             title = song.title,
             subtitle = song.artistName.ifBlank { stringResource(R.string.home_unknown_artist) },
             onClick = { onPlay(song) },
-            minimumHeight = 48.dp,
-            largeTextMinimumHeight = 48.dp,
-            artworkSize = 36.dp,
-            verticalContentPadding = 0.dp,
-            textHorizontalPadding = 10.dp,
-            titleStyle = MaterialTheme.typography.labelLarge,
-            subtitleStyle = MaterialTheme.typography.labelSmall,
-            largeTextTitleMaxLines = 1,
-            inlineTitleContent = false,
+            style = MoeSongRowStyle.Compact,
             artwork = {
                 HomeArtwork(
                     title = song.title,
@@ -104,13 +97,11 @@ internal fun HomeSongRow(
                         tone = if (song.previewBadgeIsError) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
                     )
                 }
-                Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null, modifier = Modifier.size(22.dp))
-                }
+                MoeSongMoreAction(contentDescription = null, onClick = null)
             },
         )
         HorizontalDivider(
-            modifier = Modifier.padding(start = 46.dp),
+            modifier = Modifier.padding(start = 58.dp),
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
         )
     }
@@ -147,7 +138,7 @@ private fun HomePlaylistCard(
         Text(
             playlist.title,
             modifier = Modifier.padding(top = 5.dp),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

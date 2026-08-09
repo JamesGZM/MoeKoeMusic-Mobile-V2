@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongMoreAction
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 import cn.james.music.core.model.online.Song
 
 @Composable
@@ -44,8 +44,7 @@ internal fun SearchSongItem(
         },
         onClick = onClick,
         modifier = modifier.padding(start = 14.dp),
-        minimumHeight = 64.dp,
-        verticalContentPadding = 6.dp,
+        style = MoeSongRowStyle.Standard,
         titleLeading = {
             if (isPlaying) {
                 Icon(
@@ -72,9 +71,10 @@ internal fun SearchSongItem(
             }
         },
         trailing = {
-            IconButton(onClick = onMore) {
-                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.search_more_song, song.title), modifier = Modifier.size(20.dp))
-            }
+            MoeSongMoreAction(
+                contentDescription = stringResource(R.string.search_more_song, song.title),
+                onClick = onMore,
+            )
         },
     )
 }

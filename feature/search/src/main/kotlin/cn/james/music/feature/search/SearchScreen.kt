@@ -66,7 +66,11 @@ internal fun SearchScreen(
             modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_TOOLBAR),
             trailingAction = {
                 IconButton(onClick = onVoice) {
-                    Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.search_voice))
+                    Icon(
+                        Icons.Default.Mic,
+                        contentDescription = stringResource(R.string.search_voice),
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             },
         )

@@ -38,7 +38,7 @@ fun LocalMusicEmptyScreenshot() {
 @Preview(name = "Content", widthDp = 390, heightDp = 844)
 @Composable
 fun LocalMusicContentScreenshot() {
-    LocalMusicScreenshotContent(LocalMusicUiState(music = previewMusic))
+    LocalMusicScreenshotContent(LocalMusicUiState(music = previewMusic, playingSongId = previewMusic.first().id))
 }
 
 @PreviewTest
@@ -52,7 +52,7 @@ fun LocalMusicContentLayoutProbeScreenshot() {
                 PROBE_LIBRARY_LIST to Color.Cyan,
             ),
     ) {
-        LocalMusicScreenshotContent(LocalMusicUiState(music = previewMusic))
+        LocalMusicScreenshotContent(LocalMusicUiState(music = previewMusic, playingSongId = previewMusic.first().id))
     }
 }
 

@@ -36,6 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Dp
@@ -61,14 +63,17 @@ fun MoeSearchTopBar(
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .height(56.dp)
-                .padding(horizontal = 2.dp),
+                .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = onNavigateBack,
             modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget).offset { IntOffset(0, 4.dp.roundToPx()) },
         ) {
-            MoeNavigateBackIcon(contentDescription = navigationContentDescription)
+            MoeNavigateBackIcon(
+                contentDescription = navigationContentDescription,
+                modifier = Modifier.size(18.dp),
+            )
         }
         Surface(
             modifier = Modifier.weight(1f).height(40.dp).offset { IntOffset(0, 4.dp.roundToPx()) },
@@ -84,14 +89,14 @@ fun MoeSearchTopBar(
                     Icons.Default.Search,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(20.dp),
                 )
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                     decorationBox = { innerTextField ->
@@ -100,7 +105,7 @@ fun MoeSearchTopBar(
                                 Text(
                                     text = placeholder,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
                             innerTextField()
@@ -109,13 +114,22 @@ fun MoeSearchTopBar(
                 )
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = clearContentDescription)
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = clearContentDescription,
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                 }
             }
         }
         Box(Modifier.offset { IntOffset(0, 4.dp.roundToPx()) }) { trailingAction?.invoke() }
     }
+}
+
+enum class MoeTopBarTitleEmphasis {
+    Standard,
+    Strong,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,6 +139,7 @@ fun MoeStandardTopBar(
     navigationContentDescription: String,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    titleEmphasis: MoeTopBarTitleEmphasis = MoeTopBarTitleEmphasis.Standard,
     navigationIcon: @Composable () -> Unit = {
         MoeNavigateBackIcon(
             contentDescription = navigationContentDescription,
@@ -133,6 +148,20 @@ fun MoeStandardTopBar(
     },
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val titleStyle: TextStyle =
+        when (titleEmphasis) {
+            MoeTopBarTitleEmphasis.Standard ->
+                MaterialTheme.typography.titleSmall.copy(
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp,
+                )
+            MoeTopBarTitleEmphasis.Strong ->
+                MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 17.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+        }
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -140,11 +169,7 @@ fun MoeStandardTopBar(
                 modifier = Modifier.offset(y = (-4).dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style =
-                    MaterialTheme.typography.titleSmall.copy(
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
-                    ),
+                style = titleStyle,
             )
         },
         navigationIcon = {

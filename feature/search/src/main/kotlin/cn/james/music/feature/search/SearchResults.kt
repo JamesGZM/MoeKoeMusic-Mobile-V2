@@ -118,10 +118,10 @@ private fun SearchSectionTitle(
         modifier = modifier.fillMaxWidth().padding(start = 16.dp, top = 2.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         MoeTextButton(onClick = onViewAll) {
-            Text(stringResource(R.string.search_view_all))
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(stringResource(R.string.search_view_all), style = MaterialTheme.typography.labelMedium)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
         }
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -58,7 +59,12 @@ internal fun HomeHeader(onSearch: () -> Unit) {
         }
     } else {
         Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 12.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .padding(start = 12.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
+                    .offset(y = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             HomeBrand()
@@ -91,8 +97,8 @@ private fun HomeSearch(
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth().height(44.dp),
-            shape = RoundedCornerShape(22.dp),
+            modifier = Modifier.fillMaxWidth().height(36.dp),
+            shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
@@ -104,13 +110,13 @@ private fun HomeSearch(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = stringResource(R.string.home_search),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -142,7 +148,7 @@ internal fun HomeRadioHero(modifier: Modifier = Modifier) {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 4.dp)
+                .padding(start = 10.dp, top = 4.dp, end = 10.dp, bottom = 6.dp)
                 .then(modifier)
                 .height(heroHeight)
                 .clip(RoundedCornerShape(16.dp))
@@ -201,25 +207,32 @@ internal fun HomeRadioHero(modifier: Modifier = Modifier) {
             )
             Text(
                 text = stringResource(R.string.home_radio_supporting),
+                modifier = Modifier.padding(top = 7.dp),
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, lineHeight = 16.sp),
                 color = supportingColor,
                 maxLines = if (largeText) 2 else 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+            Row(modifier = Modifier.offset(y = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.height(48.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Row(
-                        modifier = Modifier.heightIn(min = 44.dp).padding(horizontal = 10.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    Surface(
+                        modifier = Modifier.height(40.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
-                        Text(stringResource(R.string.home_radio_play), fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
+                            Text(stringResource(R.string.home_radio_play), fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        }
                     }
                 }
                 if (!largeText) {

@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongMoreAction
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 import cn.james.music.core.model.local.LocalMusic
 import cn.james.music.core.model.local.LocalMusicSort
 import coil3.compose.AsyncImage
@@ -76,6 +80,7 @@ internal fun LocalMusicMessage(
 @Composable
 internal fun LocalMusicRow(
     music: LocalMusic,
+    isPlaying: Boolean,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -87,7 +92,9 @@ internal fun LocalMusicRow(
         metadata = formatDuration(music.durationMs),
         onClick = onClick,
         modifier = modifier,
-        artworkSize = 60.dp,
+        style = MoeSongRowStyle.Comfortable,
+        isPlaying = isPlaying,
+        showPlayingIndicator = false,
         artwork = {
             AsyncImage(
                 model = music.artworkKey?.let { File(context.filesDir, it) },
@@ -96,13 +103,21 @@ internal fun LocalMusicRow(
                 contentScale = ContentScale.Crop,
             )
         },
-        trailing = {
-            IconButton(onClick = onDelete) {
+        badges = {
+            if (isPlaying) {
                 Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.local_music_more, music.title),
+                    imageVector = Icons.Default.GraphicEq,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
+        },
+        trailing = {
+            MoeSongMoreAction(
+                contentDescription = stringResource(R.string.local_music_more, music.title),
+                onClick = onDelete,
+            )
         },
     )
 }

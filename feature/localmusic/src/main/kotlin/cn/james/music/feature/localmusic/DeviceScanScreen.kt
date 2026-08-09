@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
@@ -258,6 +259,7 @@ private fun ScanningCandidateList(
                 subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
                 metadata = formatDuration(candidate.durationMs),
                 onClick = null,
+                style = MoeSongRowStyle.Comfortable,
                 modifier = if (index == 0 && probeName != null) Modifier.localMusicLayoutProbe(probeName) else Modifier,
                 artwork = {
                     Icon(
@@ -294,6 +296,7 @@ private fun SelectionCandidateList(
                 subtitle = candidate.artist ?: stringResource(R.string.local_music_unknown_artist),
                 metadata = formatDuration(candidate.durationMs),
                 onClick = { onToggle(candidate.mediaStoreId) },
+                style = MoeSongRowStyle.Comfortable,
                 artwork = {
                     Icon(
                         imageVector = Icons.Default.MusicNote,

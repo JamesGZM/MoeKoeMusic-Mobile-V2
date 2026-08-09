@@ -41,6 +41,7 @@ internal data class LocalMusicUiState(
     val music: List<LocalMusic> = emptyList(),
     val imports: List<LocalImportProgress> = emptyList(),
     val deviceImport: DeviceImportUiState = DeviceImportUiState.PermissionRequired,
+    val playingSongId: String? = null,
 )
 
 @HiltViewModel
@@ -53,8 +54,19 @@ internal class LocalMusicViewModel
         private val deviceImport = MutableStateFlow<DeviceImportUiState>(DeviceImportUiState.PermissionRequired)
         private var scanJob: Job? = null
         val state: StateFlow<LocalMusicUiState> =
-            combine(repository.observeMusic(), repository.observeImports(), deviceImport, ::LocalMusicUiState)
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalMusicUiState())
+            combine(repository.observeMusic(), repository.observeImports(), deviceImport, playbackController.state) {
+                music,
+                imports,
+                deviceImport,
+                playback,
+                ->
+                LocalMusicUiState(
+                    music = music,
+                    imports = imports,
+                    deviceImport = deviceImport,
+                    playingSongId = playback.currentItem?.id,
+                )
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LocalMusicUiState())
 
         fun openImporter(hasPermission: Boolean) {
             if (hasPermission) {

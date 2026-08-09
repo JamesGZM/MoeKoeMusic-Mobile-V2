@@ -41,4 +41,10 @@ Importing → library/result feedback
 - 大字体允许歌曲行增高；底部主操作不得被列表挤出视口。
 - 每个结构状态提供独立 Preview，状态互斥由 `LocalMusicViewModelTest` 验证。
 
+## 误通过复核
+
+- 旧 contract 只验证搜索框与列表两个顶部中心点，并使用 `fixed=8`、`cumulativeY=12`，无法发现歌曲行、固定文字、播放态和尾部图形偏差。
+- 修复后内容态恢复 `fixed=2`、`cumulativeY=3`，搜索与首行锚点误差分别为 `0.23`、`0.16`，累计漂移 `0.16`；搜索文字、歌曲文字和尾部操作三个局部 region 全部通过。
+- 首曲播放真值来自 `PlaybackController.state` 并提升到 `LocalMusicUiState.playingSongId`，页面不在 Composable 内复制播放选择；截图 fixture 只指定首曲为当前项，不伪造生产状态。
+
 final result: approved

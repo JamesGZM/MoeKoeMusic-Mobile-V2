@@ -21,6 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +34,7 @@ import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeMiniPlayer
 import cn.james.music.core.designsystem.component.MoeSectionHeader
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 import cn.james.music.core.designsystem.test.R as ScreenshotTestR
 import com.android.tools.screenshot.PreviewTest
 
@@ -52,6 +57,20 @@ fun MoeMusicContentDarkScreenshot() {
 @Composable
 fun MoeMusicContentLargeTextScreenshot() {
     MusicContentPreview(themeMode = ThemeMode.Light)
+}
+
+@PreviewTest
+@Preview(name = "SongRowContract", widthDp = 360, heightDp = 64)
+@Composable
+fun MoeSongRowContractScreenshot() {
+    SongRowContractPreview(showProbe = false)
+}
+
+@PreviewTest
+@Preview(name = "SongRowContractLayoutProbe", widthDp = 360, heightDp = 64)
+@Composable
+fun MoeSongRowContractLayoutProbeScreenshot() {
+    SongRowContractPreview(showProbe = true)
 }
 
 @PreviewTest
@@ -144,15 +163,8 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
                 metadata = "3:04",
                 isPlaying = true,
                 onClick = {},
-                minimumHeight = 64.dp,
-                largeTextMinimumHeight = 64.dp,
-                artworkSize = 44.dp,
-                verticalContentPadding = MoeKoeTheme.spacing.extraSmall,
+                style = MoeSongRowStyle.Queue,
                 showPlayingIndicator = false,
-                metadataEndPadding = 0.dp,
-                metadataInSubtitleOnLargeText = false,
-                largeTextTitleMaxLines = 1,
-                inlineTitleContent = false,
                 artwork = artwork(0),
                 leading = {
                     Box(
@@ -180,6 +192,57 @@ private fun MusicContentPreview(themeMode: ThemeMode) {
         }
     }
 }
+
+@Composable
+private fun SongRowContractPreview(showProbe: Boolean) {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        MoeSongRow(
+            title = "コレカラ（从今以后）",
+            subtitle = "Machico",
+            metadata = "4:28",
+            onClick = {},
+            modifier = Modifier.songRowContractProbe(showProbe, Color.Magenta),
+            artwork = {
+                Box(Modifier.fillMaxSize().songRowContractProbe(showProbe, Color.Cyan)) {
+                    Image(
+                        painter = painterResource(ScreenshotTestR.drawable.mini_player_artwork),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+            },
+            badges = {
+                MoeMediaBadge(text = "HQ")
+                MoeMediaBadge(text = "MV", tone = MoeMediaBadgeTone.Error)
+            },
+            trailing = {
+                cn.james.music.core.designsystem.component.MoeSongMoreAction(
+                    contentDescription = "更多",
+                    onClick = {},
+                    modifier = Modifier.songRowContractProbe(showProbe, Color.Green),
+                )
+            },
+        )
+    }
+}
+
+private fun Modifier.songRowContractProbe(
+    enabled: Boolean,
+    color: Color,
+): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        drawWithContent {
+            drawContent()
+            drawRect(
+                color = color,
+                topLeft = Offset(size.width / 2f - 4f, 0f),
+                size = Size(8f, 8f),
+            )
+        }
+    }
 
 @Composable
 private fun MiniPlayerPreview(themeMode: ThemeMode) {

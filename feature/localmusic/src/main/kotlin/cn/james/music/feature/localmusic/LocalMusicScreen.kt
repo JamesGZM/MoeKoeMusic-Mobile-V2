@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,10 +21,15 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +51,7 @@ import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBar
 import cn.james.music.core.designsystem.component.navigation.MoeStandardTopBarAction
+import cn.james.music.core.designsystem.component.navigation.MoeTopBarTitleEmphasis
 import cn.james.music.core.designsystem.component.overlay.MoeAlertDialog
 import cn.james.music.core.model.local.LocalImportBatchState
 import cn.james.music.core.model.local.LocalMusic
@@ -69,9 +76,10 @@ internal fun LocalMusicScreen(
             title = stringResource(R.string.local_music_title),
             navigationContentDescription = stringResource(R.string.local_music_back),
             onNavigateBack = onBack,
+            titleEmphasis = MoeTopBarTitleEmphasis.Strong,
             actions = {
                 MoeStandardTopBarAction(
-                    imageVector = Icons.Default.Download,
+                    imageVector = Icons.Default.SystemUpdateAlt,
                     contentDescription = stringResource(R.string.local_music_open_import),
                     onClick = onImport,
                 )
@@ -115,9 +123,11 @@ internal fun LocalMusicScreen(
                         .padding(
                             horizontal = MoeKoeTheme.spacing.medium,
                             vertical = 6.dp,
-                        ).localMusicLayoutProbe(PROBE_LIBRARY_SEARCH),
+                        ).offset(y = 3.dp)
+                        .localMusicLayoutProbe(PROBE_LIBRARY_SEARCH),
             )
             LazyRow(
+                modifier = Modifier.padding(top = 4.dp),
                 contentPadding = PaddingValues(horizontal = MoeKoeTheme.spacing.medium),
                 horizontalArrangement = Arrangement.spacedBy(MoeKoeTheme.spacing.small),
             ) {
@@ -125,7 +135,27 @@ internal fun LocalMusicScreen(
                     FilterChip(
                         selected = sort == option,
                         onClick = { sort = option },
-                        label = { Text(stringResource(option.labelRes)) },
+                        label = { Text(stringResource(option.labelRes), style = MaterialTheme.typography.labelMedium) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector =
+                                    when (option) {
+                                        LocalMusicSort.Newest -> Icons.Default.History
+                                        LocalMusicSort.Title -> Icons.Default.SortByAlpha
+                                        LocalMusicSort.Artist -> Icons.Default.PersonOutline
+                                        LocalMusicSort.Duration -> Icons.Default.Schedule
+                                    },
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                        colors =
+                            FilterChipDefaults.filterChipColors(
+                                labelColor = MaterialTheme.colorScheme.primary,
+                                iconColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                                selectedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            ),
                     )
                 }
             }
@@ -148,11 +178,18 @@ internal fun LocalMusicScreen(
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(MoeKoeTheme.spacing.medium),
+                    contentPadding =
+                        PaddingValues(
+                            start = 19.dp,
+                            top = 9.dp,
+                            end = 8.dp,
+                            bottom = MoeKoeTheme.spacing.medium,
+                        ),
                 ) {
                     itemsIndexed(visible, key = { _, music -> music.id }) { index, music ->
                         LocalMusicRow(
                             music = music,
+                            isPlaying = music.id == state.playingSongId,
                             onClick = { onPlay(music, visible) },
                             onDelete = { deleting = music },
                             modifier = if (index == 0) Modifier.localMusicLayoutProbe(PROBE_LIBRARY_LIST) else Modifier,

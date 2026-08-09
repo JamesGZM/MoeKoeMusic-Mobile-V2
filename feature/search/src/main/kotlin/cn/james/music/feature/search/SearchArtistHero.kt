@@ -95,7 +95,7 @@ private fun ArtistDetails(
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(artist.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(artist.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             artist.badge?.let { SearchBadge(it, MaterialTheme.colorScheme.tertiary) }
         }
         Text(artist.stats, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1)

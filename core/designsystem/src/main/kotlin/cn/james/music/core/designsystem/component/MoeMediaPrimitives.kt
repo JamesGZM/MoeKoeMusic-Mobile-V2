@@ -61,8 +61,8 @@ fun MoeMediaBadge(
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 3.dp),
+            style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
         )
     }

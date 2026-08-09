@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeMediaBadge
 import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
+import cn.james.music.core.designsystem.component.MoeSongMoreAction
 import cn.james.music.core.designsystem.component.MoeSongRow
+import cn.james.music.core.designsystem.component.MoeSongRowStyle
 
 @Composable
 internal fun PlaylistTrackItem(
@@ -46,29 +46,13 @@ internal fun PlaylistTrackItem(
         subtitle = song.artist,
         metadata = song.durationLabel,
         onClick = onClick,
-        minimumHeight = if (isCurrent) 58.dp else 57.dp,
-        largeTextMinimumHeight = 88.dp,
-        artworkSize = 44.dp,
-        artworkShape = RoundedCornerShape(8.dp),
-        decorateArtwork = false,
-        contentStartPadding = 4.dp,
-        contentEndPadding = 0.dp,
-        verticalContentPadding = 0.dp,
-        textHorizontalPadding = 12.dp,
-        subtitleTopPadding = 2.dp,
-        metadataStartPadding = 8.dp,
-        metadataEndPadding = 0.dp,
-        metadataInSubtitleOnLargeText = false,
+        style = if (isCurrent) MoeSongRowStyle.PlaylistCurrent else MoeSongRowStyle.Playlist,
         isPlaying = isCurrent,
         showPlayingIndicator = false,
         highlightTitleWhenPlaying = false,
         shape = RoundedCornerShape(12.dp),
         containerColor = if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f) else Color.Transparent,
-        titleStyle = MaterialTheme.typography.titleSmall,
-        subtitleStyle = MaterialTheme.typography.bodySmall,
-        metadataStyle = MaterialTheme.typography.bodySmall,
         titleFontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Medium,
-        inlineTitleContent = false,
         modifier = modifier.padding(horizontal = 8.dp).fillMaxWidth(),
         leading = {
             if (isCurrent) {
@@ -107,9 +91,10 @@ internal fun PlaylistTrackItem(
             }
         },
         trailing = {
-            IconButton(onClick = onMore, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
-                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.playlist_detail_track_more, song.title))
-            }
+            MoeSongMoreAction(
+                contentDescription = stringResource(R.string.playlist_detail_track_more, song.title),
+                onClick = onMore,
+            )
         },
     )
 }
