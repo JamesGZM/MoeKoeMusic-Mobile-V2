@@ -53,14 +53,14 @@ PC 会保存 `resolvedQuality` 与候选 hash；见 `../MoeKoeMusic/src/componen
 
 - 保持现有 HTTPS、签名、会话加密和幂等读取有限重试；不新增 Endpoint、权限、DataStore 文件、Room 表或网络日志。`privilege_lite` 与 `song_url` 已是既有 Endpoint，首次实现仍须在离线 fixture 通过后单独受控真实兼容验证，且不得记录 URL、Cookie、token、候选 hash 或正文。
 - 设置读取失败安全回退 128；保存失败回滚最后持久值并精确重试最后失败的质量选择。质量写入拥有独立 job/generation，不取消主题、自动跳过、动态色、歌词附加文本或字号写入。
-- `09-settings.png` 已确认“默认音质”行和现有 `MoeDialog`/RadioButton 是可复用视觉语言，但尚未确认具体 Android 选项文案与 Dialog 状态。实现前必须用本审计七档产品事实登记设置 dialog 的 state/contract、语义、正常/保存失败状态及截图；不得放宽 `settings.content.light` 阈值或把真实行改动遮罩。实际质量角标变化同时更新 Player contract/evidence，只有设计符合度通过后才更新受影响 golden。
+- `09-settings.png` 已确认“默认音质”行和现有 `MoeDialog`/RadioButton 是可复用视觉语言。设置 Dialog 标题为“选择默认音质”，七档完整文案依次为“标准音质 · 128 Kbps / 高品音质 · 320 Kbps / FLAC 无损 / Hi-Res 无损 / 蝰蛇全景 / 蝰蛇超清 / 蝰蛇母带”，行尾则只显示简短无歧义标签。正常、保存中与失败回滚状态由 settings contract、语义/行为测试和截图共同验证；不得放宽 `settings.content.light` 阈值或把真实行改动遮罩。实际质量角标变化同时更新 Player contract/evidence，只有设计符合度通过后才更新受影响 golden。
 
 ## 原子实施顺序与测试矩阵
 
 1. 领域：`PlaybackQualityPreference`、`AppSettings`、Repository setter、独立 v1 string key；已完成。core 只定义七档语义顺序；data 私有地映射稳定 storage value。default/round-trip/unknown/read/write/cancellation、每档 raw storage value 及与既有偏好互不覆盖均由 core/data JVM 测试覆盖；尚未开放设置 UI 或消费解析偏好。协议字符串到 `KugouPlaybackQuality` 的映射留给下一协议切片。
 2. 协议与数据：类型化候选计划、client 质量参数、登录/匿名分支、逐档回退、停止边界、取消和迟到结果；已完成，并以固定虚构 DTO/Transport 覆盖七档顺序、匿名、候选、VIP/mp4、停止错误、取消和偏好快照；未碰真实服务。
 3. 播放：resolved-source/runtime-state 只携带实际质量；已完成。JVM 覆盖协议候选到 runtime quality 的七档映射、当前队列项读取、地址刷新替换，以及 `PlaybackItem`/快照边界不携带质量；本地/演示 source result 为 `null`。`MediaItem` extras 的运行时跨进程行为与实际播放留给后续指定真机验收。
-4. 设置：真实选择行、复用确认 Dialog、独立保存代际、回滚和精确 Retry；在写入中仅禁用该行/Dialog。
+4. 设置：真实选择行、复用确认 Dialog、独立保存代际、回滚和精确 Retry；已完成。保存中仅禁用该行/Dialog，七档文案、Radio 语义、失败回滚、快速代际与最后失败精确 Retry 均由 settings JVM/Compose/screenshot 覆盖；未触碰 Player badge 或真实服务。
 5. UI/证据：Settings dialog/语义、Player 实际标签/无标签状态、现有浅深/AMOLED/大字体截图与定向 fidelity；再进行受控真实登录/匿名地址解析和指定真机播放验证。
 
 JVM 必测：七档顺序与未知值；匿名不查候选且始终 128；登录优先档/缺候选/逐级回退；VIP、无版权、风控、登录失效、离线、超时、连接、服务、协议；`mp4`、空/过滤后 URL 映射到既有 `Unavailable` 的行为；取消、A→B 切歌迟到、地址刷新；偏好并发写入和当前流不换流。Compose/截图必测：选择语义、保存中禁用、失败回滚/Retry，以及 badge 只反映 resolved quality。设备与真实服务均留给实现后验收，本审计未运行。

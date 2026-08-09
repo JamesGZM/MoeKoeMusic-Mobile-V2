@@ -55,6 +55,23 @@ internal fun LyricsTextSizeSelectionDialog(
 }
 
 @Composable
+internal fun PlaybackQualitySelectionDialog(
+    selected: SettingsPlaybackQualityUi,
+    saving: SettingsPlaybackQualityUi?,
+    onAction: (SettingsAction) -> Unit,
+) {
+    SettingsSelectionDialog(
+        title = stringResource(R.string.settings_choose_playback_quality),
+        options = SettingsPlaybackQualityUi.entries,
+        selected = selected,
+        saving = saving != null,
+        optionLabel = { quality -> quality.fullDisplayName() },
+        onSelected = { quality -> onAction(SettingsAction.SelectPlaybackQuality(quality)) },
+        onDismiss = { onAction(SettingsAction.DismissOverlay) },
+    )
+}
+
+@Composable
 private fun <T> SettingsSelectionDialog(
     title: String,
     options: List<T>,

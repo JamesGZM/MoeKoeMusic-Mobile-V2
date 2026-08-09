@@ -10,6 +10,19 @@
     <string name="settings_playback_quality">播放与音质</string>
     <string name="settings_default_quality">默认音质</string>
     <string name="settings_quality_standard">标准</string>
+    <string name="settings_quality_high">高品</string>
+    <string name="settings_quality_lossless">FLAC</string>
+    <string name="settings_quality_hi_res">Hi-Res</string>
+    <string name="settings_quality_viper_atmos">蝰蛇全景</string>
+    <string name="settings_quality_viper_clear">蝰蛇超清</string>
+    <string name="settings_quality_viper_tape">蝰蛇母带</string>
+    <string name="settings_quality_standard_full">标准音质 · 128 Kbps</string>
+    <string name="settings_quality_high_full">高品音质 · 320 Kbps</string>
+    <string name="settings_quality_lossless_full">FLAC 无损</string>
+    <string name="settings_quality_hi_res_full">Hi-Res 无损</string>
+    <string name="settings_quality_viper_atmos_full">蝰蛇全景</string>
+    <string name="settings_quality_viper_clear_full">蝰蛇超清</string>
+    <string name="settings_quality_viper_tape_full">蝰蛇母带</string>
     <string name="settings_skip_failed">播放失败时自动跳过</string>
     <string name="settings_fade">淡入淡出</string>
     <string name="settings_disabled">关闭</string>
@@ -31,6 +44,7 @@
     <string name="settings_about">关于 MoeKoe Air</string>
     <string name="settings_choose_theme">选择主题模式</string>
     <string name="settings_choose_lyrics_text_size">选择歌词字体大小</string>
+    <string name="settings_choose_playback_quality">选择默认音质</string>
     <string name="settings_theme_system">跟随系统</string>
     <string name="settings_theme_light">浅色</string>
     <string name="settings_theme_dark">深色</string>

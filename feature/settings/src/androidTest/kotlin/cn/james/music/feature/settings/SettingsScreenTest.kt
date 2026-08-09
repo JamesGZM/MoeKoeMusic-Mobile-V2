@@ -281,6 +281,86 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("150%").assertIsNotEnabled()
     }
 
+    @Test
+    fun playbackQualityDialogUsesSevenRadioOptionsAndDisablesWhileSaving() {
+        var selected: SettingsPlaybackQualityUi? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(overlay = SettingsOverlay.PlaybackQualitySelection),
+                        onAction = { action ->
+                            if (action is SettingsAction.SelectPlaybackQuality) selected = action.quality
+                        },
+                    )
+                }
+            }
+        }
+
+        listOf(
+            "标准音质 · 128 Kbps",
+            "高品音质 · 320 Kbps",
+            "FLAC 无损",
+            "Hi-Res 无损",
+            "蝰蛇全景",
+            "蝰蛇超清",
+            "蝰蛇母带",
+        ).forEach { label -> composeRule.onNodeWithText(label).assertIsDisplayed() }
+        composeRule.onNodeWithText("Hi-Res 无损").performClick()
+        assertEquals(SettingsPlaybackQualityUi.HiRes, selected)
+
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                playbackQuality = SettingsPlaybackQualityUi.HiRes,
+                                savingPlaybackQuality = SettingsPlaybackQualityUi.HiRes,
+                                overlay = SettingsOverlay.PlaybackQualitySelection,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        playbackQuality = SettingsPlaybackQualityUi.HiRes,
+                                        savingPlaybackQuality = SettingsPlaybackQualityUi.HiRes,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Hi-Res 无损").assertIsNotEnabled()
+    }
+
+    @Test
+    fun savingPlaybackQualityDisablesOnlyItsRow() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                savingPlaybackQuality = SettingsPlaybackQualityUi.Standard,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        savingPlaybackQuality = SettingsPlaybackQualityUi.Standard,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("默认音质").assertIsNotEnabled()
+        composeRule.onNodeWithText("主题模式").assertIsEnabled()
+    }
+
     private fun setSettingsContent(theme: SettingsThemeUi) {
         composeRule.setContent {
             MoeKoeTheme {

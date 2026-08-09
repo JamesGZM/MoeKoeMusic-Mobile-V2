@@ -101,6 +101,12 @@ internal fun SettingsScreen(
                 saving = state.savingLyricsTextSize,
                 onAction = onAction,
             )
+        SettingsOverlay.PlaybackQualitySelection ->
+            PlaybackQualitySelectionDialog(
+                selected = state.playbackQuality,
+                saving = state.savingPlaybackQuality,
+                onAction = onAction,
+            )
         SettingsOverlay.About -> AboutDialog(onAction = onAction)
         null -> Unit
     }

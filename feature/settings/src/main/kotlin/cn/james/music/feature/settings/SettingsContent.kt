@@ -87,6 +87,15 @@ private fun SettingsRow(
                 loading = row.loading,
                 onClick = { onAction(SettingsAction.OpenLyricsTextSize) },
             )
+        is SettingsRowUi.PlaybackQualityValue ->
+            SettingsActionItem(
+                icon = visual.icon,
+                iconColor = visual.color,
+                title = stringResource(visual.titleRes),
+                value = row.value.shortDisplayName(),
+                loading = row.loading,
+                onClick = { onAction(SettingsAction.OpenPlaybackQuality) },
+            )
         is SettingsRowUi.Unavailable ->
             SettingsUnavailableItem(
                 icon = visual.icon,
@@ -178,5 +187,33 @@ internal fun SettingsLyricsTextSizeUi.displayName(): String =
             SettingsLyricsTextSizeUi.Standard -> R.string.settings_standard
             SettingsLyricsTextSizeUi.Large -> R.string.settings_lyrics_text_size_large
             SettingsLyricsTextSizeUi.Largest -> R.string.settings_lyrics_text_size_largest
+        },
+    )
+
+@Composable
+internal fun SettingsPlaybackQualityUi.shortDisplayName(): String =
+    stringResource(
+        when (this) {
+            SettingsPlaybackQualityUi.Standard -> R.string.settings_quality_standard
+            SettingsPlaybackQualityUi.High -> R.string.settings_quality_high
+            SettingsPlaybackQualityUi.Lossless -> R.string.settings_quality_lossless
+            SettingsPlaybackQualityUi.HiRes -> R.string.settings_quality_hi_res
+            SettingsPlaybackQualityUi.ViperAtmos -> R.string.settings_quality_viper_atmos
+            SettingsPlaybackQualityUi.ViperClear -> R.string.settings_quality_viper_clear
+            SettingsPlaybackQualityUi.ViperTape -> R.string.settings_quality_viper_tape
+        },
+    )
+
+@Composable
+internal fun SettingsPlaybackQualityUi.fullDisplayName(): String =
+    stringResource(
+        when (this) {
+            SettingsPlaybackQualityUi.Standard -> R.string.settings_quality_standard_full
+            SettingsPlaybackQualityUi.High -> R.string.settings_quality_high_full
+            SettingsPlaybackQualityUi.Lossless -> R.string.settings_quality_lossless_full
+            SettingsPlaybackQualityUi.HiRes -> R.string.settings_quality_hi_res_full
+            SettingsPlaybackQualityUi.ViperAtmos -> R.string.settings_quality_viper_atmos_full
+            SettingsPlaybackQualityUi.ViperClear -> R.string.settings_quality_viper_clear_full
+            SettingsPlaybackQualityUi.ViperTape -> R.string.settings_quality_viper_tape_full
         },
     )

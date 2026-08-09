@@ -74,6 +74,36 @@ fun SettingsLyricsTextSizeDialogScreenshot() {
     }
 }
 
+@PreviewTest
+@Preview(name = "PlaybackQualityDialog", widthDp = 390, heightDp = 844)
+@Composable
+fun SettingsPlaybackQualityDialogScreenshot() {
+    PlaybackQualityDialogScreenshotContent()
+}
+
+@PreviewTest
+@Preview(name = "PlaybackQualityDialogLargeText20", widthDp = 390, heightDp = 844, fontScale = 2.0f)
+@Composable
+fun SettingsPlaybackQualityDialogLargeText20Screenshot() {
+    PlaybackQualityDialogScreenshotContent()
+}
+
+@Composable
+private fun PlaybackQualityDialogScreenshotContent() {
+    MoeKoeTheme(themeMode = ThemeMode.Light) {
+        Surface {
+            SettingsScreen(
+                state =
+                    SettingsUiState(
+                        overlay = SettingsOverlay.PlaybackQualitySelection,
+                        groups = settingsGroups(SettingsThemeUi.System, autoSkipFailedPlayback = true),
+                    ),
+                onAction = {},
+            )
+        }
+    }
+}
+
 @Composable
 private fun SettingsScreenshotContent(
     themeMode: ThemeMode,

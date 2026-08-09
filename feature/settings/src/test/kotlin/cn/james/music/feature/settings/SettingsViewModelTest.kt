@@ -403,6 +403,109 @@ class SettingsViewModelTest {
             )
         }
 
+    @Test
+    fun repositorySnapshotMapsPlaybackQualityToTheSettingsRow() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.settingsState.value =
+                AppSettingsSnapshot(
+                    settings = AppSettings(playbackQuality = PlaybackQualityPreference.ViperTape),
+                )
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            assertEquals(SettingsPlaybackQualityUi.ViperTape, viewModel.state.value.playbackQuality)
+        }
+
+    @Test
+    fun playbackQualitySelectionPersistsIndependently() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.HiRes))
+            advanceUntilIdle()
+
+            assertEquals(SettingsPlaybackQualityUi.HiRes, viewModel.state.value.playbackQuality)
+            assertEquals(null, viewModel.state.value.savingPlaybackQuality)
+            assertEquals(listOf(PlaybackQualityPreference.HiRes), repository.playbackQualityRequests)
+        }
+
+    @Test
+    fun failedPlaybackQualitySelectionRollsBackAndRetriesItsOwnRequest() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.playbackQualityResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.Lossless))
+            advanceUntilIdle()
+
+            assertEquals(SettingsPlaybackQualityUi.Standard, viewModel.state.value.playbackQuality)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.playbackQualityResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(SettingsPlaybackQualityUi.Lossless, viewModel.state.value.playbackQuality)
+            assertEquals(
+                listOf(PlaybackQualityPreference.Lossless, PlaybackQualityPreference.Lossless),
+                repository.playbackQualityRequests,
+            )
+        }
+
+    @Test
+    fun stalePlaybackQualityWriteCannotOverrideNewerSelection() =
+        runTest(dispatcher) {
+            val repository = OutOfOrderRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.High))
+            runCurrent()
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.ViperTape))
+            runCurrent()
+
+            repository.completePlaybackQuality(PlaybackQualityPreference.High)
+            runCurrent()
+            assertEquals(SettingsPlaybackQualityUi.Standard, viewModel.state.value.playbackQuality)
+            assertEquals(SettingsPlaybackQualityUi.ViperTape, viewModel.state.value.savingPlaybackQuality)
+
+            repository.completePlaybackQuality(PlaybackQualityPreference.ViperTape)
+            advanceUntilIdle()
+            assertEquals(SettingsPlaybackQualityUi.ViperTape, viewModel.state.value.playbackQuality)
+            assertEquals(null, viewModel.state.value.savingPlaybackQuality)
+        }
+
+    @Test
+    fun retryTargetsPlaybackQualityWhenItsFailureFinishesLast() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetDynamicCoverColors(false))
+            viewModel.onAction(SettingsAction.SelectPlaybackQuality(SettingsPlaybackQualityUi.HiRes))
+            runCurrent()
+
+            repository.failDynamicCoverColors()
+            runCurrent()
+            repository.failPlaybackQuality()
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(false), repository.dynamicCoverColorsRequests)
+            assertEquals(
+                listOf(PlaybackQualityPreference.HiRes, PlaybackQualityPreference.HiRes),
+                repository.playbackQualityRequests,
+            )
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
@@ -413,11 +516,13 @@ class SettingsViewModelTest {
         var dynamicCoverColorsResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var lyricsSupplementalTextResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         var lyricsTextSizeResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        var playbackQualityResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
         val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
+        val playbackQualityRequests = mutableListOf<PlaybackQualityPreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -428,7 +533,14 @@ class SettingsViewModelTest {
             }
         }
 
-        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult = result
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
+            playbackQualityRequests += quality
+            return playbackQualityResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(playbackQuality = quality))
+                }
+            }
+        }
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
             autoSkipRequests += enabled
@@ -478,6 +590,8 @@ class SettingsViewModelTest {
         private val completions = AppThemePreference.entries.associateWith { CompletableDeferred<Unit>() }
         private val lyricsTextSizeCompletions =
             LyricsTextSizePreference.entries.associateWith { CompletableDeferred<Unit>() }
+        private val playbackQualityCompletions =
+            PlaybackQualityPreference.entries.associateWith { CompletableDeferred<Unit>() }
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             withContext(NonCancellable) { completions.getValue(theme).await() }
@@ -485,8 +599,11 @@ class SettingsViewModelTest {
             return AppSettingsUpdateResult.Success
         }
 
-        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
-            AppSettingsUpdateResult.Success
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
+            withContext(NonCancellable) { playbackQualityCompletions.getValue(quality).await() }
+            settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(playbackQuality = quality))
+            return AppSettingsUpdateResult.Success
+        }
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
 
@@ -507,6 +624,10 @@ class SettingsViewModelTest {
         fun completeLyricsTextSize(size: LyricsTextSizePreference) {
             lyricsTextSizeCompletions.getValue(size).complete(Unit)
         }
+
+        fun completePlaybackQuality(quality: PlaybackQualityPreference) {
+            playbackQualityCompletions.getValue(quality).complete(Unit)
+        }
     }
 
     private class ConcurrentFailureRepository(
@@ -519,11 +640,13 @@ class SettingsViewModelTest {
         private val dynamicCoverColorsCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val lyricsSupplementalTextCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         private val lyricsTextSizeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val playbackQualityCompletion = CompletableDeferred<AppSettingsUpdateResult>()
         val themeRequests = mutableListOf<AppThemePreference>()
         val autoSkipRequests = mutableListOf<Boolean>()
         val dynamicCoverColorsRequests = mutableListOf<Boolean>()
         val lyricsSupplementalTextRequests = mutableListOf<Boolean>()
         val lyricsTextSizeRequests = mutableListOf<LyricsTextSizePreference>()
+        val playbackQualityRequests = mutableListOf<PlaybackQualityPreference>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
             themeRequests += theme
@@ -534,8 +657,14 @@ class SettingsViewModelTest {
             }
         }
 
-        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult =
-            AppSettingsUpdateResult.Success
+        override suspend fun setPlaybackQuality(quality: PlaybackQualityPreference): AppSettingsUpdateResult {
+            playbackQualityRequests += quality
+            return if (playbackQualityRequests.size == 1) {
+                withContext(NonCancellable) { playbackQualityCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
 
         override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
             autoSkipRequests += enabled
@@ -591,6 +720,10 @@ class SettingsViewModelTest {
 
         fun failLyricsTextSize() {
             lyricsTextSizeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failPlaybackQuality() {
+            playbackQualityCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }

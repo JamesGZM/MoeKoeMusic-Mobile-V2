@@ -18,6 +18,17 @@ internal enum class SettingsLyricsTextSizeUi {
 }
 
 @Immutable
+internal enum class SettingsPlaybackQualityUi {
+    Standard,
+    High,
+    Lossless,
+    HiRes,
+    ViperAtmos,
+    ViperClear,
+    ViperTape,
+}
+
+@Immutable
 internal enum class SettingsProblemUi {
     Read,
     Write,
@@ -28,6 +39,8 @@ internal sealed interface SettingsOverlay {
     data object ThemeSelection : SettingsOverlay
 
     data object LyricsTextSizeSelection : SettingsOverlay
+
+    data object PlaybackQualitySelection : SettingsOverlay
 
     data object About : SettingsOverlay
 }
@@ -79,6 +92,12 @@ internal sealed interface SettingsRowUi {
         val loading: Boolean,
     ) : SettingsRowUi
 
+    data class PlaybackQualityValue(
+        override val id: SettingsRowId,
+        val value: SettingsPlaybackQualityUi,
+        val loading: Boolean,
+    ) : SettingsRowUi
+
     data class Unavailable(
         override val id: SettingsRowId,
     ) : SettingsRowUi
@@ -103,11 +122,13 @@ internal data class SettingsUiState(
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
     val lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
+    val playbackQuality: SettingsPlaybackQualityUi = SettingsPlaybackQualityUi.Standard,
     val savingTheme: SettingsThemeUi? = null,
     val savingAutoSkipFailedPlayback: Boolean? = null,
     val savingDynamicCoverColors: Boolean? = null,
     val savingLyricsSupplementalText: Boolean? = null,
     val savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
+    val savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
@@ -141,7 +162,13 @@ internal sealed interface SettingsAction {
         val size: SettingsLyricsTextSizeUi,
     ) : SettingsAction
 
+    data class SelectPlaybackQuality(
+        val quality: SettingsPlaybackQualityUi,
+    ) : SettingsAction
+
     data object OpenLyricsTextSize : SettingsAction
+
+    data object OpenPlaybackQuality : SettingsAction
 
     data object DismissOverlay : SettingsAction
 
@@ -156,11 +183,13 @@ internal fun settingsGroups(
     dynamicCoverColors: Boolean = true,
     showLyricsSupplementalText: Boolean = true,
     lyricsTextSize: SettingsLyricsTextSizeUi = SettingsLyricsTextSizeUi.Standard,
+    playbackQuality: SettingsPlaybackQualityUi = SettingsPlaybackQualityUi.Standard,
     savingTheme: SettingsThemeUi? = null,
     savingAutoSkipFailedPlayback: Boolean? = null,
     savingDynamicCoverColors: Boolean? = null,
     savingLyricsSupplementalText: Boolean? = null,
     savingLyricsTextSize: SettingsLyricsTextSizeUi? = null,
+    savingPlaybackQuality: SettingsPlaybackQualityUi? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -181,7 +210,11 @@ internal fun settingsGroups(
             id = SettingsGroupId.PlaybackQuality,
             rows =
                 listOf(
-                    SettingsRowUi.Unavailable(SettingsRowId.DefaultQuality),
+                    SettingsRowUi.PlaybackQualityValue(
+                        id = SettingsRowId.DefaultQuality,
+                        value = playbackQuality,
+                        loading = savingPlaybackQuality != null,
+                    ),
                     SettingsRowUi.Toggle(
                         id = SettingsRowId.SkipFailed,
                         checked = autoSkipFailedPlayback,
