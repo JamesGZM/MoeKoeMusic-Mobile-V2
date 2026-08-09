@@ -23,7 +23,6 @@ jobs:
       - name: Configure deterministic runner locale and timezone
         shell: bash
         run: |
-          locale -a | grep -Eiq '^en_US\.UTF-8$'
           test "$(LC_ALL=en_US.UTF-8 locale charmap)" = "UTF-8"
           test "$(TZ=UTC date +%Z)" = "UTC"
           printf '%s\n' 'LANG=en_US.UTF-8' 'LC_ALL=en_US.UTF-8' 'TZ=UTC' >> "$GITHUB_ENV"
