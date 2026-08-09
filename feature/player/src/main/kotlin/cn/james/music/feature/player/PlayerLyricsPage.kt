@@ -40,13 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.action.MoeButton
-import cn.james.music.core.model.playback.PlaybackItem
 
 @Composable
 internal fun PlayerLyricsPage(
     state: PlayerUiState,
     progress: State<PlayerProgressUiState>,
-    item: PlaybackItem,
+    item: PlayerItemUiModel,
     lyricsState: PlayerLyricsUiState,
     activePage: Int,
     onTogglePlayback: () -> Unit,

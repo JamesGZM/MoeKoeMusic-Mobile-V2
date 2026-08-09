@@ -15,6 +15,7 @@ class ArchitecturePolicyTest {
                     ":feature:localmusic -> :playback",
                     ":feature:foundation -> :playback",
                     ":feature:login -> :core:model",
+                    ":feature:player -> :core:designsystem",
                 ),
             )
 
@@ -23,9 +24,16 @@ class ArchitecturePolicyTest {
 
     @Test
     fun `拒绝 Feature 之间和 Feature 到 data 的依赖`() {
-        val violations = ArchitecturePolicy.validateEdges(listOf(":feature:home -> :feature:login", ":feature:home -> :data"))
+        val violations =
+            ArchitecturePolicy.validateEdges(
+                listOf(
+                    ":feature:home -> :feature:login",
+                    ":feature:home -> :data",
+                    ":feature:player -> :core:model",
+                ),
+            )
 
-        assertEquals(listOf(":feature:home -> :data", ":feature:home -> :feature:login"), violations)
+        assertEquals(listOf(":feature:home -> :data", ":feature:home -> :feature:login", ":feature:player -> :core:model"), violations)
     }
 
     @Test
@@ -55,6 +63,45 @@ class ArchitecturePolicyTest {
 
         assertEquals(2, violations.size)
         assertTrue(violations.all { it.contains("受控视觉原语") })
+    }
+
+    @Test
+    fun `Player 生产源码只允许纯 UI model 且禁止视觉字段`() {
+        val root = createTempDirectory("moekoe-player-boundary-").toFile()
+        val valid =
+            writeSource(
+                root,
+                "feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerModels.kt",
+                "@JvmInline value class PlayerArtworkStorageRef(val key: String)\n" +
+                    "data class AppStorage(val ref: PlayerArtworkStorageRef)\n" +
+                    "data class PlayerArtworkUiModel(val storage: AppStorage)\n" +
+                    "data class PlayerItemUiModel(val id: String, val artwork: PlayerArtworkUiModel)",
+            )
+
+        assertTrue(ArchitecturePolicy.validateImports(root, listOf(valid)).isEmpty())
+        assertTrue(ArchitecturePolicy.validatePlayerFeatureBoundary(root, listOf(valid)).isEmpty())
+
+        val invalidImports =
+            writeSource(
+                root,
+                "feature/player/src/main/kotlin/cn/james/music/feature/player/LeakingPlayer.kt",
+                "import cn.james.music.core.model.playback.PlaybackItem\nimport cn.james.music.playback.PlaybackController\nimport java.io.File\nimport android.net.Uri\n",
+            )
+        assertEquals(4, ArchitecturePolicy.validateImports(root, listOf(invalidImports)).size)
+
+        val invalidModel =
+            writeSource(
+                root,
+                "feature/player/src/main/kotlin/cn/james/music/feature/player/LeakingPlayerModel.kt",
+                "@JvmInline value class LeakingStorageRef(val relativePath: String)\n" +
+                    "data class AppStorage(val artworkPath: String)\n" +
+                    "data class PlayerUiModel(val item: PlaybackItem, val padding: Dp, val tint: Color, val previewArtwork: String)",
+            )
+        val violations = ArchitecturePolicy.validatePlayerFeatureBoundary(root, listOf(invalidModel))
+        assertTrue(violations.any { it.contains("PlaybackItem") })
+        assertTrue(violations.any { it.contains("视觉布局") })
+        assertTrue(violations.any { it.contains("relativePath") })
+        assertTrue(violations.any { it.contains("artworkPath") })
     }
 
     @Test
@@ -188,6 +235,39 @@ class ArchitecturePolicyTest {
 
         valid.writeText("fun Screen() { MoeDataSongRow(model = model) }")
         assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, valid), listOf(spec)).single().contains("onEvent"))
+    }
+
+    @Test
+    fun `PlayerQueueSheet 登记后只接受 model onEvent 和可选 modifier`() {
+        val root = createTempDirectory("moekoe-player-queue-component-").toFile()
+        val owner =
+            writeSource(
+                root,
+                "feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerQueueSheet.kt",
+                "fun PlayerQueueSheet(model: Any, onEvent: (Any) -> Unit, modifier: Any) = Unit",
+            )
+        val consumer =
+            writeSource(
+                root,
+                "app/src/main/kotlin/cn/james/music/PlaybackShell.kt",
+                "fun Queue() { PlayerQueueSheet(model = model, onEvent = onEvent, modifier = modifier) }",
+            )
+        val spec = DataDrivenUiComponentSpec("PlayerQueueSheet", owner.relativeTo(root).invariantSeparatorsPath)
+
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec)).isEmpty())
+
+        consumer.writeText("fun Queue() { PlayerQueueSheet(model, onEvent = onEvent) }")
+        assertTrue(ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec)).single().contains("命名参数"))
+
+        consumer.writeText("fun Queue() { PlayerQueueSheet(model = model, onDismiss = {}) }")
+        val extraCallback = ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec))
+        assertTrue(extraCallback.any { it.contains("只允许") })
+        assertTrue(extraCallback.any { it.contains("onEvent") })
+
+        consumer.writeText("fun Queue() { PlayerQueueSheet(onEvent = onEvent) }")
+        assertTrue(
+            ArchitecturePolicy.validateDataDrivenUiComponents(root, listOf(owner, consumer), listOf(spec)).single().contains("model"),
+        )
     }
 
     @Test

@@ -28,7 +28,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cn.james.music.core.model.playback.PlaybackMode
 
 @Composable
 internal fun QueueEmptyState(modifier: Modifier = Modifier) {
@@ -74,19 +73,19 @@ internal fun QueueDismissHint(onDismiss: () -> Unit) {
     }
 }
 
-internal fun queueModeIcon(mode: PlaybackMode): ImageVector =
+internal fun queueModeIcon(mode: PlayerPlaybackModeUi): ImageVector =
     when (mode) {
-        PlaybackMode.Shuffle -> Icons.Default.Shuffle
-        PlaybackMode.RepeatOne -> Icons.Default.RepeatOne
-        PlaybackMode.Sequential, PlaybackMode.RepeatAll -> Icons.Default.Repeat
+        PlayerPlaybackModeUi.Shuffle -> Icons.Default.Shuffle
+        PlayerPlaybackModeUi.RepeatOne -> Icons.Default.RepeatOne
+        PlayerPlaybackModeUi.Sequential, PlayerPlaybackModeUi.RepeatAll -> Icons.Default.Repeat
     }
 
-internal fun queueModeLabel(mode: PlaybackMode): Int =
+internal fun queueModeLabel(mode: PlayerPlaybackModeUi): Int =
     when (mode) {
-        PlaybackMode.Sequential -> R.string.player_mode_sequence
-        PlaybackMode.RepeatAll -> R.string.player_mode_repeat_all
-        PlaybackMode.RepeatOne -> R.string.player_mode_repeat_one
-        PlaybackMode.Shuffle -> R.string.player_mode_shuffle
+        PlayerPlaybackModeUi.Sequential -> R.string.player_mode_sequence
+        PlayerPlaybackModeUi.RepeatAll -> R.string.player_mode_repeat_all
+        PlayerPlaybackModeUi.RepeatOne -> R.string.player_mode_repeat_one
+        PlayerPlaybackModeUi.Shuffle -> R.string.player_mode_shuffle
     }
 
 internal val QueueContainer = Color(0xFF222538)

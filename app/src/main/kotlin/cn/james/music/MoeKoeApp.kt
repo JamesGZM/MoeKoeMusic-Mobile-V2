@@ -44,7 +44,6 @@ import cn.james.music.feature.login.loginDestination
 import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.player.PlayerDestination
 import cn.james.music.feature.player.PlayerProgressUiState
-import cn.james.music.feature.player.PlayerUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.playlist.PlaylistDetailDestination
 import cn.james.music.feature.playlist.playlistDetailDestination
@@ -54,8 +53,6 @@ import cn.james.music.feature.search.SearchDestination
 import cn.james.music.feature.search.searchDestination
 import cn.james.music.feature.settings.SettingsDestination
 import cn.james.music.feature.settings.settingsDestination
-import cn.james.music.playback.PlaybackConnectionState
-import cn.james.music.playback.PlaybackStatus
 import kotlinx.coroutines.delay
 
 @Composable
@@ -81,13 +78,7 @@ fun MoeKoeApp(
     val isImmersiveLogin = currentDestination?.hasRoute<LoginDestination>() == true
     val playerUiState =
         rememberUpdatedState(
-            PlayerUiState(
-                item = state.currentItem,
-                isPlaying = state.isPlaying,
-                isBuffering = state.status == PlaybackStatus.Buffering,
-                controlsEnabled = state.connection == PlaybackConnectionState.Connected,
-                mode = state.mode,
-            ),
+            state.toPlayerUiState(),
         )
     val playerProgressUiState =
         remember(progress) {
@@ -243,13 +234,17 @@ fun MoeKoeApp(
 
     if (queueVisible) {
         MoeKoeQueueSheet(
-            state = state,
-            currentDurationMs = progress.value.durationMs,
-            onDismiss = { queueVisible = false },
-            onPlayAt = viewModel::playAt,
-            onRemove = viewModel::removeAt,
-            onClear = viewModel::clearQueue,
-            onChangeMode = viewModel::cycleMode,
+            model = state.toPlayerQueueUiState(progress.value.durationMs),
+            onEvent = { action ->
+                when (val resolved = state.resolvePlayerQueueAction(action)) {
+                    ResolvedPlayerQueueAction.Dismiss -> queueVisible = false
+                    is ResolvedPlayerQueueAction.PlayAt -> viewModel.playAt(resolved.index)
+                    is ResolvedPlayerQueueAction.RemoveAt -> viewModel.removeAt(resolved.index)
+                    ResolvedPlayerQueueAction.Clear -> viewModel.clearQueue()
+                    ResolvedPlayerQueueAction.ChangeMode -> viewModel.cycleMode()
+                    null -> Unit
+                }
+            },
         )
     }
 }

@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
-import cn.james.music.core.model.playback.PlaybackItem
 
 @Composable
 fun PlayerScreen(
@@ -46,7 +45,6 @@ fun PlayerScreen(
     onRetryLyrics: () -> Unit = {},
     onLyricClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)? = null,
 ) {
     MoeKoeTheme(themeMode = ThemeMode.Dark) {
         val item = state.item
@@ -79,7 +77,6 @@ fun PlayerScreen(
                         onLyricsSettings = onLyricsSettings,
                         onRetryLyrics = onRetryLyrics,
                         onLyricClick = onLyricClick,
-                        artworkContent = artworkContent,
                     )
                 }
             }
@@ -91,7 +88,7 @@ fun PlayerScreen(
 private fun PlayerContent(
     state: PlayerUiState,
     progress: State<PlayerProgressUiState>,
-    item: PlaybackItem,
+    item: PlayerItemUiModel,
     onBack: () -> Unit,
     onTogglePlayback: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -109,7 +106,6 @@ private fun PlayerContent(
     onLyricsSettings: () -> Unit,
     onRetryLyrics: () -> Unit,
     onLyricClick: (Long) -> Unit,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(25.dp)
     val pagerState = rememberPagerState(initialPage = initialPage.ordinal, pageCount = { PlayerPage.entries.size })
@@ -147,7 +143,6 @@ private fun PlayerContent(
                         onDownload = onDownload,
                         onAddToPlaylist = onAddToPlaylist,
                         onShare = onShare,
-                        artworkContent = artworkContent,
                     )
 
                 PlayerPage.Lyrics ->

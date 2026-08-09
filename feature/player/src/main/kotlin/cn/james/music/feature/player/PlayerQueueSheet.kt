@@ -20,23 +20,18 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.MoeDividerEmphasis
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
-import cn.james.music.core.model.playback.PlaybackItem
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun PlayerQueueSheet(
-    state: PlayerQueueUiState,
-    onDismiss: () -> Unit,
-    onPlayAt: (Int) -> Unit,
-    onRemove: (Int) -> Unit,
-    onClear: () -> Unit,
-    onChangeMode: () -> Unit,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)? = null,
+    model: PlayerQueueUiState,
+    onEvent: (PlayerQueueAction) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { onEvent(PlayerQueueAction.Dismiss) },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
         containerColor = QueueContainer,
         contentColor = MaterialTheme.colorScheme.onSurface,
@@ -50,13 +45,8 @@ fun PlayerQueueSheet(
                     .coerceAtLeast(320.dp)
                     .coerceAtMost(maxHeight * 0.68f)
             PlayerQueueSheetContent(
-                state = state,
-                onDismiss = onDismiss,
-                onPlayAt = onPlayAt,
-                onRemove = onRemove,
-                onClear = onClear,
-                onChangeMode = onChangeMode,
-                artworkContent = artworkContent,
+                model = model,
+                onEvent = onEvent,
                 modifier = Modifier.fillMaxWidth().height(contentHeight),
             )
         }
@@ -65,14 +55,9 @@ fun PlayerQueueSheet(
 
 @Composable
 internal fun PlayerQueueSheetContent(
-    state: PlayerQueueUiState,
-    onDismiss: () -> Unit,
-    onPlayAt: (Int) -> Unit,
-    onRemove: (Int) -> Unit,
-    onClear: () -> Unit,
-    onChangeMode: () -> Unit,
+    model: PlayerQueueUiState,
+    onEvent: (PlayerQueueAction) -> Unit,
     modifier: Modifier = Modifier,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)? = null,
 ) {
     Column(
         modifier =
@@ -81,23 +66,26 @@ internal fun PlayerQueueSheetContent(
                 .playerLayoutProbe(PLAYER_PROBE_QUEUE_SHEET, horizontalFraction = 0.25f),
     ) {
         QueueDragHandle()
-        QueueHeader(state = state, onChangeMode = onChangeMode, onClear = onClear)
-        state.sourceLabel?.let { QueueSource(it) }
-        if (state.items.isEmpty()) {
+        QueueHeader(
+            state = model,
+            onChangeMode = { onEvent(PlayerQueueAction.ChangeMode) },
+            onClear = { onEvent(PlayerQueueAction.Clear) },
+        )
+        model.sourceLabel?.let { QueueSource(it) }
+        if (model.items.isEmpty()) {
             QueueEmptyState(Modifier.fillMaxWidth().weight(1f))
         } else {
             LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                itemsIndexed(state.items, key = { _, queueItem -> queueItem.item.id }) { index, queueItem ->
+                itemsIndexed(model.items, key = { _, queueItem -> queueItem.id }) { index, queueItem ->
                     QueueItem(
                         queueItem = queueItem,
-                        isCurrent = index == state.currentIndex,
-                        onClick = { onPlayAt(index) },
-                        onRemove = { onRemove(index) },
-                        artworkContent = artworkContent,
+                        isCurrent = queueItem.id == model.currentItemId,
+                        onClick = { onEvent(PlayerQueueAction.Play(queueItem.id)) },
+                        onRemove = { onEvent(PlayerQueueAction.Remove(queueItem.id)) },
                         modifier = if (index == 0) Modifier.playerLayoutProbe(PLAYER_PROBE_QUEUE_FIRST_ITEM) else Modifier,
                     )
-                    if (index != state.items.lastIndex) {
-                        if (index == state.currentIndex) {
+                    if (index != model.items.lastIndex) {
+                        if (queueItem.id == model.currentItemId) {
                             Spacer(Modifier.height(2.dp))
                         } else {
                             MoeHorizontalDivider(
@@ -112,6 +100,6 @@ internal fun PlayerQueueSheetContent(
         if (LocalDensity.current.fontScale >= 1.3f) {
             Spacer(Modifier.height(20.dp))
         }
-        QueueDismissHint(onDismiss)
+        QueueDismissHint { onEvent(PlayerQueueAction.Dismiss) }
     }
 }

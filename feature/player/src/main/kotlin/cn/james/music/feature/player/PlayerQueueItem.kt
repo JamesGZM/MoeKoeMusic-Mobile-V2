@@ -23,19 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
-import cn.james.music.core.model.playback.PlaybackArtwork
-import cn.james.music.core.model.playback.PlaybackItem
-import java.io.File
 
 @Composable
 internal fun QueueItem(
@@ -43,12 +37,11 @@ internal fun QueueItem(
     isCurrent: Boolean,
     onClick: () -> Unit,
     onRemove: () -> Unit,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     MoeSongRow(
-        title = queueItem.item.title,
-        subtitle = queueItem.item.artist,
+        title = queueItem.title,
+        subtitle = queueItem.artist,
         metadata = queueItem.durationLabel,
         onClick = onClick,
         style = if (isCurrent) MoeSongRowStyle.QueueCurrent else MoeSongRowStyle.Queue,
@@ -67,7 +60,7 @@ internal fun QueueItem(
                 .padding(horizontal = 12.dp)
                 .fillMaxWidth()
                 .then(modifier),
-        artwork = { QueueArtwork(queueItem.item, artworkContent) },
+        artwork = { QueueArtwork(queueItem) },
         artworkTrailing = {
             if (isCurrent) {
                 Icon(
@@ -95,7 +88,7 @@ internal fun QueueItem(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = stringResource(R.string.player_queue_remove, queueItem.item.title),
+                            contentDescription = stringResource(R.string.player_queue_remove, queueItem.title),
                             modifier = Modifier.size(18.dp),
                             tint = QueueOnSurfaceVariant,
                         )
@@ -108,22 +101,13 @@ internal fun QueueItem(
 
 @Composable
 private fun QueueArtwork(
-    item: PlaybackItem,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
+    item: PlayerQueueItemUi,
 ) {
-    val context = LocalContext.current
-    val model =
-        when (val artwork = item.artwork) {
-            is PlaybackArtwork.Remote -> artwork.value
-            is PlaybackArtwork.AppFile -> File(context.filesDir, artwork.value)
-            null -> null
-        }
     Box(
         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(7.dp)).background(QueueArtworkPlaceholder),
         contentAlignment = Alignment.Center,
     ) {
         Icon(Icons.Default.MusicNote, contentDescription = null, tint = QueueOnSurfaceVariant)
-        AsyncImage(model = model, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        artworkContent?.invoke(item)
+        PlayerArtworkRenderer(model = item.artwork, contentDescription = null, modifier = Modifier.fillMaxSize())
     }
 }

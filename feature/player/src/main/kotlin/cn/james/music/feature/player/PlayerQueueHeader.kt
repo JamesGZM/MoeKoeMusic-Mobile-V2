@@ -33,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cn.james.music.core.model.playback.PlaybackMode
 
 @Composable
 internal fun QueueHeader(
@@ -97,7 +96,7 @@ private fun QueueTitle(count: Int) {
 
 @Composable
 private fun QueueModeButton(
-    mode: PlaybackMode,
+    mode: PlayerPlaybackModeUi,
     expanded: Boolean,
     onClick: () -> Unit,
 ) {

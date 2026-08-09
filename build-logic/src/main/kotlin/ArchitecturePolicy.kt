@@ -38,6 +38,7 @@ internal object ArchitecturePolicy {
             addAll(validateMoeSongRowStyle(sources[SONG_ROW_OWNER]))
             addAll(validatePreviewUiProperties(sources))
             addAll(validateSearchParallelMaps(sources))
+            addAll(validatePlayerFeatureBoundary(rootDir, sourceFiles))
             addAll(validateDataDrivenUiComponents(rootDir, sourceFiles, DATA_DRIVEN_UI_COMPONENTS))
         }
     }
@@ -157,6 +158,35 @@ internal object ArchitecturePolicy {
             }
         }
 
+    internal fun validatePlayerFeatureBoundary(
+        rootDir: File,
+        sourceFiles: Iterable<File>,
+    ): List<String> =
+        sourceFiles.flatMap { file ->
+            val relative = file.relativeTo(rootDir).invariantSeparatorsPath
+            if (!relative.startsWith(PLAYER_PRODUCTION_SOURCE_PREFIX)) return@flatMap emptyList()
+            val code = maskNonCode(file.readText())
+            buildList {
+                PLAYER_FORBIDDEN_SYMBOLS.forEach { symbol ->
+                    if (Regex("\\b${Regex.escape(symbol)}\\b").containsMatchIn(code)) {
+                        add("$relative: :feature:player 生产源码不得持有播放领域或平台路径类型 $symbol")
+                    }
+                }
+                PLAYER_PRIMARY_CONSTRUCTOR.findAll(code).forEach { match ->
+                    val constructor = extractDelimited(code, match.range.last, '(', ')').orEmpty()
+                    PLAYER_MODEL_PATH_MEMBER.findAll(constructor).forEach { member ->
+                        add("$relative: Player 展示类型不得持有路径语义字段 ${member.value}")
+                    }
+                }
+                UI_MODEL_DATA_CLASS.findAll(code).forEach { match ->
+                    val constructor = extractDelimited(code, match.range.last, '(', ')').orEmpty()
+                    PLAYER_UI_MODEL_VISUAL_MEMBER.findAll(constructor).forEach { member ->
+                        add("$relative: Player UI model 不得持有视觉布局或 preview 字段 ${member.value}")
+                    }
+                }
+            }
+        }
+
     private fun uiModelMainConstructorProperties(
         source: String,
         propertyPattern: Regex,
@@ -196,6 +226,10 @@ internal object ArchitecturePolicy {
                 target in setOf(":core:model", ":core:designsystem", ":playback")
             }
 
+            source == ":feature:player" -> {
+                target == ":core:designsystem"
+            }
+
             source.startsWith(":feature:") -> {
                 target in setOf(":core:model", ":core:designsystem")
             }
@@ -232,6 +266,15 @@ internal object ArchitecturePolicy {
             if (imported.startsWith("androidx.datastore.")) return "Feature 不得直接访问 DataStore"
             if (imported.startsWith("androidx.media3.exoplayer.")) return "Feature 不得直接访问 ExoPlayer"
             if (imported.startsWith("io.ktor.") || imported.startsWith("okhttp3.")) return "Feature 不得直接访问网络传输"
+            if (module == ":feature:player" && imported.startsWith("cn.james.music.core.model.playback.")) {
+                return ":feature:player 只能接收纯播放器 UI model"
+            }
+            if (module == ":feature:player" && imported.startsWith("cn.james.music.playback.")) {
+                return ":feature:player 不得依赖播放器领域对象或 Controller"
+            }
+            if (module == ":feature:player" && imported in setOf("java.io.File", "android.net.Uri")) {
+                return ":feature:player 不得接收文件或 URI 类型"
+            }
             val targetFeature = FEATURE_IMPORT.find(imported)?.groupValues?.get(1)
             val ownFeature = module.substringAfterLast(':')
             if (targetFeature != null && targetFeature != ownFeature) return "Feature 不得依赖其他 Feature 实现"
@@ -418,11 +461,29 @@ internal object ArchitecturePolicy {
     private val NAMED_ARGUMENT = Regex("^\\s*([A-Za-z][A-Za-z0-9_]*)\\s*=")
     private val PREVIEW_PROPERTY = Regex("\\b(?:val|var)\\s+(preview[A-Za-z0-9_]*)\\b")
     private val SEARCH_PARALLEL_MAP = Regex("\\b(?:val|var)\\s+(songBadges|songArtwork)\\b")
+    private val PLAYER_PRIMARY_CONSTRUCTOR = Regex("(?:(?:data|value)\\s+)?class\\s+[A-Za-z][A-Za-z0-9_]*\\s*\\(")
     private val UI_MODEL_DATA_CLASS = Regex("data\\s+class\\s+[A-Za-z][A-Za-z0-9_]*(?:Ui|UiState|UiModel)\\s*\\(")
+    private val PLAYER_MODEL_PATH_MEMBER = Regex("(?i)\\b(?:val|var)\\s+[A-Za-z0-9_]*path[A-Za-z0-9_]*\\b")
+    private val PLAYER_UI_MODEL_VISUAL_MEMBER =
+        Regex(
+            "(?i)(?:\\b(?:Dp|Shape|Color|PaddingValues)\\b|@Composable|\\b(?:val|var)\\s+[A-Za-z0-9_]*(?:padding|offset|preview)[A-Za-z0-9_]*\\b)",
+        )
     private val MOE_SONG_ROW_STYLE_ENUM = Regex("enum\\s+class\\s+MoeSongRowStyle\\s*")
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")
     private const val SONG_ROW_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
+    private const val PLAYER_PRODUCTION_SOURCE_PREFIX = "feature/player/src/main/"
+    private val PLAYER_FORBIDDEN_SYMBOLS =
+        setOf(
+            "PlaybackItem",
+            "PlaybackState",
+            "PlaybackMode",
+            "PlaybackArtwork",
+            "PlaybackSource",
+            "PlaybackController",
+            "File",
+            "Uri",
+        )
     private val FROZEN_MOE_SONG_ROW_STYLES =
         setOf("Standard", "Comfortable", "Compact", "Playlist", "PlaylistCurrent", "Queue", "QueueCurrent")
     private val SONG_ROW_DATA_ARGUMENTS = setOf("title", "subtitle", "metadata", "onClick", "isPlaying")
@@ -477,7 +538,13 @@ internal object ArchitecturePolicy {
         )
     private val LEGACY_PREVIEW_PROPERTIES = emptyMap<String, Map<String, Int>>()
     private val FROZEN_SEARCH_PARALLEL_MAPS = emptyMap<String, Int>()
-    private val DATA_DRIVEN_UI_COMPONENTS = emptyList<DataDrivenUiComponentSpec>()
+    private val DATA_DRIVEN_UI_COMPONENTS =
+        listOf(
+            DataDrivenUiComponentSpec(
+                name = "PlayerQueueSheet",
+                ownerSource = "feature/player/src/main/kotlin/cn/james/music/feature/player/PlayerQueueSheet.kt",
+            ),
+        )
     private val DATA_DRIVEN_COMPONENT_ARGUMENTS = setOf("model", "onEvent", "modifier")
     private val DATA_DRIVEN_REQUIRED_ARGUMENTS = setOf("model", "onEvent")
 }

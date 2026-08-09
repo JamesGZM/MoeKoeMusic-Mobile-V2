@@ -23,20 +23,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import cn.james.music.core.model.playback.PlaybackArtwork
-import cn.james.music.core.model.playback.PlaybackItem
-import java.io.File
 
 @Composable
 internal fun PlayerCoverPage(
     state: PlayerUiState,
     progress: State<PlayerProgressUiState>,
-    item: PlaybackItem,
+    item: PlayerItemUiModel,
     activePage: Int,
     onTogglePlayback: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -48,13 +42,11 @@ internal fun PlayerCoverPage(
     onDownload: () -> Unit,
     onAddToPlaylist: () -> Unit,
     onShare: () -> Unit,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
 ) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Spacer(Modifier.height(23.dp))
         PlayerArtwork(
             item = item,
-            artworkContent = artworkContent,
             modifier = Modifier.fillMaxWidth().playerLayoutProbe(PLAYER_PROBE_ARTWORK),
         )
         PlayerPageIndicator(
@@ -85,17 +77,9 @@ internal fun PlayerCoverPage(
 
 @Composable
 private fun PlayerArtwork(
-    item: PlaybackItem,
-    artworkContent: (@Composable (PlaybackItem) -> Unit)?,
+    item: PlayerItemUiModel,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val model =
-        when (val artwork = item.artwork) {
-            is PlaybackArtwork.Remote -> artwork.value
-            is PlaybackArtwork.AppFile -> File(context.filesDir, artwork.value)
-            null -> null
-        }
     BoxWithConstraints(
         modifier = modifier.padding(horizontal = 28.5.dp),
         contentAlignment = Alignment.TopCenter,
@@ -116,13 +100,11 @@ private fun PlayerArtwork(
                 modifier = Modifier.size(68.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             )
-            AsyncImage(
-                model = model,
+            PlayerArtworkRenderer(
+                model = item.artwork,
                 contentDescription = stringResource(R.string.player_artwork, item.title),
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
             )
-            artworkContent?.invoke(item)
         }
     }
 }

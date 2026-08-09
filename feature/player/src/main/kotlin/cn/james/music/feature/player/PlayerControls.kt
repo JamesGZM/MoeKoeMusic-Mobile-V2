@@ -55,8 +55,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
-import cn.james.music.core.model.playback.PlaybackItem
-import cn.james.music.core.model.playback.PlaybackMode
 import kotlin.math.roundToLong
 
 @Composable
@@ -119,7 +117,7 @@ internal fun PlayerPageIndicator(
 internal fun PlayerControls(
     state: PlayerUiState,
     progress: State<PlayerProgressUiState>,
-    item: PlaybackItem,
+    item: PlayerItemUiModel,
     onTogglePlayback: () -> Unit,
     onSeek: (Long) -> Unit,
     onPrevious: () -> Unit,
@@ -398,21 +396,21 @@ private fun PlayerProgressTrack(
 
 @Composable
 private fun PlayerModeButton(
-    mode: PlaybackMode,
+    mode: PlayerPlaybackModeUi,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
     val icon =
         when (mode) {
-            PlaybackMode.Sequential, PlaybackMode.RepeatAll, PlaybackMode.Shuffle -> Icons.Default.Repeat
-            PlaybackMode.RepeatOne -> Icons.Default.RepeatOne
+            PlayerPlaybackModeUi.Sequential, PlayerPlaybackModeUi.RepeatAll, PlayerPlaybackModeUi.Shuffle -> Icons.Default.Repeat
+            PlayerPlaybackModeUi.RepeatOne -> Icons.Default.RepeatOne
         }
     val label =
         when (mode) {
-            PlaybackMode.Sequential -> R.string.player_mode_sequence
-            PlaybackMode.RepeatAll -> R.string.player_mode_repeat_all
-            PlaybackMode.RepeatOne -> R.string.player_mode_repeat_one
-            PlaybackMode.Shuffle -> R.string.player_mode_shuffle
+            PlayerPlaybackModeUi.Sequential -> R.string.player_mode_sequence
+            PlayerPlaybackModeUi.RepeatAll -> R.string.player_mode_repeat_all
+            PlayerPlaybackModeUi.RepeatOne -> R.string.player_mode_repeat_one
+            PlayerPlaybackModeUi.Shuffle -> R.string.player_mode_shuffle
         }
     PlayerIconButton(icon, label, enabled, onClick)
 }

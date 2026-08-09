@@ -1,6 +1,5 @@
 package cn.james.music.feature.player
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,15 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.ThemeMode
-import cn.james.music.core.model.playback.PlaybackItem
-import cn.james.music.core.model.playback.PlaybackMode
-import cn.james.music.core.model.playback.PlaybackSource
 import com.android.tools.screenshot.PreviewTest
 
 @PreviewTest
@@ -142,7 +136,7 @@ fun PlayerQueueLayoutProbeScreenshot() =
 @Composable
 fun PlayerQueueEmptyScreenshot() {
     PlayerQueueScreenshotContent(
-        PlayerQueueUiState(items = emptyList(), currentIndex = -1, mode = PlaybackMode.RepeatAll),
+        PlayerQueueUiState(items = emptyList(), currentItemId = null, mode = PlayerPlaybackModeUi.RepeatAll),
     )
 }
 
@@ -246,17 +240,21 @@ private fun PlayerScreenshotContent(
         state =
             PlayerUiState(
                 item =
-                    PlaybackItem(
-                        id = "preview-player",
+                    PlayerItemUiModel(
+                        id = "screenshot-player",
                         title = "コレカラ（从今以后）",
                         artist = "Machico",
-                        albumTitle = "从今以后",
-                        source = PlaybackSource.FoundationDemo,
+                        artwork =
+                            if (showArtwork) {
+                                PlayerArtworkUiModel.BundledResource(R.drawable.player_preview_cover)
+                            } else {
+                                PlayerArtworkUiModel.None
+                            },
                     ),
                 isPlaying = isPlaying,
                 isBuffering = isBuffering,
                 controlsEnabled = controlsEnabled,
-                mode = PlaybackMode.RepeatAll,
+                mode = PlayerPlaybackModeUi.RepeatAll,
             ),
         progress =
             remember {
@@ -276,12 +274,6 @@ private fun PlayerScreenshotContent(
         onOpenQueue = {},
         initialPage = initialPage,
         lyricsState = lyricsState,
-        artworkContent =
-            if (showArtwork) {
-                { _ -> PlayerScreenshotArtwork() }
-            } else {
-                null
-            },
     )
 }
 
@@ -349,16 +341,6 @@ private fun PlayerLayoutProbeProvider(
 }
 
 @Composable
-private fun PlayerScreenshotArtwork() {
-    Image(
-        painter = painterResource(R.drawable.player_preview_cover),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-    )
-}
-
-@Composable
 private fun PlayerQueueScreenshotContent(
     state: PlayerQueueUiState,
     sheetHeight: androidx.compose.ui.unit.Dp = 470.dp,
@@ -369,18 +351,13 @@ private fun PlayerQueueScreenshotContent(
             contentAlignment = Alignment.BottomCenter,
         ) {
             PlayerQueueSheetContent(
-                state = state,
-                onDismiss = {},
-                onPlayAt = {},
-                onRemove = {},
-                onClear = {},
-                onChangeMode = {},
+                model = state,
+                onEvent = {},
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(sheetHeight)
                         .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
-                artworkContent = { PlayerScreenshotArtwork() },
             )
         }
     }
@@ -401,18 +378,15 @@ private fun queueScreenshotState(): PlayerQueueUiState {
         items =
             songs.mapIndexed { index, (title, artist, duration) ->
                 PlayerQueueItemUi(
-                    item =
-                        PlaybackItem(
-                            id = "queue-$index",
-                            title = title,
-                            artist = artist,
-                            source = PlaybackSource.FoundationDemo,
-                        ),
+                    id = "queue-$index",
+                    title = title,
+                    artist = artist,
                     durationLabel = duration,
+                    artwork = PlayerArtworkUiModel.BundledResource(R.drawable.player_preview_cover),
                 )
             },
-        currentIndex = 0,
-        mode = PlaybackMode.RepeatAll,
+        currentItemId = "queue-0",
+        mode = PlayerPlaybackModeUi.RepeatAll,
         sourceLabel = "ACG 收藏",
     )
 }

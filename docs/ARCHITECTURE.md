@@ -112,7 +112,7 @@ Repository
 - `:feature:my` 消费 `UserProfileRepository` 与 `AuthRepository`，拥有匿名、加载、已认证、部分失败和完整失败状态，并在页面恢复时刷新资料；退出必须经过确认且仅在会话清除成功后切换匿名态。匿名用户点击账号资产时，Feature 只上抛具名导航事件，由 `:app` 复用唯一登录目的地；Screen、ViewModel 和 Repository 不通过禁用文案或字符串判断模拟权限，也不在进入登录前发起受认证资产请求。本地音乐与应用级设置不经过该门禁。
 - `:feature:settings` 拥有设置 Destination、Route、Screen、ViewModel 和测试，只依赖 `:core:model` 的应用偏好端口与 `:core:designsystem`；`:feature:my` 只上抛设置导航事件，`:app` 注册唯一目的地并以独立 app-level ViewModel 消费全局主题。设置页不直接访问 DataStore，也不显示没有真实消费者的假开关。
 - `:feature:search` 保留 `SearchRepository` 提供的真实歌曲搜索、分页和播放事件；歌手摘要、歌单/专辑横卡与分类选择是 Feature 内部 UI Model。未迁移的协议结果在生产态保持空，不向 Repository、Domain 或缓存注入设计 fixture。搜索型 Toolbar 由 `:core:designsystem` 提供外观、Insets 与输入语义，查询状态和请求仍归 Search ViewModel。
-- `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 传入的播放状态与事件，不依赖 `:playback`、Service、数据库或网络。歌词协议、领域映射和成功缓存位于 `:kugou-api`、`:data` 与 `:core:database`；后续只通过 `LyricsRepository` 和页面 ViewModel 接入，歌词现有主态与补充状态均已确认。
+- `:feature:player` 拥有全屏播放器目的地、无状态 Screen、纯 UI 状态和截图基准；它只接收 `:app` 映射后的 `PlayerItemUiModel`、`PlayerQueueUiState`、`PlayerPlaybackModeUi` 与类型化事件，不依赖 `:core:model`、`:playback`、Service、数据库或网络。歌词协议、领域映射和成功缓存位于 `:kugou-api`、`:data` 与 `:core:database`；后续只通过 `LyricsRepository` 和页面 ViewModel 接入，歌词现有主态与补充状态均已确认。
 - `:feature:playlist` 拥有歌单详情目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；详情可由首页、发现或“我的”复用，任何来源 Feature 都不依赖它。首个视觉切片不依赖 Repository、`:playback` 或网络，真实歌单纵向切片后续在本 Feature 内补 ViewModel。
 - `:feature:profile` 拥有用户主页目的地、无状态 Screen、纯 UI Model、事件端口和截图基准；“我的”只上抛已认证用户的资料页事件，由 `:app` 完成跨 Feature 导航。首个视觉切片不读取 `UserProfileRepository`，设计示例计数不进入领域层或持久化。
 - Screen 与实现细节默认 `internal`；组合根只依赖少量稳定导航入口。
@@ -133,7 +133,7 @@ Repository
 :feature:foundation ► :playback
 :feature:login ────► AuthRepository + :core:designsystem
 :feature:my ───────► UserProfileRepository + AuthRepository + :core:designsystem
-:feature:player ───► :core:model + :core:designsystem
+:feature:player ───► :core:designsystem
 :feature:playlist ─► :core:designsystem
 :feature:profile ──► :core:designsystem
 
@@ -170,6 +170,7 @@ sealed interface SearchUiState {
 ## 数据驱动公共 UI
 
 - Feature 将 Domain/Repository/播放快照映射为不可变 Feature UI Model；Screen 再向公共组件提供不可变展示数据，并把类型化组件事件交给 Route、ViewModel 或应用组合根。完整准入与迁移顺序见 [`reference-audits/23-data-driven-ui-architecture.md`](reference-audits/23-data-driven-ui-architecture.md)。
+- 播放器是组合根映射的明确边界：`:app` 保留 `PlaybackState` / `PlaybackItem` 并转换为纯 Player/Queue UI model；`:feature:player` 不接收领域对象、文件路径对象或 Android URI。队列组件只上抛 stable item id，`:app` 必须针对动作发生时的最新 `PlaybackState.queue` 解析为 index；已消失 id 安全忽略，不把过期 index 跨层保存。
 - UI Model 与公共展示模型不得包含 DTO、Entity、Repository、DAO、Service、`PlaybackState`、`PlaybackController`、Android 文件/URI/Context、导航对象，或任何 `Dp`、`Shape`、`Color`、内部 Padding、视觉偏移和任意视觉 Slot。
 - 公共组件拥有已确认的内部几何、颜色、字体、状态和受控动作。图片是唯一受控例外：应用/Feature 可在组件固定容器内提供像素 renderer，但 renderer 不得控制容器或其他内部布局；本规则不要求 Design System 引入图片加载依赖。
 - 当前架构阶段冻结 `MoeSongRow` 现有调用点、style、Slot、视觉覆写和 API 增长。十个原子切片完成并获得独立 UI 授权后，标准 Item 才迁移为展示数据驱动；届时未提供徽标自然折叠，More 为组件固有的 `More(id)` 事件。当前阶段不得由 Feature 新增歌曲行内部播放、徽标或尾部视觉。
@@ -179,10 +180,10 @@ sealed interface SearchUiState {
 ## 播放器边界
 
 ```text
-PlayerScreen / MiniPlayer (:feature:player / :core:designsystem)
-          │ values + event lambdas
+PlayerScreen / Queue Sheet (:feature:player)
+          │ pure UI model + typed stable-id event
           ▼
-AppPlaybackViewModel (:app)
+App mapping + AppPlaybackViewModel (:app)
           │ StateFlow + commands
           ▼
 PlaybackController (:playback)
