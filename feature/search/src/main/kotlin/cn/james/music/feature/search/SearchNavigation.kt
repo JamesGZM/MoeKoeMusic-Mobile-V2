@@ -20,12 +20,26 @@ fun NavGraphBuilder.searchDestination(
         val state by viewModel.state.collectAsStateWithLifecycle()
         SearchScreen(
             state = state,
-            onBack = onBack,
-            onQueryChange = viewModel::updateQuery,
-            onSearch = viewModel::submit,
-            onLoadMore = viewModel::loadMore,
-            onPlay = onPlay,
-            onCategorySelected = viewModel::selectCategory,
+            onAction = { action ->
+                when (action) {
+                    SearchAction.Back -> onBack()
+
+                    is SearchAction.PlaySong -> viewModel.songFor(action.id)?.let(onPlay)
+
+                    is SearchAction.QueryChanged,
+                    SearchAction.ClearQuery,
+                    SearchAction.Submit,
+                    is SearchAction.SelectCategory,
+                    SearchAction.LoadMore,
+                    is SearchAction.MoreSong,
+                    SearchAction.Voice,
+                    SearchAction.FollowArtist,
+                    SearchAction.ViewAllSongs,
+                    SearchAction.ViewAllCollections,
+                    is SearchAction.OpenCollection,
+                    -> viewModel.onAction(action)
+                }
+            },
         )
     }
 }

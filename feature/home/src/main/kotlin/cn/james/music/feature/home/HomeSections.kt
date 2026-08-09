@@ -1,6 +1,5 @@
 package cn.james.music.feature.home
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -84,18 +83,12 @@ internal fun HomeSongRow(
             subtitle = song.artistName.ifBlank { stringResource(R.string.home_unknown_artist) },
             onClick = { onPlay(song) },
             style = MoeSongRowStyle.Compact,
-            artwork = {
-                HomeArtwork(
-                    title = song.title,
-                    artworkUrl = song.artworkUrl,
-                    previewArtworkRes = song.previewArtworkRes,
-                )
-            },
+            artwork = { HomeArtwork(title = song.title, artwork = song.artwork) },
             trailing = {
-                song.previewBadge?.let { badge ->
+                song.badge?.let { badge ->
                     MoeMediaBadge(
-                        text = badge,
-                        tone = if (song.previewBadgeIsError) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
+                        text = if (badge == HomeSongBadgeUi.MusicVideo) "MV" else "HQ",
+                        tone = if (badge == HomeSongBadgeUi.MusicVideo) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,
                     )
                 }
                 MoeSongMoreAction(
@@ -133,8 +126,7 @@ private fun HomePlaylistCard(
     Column(modifier) {
         HomeArtwork(
             title = playlist.title,
-            artworkUrl = playlist.artworkUrl,
-            previewArtworkRes = playlist.previewArtworkRes,
+            artwork = playlist.artwork,
             modifier = Modifier.fillMaxWidth().height(88.dp).clip(RoundedCornerShape(11.dp)),
         )
         Text(
@@ -145,8 +137,12 @@ private fun HomePlaylistCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        val playCount = playlist.playCount
-        val subtitle = playlist.previewSubtitle ?: if (playCount == null) null else formatPlayCount(playCount)
+        val subtitle =
+            when (val supporting = playlist.supporting) {
+                is HomePlaylistSupportingUi.PlayCount -> formatPlayCount(supporting.count)
+                is HomePlaylistSupportingUi.Text -> supporting.value
+                null -> null
+            }
         subtitle?.let {
             Text(
                 it,
@@ -162,27 +158,26 @@ private fun HomePlaylistCard(
 @Composable
 private fun HomeArtwork(
     title: String,
-    artworkUrl: String?,
-    @DrawableRes previewArtworkRes: Int?,
+    artwork: HomeArtworkUi,
     modifier: Modifier = Modifier.fillMaxSize(),
 ) {
     val description = stringResource(R.string.home_artwork_description, title)
-    when {
-        previewArtworkRes != null ->
+    when (artwork) {
+        is HomeArtworkUi.Resource ->
             Image(
-                painter = painterResource(previewArtworkRes),
+                painter = painterResource(artwork.drawableRes),
                 contentDescription = description,
                 modifier = modifier,
                 contentScale = ContentScale.Crop,
             )
-        artworkUrl != null ->
+        is HomeArtworkUi.Remote ->
             AsyncImage(
-                model = artworkUrl,
+                model = artwork.url,
                 contentDescription = description,
                 modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentScale = ContentScale.Crop,
             )
-        else ->
+        HomeArtworkUi.Placeholder ->
             Box(
                 modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentAlignment = Alignment.Center,

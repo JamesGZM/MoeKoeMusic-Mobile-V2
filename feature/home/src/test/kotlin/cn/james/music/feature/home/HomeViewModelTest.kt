@@ -70,6 +70,36 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun homeUiModelKeepsDomainSongPrivateAndResolvesStableIdForRoute() =
+        runTest(dispatcher) {
+            val viewModel = HomeViewModel(FakeHomeRepository(content("cached")))
+            runCurrent()
+
+            val song = viewModel.content().recommendations.single()
+
+            assertEquals("cached", song.title)
+            assertTrue(HomeSongUi::class.java.declaredFields.none { it.type == Song::class.java || it.name.startsWith("preview") })
+            assertEquals("hash", viewModel.songFor(song.id)?.hash)
+        }
+
+    @Test
+    fun homeActionsPreserveRefreshAndDismissProblemBehavior() =
+        runTest(dispatcher) {
+            val repository = FakeHomeRepository(content("cached"))
+            val viewModel = HomeViewModel(repository)
+            runCurrent()
+
+            repository.automatic.value = HomeAutomaticRefreshState.Complete(HomeRefreshResult.Failure(HomeRefreshProblem.Timeout))
+            runCurrent()
+            viewModel.onAction(HomeAction.DismissProblem)
+            viewModel.onAction(HomeAction.Refresh)
+            runCurrent()
+
+            assertNull(viewModel.state.value.refreshProblem)
+            assertTrue(viewModel.state.value.refreshing)
+        }
+
+    @Test
     fun firstLoadFailureUsesBlockingFailureState() =
         runTest(dispatcher) {
             val repository = FakeHomeRepository(null)
@@ -118,7 +148,7 @@ class HomeViewModelTest {
             )
             assertEquals(HomeProblemUi.Timeout, viewModel.state.value.refreshProblem)
 
-            viewModel.dismissRefreshProblem()
+            viewModel.onAction(HomeAction.DismissProblem)
             assertNull(viewModel.state.value.refreshProblem)
         }
 
@@ -172,26 +202,27 @@ class HomeViewModelTest {
                     .single()
                     .title,
             )
+            assertEquals("hash", cachedViewModel.songFor("song")?.hash)
         }
 
     @Test
     fun explicitRefreshPublishesLatestSuccessAndCancelsOlderRequest() =
         runTest(dispatcher) {
-            val repository = FakeHomeRepository(content("cached"))
+            val repository = FakeHomeRepository(content("cached", songId = "old-song", hash = "old-hash"))
             val viewModel = HomeViewModel(repository)
             runCurrent()
 
-            viewModel.refresh()
+            viewModel.onAction(HomeAction.Refresh)
             runCurrent()
             val first = repository.refreshRequests.single()
             assertTrue(viewModel.state.value.refreshing)
 
-            viewModel.refresh()
+            viewModel.onAction(HomeAction.Refresh)
             runCurrent()
             val second = repository.refreshRequests.last()
-            second.complete(HomeRefreshResult.Success(content("new"), persisted = true))
+            second.complete(HomeRefreshResult.Success(content("new", songId = "new-song", hash = "new-hash"), persisted = true))
             runCurrent()
-            first.complete(HomeRefreshResult.Success(content("old"), persisted = true))
+            first.complete(HomeRefreshResult.Success(content("old", songId = "old-request", hash = "old-request-hash"), persisted = true))
             runCurrent()
 
             assertEquals(
@@ -204,6 +235,8 @@ class HomeViewModelTest {
             )
             assertFalse(viewModel.state.value.refreshing)
             assertEquals(2, repository.refreshRequests.size)
+            assertNull(viewModel.songFor("old-song"))
+            assertEquals("new-hash", viewModel.songFor("new-song")?.hash)
         }
 
     @Test
@@ -227,6 +260,7 @@ class HomeViewModelTest {
 
             assertEquals(HomeContentUiState.Loading, viewModel.state.value.content)
             assertTrue(viewModel.state.value.refreshing)
+            assertNull(viewModel.songFor("song"))
         }
 
     @Test
@@ -236,7 +270,7 @@ class HomeViewModelTest {
             val viewModel = HomeViewModel(repository)
             runCurrent()
 
-            viewModel.refresh()
+            viewModel.onAction(HomeAction.Refresh)
             runCurrent()
             val accountARefresh = repository.refreshRequests.single()
 
@@ -295,17 +329,20 @@ class HomeViewModelTest {
         }
     }
 
-    private fun content(title: String) =
-        HomeContent(
-            banners = listOf(HomeBanner("banner", "Banner", "https://example.test/banner")),
-            recommendations =
-                listOf(
-                    HomeRecommendation(
-                        song = Song("song", "hash", title, "artist", null, null, 1_000, null),
-                        note = "note",
-                    ),
+    private fun content(
+        title: String,
+        songId: String = "song",
+        hash: String = "hash",
+    ) = HomeContent(
+        banners = listOf(HomeBanner("banner", "Banner", "https://example.test/banner")),
+        recommendations =
+            listOf(
+                HomeRecommendation(
+                    song = Song(songId, hash, title, "artist", null, null, 1_000, null),
+                    note = "note",
                 ),
-            playlists = listOf(HomePlaylist("playlist", "Playlist", null, 10)),
-            updatedAtEpochMs = 1,
-        )
+            ),
+        playlists = listOf(HomePlaylist("playlist", "Playlist", null, 10)),
+        updatedAtEpochMs = 1,
+    )
 }

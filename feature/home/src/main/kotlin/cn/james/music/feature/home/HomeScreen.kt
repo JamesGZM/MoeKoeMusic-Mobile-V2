@@ -21,34 +21,31 @@ import cn.james.music.core.designsystem.component.MoeSnackbarTone
 @Composable
 internal fun HomeScreen(
     state: HomeUiState,
-    onSearch: () -> Unit,
-    onRefresh: () -> Unit,
-    onDismissProblem: () -> Unit,
-    onPlay: (HomeSongUi) -> Unit,
+    onAction: (HomeAction) -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
         PullToRefreshBox(
             isRefreshing = state.refreshing,
-            onRefresh = onRefresh,
+            onRefresh = { onAction(HomeAction.Refresh) },
             modifier = Modifier.fillMaxSize(),
         ) {
             when (val content = state.content) {
-                HomeContentUiState.Loading -> HomeLoading(onSearch)
+                HomeContentUiState.Loading -> HomeLoading { onAction(HomeAction.Search) }
                 HomeContentUiState.Empty ->
                     HomeMessage(
-                        onSearch = onSearch,
+                        onSearch = { onAction(HomeAction.Search) },
                         title = stringResource(R.string.home_empty_title),
                         message = stringResource(R.string.home_empty_message),
-                        onRetry = onRefresh,
+                        onRetry = { onAction(HomeAction.Refresh) },
                     )
                 is HomeContentUiState.Failure ->
                     HomeMessage(
-                        onSearch = onSearch,
+                        onSearch = { onAction(HomeAction.Search) },
                         title = stringResource(R.string.home_failure_title),
                         message = homeProblemMessage(content.problem),
-                        onRetry = onRefresh,
+                        onRetry = { onAction(HomeAction.Refresh) },
                     )
-                is HomeContentUiState.Content -> HomeContent(content.value, onSearch, onPlay)
+                is HomeContentUiState.Content -> HomeContent(content.value, onAction)
             }
         }
         state.refreshProblem?.let { problem ->
@@ -62,7 +59,7 @@ internal fun HomeScreen(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                 tone = MoeSnackbarTone.Warning,
                 actionLabel = stringResource(R.string.home_acknowledge),
-                onAction = onDismissProblem,
+                onAction = { onAction(HomeAction.DismissProblem) },
             )
         }
     }
@@ -71,14 +68,13 @@ internal fun HomeScreen(
 @Composable
 private fun HomeContent(
     content: HomeContentUi,
-    onSearch: () -> Unit,
-    onPlay: (HomeSongUi) -> Unit,
+    onAction: (HomeAction) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().testTag("home_content"),
         contentPadding = PaddingValues(bottom = 12.dp),
     ) {
-        item { HomeHeader(onSearch) }
+        item { HomeHeader { onAction(HomeAction.Search) } }
         item { HomeRadioHero(modifier = Modifier.homeLayoutProbe(HOME_PROBE_HERO)) }
         item { HomeQuickEntries(modifier = Modifier.homeLayoutProbe(HOME_PROBE_QUICK_ENTRIES)) }
         item { Spacer(Modifier.height(2.dp)) }
@@ -92,7 +88,7 @@ private fun HomeContent(
             itemsIndexed(content.recommendations.take(4), key = { _, song -> song.id }) { index, song ->
                 HomeSongRow(
                     song = song,
-                    onPlay = onPlay,
+                    onPlay = { song -> onAction(HomeAction.PlaySong(song.id)) },
                     modifier = if (index == 0) Modifier.homeLayoutProbe(HOME_PROBE_FIRST_SONG) else Modifier,
                 )
             }

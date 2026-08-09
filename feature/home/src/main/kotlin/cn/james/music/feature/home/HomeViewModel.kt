@@ -21,30 +21,6 @@ internal data class HomeBannerUi(
     val artworkUrl: String,
 )
 
-internal data class HomeSongUi(
-    val id: String,
-    val hash: String,
-    val title: String,
-    val artistName: String,
-    val albumId: String?,
-    val albumTitle: String?,
-    val durationMs: Long,
-    val artworkUrl: String?,
-    val note: String?,
-    val previewArtworkRes: Int? = null,
-    val previewBadge: String? = null,
-    val previewBadgeIsError: Boolean = false,
-)
-
-internal data class HomePlaylistUi(
-    val id: String,
-    val title: String,
-    val artworkUrl: String?,
-    val playCount: Long?,
-    val previewArtworkRes: Int? = null,
-    val previewSubtitle: String? = null,
-)
-
 internal data class HomeContentUi(
     val banners: List<HomeBannerUi>,
     val recommendations: List<HomeSongUi>,
@@ -92,19 +68,34 @@ internal class HomeViewModel
         val state: StateFlow<HomeUiState> = mutableState.asStateFlow()
         private var refreshJob: Job? = null
         private var refreshGeneration = 0L
+        private var songsById = emptyMap<String, cn.james.music.core.model.online.Song>()
+
+        fun onAction(action: HomeAction) {
+            when (action) {
+                HomeAction.Refresh -> refresh()
+
+                HomeAction.DismissProblem -> dismissRefreshProblem()
+
+                HomeAction.Search,
+                is HomeAction.PlaySong,
+                -> Unit
+            }
+        }
+
+        fun songFor(id: String): cn.james.music.core.model.online.Song? = songsById[id]
 
         init {
             viewModelScope.launch {
                 repository.observeContent().collect { content ->
-                    val contentState =
-                        content?.toUiState()
-                            ?: mutableState.value.content.takeIf { it is HomeContentUiState.Failure }
-                            ?: HomeContentUiState.Loading
-                    mutableState.value =
-                        mutableState.value.copy(
-                            content = contentState,
-                            refreshProblem = null,
-                        )
+                    val snapshot =
+                        content?.toSnapshot()
+                            ?: HomeContentSnapshot(
+                                content =
+                                    mutableState.value.content.takeIf { it is HomeContentUiState.Failure }
+                                        ?: HomeContentUiState.Loading,
+                                songsById = emptyMap(),
+                            )
+                    publish(snapshot, refreshProblem = null)
                 }
             }
             viewModelScope.launch {
@@ -112,7 +103,7 @@ internal class HomeViewModel
             }
         }
 
-        fun refresh() {
+        private fun refresh() {
             refreshJob?.cancel()
             val generation = ++refreshGeneration
             mutableState.value = mutableState.value.copy(refreshing = true, refreshProblem = null)
@@ -123,7 +114,7 @@ internal class HomeViewModel
                 }
         }
 
-        fun dismissRefreshProblem() {
+        private fun dismissRefreshProblem() {
             mutableState.value = mutableState.value.copy(refreshProblem = null)
         }
 
@@ -147,77 +138,99 @@ internal class HomeViewModel
             result: HomeRefreshResult,
             keepRefreshing: Boolean = false,
         ) {
-            mutableState.value =
-                when (result) {
-                    HomeRefreshResult.NotNeeded,
-                    HomeRefreshResult.Superseded,
-                    -> {
-                        mutableState.value.copy(refreshing = keepRefreshing)
-                    }
+            when (result) {
+                HomeRefreshResult.NotNeeded,
+                HomeRefreshResult.Superseded,
+                -> {
+                    mutableState.value = mutableState.value.copy(refreshing = keepRefreshing)
+                }
 
-                    is HomeRefreshResult.Success -> {
-                        val remoteState = result.content.toUiState()
-                        val content =
-                            if (!result.persisted && remoteState == HomeContentUiState.Empty &&
-                                mutableState.value.content is HomeContentUiState.Content
-                            ) {
-                                mutableState.value.content
-                            } else {
-                                remoteState
-                            }
-                        mutableState.value.copy(content = content, refreshing = keepRefreshing, refreshProblem = null)
-                    }
-
-                    is HomeRefreshResult.Partial -> {
-                        mutableState.value.copy(
-                            content = result.content.toUiState(),
-                            refreshing = keepRefreshing,
-                            refreshProblem = result.problem.toUi(),
-                        )
-                    }
-
-                    is HomeRefreshResult.Failure -> {
-                        val problem = result.problem.toUi()
-                        if (mutableState.value.content is HomeContentUiState.Content) {
-                            mutableState.value.copy(refreshing = keepRefreshing, refreshProblem = problem)
-                        } else {
-                            mutableState.value.copy(
-                                content = HomeContentUiState.Failure(problem),
-                                refreshing = keepRefreshing,
-                                refreshProblem = null,
-                            )
-                        }
+                is HomeRefreshResult.Success -> {
+                    val snapshot = result.content.toSnapshot()
+                    if (!result.persisted && snapshot.content == HomeContentUiState.Empty &&
+                        mutableState.value.content is HomeContentUiState.Content
+                    ) {
+                        mutableState.value = mutableState.value.copy(refreshing = keepRefreshing, refreshProblem = null)
+                    } else {
+                        publish(snapshot, refreshing = keepRefreshing, refreshProblem = null)
                     }
                 }
+
+                is HomeRefreshResult.Partial -> {
+                    publish(
+                        result.content.toSnapshot(),
+                        refreshing = keepRefreshing,
+                        refreshProblem = result.problem.toUi(),
+                    )
+                }
+
+                is HomeRefreshResult.Failure -> {
+                    val problem = result.problem.toUi()
+                    if (mutableState.value.content is HomeContentUiState.Content) {
+                        mutableState.value = mutableState.value.copy(refreshing = keepRefreshing, refreshProblem = problem)
+                    } else {
+                        publish(
+                            HomeContentSnapshot(HomeContentUiState.Failure(problem), emptyMap()),
+                            refreshing = keepRefreshing,
+                            refreshProblem = null,
+                        )
+                    }
+                }
+            }
         }
 
-        private fun HomeContent.toUiState(): HomeContentUiState {
-            if (recommendations.isEmpty() && playlists.isEmpty()) return HomeContentUiState.Empty
-            return HomeContentUiState.Content(
-                HomeContentUi(
-                    banners = banners.map { banner -> HomeBannerUi(banner.id, banner.title, banner.artworkUrl) },
-                    recommendations =
-                        recommendations.map { recommendation ->
-                            val song = recommendation.song
-                            HomeSongUi(
-                                id = song.id,
-                                hash = song.hash,
-                                title = song.title,
-                                artistName = song.artistName,
-                                albumId = song.albumId,
-                                albumTitle = song.albumTitle,
-                                durationMs = song.durationMs,
-                                artworkUrl = song.artworkUrl,
-                                note = recommendation.note,
-                            )
-                        },
-                    playlists =
-                        playlists.map { playlist ->
-                            HomePlaylistUi(playlist.id, playlist.title, playlist.artworkUrl, playlist.playCount)
-                        },
-                ),
+        private fun publish(
+            snapshot: HomeContentSnapshot,
+            refreshing: Boolean = mutableState.value.refreshing,
+            refreshProblem: HomeProblemUi?,
+        ) {
+            songsById = snapshot.songsById
+            mutableState.value =
+                mutableState.value.copy(
+                    content = snapshot.content,
+                    refreshing = refreshing,
+                    refreshProblem = refreshProblem,
+                )
+        }
+
+        private fun HomeContent.toSnapshot(): HomeContentSnapshot {
+            if (recommendations.isEmpty() && playlists.isEmpty()) {
+                return HomeContentSnapshot(HomeContentUiState.Empty, emptyMap())
+            }
+            return HomeContentSnapshot(
+                content =
+                    HomeContentUiState.Content(
+                        HomeContentUi(
+                            banners = banners.map { banner -> HomeBannerUi(banner.id, banner.title, banner.artworkUrl) },
+                            recommendations =
+                                recommendations.map { recommendation ->
+                                    val song = recommendation.song
+                                    HomeSongUi(
+                                        id = song.id,
+                                        title = song.title,
+                                        artistName = song.artistName,
+                                        artwork = song.artworkUrl?.let(HomeArtworkUi::Remote) ?: HomeArtworkUi.Placeholder,
+                                    )
+                                },
+                            playlists =
+                                playlists.map { playlist ->
+                                    HomePlaylistUi(
+                                        id = playlist.id,
+                                        title = playlist.title,
+                                        artwork = playlist.artworkUrl?.let(HomeArtworkUi::Remote) ?: HomeArtworkUi.Placeholder,
+                                        supporting = playlist.playCount?.let(HomePlaylistSupportingUi::PlayCount),
+                                    )
+                                },
+                        ),
+                    ),
+                songsById = recommendations.associate { recommendation -> recommendation.song.id to recommendation.song },
             )
         }
+
+        private data class HomeContentSnapshot(
+            val content: HomeContentUiState,
+            val songsById: Map<String, cn.james.music.core.model.online.Song>,
+        )
 
         private fun HomeRefreshProblem.toUi(): HomeProblemUi =
             when (this) {

@@ -87,10 +87,7 @@ private fun HomeScreenshotContent(
         Surface {
             HomeScreen(
                 state = state,
-                onSearch = {},
-                onRefresh = {},
-                onDismissProblem = {},
-                onPlay = {},
+                onAction = {},
             )
         }
     }
@@ -104,40 +101,32 @@ private val contentState =
                     banners = emptyList(),
                     recommendations =
                         listOf(
-                            previewSong("1", "これからも。", "水瀬祈（みなせ いのり）", R.drawable.home_playlist_seaside, "HQ"),
-                            previewSong("2", "キライ…でも好き", "BRIGHT", R.drawable.home_playlist_room, "MV", true),
-                            previewSong("3", "クリームソーダとシャンデリア", "ねんね", R.drawable.home_playlist_bamboo, "HQ"),
-                            previewSong("4", "フェイスレス", "蓝井エイル（Aoi Eir）", R.drawable.home_playlist_night_city, "HQ"),
+                            screenshotSong("1", "これからも。", "水瀬祈（みなせ いのり）", R.drawable.home_playlist_seaside, HomeSongBadgeUi.Quality),
+                            screenshotSong("2", "キライ…でも好き", "BRIGHT", R.drawable.home_playlist_room, HomeSongBadgeUi.MusicVideo),
+                            screenshotSong("3", "クリームソーダとシャンデリア", "ねんね", R.drawable.home_playlist_bamboo, HomeSongBadgeUi.Quality),
+                            screenshotSong("4", "フェイスレス", "蓝井エイル（Aoi Eir）", R.drawable.home_playlist_night_city, HomeSongBadgeUi.Quality),
                         ),
                     playlists =
                         listOf(
-                            HomePlaylistUi("1", "治愈海风", null, 120_000, R.drawable.home_playlist_seaside, "海风与日落"),
-                            HomePlaylistUi("2", "日系放松", null, 86_000, R.drawable.home_playlist_room, "午后的闲适时光"),
-                            HomePlaylistUi("3", "清新旋律", null, 32_000, R.drawable.home_playlist_bamboo, "自然与轻音乐"),
-                            HomePlaylistUi("4", "夜色电台", null, 58_000, R.drawable.home_playlist_night_city, "深夜陪伴"),
+                            HomePlaylistUi("1", "治愈海风", HomeArtworkUi.Resource(R.drawable.home_playlist_seaside), HomePlaylistSupportingUi.Text("海风与日落")),
+                            HomePlaylistUi("2", "日系放松", HomeArtworkUi.Resource(R.drawable.home_playlist_room), HomePlaylistSupportingUi.Text("午后的闲适时光")),
+                            HomePlaylistUi("3", "清新旋律", HomeArtworkUi.Resource(R.drawable.home_playlist_bamboo), HomePlaylistSupportingUi.Text("自然与轻音乐")),
+                            HomePlaylistUi("4", "夜色电台", HomeArtworkUi.Resource(R.drawable.home_playlist_night_city), HomePlaylistSupportingUi.Text("深夜陪伴")),
                         ),
                 ),
             ),
     )
 
-private fun previewSong(
+private fun screenshotSong(
     id: String,
     title: String,
     artist: String,
     artworkRes: Int,
-    badge: String,
-    badgeIsError: Boolean = false,
+    badge: HomeSongBadgeUi,
 ) = HomeSongUi(
     id = id,
-    hash = "hash-$id",
     title = title,
     artistName = artist,
-    albumId = null,
-    albumTitle = null,
-    durationMs = 215_000,
-    artworkUrl = null,
-    note = null,
-    previewArtworkRes = artworkRes,
-    previewBadge = badge,
-    previewBadgeIsError = badgeIsError,
+    artwork = HomeArtworkUi.Resource(artworkRes),
+    badge = badge,
 )

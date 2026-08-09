@@ -147,7 +147,7 @@ internal object ArchitecturePolicy {
     internal fun validateSearchParallelMaps(sources: Map<String, File>): List<String> =
         sources.flatMap { (relative, file) ->
             val actual = uiModelMainConstructorProperties(file.readText(), SEARCH_PARALLEL_MAP)
-            val allowed = if (relative == SEARCH_PARALLEL_MAP_OWNER) FROZEN_SEARCH_PARALLEL_MAPS else emptyMap()
+            val allowed = FROZEN_SEARCH_PARALLEL_MAPS
             buildList {
                 (actual.keys + allowed.keys).sorted().forEach { name ->
                     if (actual[name] != allowed[name]) {
@@ -423,8 +423,6 @@ internal object ArchitecturePolicy {
     private val IDENTIFIER = Regex("[A-Za-z][A-Za-z0-9_]*")
     private const val SONG_ROW_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"
-    private const val SEARCH_PARALLEL_MAP_OWNER =
-        "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
     private val FROZEN_MOE_SONG_ROW_STYLES =
         setOf("Standard", "Comfortable", "Compact", "Playlist", "PlaylistCurrent", "Queue", "QueueCurrent")
     private val SONG_ROW_DATA_ARGUMENTS = setOf("title", "subtitle", "metadata", "onClick", "isPlaying")
@@ -477,17 +475,8 @@ internal object ArchitecturePolicy {
                     ),
                 ),
         )
-    private val LEGACY_PREVIEW_PROPERTIES =
-        mapOf(
-            "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt" to
-                mapOf(
-                    "previewArtworkRes" to 2,
-                    "previewBadge" to 1,
-                    "previewBadgeIsError" to 1,
-                    "previewSubtitle" to 1,
-                ),
-        )
-    private val FROZEN_SEARCH_PARALLEL_MAPS = mapOf("songBadges" to 1, "songArtwork" to 1)
+    private val LEGACY_PREVIEW_PROPERTIES = emptyMap<String, Map<String, Int>>()
+    private val FROZEN_SEARCH_PARALLEL_MAPS = emptyMap<String, Int>()
     private val DATA_DRIVEN_UI_COMPONENTS = emptyList<DataDrivenUiComponentSpec>()
     private val DATA_DRIVEN_COMPONENT_ARGUMENTS = setOf("model", "onEvent", "modifier")
     private val DATA_DRIVEN_REQUIRED_ARGUMENTS = setOf("model", "onEvent")

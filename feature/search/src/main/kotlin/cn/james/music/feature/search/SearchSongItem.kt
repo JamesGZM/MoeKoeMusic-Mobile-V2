@@ -20,14 +20,10 @@ import cn.james.music.core.designsystem.component.MoeMediaBadgeTone
 import cn.james.music.core.designsystem.component.MoeSongRow
 import cn.james.music.core.designsystem.component.MoeSongMoreAction
 import cn.james.music.core.designsystem.component.MoeSongRowStyle
-import cn.james.music.core.model.online.Song
 
 @Composable
 internal fun SearchSongItem(
-    song: Song,
-    artworkRes: Int?,
-    badge: SearchSongBadge?,
-    isPlaying: Boolean,
+    song: SearchSongUiModel,
     onClick: () -> Unit,
     onMore: () -> Unit,
     modifier: Modifier = Modifier,
@@ -43,7 +39,7 @@ internal fun SearchSongItem(
         modifier = modifier.padding(start = 14.dp),
         style = MoeSongRowStyle.Standard,
         titleLeading = {
-            if (isPlaying) {
+            if (song.isPlaying) {
                 Icon(
                     Icons.Default.GraphicEq,
                     contentDescription = null,
@@ -53,14 +49,17 @@ internal fun SearchSongItem(
             }
         },
         artwork = {
-            if (artworkRes != null) {
-                Image(painterResource(artworkRes), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            } else {
-                AsyncImage(song.artworkUrl, "${song.title} 封面", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            when (val artwork = song.artwork) {
+                is SearchSongArtworkUi.Resource -> {
+                    Image(painterResource(artwork.drawableRes), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                }
+                is SearchSongArtworkUi.Remote -> {
+                    AsyncImage(artwork.url, "${song.title} 封面", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                }
             }
         },
         badges = {
-            badge?.let {
+            song.badge?.let {
                 MoeMediaBadge(
                     text = if (it == SearchSongBadge.Mv) stringResource(R.string.search_mv) else stringResource(R.string.search_quality),
                     tone = if (it == SearchSongBadge.Mv) MoeMediaBadgeTone.Error else MoeMediaBadgeTone.Primary,

@@ -36,24 +36,11 @@ import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.MoeDividerEmphasis
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.navigation.MoeSearchTopBar
-import cn.james.music.core.model.online.SearchError
-import cn.james.music.core.model.online.Song
 
 @Composable
 internal fun SearchScreen(
     state: SearchUiState,
-    onBack: () -> Unit,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onLoadMore: () -> Unit,
-    onPlay: (Song) -> Unit,
-    onCategorySelected: (SearchCategory) -> Unit = {},
-    onVoice: () -> Unit = {},
-    onFollowArtist: () -> Unit = {},
-    onViewAllSongs: () -> Unit = {},
-    onViewAllCollections: () -> Unit = {},
-    onCollection: (String) -> Unit = {},
-    onSongMore: (Song) -> Unit = {},
+    onAction: (SearchAction) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         MoeSearchTopBar(
@@ -61,12 +48,12 @@ internal fun SearchScreen(
             placeholder = stringResource(R.string.search_placeholder),
             navigationContentDescription = stringResource(R.string.search_back),
             clearContentDescription = stringResource(R.string.search_clear),
-            onQueryChange = onQueryChange,
-            onSearch = onSearch,
-            onNavigateBack = onBack,
+            onQueryChange = { value -> onAction(if (value.isEmpty()) SearchAction.ClearQuery else SearchAction.QueryChanged(value)) },
+            onSearch = { onAction(SearchAction.Submit) },
+            onNavigateBack = { onAction(SearchAction.Back) },
             modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_TOOLBAR),
             trailingAction = {
-                IconButton(onClick = onVoice) {
+                IconButton(onClick = { onAction(SearchAction.Voice) }) {
                     Icon(
                         Icons.Default.Mic,
                         contentDescription = stringResource(R.string.search_voice),
@@ -75,19 +62,12 @@ internal fun SearchScreen(
                 }
             },
         )
-        SearchTabs(state.selectedCategory, onCategorySelected)
+        SearchTabs(state.selectedCategory) { onAction(SearchAction.SelectCategory(it)) }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             Box(Modifier.fillMaxSize().widthIn(max = 520.dp)) {
                 SearchBody(
                     state = state,
-                    onSearch = onSearch,
-                    onLoadMore = onLoadMore,
-                    onPlay = onPlay,
-                    onFollowArtist = onFollowArtist,
-                    onViewAllSongs = onViewAllSongs,
-                    onViewAllCollections = onViewAllCollections,
-                    onCollection = onCollection,
-                    onSongMore = onSongMore,
+                    onAction = onAction,
                 )
             }
         }
@@ -134,14 +114,7 @@ private fun SearchTabs(
 @Composable
 private fun SearchBody(
     state: SearchUiState,
-    onSearch: () -> Unit,
-    onLoadMore: () -> Unit,
-    onPlay: (Song) -> Unit,
-    onFollowArtist: () -> Unit,
-    onViewAllSongs: () -> Unit,
-    onViewAllCollections: () -> Unit,
-    onCollection: (String) -> Unit,
-    onSongMore: (Song) -> Unit,
+    onAction: (SearchAction) -> Unit,
 ) {
     when {
         state.loading -> SearchMessage(true, stringResource(R.string.search_loading_title), stringResource(R.string.search_loading_message))
@@ -150,7 +123,7 @@ private fun SearchBody(
                 title = stringResource(R.string.search_error_title),
                 message = state.error.message,
                 action = stringResource(R.string.search_retry),
-                onAction = onSearch,
+                onAction = { onAction(SearchAction.Submit) },
             )
         !state.hasSearched -> SearchMessage(false, stringResource(R.string.search_idle_title), stringResource(R.string.search_idle_message))
         !state.selectedCategory.hasContent(state) ->
@@ -161,13 +134,7 @@ private fun SearchBody(
         else ->
             SearchResults(
                 state = state,
-                onLoadMore = onLoadMore,
-                onPlay = onPlay,
-                onFollowArtist = onFollowArtist,
-                onViewAllSongs = onViewAllSongs,
-                onViewAllCollections = onViewAllCollections,
-                onCollection = onCollection,
-                onSongMore = onSongMore,
+                onAction = onAction,
             )
     }
 }
@@ -214,18 +181,18 @@ private fun SearchCategory.hasContent(state: SearchUiState): Boolean =
         SearchCategory.Mv -> false
     }
 
-private val SearchError.message: String
+private val SearchProblemUi.message: String
     @Composable
     get() =
         when (this) {
-            SearchError.Offline -> stringResource(R.string.search_error_offline)
-            SearchError.Timeout -> stringResource(R.string.search_error_timeout)
-            SearchError.Connection -> stringResource(R.string.search_error_connection)
-            SearchError.VerificationRequired -> stringResource(R.string.search_error_verification_required)
-            SearchError.AuthenticationRequired -> stringResource(R.string.search_error_authentication_required)
-            SearchError.ServiceUnavailable -> stringResource(R.string.search_error_service_unavailable)
-            SearchError.Protocol -> stringResource(R.string.search_error_protocol)
-            SearchError.SessionInitialization -> stringResource(R.string.search_error_session_initialization)
+            SearchProblemUi.Offline -> stringResource(R.string.search_error_offline)
+            SearchProblemUi.Timeout -> stringResource(R.string.search_error_timeout)
+            SearchProblemUi.Connection -> stringResource(R.string.search_error_connection)
+            SearchProblemUi.VerificationRequired -> stringResource(R.string.search_error_verification_required)
+            SearchProblemUi.AuthenticationRequired -> stringResource(R.string.search_error_authentication_required)
+            SearchProblemUi.ServiceUnavailable -> stringResource(R.string.search_error_service_unavailable)
+            SearchProblemUi.Protocol -> stringResource(R.string.search_error_protocol)
+            SearchProblemUi.SessionInitialization -> stringResource(R.string.search_error_session_initialization)
         }
 
 internal const val SEARCH_RESULTS_TAG = "search_results"

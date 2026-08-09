@@ -25,13 +25,18 @@ fun NavGraphBuilder.homeGraph(
             val state by viewModel.state.collectAsStateWithLifecycle()
             HomeScreen(
                 state = state,
-                onSearch = onSearch,
-                onRefresh = viewModel::refresh,
-                onDismissProblem = viewModel::dismissRefreshProblem,
-                onPlay = { song -> onPlay(song.toDomain()) },
+                onAction = { action ->
+                    when (action) {
+                        HomeAction.Search -> onSearch()
+
+                        is HomeAction.PlaySong -> viewModel.songFor(action.id)?.let(onPlay)
+
+                        HomeAction.Refresh,
+                        HomeAction.DismissProblem,
+                        -> viewModel.onAction(action)
+                    }
+                },
             )
         }
     }
 }
-
-private fun HomeSongUi.toDomain(): Song = Song(id, hash, title, artistName, albumId, albumTitle, durationMs, artworkUrl)

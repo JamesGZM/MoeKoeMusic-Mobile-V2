@@ -112,47 +112,47 @@ class ArchitecturePolicyTest {
     }
 
     @Test
-    fun `preview UI property 只检查 UI model 主构造属性`() {
+    fun `preview UI property 不再允许临时登记`() {
         val root = createTempDirectory("moekoe-preview-property-").toFile()
-        val allowedPath = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt"
-        val allowed =
+        val path = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt"
+        val valid = writeSource(root, path, "data class HomeContentUi(val artwork: String)")
+
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(path to valid)).isEmpty())
+
+        val invalid =
             writeSource(
                 root,
-                allowedPath,
+                path,
                 "data class HomeContentUi(val previewArtworkRes: Int?, val previewBadge: String?, val previewBadgeIsError: Boolean, val previewArtworkRes: Int?, val previewSubtitle: String?)",
             )
 
-        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(allowedPath to allowed)).isEmpty())
-
-        val invalidPath = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
-        val invalid = writeSource(root, invalidPath, "data class SearchUiState(val previewSong: String)")
-        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(invalidPath to invalid)).single().contains("previewSong"))
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(path to invalid)).any { it.contains("previewArtworkRes") })
 
         invalid.writeText("fun mapper() { val previewUrl = value }\ndata class ProtocolPreview(val previewSong: String)")
-        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(invalidPath to invalid)).isEmpty())
+        assertTrue(ArchitecturePolicy.validatePreviewUiProperties(mapOf(path to invalid)).isEmpty())
     }
 
     @Test
-    fun `Search 并行 Map 只检查 UI model 主构造属性`() {
+    fun `Search 并行 Map 不再允许临时登记`() {
         val root = createTempDirectory("moekoe-search-parallel-map-").toFile()
-        val allowedPath = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
-        val allowed =
+        val path = "feature/search/src/main/kotlin/cn/james/music/feature/search/SearchViewModel.kt"
+        val valid = writeSource(root, path, "data class SearchUiState(val songs: List<String>)")
+
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(path to valid)).isEmpty())
+
+        val invalid =
             writeSource(
                 root,
-                allowedPath,
+                path,
                 "data class SearchUiState(val songBadges: Map<String, String>, val songArtwork: Map<String, Int>)",
             )
 
-        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(allowedPath to allowed)).isEmpty())
-
-        val invalidPath = "feature/home/src/main/kotlin/cn/james/music/feature/home/HomeViewModel.kt"
-        val invalid = writeSource(root, invalidPath, "data class HomeUiModel(val songBadges: Map<String, String>)")
-        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(invalidPath to invalid)).single().contains("songBadges"))
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(path to invalid)).any { it.contains("songBadges") })
 
         invalid.writeText(
             "fun mapper() { val songBadges = emptyMap<String, String>() }\ndata class SearchCache(val songArtwork: Map<String, Int>)",
         )
-        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(invalidPath to invalid)).isEmpty())
+        assertTrue(ArchitecturePolicy.validateSearchParallelMaps(mapOf(path to invalid)).isEmpty())
     }
 
     @Test

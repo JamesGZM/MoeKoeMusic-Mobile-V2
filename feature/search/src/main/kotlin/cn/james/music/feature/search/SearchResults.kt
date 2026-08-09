@@ -27,18 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.MoeHorizontalDivider
-import cn.james.music.core.model.online.Song
 
 @Composable
 internal fun SearchResults(
     state: SearchUiState,
-    onLoadMore: () -> Unit,
-    onPlay: (Song) -> Unit,
-    onFollowArtist: () -> Unit,
-    onViewAllSongs: () -> Unit,
-    onViewAllCollections: () -> Unit,
-    onCollection: (String) -> Unit,
-    onSongMore: (Song) -> Unit,
+    onAction: (SearchAction) -> Unit,
 ) {
     val showArtist = state.selectedCategory in listOf(SearchCategory.Overview, SearchCategory.Artists) && state.artist != null
     val showSongs = state.selectedCategory in listOf(SearchCategory.Overview, SearchCategory.Songs) && state.songs.isNotEmpty()
@@ -48,7 +41,7 @@ internal fun SearchResults(
         contentPadding = PaddingValues(top = 14.dp, bottom = 16.dp),
     ) {
         state.artist?.takeIf { showArtist }?.let { artist ->
-            item(key = "artist") { SearchArtistHero(artist, onFollowArtist) }
+            item(key = "artist") { SearchArtistHero(artist) { onAction(SearchAction.FollowArtist) } }
         }
         if (showSongs) {
             if (showArtist) {
@@ -57,18 +50,15 @@ internal fun SearchResults(
             item(key = "songs-title") {
                 SearchSectionTitle(
                     title = stringResource(R.string.search_songs),
-                    onViewAll = onViewAllSongs,
+                    onViewAll = { onAction(SearchAction.ViewAllSongs) },
                     modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_SONGS_HEADER),
                 )
             }
             itemsIndexed(state.songs, key = { _, song -> song.id }) { index, song ->
                 SearchSongItem(
                     song = song,
-                    artworkRes = state.songArtwork[song.id],
-                    badge = state.songBadges[song.id],
-                    isPlaying = song.id == state.playingSongId,
-                    onClick = { onPlay(song) },
-                    onMore = { onSongMore(song) },
+                    onClick = { onAction(SearchAction.PlaySong(song.id)) },
+                    onMore = { onAction(SearchAction.MoreSong(song.id)) },
                     modifier =
                         when (index) {
                             0 -> Modifier.searchLayoutProbe(SEARCH_PROBE_FIRST_SONG)
@@ -83,8 +73,8 @@ internal fun SearchResults(
                     Box(Modifier.fillMaxWidth().padding(10.dp), contentAlignment = Alignment.Center) {
                         when {
                             state.loadingMore -> CircularProgressIndicator(Modifier.size(26.dp), strokeWidth = 2.dp)
-                            state.error != null -> MoeTextButton(onClick = onLoadMore) { Text(stringResource(R.string.search_load_failed)) }
-                            else -> MoeTextButton(onClick = onLoadMore) { Text(stringResource(R.string.search_load_more)) }
+                            state.error != null -> MoeTextButton(onClick = { onAction(SearchAction.LoadMore) }) { Text(stringResource(R.string.search_load_failed)) }
+                            else -> MoeTextButton(onClick = { onAction(SearchAction.LoadMore) }) { Text(stringResource(R.string.search_load_more)) }
                         }
                     }
                 }
@@ -94,7 +84,7 @@ internal fun SearchResults(
             item(key = "collections-title") {
                 SearchSectionTitle(
                     title = stringResource(R.string.search_collections),
-                    onViewAll = onViewAllCollections,
+                    onViewAll = { onAction(SearchAction.ViewAllCollections) },
                     modifier = Modifier.searchLayoutProbe(SEARCH_PROBE_COLLECTIONS_HEADER),
                 )
             }
@@ -105,7 +95,7 @@ internal fun SearchResults(
                     horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
                 ) {
                     items(state.collections, key = SearchCollectionUi::id) { item ->
-                        SearchCollectionCard(item, onClick = { onCollection(item.id) })
+                        SearchCollectionCard(item, onClick = { onAction(SearchAction.OpenCollection(item.id)) })
                     }
                 }
             }
