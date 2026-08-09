@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -19,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import cn.james.music.core.designsystem.component.MoeDividerEmphasis
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.model.playback.PlaybackItem
 
 @Composable
@@ -99,9 +100,9 @@ internal fun PlayerQueueSheetContent(
                         if (index == state.currentIndex) {
                             Spacer(Modifier.height(2.dp))
                         } else {
-                            HorizontalDivider(
+                            MoeHorizontalDivider(
                                 modifier = Modifier.padding(start = 80.dp, end = 21.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+                                emphasis = MoeDividerEmphasis.Muted,
                             )
                         }
                     }

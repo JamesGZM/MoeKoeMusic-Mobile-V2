@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -17,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeTextButton
 import cn.james.music.core.designsystem.component.overlay.MoeDialog
 import cn.james.music.core.model.settings.AppThemePreference
@@ -64,7 +64,7 @@ internal fun ThemeSelectionDialog(
 internal fun AboutDialog(onDismiss: () -> Unit) {
     MoeDialog(onDismissRequest = onDismiss) {
         Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        HorizontalDivider(Modifier.padding(vertical = MoeKoeTheme.spacing.space16))
+        MoeHorizontalDivider(Modifier.padding(vertical = MoeKoeTheme.spacing.space16))
         Text(stringResource(R.string.settings_about_message), color = MaterialTheme.colorScheme.onSurfaceVariant)
         MoeTextButton(
             onClick = onDismiss,

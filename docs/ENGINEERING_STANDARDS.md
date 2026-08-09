@@ -118,6 +118,7 @@
 ### 唯一歌曲 Item
 
 - 全 App 的歌曲型列表项只允许 `:core:designsystem` 的 `MoeSongRow` 作为视觉母组件。
+- Feature 不得直接导入 Material3 `Switch`、`HorizontalDivider` 或 `VerticalDivider`；必须使用 Design System 的 `MoeSwitch` 与 hairline divider，保证状态颜色、触控语义、线宽和强调等级一致。
 - 首页、搜索、本地音乐、设备扫描、歌单与队列可以保留页面私有参数适配器，但适配器函数体必须调用 `MoeSongRow`，不得自行组合封面、标题、副标题和尾部操作布局。
 - 播放态、候选只读态、多选 Checkbox、徽标、时长、序号、拖拽和删除通过母组件参数或 slot 表达；不得为状态另建第二个歌曲 Row。
 - 歌曲型适配器命名必须包含 `Song`、`Music`、`Track` 或 `Queue`，并以 `Row` 或 `Item` 结尾；`verifyArchitecture` 会阻断未委托母组件的实现。

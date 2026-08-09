@@ -1,7 +1,13 @@
 package cn.james.music.feature.settings
 
 import androidx.compose.material3.Surface
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -70,4 +76,46 @@ class SettingsScreenTest {
 
         assertEquals(AppThemePreference.Light, selected)
     }
+
+    @Test
+    fun amoledPreferenceRendersEnabledCheckedSwitch() {
+        setSettingsContent(AppThemePreference.Amoled)
+
+        composeRule
+            .onNode(toggleableState(ToggleableState.On), useUnmergedTree = true)
+            .assertIsEnabled()
+            .assertIsOn()
+    }
+
+    @Test
+    fun systemPreferenceRendersEnabledUncheckedSwitch() {
+        setSettingsContent(AppThemePreference.System)
+
+        composeRule
+            .onNode(toggleableState(ToggleableState.Off), useUnmergedTree = true)
+            .assertIsEnabled()
+            .assertIsOff()
+    }
+
+    private fun setSettingsContent(theme: AppThemePreference) {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(theme = theme),
+                        onBack = {},
+                        onThemeSelected = {},
+                        onThemeDialogRequest = {},
+                        onAboutDialogRequest = {},
+                        onDismissOverlay = {},
+                        onRetry = {},
+                        onDismissProblem = {},
+                    )
+                }
+            }
+        }
+    }
+
+    private fun toggleableState(state: ToggleableState): SemanticsMatcher =
+        SemanticsMatcher.expectValue(SemanticsProperties.ToggleableState, state)
 }

@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.james.music.core.designsystem.MoeKoeTheme
+import cn.james.music.core.designsystem.component.MoeVerticalDivider
 
 @Composable
 internal fun ProfileHero(
@@ -223,14 +223,14 @@ private fun ProfileRelations(
             { onAction(UserProfileAction.Following) },
             Modifier.weight(1f),
         )
-        VerticalDivider(Modifier.height(34.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        MoeVerticalDivider(Modifier.height(34.dp))
         RelationItem(
             profile.followerCount,
             stringResource(R.string.profile_followers),
             { onAction(UserProfileAction.Followers) },
             Modifier.weight(1f),
         )
-        VerticalDivider(Modifier.height(34.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        MoeVerticalDivider(Modifier.height(34.dp))
         RelationItem(
             profile.friendCount,
             stringResource(R.string.profile_friends),

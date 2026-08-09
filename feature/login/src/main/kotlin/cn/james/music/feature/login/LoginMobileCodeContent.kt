@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import cn.james.music.core.designsystem.component.MoeVerticalDivider
 
 @Composable
 internal fun LoginMobileCodeContent(
@@ -69,12 +69,11 @@ internal fun LoginMobileCodeContent(
                         contentDescription = null,
                         modifier = Modifier.size(layout.form.countryDropDownIconSize),
                     )
-                    VerticalDivider(
+                    MoeVerticalDivider(
                         modifier =
                             Modifier
                                 .padding(start = layout.dp(8f), end = layout.dp(20f))
                                 .height(layout.form.countryDividerHeight),
-                        color = MaterialTheme.colorScheme.outlineVariant,
                     )
                 }
             },

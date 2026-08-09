@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +34,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import cn.james.music.core.designsystem.component.MoeDividerEmphasis
+import cn.james.music.core.designsystem.component.MoeDividerWeight
+import cn.james.music.core.designsystem.component.MoeHorizontalDivider
 import cn.james.music.core.designsystem.component.action.MoeButton
 import cn.james.music.core.designsystem.component.action.MoeButtonSize
 import cn.james.music.core.designsystem.component.input.MoeTextField
@@ -199,9 +201,10 @@ internal fun LoginSecurityFooter(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            HorizontalDivider(
+            MoeHorizontalDivider(
                 Modifier.width(layout.form.footerDividerWidth),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+                emphasis = MoeDividerEmphasis.Strong,
+                weight = MoeDividerWeight.Standard,
             )
             Icon(
                 Icons.Filled.VerifiedUser,
@@ -209,9 +212,10 @@ internal fun LoginSecurityFooter(
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = layout.form.footerIconPadding).size(layout.form.footerIconSize),
             )
-            HorizontalDivider(
+            MoeHorizontalDivider(
                 Modifier.width(layout.form.footerDividerWidth),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+                emphasis = MoeDividerEmphasis.Strong,
+                weight = MoeDividerWeight.Standard,
             )
         }
         Text(

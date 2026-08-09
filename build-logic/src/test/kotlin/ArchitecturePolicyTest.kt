@@ -49,6 +49,24 @@ class ArchitecturePolicyTest {
     }
 
     @Test
+    fun `Feature 必须使用受控分隔线和 Switch`() {
+        val root = createTempDirectory("moekoe-visual-primitives-").toFile()
+        val source = File(root, "feature/settings/src/main/kotlin/SettingsScreen.kt")
+        source.parentFile.mkdirs()
+        source.writeText(
+            """
+            import androidx.compose.material3.HorizontalDivider
+            import androidx.compose.material3.Switch
+            """.trimIndent(),
+        )
+
+        val violations = ArchitecturePolicy.validateImports(root, listOf(source))
+
+        assertEquals(2, violations.size)
+        assertTrue(violations.all { it.contains("受控视觉原语") })
+    }
+
+    @Test
     fun `歌曲型页面适配器必须委托唯一母组件`() {
         val root = createTempDirectory("moekoe-song-item-").toFile()
         val valid = File(root, "feature/search/src/main/kotlin/SearchScreen.kt")

@@ -129,6 +129,9 @@ internal object ArchitecturePolicy {
         imported: String,
     ): String? {
         if (module.startsWith(":feature:")) {
+            if (imported in RAW_VISUAL_PRIMITIVES) {
+                return "Feature 必须使用 :core:designsystem 的受控视觉原语"
+            }
             if (imported.startsWith("cn.james.music.data.")) return "Feature 不得依赖 data 实现"
             if (imported.startsWith("cn.james.music.kugou.")) return "Feature 不得依赖酷狗协议实现"
             if (imported.startsWith("androidx.room.")) return "Feature 不得直接访问 Room"
@@ -177,6 +180,12 @@ internal object ArchitecturePolicy {
 
     private val IMPORT = Regex("import\\s+([A-Za-z0-9_.*]+)")
     private val FEATURE_IMPORT = Regex("^cn\\.james\\.music\\.feature\\.([^.]+)\\.")
+    private val RAW_VISUAL_PRIMITIVES =
+        setOf(
+            "androidx.compose.material3.HorizontalDivider",
+            "androidx.compose.material3.VerticalDivider",
+            "androidx.compose.material3.Switch",
+        )
     private val SONG_ITEM_FUNCTION = Regex("fun\\s+([A-Za-z0-9_]*(?:Song|Track|Queue|Music)[A-Za-z0-9_]*(?:Row|Item))\\s*\\(")
     private const val SONG_ITEM_OWNER =
         "core/designsystem/src/main/kotlin/cn/james/music/core/designsystem/component/MoeSongRow.kt"

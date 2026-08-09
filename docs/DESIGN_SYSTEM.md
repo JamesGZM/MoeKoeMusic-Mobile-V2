@@ -154,6 +154,8 @@
 
 - 常规列表和页面容器以分隔线和色调差建立层级，默认无阴影。
 - 同一设置分组内的单行 Item 必须使用一致的行高、上下内边距和内容基线；组尾、页面尾部或为了塞进截图都不得压缩单个 Item。图标、主文案、尾部值、Chevron 与 Switch 分别在该行的可见高度内垂直居中，分隔线只改变边界，不占用或缩短相邻行。
+- Feature 页面必须使用 `MoeSwitch`，开启态轨道使用主题 `primary`、拇指使用 `onPrimary`；禁用态才允许使用低强调灰。Switch 保留至少 `48dp` 语义命中区，视觉缩放和颜色不得由页面自行覆盖。
+- Feature 页面必须使用 `MoeHorizontalDivider` / `MoeVerticalDivider`。普通分隔线固定为 `0.5dp` 可见 hairline，并按具名强调等级选择透明度；只有确认稿明确要求的装饰线可使用受控 `Standard` 权重，页面不得直接调用 Material3 Divider 或传入任意粗细。
 - 标准 Toolbar 与页面使用同一 `surface`，默认无卡片外框、圆角容器或整体阴影；滚动后最多增加底部分隔线。
 - Dropdown 和 Snackbar 只使用轻量阴影；Dialog 与 Bottom Sheet 主要依靠遮罩分层。
 - 禁止在业务页面自定义任意阴影参数；最终 Elevation Token 在 Compose 截图和真机校准时固化。
