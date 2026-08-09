@@ -5,6 +5,7 @@ import cn.james.music.core.database.lyrics.LyricsCacheEntity
 import cn.james.music.core.model.lyrics.LyricsError
 import cn.james.music.core.model.lyrics.LyricsResult
 import cn.james.music.core.model.playback.PlaybackSource
+import cn.james.music.data.cache.RegenerableContentCache
 import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.transport.EpochSecondsProvider
 import cn.james.music.kugou.api.transport.KugouCallExecutor
@@ -15,6 +16,7 @@ import cn.james.music.kugou.api.transport.KugouRequestFactory
 import cn.james.music.kugou.api.transport.KugouRetryDelayer
 import cn.james.music.kugou.api.transport.KugouTransport
 import cn.james.music.kugou.api.transport.KugouTransportResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -125,9 +127,40 @@ class KugouLyricsRepositoryTest {
         assertTrue(dao.upserts.isEmpty())
     }
 
+    @Test
+    fun clearDuringNetworkLoadReturnsLyricsButDoesNotRepopulateDisk() =
+        runBlocking {
+            val started = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            val dao = FakeLyricsCacheDao()
+            val contentCache = RegenerableContentCache.forTesting { }
+            val transport =
+                QueueTransport(
+                    searchSuccess(),
+                    downloadSuccess(),
+                    beforeResponse = { request ->
+                        if (request.path == "/download") {
+                            started.complete(Unit)
+                            release.await()
+                        }
+                    },
+                )
+            val repository = repository(dao, transport, contentCache)
+
+            val lyrics = async { repository.getLyrics(KUGOU_SOURCE) }
+            started.await()
+
+            contentCache.clearAllRegenerableContent()
+            release.complete(Unit)
+
+            assertTrue(lyrics.await() is LyricsResult.Success)
+            assertTrue(dao.upserts.isEmpty())
+        }
+
     private fun repository(
         dao: LyricsCacheDao,
         transport: KugouTransport,
+        contentCache: RegenerableContentCache = RegenerableContentCache.forTesting { },
     ) = KugouLyricsRepository(
         cacheDao = dao,
         onlineClient =
@@ -139,6 +172,7 @@ class KugouLyricsRepositoryTest {
                 ),
             ),
         parserDispatcher = Dispatchers.Unconfined,
+        regenerableContentCache = contentCache,
     )
 
     private fun entity(
@@ -188,17 +222,23 @@ class KugouLyricsRepositoryTest {
             deletedKeys += sourceKey
             entries.remove(sourceKey)
         }
+
+        override suspend fun deleteAll() {
+            entries.clear()
+        }
     }
 
     private class QueueTransport(
         vararg responses: KugouTransportResult,
         private val delayMs: Long = 0,
+        private val beforeResponse: suspend (KugouPreparedRequest) -> Unit = {},
     ) : KugouTransport {
         private val responses = ArrayDeque(responses.toList())
         val requests = CopyOnWriteArrayList<KugouPreparedRequest>()
 
         override suspend fun execute(request: KugouPreparedRequest): KugouTransportResult {
             requests += request
+            beforeResponse(request)
             if (delayMs > 0) delay(delayMs)
             return responses.removeFirst()
         }

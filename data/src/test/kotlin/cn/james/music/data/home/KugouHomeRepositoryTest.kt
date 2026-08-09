@@ -10,6 +10,7 @@ import cn.james.music.core.model.home.HomeRecommendation
 import cn.james.music.core.model.home.HomeRefreshProblem
 import cn.james.music.core.model.home.HomeRefreshResult
 import cn.james.music.core.model.online.Song
+import cn.james.music.data.cache.RegenerableContentCache
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouHomeBannerDto
 import cn.james.music.kugou.api.endpoint.KugouHomePlaylistDto
@@ -314,6 +315,35 @@ class KugouHomeRepositoryTest {
         }
 
     @Test
+    fun clearDuringRefreshSupersedesOldResultWithoutStartingAnotherRequest() =
+        runBlocking {
+            val started = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            val dao = FakeDao()
+            val contentCache = RegenerableContentCache.forTesting { }
+            val service =
+                FakeHomeService(
+                    daily = {
+                        started.complete(Unit)
+                        release.await()
+                        KugouApiResult.Success(listOf(SONG_DTO))
+                    },
+                )
+            val repository = repository(dao, service, contentCache = contentCache)
+
+            val refresh = async { repository.refresh(force = true) }
+            started.await()
+            contentCache.clearAllRegenerableContent()
+            release.complete(Unit)
+
+            assertEquals(HomeRefreshResult.Superseded, refresh.await())
+            assertNull(dao.entities[CACHE_KEY_ANONYMOUS])
+            assertEquals(1, service.dailyCalls)
+            assertEquals(1, service.playlistCalls)
+            assertEquals(1, service.bannerCalls)
+        }
+
+    @Test
     fun callerCancellationPropagatesAndDoesNotWritePartialSnapshot() =
         runBlocking {
             val started = CompletableDeferred<Unit>()
@@ -459,12 +489,14 @@ class KugouHomeRepositoryTest {
         dao: FakeDao,
         service: FakeHomeService,
         observer: FakeSessionObserver = FakeSessionObserver(ANONYMOUS_SESSION),
+        contentCache: RegenerableContentCache = RegenerableContentCache.forTesting { },
     ) = KugouHomeRepository(
         sessionProvider = FakeSessionProvider(observer),
         sessionObserver = observer,
         homeService = service,
         cacheDao = dao,
         timeProvider = HomeTimeProvider { NOW },
+        regenerableContentCache = contentCache,
     )
 
     private class FakeSessionProvider(
@@ -504,6 +536,10 @@ class KugouHomeRepositoryTest {
         override suspend fun delete(cacheKey: String) {
             entities.remove(cacheKey)
             flows.getOrPut(cacheKey) { MutableStateFlow(null) }.value = null
+        }
+
+        override suspend fun deleteAll() {
+            entities.keys.toList().forEach { cacheKey -> delete(cacheKey) }
         }
 
         suspend fun put(

@@ -6,6 +6,8 @@ import cn.james.music.core.model.lyrics.LyricsError
 import cn.james.music.core.model.lyrics.LyricsRepository
 import cn.james.music.core.model.lyrics.LyricsResult
 import cn.james.music.core.model.playback.PlaybackSource
+import cn.james.music.data.cache.RegenerableContentCache
+import cn.james.music.data.cache.RegenerableContentCacheGeneration
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouLyricsFetchResult
 import cn.james.music.kugou.api.endpoint.KugouOnlineClient
@@ -25,29 +27,31 @@ class KugouLyricsRepository
         private val cacheDao: LyricsCacheDao,
         private val onlineClient: KugouOnlineClient,
         @LyricsParserDispatcher parserDispatcher: CoroutineDispatcher,
+        private val regenerableContentCache: RegenerableContentCache,
     ) : LyricsRepository {
         private val parser = KugouLyricsParser(parserDispatcher)
         private val inFlightMutex = Mutex()
-        private val inFlight = mutableMapOf<String, CompletableDeferred<LyricsResult>>()
+        private val inFlight = mutableMapOf<FlightKey, CompletableDeferred<LyricsResult>>()
 
         override suspend fun getLyrics(source: PlaybackSource): LyricsResult {
             val kugou = source as? PlaybackSource.Kugou ?: return LyricsResult.Failure(LyricsError.UnsupportedSource)
             val hash = kugou.songHash.trim().lowercase()
             if (!KUGOU_HASH.matches(hash)) return LyricsResult.Failure(LyricsError.Protocol)
             val sourceKey = "$KUGOU_SOURCE_PREFIX$hash"
-            return singleFlight(sourceKey) { load(sourceKey, hash) }
+            val cacheGeneration = regenerableContentCache.snapshot()
+            return singleFlight(FlightKey(sourceKey, cacheGeneration)) { load(sourceKey, hash, cacheGeneration) }
         }
 
         private suspend fun singleFlight(
-            sourceKey: String,
+            key: FlightKey,
             loader: suspend () -> LyricsResult,
         ): LyricsResult {
             var ownsFlight = false
             val deferred =
                 inFlightMutex.withLock {
-                    inFlight[sourceKey]
+                    inFlight[key]
                         ?: CompletableDeferred<LyricsResult>().also { created ->
-                            inFlight[sourceKey] = created
+                            inFlight[key] = created
                             ownsFlight = true
                         }
                 }
@@ -66,7 +70,7 @@ class KugouLyricsRepository
                 failure
             } finally {
                 inFlightMutex.withLock {
-                    if (inFlight[sourceKey] === deferred) inFlight.remove(sourceKey)
+                    if (inFlight[key] === deferred) inFlight.remove(key)
                 }
             }
         }
@@ -74,6 +78,7 @@ class KugouLyricsRepository
         private suspend fun load(
             sourceKey: String,
             hash: String,
+            cacheGeneration: RegenerableContentCacheGeneration,
         ): LyricsResult {
             storageOrNull { cacheDao.find(sourceKey) }?.let { cached ->
                 when (val parsed = parser.parse(cached.krcText)) {
@@ -83,7 +88,9 @@ class KugouLyricsRepository
 
                     is KugouLyricsParseResult.Success -> {
                         if (cached.parserVersion != PARSER_VERSION) {
-                            storageOrNull { cacheDao.upsert(cached.currentParserVersion()) }
+                            regenerableContentCache.writeIfCurrent(cacheGeneration) {
+                                cacheDao.upsert(cached.currentParserVersion())
+                            }
                         }
                         return LyricsResult.Success(parsed.document)
                     }
@@ -92,11 +99,14 @@ class KugouLyricsRepository
 
             return when (val response = onlineClient.fetchLyrics(hash)) {
                 is KugouApiResult.Failure -> LyricsResult.Failure(response.error.toDomain())
-                is KugouApiResult.Success -> response.value.toDomain(sourceKey)
+                is KugouApiResult.Success -> response.value.toDomain(sourceKey, cacheGeneration)
             }
         }
 
-        private suspend fun KugouLyricsFetchResult.toDomain(sourceKey: String): LyricsResult =
+        private suspend fun KugouLyricsFetchResult.toDomain(
+            sourceKey: String,
+            cacheGeneration: RegenerableContentCacheGeneration,
+        ): LyricsResult =
             when (this) {
                 KugouLyricsFetchResult.NotFound -> {
                     LyricsResult.NotFound
@@ -109,7 +119,7 @@ class KugouLyricsRepository
                         }
 
                         is KugouLyricsParseResult.Success -> {
-                            storageOrNull {
+                            regenerableContentCache.writeIfCurrent(cacheGeneration) {
                                 cacheDao.upsert(
                                     LyricsCacheEntity(
                                         sourceKey = sourceKey,
@@ -130,6 +140,11 @@ class KugouLyricsRepository
                 parserVersion = PARSER_VERSION,
                 updatedAtEpochMs = System.currentTimeMillis().coerceAtLeast(0),
             )
+
+        private data class FlightKey(
+            val sourceKey: String,
+            val cacheGeneration: RegenerableContentCacheGeneration,
+        )
 
         private suspend fun <T> storageOrNull(block: suspend () -> T): T? =
             try {

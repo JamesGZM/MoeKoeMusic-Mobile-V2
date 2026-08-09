@@ -53,7 +53,7 @@ PC 与旧 Mobile 均没有此功能可迁移。固定 `../MoeKoeMusic@52c9833afe
 
 清除是单飞操作：Settings 只启动独立 clear job/generation，不能取消主题、自动跳过、动态色、歌词、字号、音质或品牌色保存。重复点击在确认后禁用该行/确认按钮并复用当前 job；Dismiss 仅关闭反馈，不取消已经开始的 I/O。
 
-Room 两张白名单表必须用一次 `RoomDatabase.withTransaction` 删除，保证数据库内没有“首页已清、歌词未清”的可观察中间提交。Coil 与 Room 之间无法组成跨存储事务，结果因此为类型化而非乐观 Boolean：
+034 已在 `data/src/main/kotlin/cn/james/music/data/cache/RegenerableContentCache.kt` 使 Room 两张白名单表通过一次 `RoomDatabase.withTransaction` 删除，并以 singleton generation 与同一 `Mutex` 串行清理和落盘；`:data` 仅显式增加已锁定的 `androidx.room.ktx` 直接依赖，以使用该 Room Kotlin API，不引入新的依赖版本或能力。Home 在 clear 前起飞的成功映射为 `Superseded`，Lyrics 仍返回原调用者的解析结果但不再写盘。Coil 与 Room 之间无法组成跨存储事务，结果因此为类型化而非乐观 Boolean：
 
 - `Cleared`：Room transaction 与 Coil memory/disk 都成功；显示“缓存已清理”。
 - `PartiallyCleared(failedScopes)`：已完成 scope 保留完成状态，显示“部分缓存未清理，可重试”；重试为幂等的整次白名单清除，不能回滚已删除数据。
@@ -76,7 +76,7 @@ Room 两张白名单表必须用一次 `RoomDatabase.withTransaction` 删除，�
 ```
 
 - `:core:model` 仅定义 `CacheMaintenanceRepository.clearCaches()`、不可变 `CacheClearResult`/scope；不含 Room、Context、File、Coil 类型或可显示容量。
-- `:data` 拥有 Room whitelist、`withTransaction`、home/lyrics epoch 与错误到 typed result 的映射；不能调用 `clearAllTables()`，也不得依赖 Compose/Media3。
+- `:data` 拥有 Room whitelist、`withTransaction`、home/lyrics epoch 与错误到 typed result 的映射；`RegenerableContentCache` 仅枚举 Home/歌词两种 scope，不能调用 `clearAllTables()`，也不得依赖 Compose/Media3。
 - `:app` 是 Coil singleton 的唯一适配与 Hilt binding 点；adapter 可注入 application context，但不把 ImageLoader 交给 UI 或 data model。
 - `:feature:settings` 只呈现确认、saving、success/partial/failure + Retry state，不读取数据库、DataStore、Context 或 Coil。现有静态行位于 `feature/settings/src/main/kotlin/cn/james/music/feature/settings/SettingsUiModels.kt:275-281`。
 - `:feature:home` 只消费既有 `HomeRepository` Flow；`AppPlayerLyricsViewModel` 不新增清除入口。
@@ -89,7 +89,7 @@ Room 两张白名单表必须用一次 `RoomDatabase.withTransaction` 删除，�
 
 ## 原子实施顺序与测试矩阵
 
-1. **数据库与 data 失效边界**：为两 DAO 加 `deleteAll`，实现 transaction + home/lyrics epoch；JVM/Room 测 all key 删除、两表原子性、读/写异常、取消，以及删除后 Home observer 只发 missing、不额外启动请求。
+1. **数据库与 data 失效边界**：已完成（034）。两 DAO 增加无参数 `deleteAll`，`RegenerableContentCache` 通过同一 Room transaction 清除两表，并在 transaction 成功后推进 generation；Home/Lyrics 在写入前持有同一 generation，迟到 Home 返回 `Superseded`、迟到 Lyrics 只返回调用者且不写盘。JVM 覆盖白名单 scope、串行、Room failure、取消和迟到写入；DAO AndroidTest 增加 all-key 删除断言（本切片只编译，未运行设备）。清除本身没有调用 Home/Lyrics 网络 API。
 2. **app Coil port**：绑定同一 singleton 的 memory/disk clear fake；单测同一实例、scope 成功/失败/partial/retry，确认不 reset/新建 ImageLoader/删根目录。
 3. **Settings 真实闭环**：静态 `ClearCache` 行改为确认 action，独立 saving/retry；JVM 覆盖重复点击单飞、partial/retry、dismiss、其他设置写入不互相取消；Compose 覆盖确认/禁用/错误语义与取消。
 4. **视觉与门禁**：补确认/保存/部分失败设计 contract、截图和局部 fidelity；不改 CacheLimit 行，也不放宽阈值或遮罩。最后运行受影响 core/data/app/settings 的 unit/compile/lint、contracts/fidelity/impact/golden、architecture/skill/agent governance 与 diff check。

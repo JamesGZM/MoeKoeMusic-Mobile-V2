@@ -53,6 +53,18 @@ class HomeContentSnapshotDaoTest {
             assertEquals("signed-in", dao.find(SIGNED_IN_KEY)?.payloadJson)
         }
 
+    @Test
+    fun deleteAllRemovesEveryIdentityPartition() =
+        runBlocking {
+            dao.upsert(entity(ANONYMOUS_KEY, "anonymous", 10))
+            dao.upsert(entity(SIGNED_IN_KEY, "signed-in", 20))
+
+            dao.deleteAll()
+
+            assertNull(dao.find(ANONYMOUS_KEY))
+            assertNull(dao.find(SIGNED_IN_KEY))
+        }
+
     private fun entity(
         cacheKey: String,
         payloadJson: String,

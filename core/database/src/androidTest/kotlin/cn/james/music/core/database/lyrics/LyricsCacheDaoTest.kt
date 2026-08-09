@@ -49,6 +49,25 @@ class LyricsCacheDaoTest {
             assertNull(dao.find(SOURCE_KEY))
         }
 
+    @Test
+    fun deleteAllRemovesEveryLyricsEntry() =
+        runBlocking {
+            dao.upsert(entity(krcText = "first", parserVersion = 1, updatedAt = 10))
+            dao.upsert(
+                LyricsCacheEntity(
+                    sourceKey = "kugou:second-fixture-hash",
+                    krcText = "second",
+                    parserVersion = 1,
+                    updatedAtEpochMs = 20,
+                ),
+            )
+
+            dao.deleteAll()
+
+            assertNull(dao.find(SOURCE_KEY))
+            assertNull(dao.find("kugou:second-fixture-hash"))
+        }
+
     private fun entity(
         krcText: String,
         parserVersion: Int,

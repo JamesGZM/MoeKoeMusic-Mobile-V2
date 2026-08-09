@@ -14,4 +14,7 @@ interface LyricsCacheDao {
 
     @Query("DELETE FROM lyrics_cache WHERE source_key = :sourceKey")
     suspend fun delete(sourceKey: String)
+
+    @Query("DELETE FROM lyrics_cache")
+    suspend fun deleteAll()
 }

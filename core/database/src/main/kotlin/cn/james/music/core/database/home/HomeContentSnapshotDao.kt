@@ -18,4 +18,7 @@ interface HomeContentSnapshotDao {
 
     @Query("DELETE FROM home_content_snapshots WHERE cache_key = :cacheKey")
     suspend fun delete(cacheKey: String)
+
+    @Query("DELETE FROM home_content_snapshots")
+    suspend fun deleteAll()
 }

@@ -12,6 +12,9 @@ import cn.james.music.core.model.home.HomeRefreshProblem
 import cn.james.music.core.model.home.HomeRefreshResult
 import cn.james.music.core.model.home.HomeRepository
 import cn.james.music.core.model.online.Song
+import cn.james.music.data.cache.RegenerableContentCache
+import cn.james.music.data.cache.RegenerableContentCacheGeneration
+import cn.james.music.data.cache.RegenerableContentCacheWriteResult
 import cn.james.music.kugou.api.endpoint.KugouApiResult
 import cn.james.music.kugou.api.endpoint.KugouHomeBannerDto
 import cn.james.music.kugou.api.endpoint.KugouHomePlaylistDto
@@ -62,6 +65,7 @@ class KugouHomeRepository
         private val homeService: KugouHomeService,
         private val cacheDao: HomeContentSnapshotDao,
         private val timeProvider: HomeTimeProvider,
+        private val regenerableContentCache: RegenerableContentCache,
     ) : HomeRepository {
         private val codec = HomeContentCacheCodec()
         private val flightMutex = Mutex()
@@ -92,7 +96,11 @@ class KugouHomeRepository
                     is KugouInitializationResult.Ready -> initialization.session
                 }
             val observedState = sessionObserver.state.value
-            return singleFlight(SessionScope(observedState.session ?: session, observedState.generation), force)
+            return singleFlight(
+                scope = SessionScope(observedState.session ?: session, observedState.generation),
+                force = force,
+                cacheGeneration = regenerableContentCache.snapshot(),
+            )
         }
 
         private fun observeSession(scope: SessionScope): Flow<HomeContent?> =
@@ -103,7 +111,14 @@ class KugouHomeRepository
                     if (!refreshStarted) {
                         refreshStarted = true
                         automaticRefresh.value = HomeAutomaticRefreshState.Refreshing
-                        automaticRefresh.value = HomeAutomaticRefreshState.Complete(singleFlight(scope, force = false))
+                        automaticRefresh.value =
+                            HomeAutomaticRefreshState.Complete(
+                                singleFlight(
+                                    scope = scope,
+                                    force = false,
+                                    cacheGeneration = regenerableContentCache.snapshot(),
+                                ),
+                            )
                     }
                 }
             }
@@ -129,17 +144,21 @@ class KugouHomeRepository
         private suspend fun singleFlight(
             scope: SessionScope,
             force: Boolean,
+            cacheGeneration: RegenerableContentCacheGeneration,
         ): HomeRefreshResult {
             val cacheKey = scope.session.cacheKey()
             var ownsFlight = false
             val flight =
                 flightMutex.withLock {
                     if (!force) {
-                        flights[cacheKey]?.takeIf { it.sessionGeneration == scope.generation }?.let { return@withLock it }
+                        flights[cacheKey]
+                            ?.takeIf {
+                                it.sessionGeneration == scope.generation && it.cacheGeneration == cacheGeneration
+                            }?.let { return@withLock it }
                     }
                     val generation = generations.getOrDefault(cacheKey, 0) + 1
                     generations[cacheKey] = generation
-                    RefreshFlight(generation, scope.generation, CompletableDeferred()).also {
+                    RefreshFlight(generation, scope.generation, cacheGeneration, CompletableDeferred()).also {
                         flights[cacheKey] = it
                         ownsFlight = true
                     }
@@ -147,7 +166,7 @@ class KugouHomeRepository
             if (!ownsFlight) return flight.result.await()
 
             return try {
-                val result = refreshOnce(scope, cacheKey, flight.generation, force)
+                val result = refreshOnce(scope, cacheKey, flight.generation, force, cacheGeneration)
                 flight.result.complete(result)
                 result
             } catch (cancellation: CancellationException) {
@@ -169,6 +188,7 @@ class KugouHomeRepository
             cacheKey: String,
             generation: Long,
             force: Boolean,
+            cacheGeneration: RegenerableContentCacheGeneration,
         ): HomeRefreshResult {
             val cached = readCache(cacheKey)
             if (cached is CacheRead.StorageFailure) return HomeRefreshResult.Failure(HomeRefreshProblem.Storage)
@@ -189,7 +209,7 @@ class KugouHomeRepository
                 if (content.recommendations.isEmpty() && content.playlists.isEmpty()) {
                     return HomeRefreshResult.Success(content, persisted = false)
                 }
-                return when (persistIfCurrent(cacheKey, generation, scope.generation, content)) {
+                return when (persistIfCurrent(cacheKey, generation, scope.generation, cacheGeneration, content)) {
                     CommitResult.Persisted -> HomeRefreshResult.Success(content, persisted = true)
                     CommitResult.StorageFailure -> HomeRefreshResult.Failure(HomeRefreshProblem.Storage)
                     CommitResult.Superseded -> HomeRefreshResult.Superseded
@@ -223,6 +243,7 @@ class KugouHomeRepository
             cacheKey: String,
             generation: Long,
             sessionGeneration: Long,
+            cacheGeneration: RegenerableContentCacheGeneration,
             content: HomeContent,
         ): CommitResult =
             flightMutex.withLock {
@@ -233,20 +254,21 @@ class KugouHomeRepository
                 ) {
                     return@withLock CommitResult.Superseded
                 }
-                try {
-                    cacheDao.upsert(
-                        HomeContentSnapshotEntity(
-                            cacheKey = cacheKey,
-                            payloadJson = codec.encode(content),
-                            schemaVersion = HomeContentCacheCodec.CACHE_SCHEMA_VERSION,
-                            updatedAtEpochMs = content.updatedAtEpochMs,
-                        ),
-                    )
-                    CommitResult.Persisted
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Exception) {
-                    CommitResult.StorageFailure
+                when (
+                    regenerableContentCache.writeIfCurrent(cacheGeneration) {
+                        cacheDao.upsert(
+                            HomeContentSnapshotEntity(
+                                cacheKey = cacheKey,
+                                payloadJson = codec.encode(content),
+                                schemaVersion = HomeContentCacheCodec.CACHE_SCHEMA_VERSION,
+                                updatedAtEpochMs = content.updatedAtEpochMs,
+                            ),
+                        )
+                    }
+                ) {
+                    RegenerableContentCacheWriteResult.Written -> CommitResult.Persisted
+                    RegenerableContentCacheWriteResult.Superseded -> CommitResult.Superseded
+                    RegenerableContentCacheWriteResult.StorageFailure -> CommitResult.StorageFailure
                 }
             }
 
@@ -322,6 +344,7 @@ class KugouHomeRepository
         private data class RefreshFlight(
             val generation: Long,
             val sessionGeneration: Long,
+            val cacheGeneration: RegenerableContentCacheGeneration,
             val result: CompletableDeferred<HomeRefreshResult>,
         )
 
