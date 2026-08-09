@@ -44,8 +44,8 @@ fun TencentCaptchaScreen(
             model =
                 MoeStandardTopBarUiModel(
                     title = stringResource(R.string.login_tencent_page_title),
-                    navigationContentDescription = stringResource(R.string.login_tencent_page_close),
-                    navigation = MoeTopBarNavigation.CaptchaClose,
+                    navigationContentDescription = stringResource(R.string.login_back),
+                    navigation = MoeTopBarNavigation.Back,
                 ),
             onEvent = { event ->
                 if (event == MoeStandardTopBarEvent.NavigateBack) onClose()

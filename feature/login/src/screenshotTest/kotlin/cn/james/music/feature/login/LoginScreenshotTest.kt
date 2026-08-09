@@ -134,7 +134,13 @@ fun LoginMultipleAccountsLayoutProbeScreenshot() {
                 accounts = previewAccounts,
                 selectedUserId = "18600002258",
             ),
-        colors = mapOf("card" to Color.Magenta, "accountList" to Color.Green),
+        colors =
+            mapOf(
+                "card" to Color.Magenta,
+                "accountTitle" to Color.Yellow,
+                "accountList" to Color.Green,
+                "accountPrimaryAction" to Color.Red,
+            ),
     )
 }
 
