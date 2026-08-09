@@ -2,6 +2,7 @@ package cn.james.music.core.designsystem
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -22,6 +23,15 @@ enum class ThemeMode {
     Light,
     Dark,
     Amoled,
+}
+
+enum class BrandThemeColor {
+    SkyBlue,
+    SakuraPink,
+    StarPurple,
+    MintGreen,
+    LakeCyan,
+    SunsetOrange,
 }
 
 @Immutable
@@ -196,6 +206,186 @@ private val DarkExtraColors =
         vipGold = Color(0xFFFFD36A),
     )
 
+private data class BrandPrimaryRoles(
+    val primary: Color,
+    val onPrimary: Color,
+    val primaryContainer: Color,
+    val onPrimaryContainer: Color,
+    val inversePrimary: Color,
+)
+
+private data class BrandThemeColorPalette(
+    val light: BrandPrimaryRoles,
+    val dark: BrandPrimaryRoles,
+    val amoled: BrandPrimaryRoles,
+)
+
+private val BrandThemeColorPalettes =
+    mapOf(
+        BrandThemeColor.SakuraPink to
+            BrandThemeColorPalette(
+                light =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFC12C69),
+                        onPrimary = Color.White,
+                        primaryContainer = Color(0xFFFFE8F0),
+                        onPrimaryContainer = Color(0xFF5C0030),
+                        inversePrimary = Color(0xFFFFB1C8),
+                    ),
+                dark =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFFFB1C8),
+                        onPrimary = Color(0xFF630035),
+                        primaryContainer = Color(0xFF8E1D4F),
+                        onPrimaryContainer = Color(0xFFFFD9E5),
+                        inversePrimary = Color(0xFFC12C69),
+                    ),
+                amoled =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFFFB1C8),
+                        onPrimary = Color(0xFF630035),
+                        primaryContainer = Color(0xFF8E1D4F),
+                        onPrimaryContainer = Color(0xFFFFD9E5),
+                        inversePrimary = Color(0xFFC12C69),
+                    ),
+            ),
+        BrandThemeColor.StarPurple to
+            BrandThemeColorPalette(
+                light =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF6847C8),
+                        onPrimary = Color.White,
+                        primaryContainer = Color(0xFFEFE7FF),
+                        onPrimaryContainer = Color(0xFF2F126E),
+                        inversePrimary = Color(0xFFCFBDFF),
+                    ),
+                dark =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFCFBDFF),
+                        onPrimary = Color(0xFF361E73),
+                        primaryContainer = Color(0xFF50379A),
+                        onPrimaryContainer = Color(0xFFEBDDFF),
+                        inversePrimary = Color(0xFF6847C8),
+                    ),
+                amoled =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFCFBDFF),
+                        onPrimary = Color(0xFF361E73),
+                        primaryContainer = Color(0xFF50379A),
+                        onPrimaryContainer = Color(0xFFEBDDFF),
+                        inversePrimary = Color(0xFF6847C8),
+                    ),
+            ),
+        BrandThemeColor.MintGreen to
+            BrandThemeColorPalette(
+                light =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF087E54),
+                        onPrimary = Color.White,
+                        primaryContainer = Color(0xFFDDF8EA),
+                        onPrimaryContainer = Color(0xFF003824),
+                        inversePrimary = Color(0xFF83E5B7),
+                    ),
+                dark =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF83E5B7),
+                        onPrimary = Color(0xFF003B27),
+                        primaryContainer = Color(0xFF005337),
+                        onPrimaryContainer = Color(0xFFA4F8CB),
+                        inversePrimary = Color(0xFF087E54),
+                    ),
+                amoled =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF83E5B7),
+                        onPrimary = Color(0xFF003B27),
+                        primaryContainer = Color(0xFF005337),
+                        onPrimaryContainer = Color(0xFFA4F8CB),
+                        inversePrimary = Color(0xFF087E54),
+                    ),
+            ),
+        BrandThemeColor.LakeCyan to
+            BrandThemeColorPalette(
+                light =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF007F8E),
+                        onPrimary = Color.White,
+                        primaryContainer = Color(0xFFD8F7FA),
+                        onPrimaryContainer = Color(0xFF003A42),
+                        inversePrimary = Color(0xFF72DCE9),
+                    ),
+                dark =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF72DCE9),
+                        onPrimary = Color(0xFF00363F),
+                        primaryContainer = Color(0xFF00535E),
+                        onPrimaryContainer = Color(0xFF92F2FF),
+                        inversePrimary = Color(0xFF007F8E),
+                    ),
+                amoled =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFF72DCE9),
+                        onPrimary = Color(0xFF00363F),
+                        primaryContainer = Color(0xFF00535E),
+                        onPrimaryContainer = Color(0xFF92F2FF),
+                        inversePrimary = Color(0xFF007F8E),
+                    ),
+            ),
+        BrandThemeColor.SunsetOrange to
+            BrandThemeColorPalette(
+                light =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFA84E00),
+                        onPrimary = Color.White,
+                        primaryContainer = Color(0xFFFFE9D9),
+                        onPrimaryContainer = Color(0xFF4E2100),
+                        inversePrimary = Color(0xFFFFB77D),
+                    ),
+                dark =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFFFB77D),
+                        onPrimary = Color(0xFF4A2100),
+                        primaryContainer = Color(0xFF773800),
+                        onPrimaryContainer = Color(0xFFFFDBC0),
+                        inversePrimary = Color(0xFFA84E00),
+                    ),
+                amoled =
+                    BrandPrimaryRoles(
+                        primary = Color(0xFFFFB77D),
+                        onPrimary = Color(0xFF4A2100),
+                        primaryContainer = Color(0xFF773800),
+                        onPrimaryContainer = Color(0xFFFFDBC0),
+                        inversePrimary = Color(0xFFA84E00),
+                    ),
+            ),
+    )
+
+internal fun moeKoeColorScheme(
+    themeMode: ThemeMode,
+    brandThemeColor: BrandThemeColor,
+    systemDark: Boolean,
+): ColorScheme {
+    val baseColorScheme =
+        when {
+            themeMode == ThemeMode.Amoled -> AmoledColors
+            themeMode == ThemeMode.Dark || (themeMode == ThemeMode.System && systemDark) -> DarkColors
+            else -> LightColors
+        }
+    val palette = BrandThemeColorPalettes[brandThemeColor] ?: return baseColorScheme
+    val roles =
+        when {
+            themeMode == ThemeMode.Amoled -> palette.amoled
+            themeMode == ThemeMode.Dark || (themeMode == ThemeMode.System && systemDark) -> palette.dark
+            else -> palette.light
+        }
+    return baseColorScheme.copy(
+        primary = roles.primary,
+        onPrimary = roles.onPrimary,
+        primaryContainer = roles.primaryContainer,
+        onPrimaryContainer = roles.onPrimaryContainer,
+        inversePrimary = roles.inversePrimary,
+    )
+}
+
 private val LocalSpacing = staticCompositionLocalOf { MoeKoeSpacing() }
 private val LocalDimensions = staticCompositionLocalOf { MoeKoeDimensions() }
 private val LocalExtraColors = staticCompositionLocalOf { LightExtraColors }
@@ -225,6 +415,7 @@ object MoeKoeTheme {
     @Composable
     operator fun invoke(
         themeMode: ThemeMode = ThemeMode.System,
+        brandThemeColor: BrandThemeColor = BrandThemeColor.SkyBlue,
         dynamicColor: Boolean = false,
         content: @Composable () -> Unit,
     ) {
@@ -235,10 +426,16 @@ object MoeKoeTheme {
                 ThemeMode.Light -> false
                 ThemeMode.Dark, ThemeMode.Amoled -> true
             }
+        val staticColorScheme =
+            moeKoeColorScheme(
+                themeMode = themeMode,
+                brandThemeColor = brandThemeColor,
+                systemDark = systemDark,
+            )
         val colorScheme =
             when {
                 themeMode == ThemeMode.Amoled -> {
-                    AmoledColors
+                    staticColorScheme
                 }
 
                 dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -247,11 +444,11 @@ object MoeKoeTheme {
                 }
 
                 darkTheme -> {
-                    DarkColors
+                    staticColorScheme
                 }
 
                 else -> {
-                    LightColors
+                    staticColorScheme
                 }
             }
 

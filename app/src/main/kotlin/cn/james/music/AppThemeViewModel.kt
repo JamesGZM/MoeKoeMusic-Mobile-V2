@@ -2,9 +2,11 @@ package cn.james.music
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.james.music.core.designsystem.BrandThemeColor
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.settings.AppSettingsRepository
 import cn.james.music.core.model.settings.AppThemePreference
+import cn.james.music.core.model.settings.BrandThemeColorPreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.feature.player.PlayerLyricsTextSize
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +31,15 @@ internal class AppThemeViewModel
                     scope = viewModelScope,
                     started = SharingStarted.Eagerly,
                     initialValue = ThemeMode.System,
+                )
+
+        val brandThemeColor: StateFlow<BrandThemeColor> =
+            repository.settings
+                .map { snapshot -> snapshot.settings.brandThemeColor.toDesignSystemBrandThemeColor() }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = BrandThemeColor.SkyBlue,
                 )
 
         val dynamicCoverColors: StateFlow<Boolean> =
@@ -79,6 +90,16 @@ internal class AppThemeViewModel
                 ThemeMode.Light -> AppThemePreference.Light
                 ThemeMode.Dark -> AppThemePreference.Dark
                 ThemeMode.Amoled -> AppThemePreference.Amoled
+            }
+
+        private fun BrandThemeColorPreference.toDesignSystemBrandThemeColor(): BrandThemeColor =
+            when (this) {
+                BrandThemeColorPreference.SkyBlue -> BrandThemeColor.SkyBlue
+                BrandThemeColorPreference.SakuraPink -> BrandThemeColor.SakuraPink
+                BrandThemeColorPreference.StarPurple -> BrandThemeColor.StarPurple
+                BrandThemeColorPreference.MintGreen -> BrandThemeColor.MintGreen
+                BrandThemeColorPreference.LakeCyan -> BrandThemeColor.LakeCyan
+                BrandThemeColorPreference.SunsetOrange -> BrandThemeColor.SunsetOrange
             }
 
         private fun LyricsTextSizePreference.toPlayerLyricsTextSize(): PlayerLyricsTextSize =

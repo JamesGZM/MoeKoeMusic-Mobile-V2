@@ -69,10 +69,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
+            val brandThemeColor by themeViewModel.brandThemeColor.collectAsStateWithLifecycle()
             val dynamicCoverColors by themeViewModel.dynamicCoverColors.collectAsStateWithLifecycle()
             val showLyricsSupplementalText by themeViewModel.showLyricsSupplementalText.collectAsStateWithLifecycle()
             val lyricsTextSize by themeViewModel.lyricsTextSize.collectAsStateWithLifecycle()
-            MoeKoeTheme(themeMode = themeMode) {
+            MoeKoeTheme(
+                themeMode = themeMode,
+                brandThemeColor = brandThemeColor,
+            ) {
                 MoeKoeApp(
                     dynamicCoverColors = dynamicCoverColors,
                     showLyricsSupplementalText = showLyricsSupplementalText,

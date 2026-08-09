@@ -82,8 +82,8 @@ Android V2 冻结六档、稳定存储 ID 与行尾文案：
 ## 原子实施顺序与非目标
 
 1. 领域 + DataStore：类型化 enum、独立 key、读取/写入/取消测试。已完成于 030；尚未接入全局主题或设置 UI。
-2. Design System：默认蓝零改动证明、六档 primary 角色表、对比度和 ThemeMode 组合单测；所有非 primary 角色保持不变。
-3. app 组合根：读取已成功 snapshot 并把纯 BrandThemeColor 输入交给 `MoeKoeTheme`；不把 DataStore 放进 UI。
+2. Design System：默认蓝零改动证明、六档 primary 角色表、对比度和 ThemeMode 组合单测；所有非 primary 角色保持不变。已完成于 031。
+3. app 组合根：读取已成功 snapshot 并把纯 BrandThemeColor 输入交给 `MoeKoeTheme`；不把 DataStore 放进 UI。已完成于 031，MainActivity、AudioImportActivity 与 RiskCaptchaActivity 共用 app-level snapshot；Settings 选择 UI 仍未完成。
 4. Settings：真实选择行、现有 Dialog、独立 generation、回滚与精确 Retry；完成 contract、语义和截图。
 5. 全量视觉与指定真机：仅在离线验证全绿后验证重建/系统深浅切换，不启动真实酷狗服务。
 

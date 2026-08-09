@@ -46,6 +46,21 @@
 | `primaryContainer` | `#E8F2FF` | 选中项、柔和操作容器 |
 | `onPrimaryContainer` | `#0B3B79` | 主色浅容器上的内容 |
 | `background` | `#FBFCFE` | 页面背景 |
+
+### 品牌主题色
+
+`BrandThemeColor` 是全局主题的纯 Design System 输入，包含天空蓝、樱花粉、星紫、薄荷绿、湖水青和落日橙六档。它只替换 `primary`、`onPrimary`、`primaryContainer`、`onPrimaryContainer` 与 `inversePrimary`；`secondary`、`tertiary`、Surface、error 与 `MoeKoeExtraColors` 保持所在 ThemeMode 的既有对象值。天空蓝直接复用当前 Light / Dark / AMOLED scheme，保证既有截图零变化。
+
+| 预设 | 浅色 `primary` | 深色 / AMOLED `primary` |
+| --- | --- | --- |
+| 天空蓝 | `#1677F2` | `#8EC4FF` |
+| 樱花粉 | `#C12C69` | `#FFB1C8` |
+| 星紫 | `#6847C8` | `#CFBDFF` |
+| 薄荷绿 | `#087E54` | `#83E5B7` |
+| 湖水青 | `#007F8E` | `#72DCE9` |
+| 落日橙 | `#A84E00` | `#FFB77D` |
+
+五个新预设的 `onPrimary / primary` 与 `onPrimaryContainer / primaryContainer` 都必须保持至少 `4.5:1` 文本对比度。应用组合根不传 `dynamicColor = true`，因此产品主题色不走系统 Monet；保留该参数只为已有 Design System API 兼容，不构成产品入口。
 | `onBackground` | `#1A1C20` | 页面主要文字 |
 | `surface` | `#FFFFFF` | 标准表面 |
 | `onSurface` | `#1A1C20` | 表面主要文字 |

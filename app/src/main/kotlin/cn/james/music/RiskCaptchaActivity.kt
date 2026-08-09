@@ -15,15 +15,19 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.feature.login.TencentCaptchaScreen
 import cn.james.music.feature.login.TencentCaptchaResult
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayInputStream
 import java.net.URI
 import kotlinx.serialization.json.Json
@@ -32,22 +36,26 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+@AndroidEntryPoint
 class RiskCaptchaActivity : ComponentActivity() {
     private var captchaWebView: WebView? = null
     private var resultDelivered = false
+    private val themeViewModel: AppThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val appId = intent.getStringExtra(EXTRA_APP_ID)
-        if (!isValidAppId(appId)) {
-            setContent { MoeKoeTheme {} }
-            window.decorView.post(::finishWithFailure)
-            return
-        }
-        val captchaAppId = requireNotNull(appId)
         setContent {
-            MoeKoeTheme { CaptchaContent(captchaAppId) }
+            val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
+            val brandThemeColor by themeViewModel.brandThemeColor.collectAsStateWithLifecycle()
+            MoeKoeTheme(
+                themeMode = themeMode,
+                brandThemeColor = brandThemeColor,
+            ) {
+                appId?.takeIf(::isValidAppId)?.let { captchaAppId -> CaptchaContent(captchaAppId) }
+            }
         }
+        if (!isValidAppId(appId)) window.decorView.post(::finishWithFailure)
     }
 
     @Composable

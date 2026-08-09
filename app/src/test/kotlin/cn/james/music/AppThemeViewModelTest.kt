@@ -1,5 +1,6 @@
 package cn.james.music
 
+import cn.james.music.core.designsystem.BrandThemeColor
 import cn.james.music.core.designsystem.ThemeMode
 import cn.james.music.core.model.settings.AppSettings
 import cn.james.music.core.model.settings.AppSettingsRepository
@@ -50,6 +51,24 @@ class AppThemeViewModelTest {
                 runCurrent()
 
                 assertEquals(preference.expectedThemeMode, viewModel.themeMode.value)
+            }
+        }
+
+    @Test
+    fun everyStoredBrandPreferenceMapsToDesignSystemBrandWithoutChangingThemeMode() =
+        runTest(dispatcher) {
+            BrandThemeColorPreference.entries.forEach { preference ->
+                val repository =
+                    FakeAppSettingsRepository(
+                        initialTheme = AppThemePreference.Amoled,
+                        brandThemeColor = preference,
+                    )
+                val viewModel = AppThemeViewModel(repository)
+
+                runCurrent()
+
+                assertEquals(AppThemePreference.Amoled.expectedThemeMode, viewModel.themeMode.value)
+                assertEquals(preference.expectedBrandThemeColor, viewModel.brandThemeColor.value)
             }
         }
 
@@ -124,6 +143,7 @@ class AppThemeViewModelTest {
         dynamicCoverColors: Boolean = true,
         showLyricsSupplementalText: Boolean = true,
         lyricsTextSize: LyricsTextSizePreference = LyricsTextSizePreference.Standard,
+        brandThemeColor: BrandThemeColorPreference = BrandThemeColorPreference.SkyBlue,
     ) : AppSettingsRepository {
         private val mutableSettings =
             MutableStateFlow(
@@ -134,6 +154,7 @@ class AppThemeViewModelTest {
                             dynamicCoverColors = dynamicCoverColors,
                             showLyricsSupplementalText = showLyricsSupplementalText,
                             lyricsTextSize = lyricsTextSize,
+                            brandThemeColor = brandThemeColor,
                         ),
                 ),
             )
@@ -173,5 +194,16 @@ class AppThemeViewModelTest {
                 AppThemePreference.Light -> ThemeMode.Light
                 AppThemePreference.Dark -> ThemeMode.Dark
                 AppThemePreference.Amoled -> ThemeMode.Amoled
+            }
+
+    private val BrandThemeColorPreference.expectedBrandThemeColor: BrandThemeColor
+        get() =
+            when (this) {
+                BrandThemeColorPreference.SkyBlue -> BrandThemeColor.SkyBlue
+                BrandThemeColorPreference.SakuraPink -> BrandThemeColor.SakuraPink
+                BrandThemeColorPreference.StarPurple -> BrandThemeColor.StarPurple
+                BrandThemeColorPreference.MintGreen -> BrandThemeColor.MintGreen
+                BrandThemeColorPreference.LakeCyan -> BrandThemeColor.LakeCyan
+                BrandThemeColorPreference.SunsetOrange -> BrandThemeColor.SunsetOrange
             }
 }

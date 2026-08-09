@@ -32,6 +32,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class AudioImportActivity : ComponentActivity() {
     private val viewModel: AudioImportViewModel by viewModels()
+    private val themeViewModel: AppThemeViewModel by viewModels()
     internal val message: String get() = viewModel.state.value.message
     private var pendingIntent: Intent? = null
     private var pendingReplacement = false
@@ -48,7 +49,12 @@ class AudioImportActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
-            MoeKoeTheme {
+            val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
+            val brandThemeColor by themeViewModel.brandThemeColor.collectAsStateWithLifecycle()
+            MoeKoeTheme(
+                themeMode = themeMode,
+                brandThemeColor = brandThemeColor,
+            ) {
                 Column(
                     Modifier.fillMaxSize().padding(28.dp),
                     verticalArrangement = Arrangement.Center,

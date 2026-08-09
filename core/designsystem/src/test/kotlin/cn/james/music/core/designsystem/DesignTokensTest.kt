@@ -4,9 +4,74 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.pow
 
 class DesignTokensTest {
+    @Test
+    fun skyBlueReturnsTheApprovedLightDarkAndAmoledBaselines() {
+        assertSame(
+            LightColors,
+            moeKoeColorScheme(
+                themeMode = ThemeMode.Light,
+                brandThemeColor = BrandThemeColor.SkyBlue,
+                systemDark = false,
+            ),
+        )
+        assertSame(
+            DarkColors,
+            moeKoeColorScheme(
+                themeMode = ThemeMode.Dark,
+                brandThemeColor = BrandThemeColor.SkyBlue,
+                systemDark = true,
+            ),
+        )
+        assertSame(
+            AmoledColors,
+            moeKoeColorScheme(
+                themeMode = ThemeMode.Amoled,
+                brandThemeColor = BrandThemeColor.SkyBlue,
+                systemDark = true,
+            ),
+        )
+    }
+
+    @Test
+    fun everyBrandKeepsThemeModeAndNonPrimaryRolesIndependent() {
+        BrandThemeColor.entries.forEach { brandThemeColor ->
+            assertPrimaryRolesOnlyChange(
+                baseline = LightColors,
+                actual = moeKoeColorScheme(ThemeMode.Light, brandThemeColor, systemDark = false),
+            )
+            assertPrimaryRolesOnlyChange(
+                baseline = DarkColors,
+                actual = moeKoeColorScheme(ThemeMode.Dark, brandThemeColor, systemDark = true),
+            )
+            assertPrimaryRolesOnlyChange(
+                baseline = AmoledColors,
+                actual = moeKoeColorScheme(ThemeMode.Amoled, brandThemeColor, systemDark = true),
+            )
+        }
+    }
+
+    @Test
+    fun everyBrandPrimaryPairMeetsTextContrastInEachThemeMode() {
+        BrandThemeColor.entries
+            .filterNot { it == BrandThemeColor.SkyBlue }
+            .forEach { brandThemeColor ->
+                listOf(
+                    moeKoeColorScheme(ThemeMode.Light, brandThemeColor, systemDark = false),
+                    moeKoeColorScheme(ThemeMode.Dark, brandThemeColor, systemDark = true),
+                    moeKoeColorScheme(ThemeMode.Amoled, brandThemeColor, systemDark = true),
+                ).forEach { colorScheme ->
+                    assertTrue(contrastRatio(colorScheme.primary, colorScheme.onPrimary) >= 4.5)
+                    assertTrue(contrastRatio(colorScheme.primaryContainer, colorScheme.onPrimaryContainer) >= 4.5)
+                }
+            }
+    }
+
     @Test
     fun `light theme matches approved brand colors`() {
         assertEquals(Color(0xFF1677F2), LightColors.primary)
@@ -65,4 +130,44 @@ class DesignTokensTest {
         assertEquals(22.sp, MoeKoeTypography.bodyMedium.lineHeight)
         assertEquals(12.sp, MoeKoeTypography.bodySmall.fontSize)
     }
+
+    private fun assertPrimaryRolesOnlyChange(
+        baseline: androidx.compose.material3.ColorScheme,
+        actual: androidx.compose.material3.ColorScheme,
+    ) {
+        assertEquals(baseline.secondary, actual.secondary)
+        assertEquals(baseline.onSecondary, actual.onSecondary)
+        assertEquals(baseline.secondaryContainer, actual.secondaryContainer)
+        assertEquals(baseline.onSecondaryContainer, actual.onSecondaryContainer)
+        assertEquals(baseline.tertiary, actual.tertiary)
+        assertEquals(baseline.onTertiary, actual.onTertiary)
+        assertEquals(baseline.tertiaryContainer, actual.tertiaryContainer)
+        assertEquals(baseline.onTertiaryContainer, actual.onTertiaryContainer)
+        assertEquals(baseline.background, actual.background)
+        assertEquals(baseline.surface, actual.surface)
+        assertEquals(baseline.error, actual.error)
+        assertEquals(baseline.onError, actual.onError)
+        assertEquals(baseline.errorContainer, actual.errorContainer)
+        assertEquals(baseline.onErrorContainer, actual.onErrorContainer)
+    }
+
+    private fun contrastRatio(
+        first: Color,
+        second: Color,
+    ): Double {
+        val lighter = maxOf(first.relativeLuminance(), second.relativeLuminance())
+        val darker = minOf(first.relativeLuminance(), second.relativeLuminance())
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    private fun Color.relativeLuminance(): Double =
+        0.2126 * red.linearized() +
+            0.7152 * green.linearized() + 0.0722 * blue.linearized()
+
+    private fun Float.linearized(): Double =
+        if (this <= 0.04045f) {
+            (this / 12.92f).toDouble()
+        } else {
+            ((this + 0.055f) / 1.055f).toDouble().pow(2.4)
+        }
 }
