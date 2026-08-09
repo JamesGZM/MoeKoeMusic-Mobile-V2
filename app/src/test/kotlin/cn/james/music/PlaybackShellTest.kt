@@ -9,6 +9,9 @@ import cn.james.music.feature.player.PlayerArtworkStorageRef
 import cn.james.music.feature.player.PlayerArtworkUiModel
 import cn.james.music.feature.player.PlayerPlaybackModeUi
 import cn.james.music.feature.player.PlayerQueueAction
+import cn.james.music.feature.player.PlayerQueueMoveRequest
+import cn.james.music.feature.player.PlayerQueueMoveResult
+import cn.james.music.playback.PlaybackCommandResult
 import cn.james.music.playback.PlaybackConnectionState
 import cn.james.music.playback.PlaybackState
 import cn.james.music.playback.PlaybackStatus
@@ -139,6 +142,46 @@ class PlaybackShellTest {
         assertEquals(ResolvedPlayerQueueAction.Dismiss, state.resolvePlayerQueueAction(PlayerQueueAction.Dismiss))
         assertNull(state.resolvePlayerQueueAction(PlayerQueueAction.Play("removed")))
         assertNull(state.resolvePlayerQueueAction(PlayerQueueAction.Remove("removed")))
+
+        val latestState = PlaybackState(queue = listOf(item("second"), item("first")), currentIndex = 0)
+        assertEquals(
+            ResolvedPlayerQueueAction.PlayAt(0),
+            latestState.resolvePlayerQueueAction(PlayerQueueAction.Play("second")),
+        )
+        assertEquals(
+            ResolvedPlayerQueueAction.RemoveAt(1),
+            latestState.resolvePlayerQueueAction(PlayerQueueAction.Remove("first")),
+        )
+    }
+
+    @Test
+    fun stableIdReorderResolvesAgainstLatestQueueUsingFinalMedia3Index() {
+        val state = PlaybackState(queue = listOf(item("one"), item("two"), item("three"), item("four")), currentIndex = 1)
+
+        assertEquals(
+            ResolvedPlayerQueueMove(fromIndex = 0, toIndex = 2),
+            state.resolveStableQueueMove(PlayerQueueMoveRequest("one", "four")),
+        )
+        assertEquals(
+            ResolvedPlayerQueueMove(fromIndex = 3, toIndex = 0),
+            state.resolveStableQueueMove(PlayerQueueMoveRequest("four", "one")),
+        )
+        assertEquals(
+            ResolvedPlayerQueueMove(fromIndex = 0, toIndex = 3),
+            state.resolveStableQueueMove(PlayerQueueMoveRequest("one", null)),
+        )
+        assertNull(state.resolveStableQueueMove(PlayerQueueMoveRequest("gone", "two")))
+        assertNull(state.resolveStableQueueMove(PlayerQueueMoveRequest("one", "gone")))
+        assertNull(state.resolveStableQueueMove(PlayerQueueMoveRequest("two", "three")))
+    }
+
+    @Test
+    fun playbackMoveResultMapsToFeatureResultWithoutLeakingPlaybackTypes() {
+        assertEquals(PlayerQueueMoveResult.Accepted, PlaybackCommandResult.Accepted.toPlayerQueueMoveResult())
+        assertEquals(
+            PlayerQueueMoveResult.Rejected,
+            PlaybackCommandResult.Rejected(cn.james.music.playback.PlaybackError.InvalidCommand).toPlayerQueueMoveResult(),
+        )
     }
 
     private fun item(

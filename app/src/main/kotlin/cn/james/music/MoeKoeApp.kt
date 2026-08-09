@@ -51,6 +51,9 @@ import cn.james.music.feature.my.myGraph
 import cn.james.music.feature.player.PlayerDestination
 import cn.james.music.feature.player.PlayerProgressUiState
 import cn.james.music.feature.player.PlayerLyricsTextSize
+import cn.james.music.feature.player.PlayerQueueAction
+import cn.james.music.feature.player.PlayerQueueActionResult
+import cn.james.music.feature.player.PlayerQueueMoveResult
 import cn.james.music.feature.player.toPlayerLyricsProgressUiState
 import cn.james.music.feature.player.playerDestination
 import cn.james.music.feature.playlist.PlaylistDetailDestination
@@ -302,13 +305,26 @@ fun MoeKoeApp(
         MoeKoeQueueSheet(
             model = state.toPlayerQueueUiState(progress.value.durationMs),
             onEvent = { action ->
-                when (val resolved = state.resolvePlayerQueueAction(action)) {
-                    ResolvedPlayerQueueAction.Dismiss -> queueVisible = false
-                    is ResolvedPlayerQueueAction.PlayAt -> viewModel.playAt(resolved.index)
-                    is ResolvedPlayerQueueAction.RemoveAt -> viewModel.removeAt(resolved.index)
-                    ResolvedPlayerQueueAction.Clear -> viewModel.clearQueue()
-                    ResolvedPlayerQueueAction.ChangeMode -> viewModel.cycleMode()
-                    null -> Unit
+                when (action) {
+                    is PlayerQueueAction.MoveBefore ->
+                        PlayerQueueActionResult.Move(
+                            when (val move = viewModel.state.value.resolveStableQueueMove(action.request)) {
+                                null -> PlayerQueueMoveResult.Stale
+                                else -> viewModel.move(move.fromIndex, move.toIndex).toPlayerQueueMoveResult()
+                            },
+                        )
+
+                    else -> {
+                        when (val resolved = viewModel.state.value.resolvePlayerQueueAction(action)) {
+                            ResolvedPlayerQueueAction.Dismiss -> queueVisible = false
+                            is ResolvedPlayerQueueAction.PlayAt -> viewModel.playAt(resolved.index)
+                            is ResolvedPlayerQueueAction.RemoveAt -> viewModel.removeAt(resolved.index)
+                            ResolvedPlayerQueueAction.Clear -> viewModel.clearQueue()
+                            ResolvedPlayerQueueAction.ChangeMode -> viewModel.cycleMode()
+                            null -> Unit
+                        }
+                        PlayerQueueActionResult.Handled
+                    }
                 }
             },
         )

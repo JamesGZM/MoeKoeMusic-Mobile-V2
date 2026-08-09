@@ -36,7 +36,11 @@
     <string name="player_queue_source">来自：%1$s</string>
     <string name="player_queue_current">当前播放</string>
     <string name="player_queue_remove">从队列移除 %1$s</string>
-    <string name="player_queue_reorder_unavailable">拖动排序暂不可用</string>
+    <string name="player_queue_reorder">拖动排序 %1$s</string>
+    <string name="player_queue_reorder_disabled_shuffle">随机播放下不可排序：%1$s</string>
+    <string name="player_queue_reorder_disabled_single_item">队列少于两首，无法排序：%1$s</string>
+    <string name="player_queue_move_up">上移</string>
+    <string name="player_queue_move_down">下移</string>
     <string name="player_queue_empty">播放队列为空</string>
     <string name="player_queue_swipe_to_close">滑动关闭</string>
 </resources>

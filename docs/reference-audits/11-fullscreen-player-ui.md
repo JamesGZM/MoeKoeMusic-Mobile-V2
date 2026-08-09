@@ -50,7 +50,7 @@
 | 时长未知 | 进度条不可拖动，时间使用安全占位 | Media3 给出有效时长后启用 |
 | 封面缺失/失败 | 使用 Design System 深色渐变与音乐占位语义 | 新歌曲或图片成功后替换，不额外探针 |
 | 离线/VIP/无版权/验证/协议错误 | 页面不清空队列；复用现有 `PlaybackError` 与 Snackbar 映射 | 仅可恢复错误提供一次显式重试 |
-| 队列打开 | 同页 Modal Bottom Sheet，最高约 `68%`，当前项高亮 | 返回先关队列；选歌后保持或关闭以最终实现规范为准 |
+| 队列打开 | 同页 Modal Bottom Sheet，最高约 `68%`，当前项高亮；非随机模式可从行尾柄长按后纵向拖拽重排所有项（含当前项） | 拖动期间 Feature 只持有 stable-id 临时顺序；drop 最多提交一次 `MoveBefore(draggedId, beforeId?)`，App 按最新权威队列解析；Rejected、stale 或权威成员/顺序变化立即回滚 |
 | 清空或删除最后一首 | 播放器失去当前项后退出到来源页面 | MiniPlayer 同步消失 |
 | Activity 重建 | 当前目的地与 Pager 页可保存；真实媒体状态仍来自 Controller | 不从 UI 保存第二份播放状态 |
 
@@ -73,7 +73,8 @@ MediaLibraryService / Media3 Player
 - `:feature:player` 提供无状态 `PlayerScreen`、目的地声明和纯 UI model。`:app` 作为组合根把现有 `AppPlaybackViewModel` 状态与事件注入，避免建立第二个 Controller 状态源。
 - 全屏播放器是 Navigation Compose 子目的地，不加入底部一级导航。进入该目的地时隐藏 MiniPlayer 和底部导航；退出后原页面与 MiniPlayer 保持。
 - `PlaybackProgress` 只下沉到进度/时间区域，封面和背景不能每秒重组。拖动中显示本地值，结束时调用一次 `seekTo`。
-- 队列继续复用现有 `MoeKoeQueueSheet` 和 `MoeQueueRow`；先完成层级与返回，再单独实现拖拽排序，避免在首个切片同时改变队列状态机。
+- 队列继续复用现有 `MoeKoeQueueSheet` 和 `MoeQueueRow`。重排由 Feature 发 stable-id `MoveBefore`，`:app` 在命令时以最新 `PlaybackState` 解析 `from` 与移除 dragged 后的最终 `to`；`beforeId` 消失、dragged 消失或同位置均为 stale no-op。Feature 在拖动及 Controller Accepted 后都只暂存本地顺序，直到权威队列对齐或 `2s` 超时；Rejected/stale、Sheet 关闭、随机模式、删除、清空、替换或外部顺序变化均取消旧拖动/待确认。
+- 非 Shuffle 模式允许移动所有项（包括当前项）；`:playback` 的 Media3 `moveMediaItem` 保持当前 media id、位置和 `playWhenReady`，仅改变 currentIndex 与后继顺序。Shuffle 显示同一拖拽柄但禁用排序，因当前界面是 canonical timeline 而不是随机遍历顺序；空/单项同样禁用。行尾可见柄保持 `22dp`，其独立、不与移除重叠的 `48dp` 实际触控节点以长按后纵向拖动启动；拖动中的 pointer change 消费，避免交给列表或 Sheet。TalkBack 提供首末裁减的“上移/下移”动作，复用同一 stable-id 提交流程。
 
 ## 首个 Compose 切片
 
@@ -86,12 +87,12 @@ MediaLibraryService / Media3 Player
 
 ## 验证矩阵
 
-- JVM：`AppPlaybackViewModel` 的 seek/skip/mode 接线、拒绝结果反馈；播放器纯映射/格式化单测。
-- Compose UI：有歌曲、无歌曲、未知时长、播放、暂停、Buffering、无封面；点击 MiniPlayer 打开、收起返回、队列返回优先级。
+- JVM：`AppPlaybackViewModel` 的 seek/skip/mode/queue move 接线、拒绝结果反馈；stable-id 重排解析、Feature 临时顺序/回滚和播放器纯映射/格式化单测。
+- Compose UI：有歌曲、无歌曲、未知时长、播放、暂停、Buffering、无封面；点击 MiniPlayer 打开、收起返回、队列返回优先级、行尾 48dp 拖拽柄与上移/下移语义。
 - Screenshot/Preview：`390 × 844dp` 深色基线，至少 `1.0×`、`1.5×`、`2.0×` 字体；封面成功与回退各一张。
 - 真机：ELE-AL00 / API 29 验证三键导航栏 inset、播放不中断、seek、上下首、队列、Activity 重建和返回；预测返回动画另在 API 35+ 设备可用时补验，不用模拟器替代用户指定真机门禁。
 - 性能：播放进度更新不触发封面图片重载；Pager/队列滚动不创建网络请求；低性能设备始终可使用静态渐变回退。
 
 ## 门禁结论
 
-首个切片的产品语义、技术栈、数据流、失败恢复和测试矩阵无关键待定项，允许开始 `:feature:player` 封面页与 App 导航联动。歌词协议、动态取色、收藏/下载/分享和队列拖拽仍是后续独立门禁，不得借本结论提前实现。动态取色的后续门禁已经由 [`13-player-artwork-palette.md`](13-player-artwork-palette.md) 独立完成并取代本审计中的暂缓结论。
+首个切片的产品语义、技术栈、数据流、失败恢复和测试矩阵无关键待定项，允许开始 `:feature:player` 封面页与 App 导航联动。歌词协议、动态取色、收藏/下载/分享和队列拖拽均须独立门禁；动态取色已由 [`13-player-artwork-palette.md`](13-player-artwork-palette.md) 完成，队列拖拽的 022 决策已按本审计写入，仍不扩展为下载、收藏或跨队列持久化。

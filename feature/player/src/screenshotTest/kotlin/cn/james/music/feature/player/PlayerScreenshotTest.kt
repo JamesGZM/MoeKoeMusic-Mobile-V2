@@ -372,7 +372,7 @@ private fun PlayerQueueScreenshotContent(
         ) {
             PlayerQueueSheetContent(
                 model = state,
-                onEvent = {},
+                onEvent = { PlayerQueueActionResult.Handled },
                 modifier =
                     Modifier
                         .fillMaxWidth()

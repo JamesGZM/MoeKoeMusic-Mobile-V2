@@ -111,6 +111,30 @@ class AppPlaybackViewModelTest {
             assertFalse(notice.canRetry)
         }
 
+    @Test
+    fun queueMoveAwaitsControllerAndReportsRejectedResult() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController(PlaybackCommandResult.Rejected(PlaybackError.InvalidCommand))
+            val viewModel = AppPlaybackViewModel(playback)
+
+            assertEquals(PlaybackCommandResult.Rejected(PlaybackError.InvalidCommand), viewModel.move(2, 0))
+
+            assertEquals(2 to 0, playback.lastMove)
+            assertEquals(PlaybackError.InvalidCommand, viewModel.notice.value?.error)
+        }
+
+    @Test
+    fun acceptedQueueMoveReturnsWithoutPublishingNotice() =
+        runTest(dispatcher) {
+            val playback = FakePlaybackController(PlaybackCommandResult.Accepted)
+            val viewModel = AppPlaybackViewModel(playback)
+
+            assertEquals(PlaybackCommandResult.Accepted, viewModel.move(0, 2))
+
+            assertEquals(0 to 2, playback.lastMove)
+            assertNull(viewModel.notice.value)
+        }
+
     private fun song() =
         Song(
             id = "fixture-id",
@@ -137,6 +161,7 @@ class AppPlaybackViewModelTest {
         var previousCalls = 0
         var nextCalls = 0
         var lastMode: PlaybackMode? = null
+        var lastMove: Pair<Int, Int>? = null
 
         override suspend fun playNow(item: PlaybackItem): PlaybackCommandResult {
             lastItem = item
@@ -161,7 +186,10 @@ class AppPlaybackViewModelTest {
         override suspend fun move(
             fromIndex: Int,
             toIndex: Int,
-        ) = accepted()
+        ): PlaybackCommandResult {
+            lastMove = fromIndex to toIndex
+            return accepted()
+        }
 
         override suspend fun clear() = accepted()
 

@@ -21,7 +21,10 @@ import cn.james.music.feature.player.PlayerArtworkStorageRef
 import cn.james.music.feature.player.PlayerItemUiModel
 import cn.james.music.feature.player.PlayerPlaybackModeUi
 import cn.james.music.feature.player.PlayerQueueAction
+import cn.james.music.feature.player.PlayerQueueActionResult
 import cn.james.music.feature.player.PlayerQueueItemUi
+import cn.james.music.feature.player.PlayerQueueMoveRequest
+import cn.james.music.feature.player.PlayerQueueMoveResult
 import cn.james.music.feature.player.PlayerQueueSheet
 import cn.james.music.feature.player.PlayerQueueUiState
 import cn.james.music.feature.player.PlayerUiState
@@ -58,7 +61,7 @@ internal fun formatMiniPlayerTime(millis: Long): String {
 @Composable
 internal fun MoeKoeQueueSheet(
     model: PlayerQueueUiState,
-    onEvent: (PlayerQueueAction) -> Unit,
+    onEvent: suspend (PlayerQueueAction) -> PlayerQueueActionResult,
 ) {
     PlayerQueueSheet(
         model = model,
@@ -176,6 +179,31 @@ internal fun PlaybackState.resolvePlayerQueueAction(action: PlayerQueueAction): 
 
         PlayerQueueAction.Clear -> ResolvedPlayerQueueAction.Clear
         PlayerQueueAction.ChangeMode -> ResolvedPlayerQueueAction.ChangeMode
+        is PlayerQueueAction.MoveBefore -> null
+    }
+
+internal data class ResolvedPlayerQueueMove(
+    val fromIndex: Int,
+    val toIndex: Int,
+)
+
+internal fun PlaybackState.resolveStableQueueMove(request: PlayerQueueMoveRequest): ResolvedPlayerQueueMove? {
+    val fromIndex = queue.indexOfFirst { it.id == request.draggedId }
+    if (fromIndex < 0) return null
+    val remaining = queue.filterIndexed { index, _ -> index != fromIndex }
+    val toIndex =
+        when (val beforeId = request.beforeId) {
+            null -> remaining.size
+            else -> remaining.indexOfFirst { it.id == beforeId }.takeIf { it >= 0 } ?: return null
+        }
+    if (fromIndex == toIndex) return null
+    return ResolvedPlayerQueueMove(fromIndex, toIndex)
+}
+
+internal fun cn.james.music.playback.PlaybackCommandResult.toPlayerQueueMoveResult(): PlayerQueueMoveResult =
+    when (this) {
+        cn.james.music.playback.PlaybackCommandResult.Accepted -> PlayerQueueMoveResult.Accepted
+        is cn.james.music.playback.PlaybackCommandResult.Rejected -> PlayerQueueMoveResult.Rejected
     }
 
 private class CurrentPlaybackArtworkRenderer(

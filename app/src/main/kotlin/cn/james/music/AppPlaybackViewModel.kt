@@ -105,6 +105,11 @@ class AppPlaybackViewModel
             viewModelScope.launch { playbackController.clear().reportFailure() }
         }
 
+        suspend fun move(
+            fromIndex: Int,
+            toIndex: Int,
+        ): PlaybackCommandResult = playbackController.move(fromIndex, toIndex).also { result -> result.reportFailure() }
+
         private fun PlaybackCommandResult.reportFailure() {
             if (this is PlaybackCommandResult.Rejected) showNotice(error)
         }

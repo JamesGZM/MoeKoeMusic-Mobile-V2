@@ -2,6 +2,7 @@ package cn.james.music.feature.player
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,13 +20,25 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cn.james.music.core.designsystem.MoeKoeTheme
 import cn.james.music.core.designsystem.component.MoeSongRow
@@ -37,6 +50,14 @@ internal fun QueueItem(
     isCurrent: Boolean,
     onClick: () -> Unit,
     onRemove: () -> Unit,
+    reorderEnabled: Boolean,
+    reorderDisabledDescription: String,
+    onDragStart: () -> Boolean,
+    onDragPosition: (Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     MoeSongRow(
@@ -72,11 +93,16 @@ internal fun QueueItem(
             }
         },
         trailing = {
-            Icon(
-                Icons.Default.DragIndicator,
-                contentDescription = stringResource(R.string.player_queue_reorder_unavailable),
-                modifier = Modifier.padding(start = 9.dp).size(22.dp),
-                tint = QueueOnSurfaceVariant,
+            QueueReorderHandle(
+                queueItem = queueItem,
+                enabled = reorderEnabled,
+                disabledDescription = reorderDisabledDescription,
+                onDragStart = onDragStart,
+                onDragPosition = onDragPosition,
+                onDragEnd = onDragEnd,
+                onDragCancel = onDragCancel,
+                onMoveUp = onMoveUp,
+                onMoveDown = onMoveDown,
             )
             IconButton(onClick = onRemove, modifier = Modifier.size(MoeKoeTheme.dimensions.minimumTouchTarget)) {
                 Surface(
@@ -97,6 +123,82 @@ internal fun QueueItem(
             }
         },
     )
+}
+
+@Composable
+private fun QueueReorderHandle(
+    queueItem: PlayerQueueItemUi,
+    enabled: Boolean,
+    disabledDescription: String,
+    onDragStart: () -> Boolean,
+    onDragPosition: (Offset) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+) {
+    var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var dragActive by remember { mutableStateOf(false) }
+    val description =
+        if (enabled) {
+            stringResource(R.string.player_queue_reorder, queueItem.title)
+        } else {
+            disabledDescription
+        }
+    val moveUpLabel = stringResource(R.string.player_queue_move_up)
+    val moveDownLabel = stringResource(R.string.player_queue_move_down)
+    val actions =
+        if (enabled) {
+            listOfNotNull(
+                onMoveUp?.let { moveUp -> CustomAccessibilityAction(moveUpLabel) { moveUp(); true } },
+                onMoveDown?.let { moveDown -> CustomAccessibilityAction(moveDownLabel) { moveDown(); true } },
+            )
+        } else {
+            emptyList()
+        }
+    Box(
+        modifier =
+            Modifier
+                .size(MoeKoeTheme.dimensions.minimumTouchTarget)
+                .onGloballyPositioned { coordinates = it }
+                .semantics {
+                    contentDescription = description
+                    customActions = actions
+                    if (!enabled) disabled()
+                }.then(
+                    if (enabled) {
+                        Modifier.pointerInput(queueItem.id) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = { dragActive = onDragStart() },
+                                onDragCancel = {
+                                    if (dragActive) onDragCancel()
+                                    dragActive = false
+                                },
+                                onDragEnd = {
+                                    if (dragActive) onDragEnd()
+                                    dragActive = false
+                                },
+                                onDrag = { change, _ ->
+                                    if (dragActive) {
+                                        change.consume()
+                                        coordinates?.localToRoot(change.position)?.let(onDragPosition)
+                                    }
+                                },
+                            )
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
+        contentAlignment = Alignment.CenterEnd,
+    ) {
+        Icon(
+            Icons.Default.DragIndicator,
+            contentDescription = null,
+            modifier = Modifier.size(22.dp),
+            tint = QueueOnSurfaceVariant,
+        )
+    }
 }
 
 @Composable
