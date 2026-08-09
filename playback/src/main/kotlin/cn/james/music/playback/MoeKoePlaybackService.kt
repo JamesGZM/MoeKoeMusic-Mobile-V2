@@ -12,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import cn.james.music.core.model.settings.AppSettingsRepository
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -33,15 +35,19 @@ class MoeKoePlaybackService : MediaLibraryService() {
 
     @Inject internal lateinit var sourceResolver: PlaybackSourceResolver
 
+    @Inject internal lateinit var appSettingsRepository: AppSettingsRepository
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private lateinit var player: ExoPlayer
     private lateinit var mediaSession: MediaLibrarySession
     private var snapshotJob: Job? = null
     private var progressCheckpointJob: Job? = null
     private var errorAdvanceJob: Job? = null
+    private var settingsJob: Job? = null
     private val initialRestoreComplete = CompletableDeferred<Unit>()
-    private val errorPolicy = ConsecutivePlaybackErrorPolicy()
+    private val failureRecoveryPolicy = PlaybackFailureRecoveryPolicy()
     private val addressRefreshPolicy = PlaybackAddressRefreshPolicy()
+    private var autoSkipFailedPlayback = true
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -76,6 +82,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
             )
         }
         mediaSession = sessionBuilder.build()
+        observeAppSettings()
         restoreSnapshot()
         startProgressCheckpoints()
     }
@@ -88,6 +95,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
         }
         progressCheckpointJob?.cancel()
         errorAdvanceJob?.cancel()
+        settingsJob?.cancel()
         snapshotJob?.cancel()
         serviceScope.cancel()
         mediaSession.release()
@@ -113,6 +121,15 @@ class MoeKoePlaybackService : MediaLibraryService() {
                 initialRestoreComplete.complete(Unit)
             }
         }
+    }
+
+    private fun observeAppSettings() {
+        settingsJob =
+            serviceScope.launch {
+                appSettingsRepository.settings.collect { snapshot ->
+                    autoSkipFailedPlayback = snapshot.settings.autoSkipFailedPlayback
+                }
+            }
     }
 
     private fun startProgressCheckpoints() {
@@ -183,7 +200,7 @@ class MoeKoePlaybackService : MediaLibraryService() {
                 if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) {
                     addressRefreshPolicy.onMediaItemTransition(player.currentMediaItem?.mediaId)
                 }
-                if (player.playbackState == Player.STATE_READY) errorPolicy.reset()
+                if (player.playbackState == Player.STATE_READY) failureRecoveryPolicy.onPlaybackReady()
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -217,18 +234,27 @@ class MoeKoePlaybackService : MediaLibraryService() {
     }
 
     private fun handleUnrecoverablePlayerError() {
-        if (!errorPolicy.shouldAdvance(player.mediaItemCount)) {
-            player.pause()
-            return
-        }
-        errorAdvanceJob =
-            serviceScope.launch {
-                delay(ERROR_ADVANCE_DELAY_MS)
-                val nextIndex = (player.currentMediaItemIndex + 1) % player.mediaItemCount
-                player.seekToDefaultPosition(nextIndex)
-                player.prepare()
-                player.play()
+        when (
+            failureRecoveryPolicy.onUnrecoverableError(
+                autoSkipFailedPlayback = autoSkipFailedPlayback,
+                queueSize = player.mediaItemCount,
+            )
+        ) {
+            PlaybackFailureRecoveryAction.Pause -> {
+                player.pause()
             }
+
+            PlaybackFailureRecoveryAction.Advance -> {
+                errorAdvanceJob =
+                    serviceScope.launch {
+                        delay(ERROR_ADVANCE_DELAY_MS)
+                        val nextIndex = (player.currentMediaItemIndex + 1) % player.mediaItemCount
+                        player.seekToDefaultPosition(nextIndex)
+                        player.prepare()
+                        player.play()
+                    }
+            }
+        }
     }
 
     @OptIn(UnstableApi::class)

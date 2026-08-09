@@ -100,6 +100,8 @@ class AppThemeViewModelTest {
                 }
             }
         }
+
+        override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = updateResult
     }
 
     private val AppThemePreference.expectedThemeMode: ThemeMode

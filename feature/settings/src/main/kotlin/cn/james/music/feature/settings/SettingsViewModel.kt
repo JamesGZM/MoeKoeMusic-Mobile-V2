@@ -23,15 +23,19 @@ internal class SettingsViewModel
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(SettingsUiState())
         val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
-        private var updateJob: Job? = null
-        private var retryTheme: SettingsThemeUi? = null
-        private var updateGeneration = 0L
+        private var themeUpdateJob: Job? = null
+        private var autoSkipUpdateJob: Job? = null
+        private var retryRequest: RetryRequest? = null
+        private var themeUpdateGeneration = 0L
+        private var autoSkipUpdateGeneration = 0L
         private var persistedTheme = AppThemePreference.System
+        private var persistedAutoSkipFailedPlayback = true
 
         init {
             viewModelScope.launch {
                 repository.settings.collect { snapshot ->
                     persistedTheme = snapshot.settings.theme
+                    persistedAutoSkipFailedPlayback = snapshot.settings.autoSkipFailedPlayback
                     mutableState.update { current ->
                         val theme =
                             if (current.savingTheme == null || current.savingTheme.toDomain() == snapshot.settings.theme) {
@@ -39,10 +43,26 @@ internal class SettingsViewModel
                             } else {
                                 current.theme
                             }
+                        val autoSkipFailedPlayback =
+                            if (
+                                current.savingAutoSkipFailedPlayback == null ||
+                                current.savingAutoSkipFailedPlayback == snapshot.settings.autoSkipFailedPlayback
+                            ) {
+                                snapshot.settings.autoSkipFailedPlayback
+                            } else {
+                                current.autoSkipFailedPlayback
+                            }
                         current.copy(
                             theme = theme,
+                            autoSkipFailedPlayback = autoSkipFailedPlayback,
                             problem = if (current.problem == SettingsProblemUi.Write) current.problem else snapshot.problem?.toUi(),
-                            groups = settingsGroups(theme, current.savingTheme),
+                            groups =
+                                settingsGroups(
+                                    theme = theme,
+                                    autoSkipFailedPlayback = autoSkipFailedPlayback,
+                                    savingTheme = current.savingTheme,
+                                    savingAutoSkipFailedPlayback = current.savingAutoSkipFailedPlayback,
+                                ),
                         )
                     }
                 }
@@ -55,6 +75,7 @@ internal class SettingsViewModel
                 is SettingsAction.SelectTheme -> selectTheme(action.theme)
                 SettingsAction.OpenTheme -> mutableState.update { it.copy(overlay = SettingsOverlay.ThemeSelection) }
                 SettingsAction.OpenAbout -> mutableState.update { it.copy(overlay = SettingsOverlay.About) }
+                is SettingsAction.SetAutoSkipFailedPlayback -> setAutoSkipFailedPlayback(action.enabled)
                 SettingsAction.DismissOverlay -> mutableState.update { it.copy(overlay = null) }
                 SettingsAction.Retry -> retry()
                 SettingsAction.DismissProblem -> dismissProblem()
@@ -64,38 +85,118 @@ internal class SettingsViewModel
         private fun selectTheme(theme: SettingsThemeUi) {
             mutableState.update { it.copy(overlay = null) }
             if (theme == mutableState.value.theme && mutableState.value.savingTheme == null) return
-            val generation = ++updateGeneration
-            updateJob?.cancel()
-            updateJob =
+            val generation = ++themeUpdateGeneration
+            themeUpdateJob?.cancel()
+            themeUpdateJob =
                 viewModelScope.launch {
-                    retryTheme = null
+                    retryRequest = null
                     mutableState.update {
                         it.copy(
                             savingTheme = theme,
                             problem = null,
                             canRetry = false,
-                            groups = settingsGroups(it.theme, theme),
+                            groups =
+                                settingsGroups(
+                                    theme = it.theme,
+                                    autoSkipFailedPlayback = it.autoSkipFailedPlayback,
+                                    savingTheme = theme,
+                                    savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
+                                ),
                         )
                     }
                     when (repository.setTheme(theme.toDomain())) {
                         AppSettingsUpdateResult.Success -> {
-                            if (generation != updateGeneration) return@launch
+                            if (generation != themeUpdateGeneration) return@launch
                             mutableState.update {
-                                val persisted = persistedTheme.toUi()
-                                it.copy(theme = persisted, savingTheme = null, groups = settingsGroups(persisted))
+                                it.copy(
+                                    theme = theme,
+                                    savingTheme = null,
+                                    groups =
+                                        settingsGroups(
+                                            theme = theme,
+                                            autoSkipFailedPlayback = it.autoSkipFailedPlayback,
+                                            savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
+                                        ),
+                                )
                             }
                         }
 
                         is AppSettingsUpdateResult.Failure -> {
-                            if (generation != updateGeneration) return@launch
-                            retryTheme = theme
+                            if (generation != themeUpdateGeneration) return@launch
+                            retryRequest = RetryRequest.Theme(theme)
                             mutableState.update {
+                                val persisted = persistedTheme.toUi()
                                 it.copy(
-                                    theme = persistedTheme.toUi(),
+                                    theme = persisted,
                                     savingTheme = null,
                                     problem = SettingsProblemUi.Write,
                                     canRetry = true,
-                                    groups = settingsGroups(persistedTheme.toUi()),
+                                    groups =
+                                        settingsGroups(
+                                            theme = persisted,
+                                            autoSkipFailedPlayback = it.autoSkipFailedPlayback,
+                                            savingAutoSkipFailedPlayback = it.savingAutoSkipFailedPlayback,
+                                        ),
+                                )
+                            }
+                        }
+                    }
+                }
+        }
+
+        private fun setAutoSkipFailedPlayback(enabled: Boolean) {
+            if (enabled == mutableState.value.autoSkipFailedPlayback && mutableState.value.savingAutoSkipFailedPlayback == null) return
+            val generation = ++autoSkipUpdateGeneration
+            autoSkipUpdateJob?.cancel()
+            autoSkipUpdateJob =
+                viewModelScope.launch {
+                    retryRequest = null
+                    mutableState.update {
+                        it.copy(
+                            savingAutoSkipFailedPlayback = enabled,
+                            problem = null,
+                            canRetry = false,
+                            groups =
+                                settingsGroups(
+                                    theme = it.theme,
+                                    autoSkipFailedPlayback = it.autoSkipFailedPlayback,
+                                    savingTheme = it.savingTheme,
+                                    savingAutoSkipFailedPlayback = enabled,
+                                ),
+                        )
+                    }
+                    when (repository.setAutoSkipFailedPlayback(enabled)) {
+                        AppSettingsUpdateResult.Success -> {
+                            if (generation != autoSkipUpdateGeneration) return@launch
+                            mutableState.update {
+                                it.copy(
+                                    autoSkipFailedPlayback = enabled,
+                                    savingAutoSkipFailedPlayback = null,
+                                    groups =
+                                        settingsGroups(
+                                            theme = it.theme,
+                                            autoSkipFailedPlayback = enabled,
+                                            savingTheme = it.savingTheme,
+                                        ),
+                                )
+                            }
+                        }
+
+                        is AppSettingsUpdateResult.Failure -> {
+                            if (generation != autoSkipUpdateGeneration) return@launch
+                            retryRequest = RetryRequest.AutoSkipFailedPlayback(enabled)
+                            mutableState.update {
+                                it.copy(
+                                    autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
+                                    savingAutoSkipFailedPlayback = null,
+                                    problem = SettingsProblemUi.Write,
+                                    canRetry = true,
+                                    groups =
+                                        settingsGroups(
+                                            theme = it.theme,
+                                            autoSkipFailedPlayback = persistedAutoSkipFailedPlayback,
+                                            savingTheme = it.savingTheme,
+                                        ),
                                 )
                             }
                         }
@@ -104,12 +205,26 @@ internal class SettingsViewModel
         }
 
         private fun retry() {
-            retryTheme?.let(::selectTheme)
+            when (val request = retryRequest) {
+                null -> Unit
+                is RetryRequest.Theme -> selectTheme(request.theme)
+                is RetryRequest.AutoSkipFailedPlayback -> setAutoSkipFailedPlayback(request.enabled)
+            }
         }
 
         private fun dismissProblem() {
-            retryTheme = null
+            retryRequest = null
             mutableState.update { it.copy(problem = null, canRetry = false) }
+        }
+
+        private sealed interface RetryRequest {
+            data class Theme(
+                val theme: SettingsThemeUi,
+            ) : RetryRequest
+
+            data class AutoSkipFailedPlayback(
+                val enabled: Boolean,
+            ) : RetryRequest
         }
 
         private fun AppThemePreference.toUi(): SettingsThemeUi =

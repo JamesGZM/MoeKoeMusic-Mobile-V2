@@ -6,6 +6,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -87,12 +88,59 @@ class SettingsScreenTest {
             .assertIsOff()
     }
 
+    @Test
+    fun autoSkipFailedPlaybackForwardsItsOwnToggleAction() {
+        var enabled: Boolean? = null
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state = SettingsUiState(),
+                        onAction = { action ->
+                            if (action is SettingsAction.SetAutoSkipFailedPlayback) enabled = action.enabled
+                        },
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("播放失败时自动跳过").performClick()
+
+        assertEquals(false, enabled)
+    }
+
+    @Test
+    fun savingAutoSkipFailedPlaybackDisablesItsRow() {
+        composeRule.setContent {
+            MoeKoeTheme {
+                Surface {
+                    SettingsScreen(
+                        state =
+                            SettingsUiState(
+                                autoSkipFailedPlayback = true,
+                                savingAutoSkipFailedPlayback = false,
+                                groups =
+                                    settingsGroups(
+                                        theme = SettingsThemeUi.System,
+                                        autoSkipFailedPlayback = true,
+                                        savingAutoSkipFailedPlayback = false,
+                                    ),
+                            ),
+                        onAction = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("播放失败时自动跳过").assertIsNotEnabled()
+    }
+
     private fun setSettingsContent(theme: SettingsThemeUi) {
         composeRule.setContent {
             MoeKoeTheme {
                 Surface {
                     SettingsScreen(
-                        state = SettingsUiState(theme = theme, groups = settingsGroups(theme)),
+                        state = SettingsUiState(theme = theme, groups = settingsGroups(theme, autoSkipFailedPlayback = true)),
                         onAction = {},
                     )
                 }

@@ -112,7 +112,7 @@ internal fun SettingsToggleItem(
     title: String,
     checked: Boolean,
     loading: Boolean,
-    onClick: () -> Unit,
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     SettingsItemLayout(
         icon = icon,
@@ -122,7 +122,7 @@ internal fun SettingsToggleItem(
         loading = loading,
         checked = checked,
         enabled = true,
-        onClick = onClick,
+        onClick = { onCheckedChange(!checked) },
     )
 }
 
@@ -166,7 +166,7 @@ private fun SettingsItemLayout(
             MoeSwitch(
                 checked = checked,
                 onCheckedChange = { _ -> onClick() },
-                enabled = enabled,
+                enabled = enabled && !loading,
             )
         } else {
             value?.let {

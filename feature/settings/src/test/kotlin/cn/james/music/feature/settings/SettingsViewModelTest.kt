@@ -71,7 +71,7 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsThemeUi.Amoled, viewModel.state.value.theme)
             assertEquals(null, viewModel.state.value.savingTheme)
-            assertEquals(listOf(AppThemePreference.Amoled), repository.requests)
+            assertEquals(listOf(AppThemePreference.Amoled), repository.themeRequests)
         }
 
     @Test
@@ -140,19 +140,98 @@ class SettingsViewModelTest {
             assertEquals(null, viewModel.state.value.savingTheme)
         }
 
+    @Test
+    fun autoSkipFailedPlaybackPersistsAndDoesNotCancelThemeUpdate() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
+            advanceUntilIdle()
+
+            assertEquals(SettingsThemeUi.Dark, viewModel.state.value.theme)
+            assertFalse(viewModel.state.value.autoSkipFailedPlayback)
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertEquals(listOf(false), repository.autoSkipRequests)
+        }
+
+    @Test
+    fun failedAutoSkipSelectionKeepsPersistedValueAndCanRetry() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(AppThemePreference.System)
+            repository.autoSkipResult = AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
+            advanceUntilIdle()
+
+            assertTrue(viewModel.state.value.autoSkipFailedPlayback)
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+            assertTrue(viewModel.state.value.canRetry)
+
+            repository.autoSkipResult = AppSettingsUpdateResult.Success
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.state.value.autoSkipFailedPlayback)
+            assertFalse(viewModel.state.value.canRetry)
+        }
+
+    @Test
+    fun retryTargetsTheLastFailureWhenThemeAndAutoSkipWritesBothFail() =
+        runTest(dispatcher) {
+            val repository = ConcurrentFailureRepository(AppThemePreference.System)
+            val viewModel = SettingsViewModel(repository)
+            runCurrent()
+
+            viewModel.onAction(SettingsAction.SelectTheme(SettingsThemeUi.Dark))
+            runCurrent()
+            viewModel.onAction(SettingsAction.SetAutoSkipFailedPlayback(false))
+            runCurrent()
+
+            repository.failTheme()
+            runCurrent()
+            repository.failAutoSkipFailedPlayback()
+            runCurrent()
+
+            assertEquals(SettingsProblemUi.Write, viewModel.state.value.problem)
+            assertTrue(viewModel.state.value.canRetry)
+
+            viewModel.onAction(SettingsAction.Retry)
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppThemePreference.Dark), repository.themeRequests)
+            assertEquals(listOf(false, false), repository.autoSkipRequests)
+        }
+
     private class FakeRepository(
         initialTheme: AppThemePreference,
     ) : AppSettingsRepository {
         val settingsState = MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme)))
         override val settings: Flow<AppSettingsSnapshot> = settingsState
         var result: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
-        val requests = mutableListOf<AppThemePreference>()
+        var autoSkipResult: AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+        val themeRequests = mutableListOf<AppThemePreference>()
+        val autoSkipRequests = mutableListOf<Boolean>()
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
-            requests += theme
+            themeRequests += theme
             return result.also {
                 if (it == AppSettingsUpdateResult.Success) {
                     settingsState.value = AppSettingsSnapshot(settings = AppSettings(theme))
+                }
+            }
+        }
+
+        override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
+            autoSkipRequests += enabled
+            return autoSkipResult.also {
+                if (it == AppSettingsUpdateResult.Success) {
+                    settingsState.value =
+                        settingsState.value.copy(settings = settingsState.value.settings.copy(autoSkipFailedPlayback = enabled))
                 }
             }
         }
@@ -171,8 +250,47 @@ class SettingsViewModelTest {
             return AppSettingsUpdateResult.Success
         }
 
+        override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult = AppSettingsUpdateResult.Success
+
         fun complete(theme: AppThemePreference) {
             completions.getValue(theme).complete(Unit)
+        }
+    }
+
+    private class ConcurrentFailureRepository(
+        initialTheme: AppThemePreference,
+    ) : AppSettingsRepository {
+        private val settingsState = MutableStateFlow(AppSettingsSnapshot(settings = AppSettings(initialTheme)))
+        override val settings: Flow<AppSettingsSnapshot> = settingsState
+        private val themeCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        private val autoSkipCompletion = CompletableDeferred<AppSettingsUpdateResult>()
+        val themeRequests = mutableListOf<AppThemePreference>()
+        val autoSkipRequests = mutableListOf<Boolean>()
+
+        override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult {
+            themeRequests += theme
+            return if (themeRequests.size == 1) {
+                withContext(NonCancellable) { themeCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
+
+        override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult {
+            autoSkipRequests += enabled
+            return if (autoSkipRequests.size == 1) {
+                withContext(NonCancellable) { autoSkipCompletion.await() }
+            } else {
+                AppSettingsUpdateResult.Success
+            }
+        }
+
+        fun failTheme() {
+            themeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
+        }
+
+        fun failAutoSkipFailedPlayback() {
+            autoSkipCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
         }
     }
 }

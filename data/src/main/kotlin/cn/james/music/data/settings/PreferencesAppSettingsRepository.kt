@@ -2,7 +2,9 @@ package cn.james.music.data.settings
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import cn.james.music.core.model.settings.AppSettings
@@ -35,8 +37,27 @@ class PreferencesAppSettingsRepository
                 }
 
         override suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult =
+            update { preferences -> preferences[THEME] = theme.storageValue }
+
+        override suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult =
+            update { preferences -> preferences[AUTO_SKIP_FAILED_PLAYBACK] = enabled }
+
+        private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
+            val storedTheme = preferences[THEME]
+            val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
+            if (storedTheme != null && theme == null) return AppSettingsSnapshot(problem = AppSettingsProblem.Read)
+            return AppSettingsSnapshot(
+                settings =
+                    AppSettings(
+                        theme = theme ?: AppThemePreference.System,
+                        autoSkipFailedPlayback = preferences[AUTO_SKIP_FAILED_PLAYBACK] ?: true,
+                    ),
+            )
+        }
+
+        private suspend fun update(block: suspend (MutablePreferences) -> Unit): AppSettingsUpdateResult =
             try {
-                dataStore.edit { preferences -> preferences[THEME] = theme.storageValue }
+                dataStore.edit(block)
                 AppSettingsUpdateResult.Success
             } catch (_: IOException) {
                 AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
@@ -44,20 +65,11 @@ class PreferencesAppSettingsRepository
                 AppSettingsUpdateResult.Failure(AppSettingsProblem.Write)
             }
 
-        private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
-            val stored = preferences[THEME] ?: return AppSettingsSnapshot()
-            val theme = AppThemePreference.entries.firstOrNull { it.storageValue == stored }
-            return if (theme == null) {
-                AppSettingsSnapshot(problem = AppSettingsProblem.Read)
-            } else {
-                AppSettingsSnapshot(settings = AppSettings(theme = theme))
-            }
-        }
-
         private val AppThemePreference.storageValue: String
             get() = name.lowercase()
 
         internal companion object {
             val THEME = stringPreferencesKey("theme_mode_v1")
+            val AUTO_SKIP_FAILED_PLAYBACK = booleanPreferencesKey("auto_skip_failed_playback_v1")
         }
     }

@@ -9,6 +9,7 @@
 - 首批同时提供只读的“关于 MoeKoe Air”应用信息。确认稿中的主题色、封面动态取色、播放与音质、歌词、缓存和语言分组应先完整保留视觉结构，再随各自消费者按纵向切片接入功能。
 - 明确非目标：视觉先行不等于提前写入无消费者的 DataStore 值，也不伪造缓存容量或执行清理；未接能力使用明确的静态/不可提交状态。不重启进程，不新增网络、权限、后台任务、分析或遥测。
 - 首次读取期间使用稳定默认值“跟随系统”，不以全屏 Loading 阻塞应用壳；读取失败继续使用该默认值并在设置页显示可恢复错误。写入失败保持最后持久化值，页面给出重试反馈。
+- `播放失败时自动跳过` 是首个随既有消费者接入的播放偏好：默认开启以保持当前产品行为。关闭只影响下一次不可恢复播放错误；已经开始的地址刷新和已排队的恢复不取消。开启时继续保留单曲不跳过、最多连续六次失败自动跳过以及成功进入 `READY` 后重置计数的既有规则。
 
 ## 平台与系统约束
 
@@ -61,6 +62,14 @@
 - 理由：设计确认与功能开发是两个阶段；隐藏未接能力会让实际页面偏离已确认稿，但伪造持久化或可点击成功语义同样不可接受。
 - 验收：页面视觉结构完整，不显示假缓存容量，不把未消费开关写入 DataStore；后续每个功能切片再补消费者、失败恢复和测试。
 
+### 播放失败自动跳过
+
+- 当前实现：`:playback` 已在不可恢复的播放器错误后按连续失败策略自动跳到下一项，但用户无法控制该行为；设置页只显示不可提交的静态行。
+- 候选：继续固定自动跳过；由设置 Feature 直接操作 Service；通过 `AppSettingsRepository` 让设置与 Service 消费同一个持久化偏好。
+- 决策：新增非敏感 `autoSkipFailedPlayback` 布尔偏好，默认 `true`。`:feature:settings` 只经 Repository 写入并展示持久化状态；`:playback` 在 Service 生命周期内观察 Repository 的快照，并只在下一次不可恢复错误发生时读取当时值。Feature 不依赖 Service，Service 不访问 DataStore。
+- 失败恢复：读取缺失、损坏或 `IOException` 时回退 `true`，避免意外关闭既有保护；写失败保留最后持久化值并在设置页提供重试。关闭时暂停当前项并保留现有错误反馈，不消耗连续失败预算；不取消已启动的一次地址刷新或已经排队的下一首恢复。
+- 验收：开关状态经进程重建恢复；开启保留单曲不跳过和六次上限；关闭后下一次不可恢复错误暂停；运行中切换只作用于下一次错误；快速主题与自动跳过写入彼此不取消。
+
 ## 视觉设计门禁与适配契约
 
 - 权威设计：[`../design/mockups/09-settings.png`](../design/mockups/09-settings.png)，已确认并于 2026-08-07 使用标准 Toolbar、登录输入框图标规范和长画布规则修订。首批仅裁取其真实能力分组，不改变 Item 视觉语言。
@@ -76,9 +85,9 @@
 ## 技术设计
 
 - 不新增第三方依赖；复用现有 AndroidX DataStore、Hilt、Coroutines、Lifecycle、Navigation Compose、Material 3 与截图插件，许可证均为 Apache-2.0。
-- 依赖方向：`:feature:settings -> :core:model + :core:designsystem`；`:data -> :core:model`；`:app -> :feature:settings + :data`。`:feature:settings` 不依赖 `:feature:my` 或 `:app`。
+- 依赖方向：`:feature:settings -> :core:model + :core:designsystem`；`:data -> :core:model`；`:playback -> :core:model`；`:app -> :feature:settings + :data`。`:feature:settings` 不依赖 `:feature:my`、`:app` 或 `:playback`。
 - 独立 Preferences DataStore 文件仅保存非敏感应用偏好，不与加密酷狗会话 DataStore 共用文件或 qualifier。
-- 主数据流：DataStore `Flow<Preferences>` → data Repository → app Theme ViewModel / Settings ViewModel → 不可变 StateFlow → Compose。事件反向调用 ViewModel，再由 Repository 单次更新。
+- 主数据流：DataStore `Flow<Preferences>` → data Repository → app Theme ViewModel / Settings ViewModel / Playback Service → 不可变 StateFlow 或运行时策略。事件反向调用 ViewModel，再由 Repository 单次更新。
 - 读取错误映射为带默认设置的 `AppSettingsSnapshot` 和类型化 Storage 问题；写入返回成功/失败。UI 写入期间禁用当前提交，失败后保留旧值并提供重试；不做无条件自动重试。
 - 多次快速选择按 ViewModel 代际串行，旧写入结果不能覆盖较新的 UI 状态；DataStore 中最终值是唯一事实来源。
 
@@ -88,15 +97,16 @@
 2. app-level 主题消费，替换 `MainActivity` 临时状态，验证重建恢复。已完成。
 3. `:feature:settings` 主题/关于页面、截图和导航目的地。已完成确认稿五个分组、14 个 Item、完整长页面与六组截图；未接能力保持静态事件边界。
 4. “我的”匿名/登录态齿轮接入 Settings，退出动作改为明确账号菜单入口。已完成。
-5. 后续播放、歌词、缓存能力分别在真实消费者完成时增加对应设置 Item。
+5. 播放失败自动跳过：复用既有连续失败策略，把 `SkipFailed` 接入真实 Toggle、持久化和 Service 观察；不改变地址刷新或播放控制器所有权。已完成。
+6. 后续歌词、缓存及其余播放能力分别在真实消费者完成时增加对应设置 Item。
 
 每个切片独立提交、推送并恢复干净工作区。
 
 ## 测试与验收
 
-- JVM：默认值、四种主题映射、持久化、读取 IOException、写入失败、快速连续写入代际、ViewModel 不乐观覆盖。
+- JVM：默认值、四种主题映射、自动跳过布尔值持久化、读取 IOException、写入失败、快速连续写入代际、ViewModel 不乐观覆盖；开启/关闭、单曲、连续六次失败与下一次错误生效的播放失败策略。
 - 集成：Activity 重建与进程重启恢复；Settings → Back 返回 My；匿名与登录态均可进入；退出确认仍可达。匿名态 My → Settings → 主题切换 → Back 已在指定 ELE-AL00 / API 29 真机通过。
-- Compose：整行选择语义、选中状态、写入中禁用、错误与重试、Back content description。
+- Compose：整行选择/Toggle 语义、选中状态、写入中禁用、错误与重试、Back content description。
 - 截图：390 × 844 浅色/深色/AMOLED、`1.5×`、`2.0×`；另做确认稿锚点对比，不以重录回归图替代设计符合度。
 - 真机：仅使用用户指定且已连接的 ELE-AL00 / API 29，验证四种主题即时切换、Activity 重建、返回栈、列表滚动和大字体；不创建模拟器。
 - 工程：受影响模块 compile、unit test、lint、screenshot validation、`spotlessCheck` 与 `:app:assembleDebug` 全部通过。

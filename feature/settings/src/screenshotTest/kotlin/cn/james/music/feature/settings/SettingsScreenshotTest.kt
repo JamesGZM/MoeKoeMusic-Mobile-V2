@@ -12,7 +12,7 @@ import com.android.tools.screenshot.PreviewTest
 @PreviewTest
 @Preview(name = "Light", widthDp = 390, heightDp = 844)
 @Composable
-fun SettingsLightScreenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System)
+fun SettingsLightScreenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
 
 @PreviewTest
 @Preview(name = "LayoutProbe", widthDp = 390, heightDp = 844)
@@ -28,43 +28,49 @@ fun SettingsLayoutProbeScreenshot() =
                 SETTINGS_PROBE_STORAGE to Color.Red,
             ),
     ) {
-        SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System)
+        SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
     }
 
 @PreviewTest
 @Preview(name = "Dark", widthDp = 390, heightDp = 844)
 @Composable
-fun SettingsDarkScreenshot() = SettingsScreenshotContent(ThemeMode.Dark, SettingsThemeUi.Dark)
+fun SettingsDarkScreenshot() = SettingsScreenshotContent(ThemeMode.Dark, SettingsThemeUi.Dark, autoSkipFailedPlayback = true)
 
 @PreviewTest
 @Preview(name = "Amoled", widthDp = 390, heightDp = 844)
 @Composable
-fun SettingsAmoledScreenshot() = SettingsScreenshotContent(ThemeMode.Amoled, SettingsThemeUi.Amoled)
+fun SettingsAmoledScreenshot() = SettingsScreenshotContent(ThemeMode.Amoled, SettingsThemeUi.Amoled, autoSkipFailedPlayback = true)
 
 @PreviewTest
 @Preview(name = "LargeText15", widthDp = 390, heightDp = 844, fontScale = 1.5f)
 @Composable
-fun SettingsLargeText15Screenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System)
+fun SettingsLargeText15Screenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
 
 @PreviewTest
 @Preview(name = "LargeText20", widthDp = 390, heightDp = 844, fontScale = 2.0f)
 @Composable
-fun SettingsLargeText20Screenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System)
+fun SettingsLargeText20Screenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
 
 @PreviewTest
 @Preview(name = "LongContent", widthDp = 390, heightDp = 1040)
 @Composable
-fun SettingsLongContentScreenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System)
+fun SettingsLongContentScreenshot() = SettingsScreenshotContent(ThemeMode.Light, SettingsThemeUi.System, autoSkipFailedPlayback = true)
 
 @Composable
 private fun SettingsScreenshotContent(
     themeMode: ThemeMode,
     preference: SettingsThemeUi,
+    autoSkipFailedPlayback: Boolean,
 ) {
     MoeKoeTheme(themeMode = themeMode) {
         Surface {
             SettingsScreen(
-                state = SettingsUiState(theme = preference, groups = settingsGroups(preference)),
+                state =
+                    SettingsUiState(
+                        theme = preference,
+                        autoSkipFailedPlayback = autoSkipFailedPlayback,
+                        groups = settingsGroups(preference, autoSkipFailedPlayback),
+                    ),
                 onAction = {},
             )
         }

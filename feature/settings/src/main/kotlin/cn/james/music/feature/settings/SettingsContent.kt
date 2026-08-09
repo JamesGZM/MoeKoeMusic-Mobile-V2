@@ -92,7 +92,13 @@ private fun SettingsRow(
                 title = stringResource(visual.titleRes),
                 checked = row.checked,
                 loading = row.loading,
-                onClick = { onAction(SettingsAction.OpenTheme) },
+                onCheckedChange = { enabled ->
+                    when (row.id) {
+                        SettingsRowId.AmoledMode -> onAction(SettingsAction.OpenTheme)
+                        SettingsRowId.SkipFailed -> onAction(SettingsAction.SetAutoSkipFailedPlayback(enabled))
+                        else -> Unit
+                    }
+                },
             )
     }
 }

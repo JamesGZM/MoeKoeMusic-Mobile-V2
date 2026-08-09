@@ -50,6 +50,25 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun autoSkipFailedPlaybackDefaultsToTrueAndRoundTrips() =
+        withFixture {
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.autoSkipFailedPlayback,
+            )
+
+            assertEquals(AppSettingsUpdateResult.Success, repository.setAutoSkipFailedPlayback(false))
+            assertEquals(
+                false,
+                repository.settings
+                    .first()
+                    .settings.autoSkipFailedPlayback,
+            )
+        }
+
+    @Test
     fun unknownStoredThemeFallsBackToSystemAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.THEME] = "future-theme" }
@@ -82,6 +101,23 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.setTheme(AppThemePreference.Dark),
             )
             assertEquals(AppSettingsSnapshot(), repository.settings.first())
+        }
+
+    @Test
+    fun autoSkipWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setAutoSkipFailedPlayback(false),
+            )
+            assertEquals(
+                true,
+                repository.settings
+                    .first()
+                    .settings.autoSkipFailedPlayback,
+            )
         }
 
     @Test

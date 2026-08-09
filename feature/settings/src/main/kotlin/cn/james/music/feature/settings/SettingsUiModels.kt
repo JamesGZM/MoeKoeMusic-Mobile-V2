@@ -84,11 +84,13 @@ internal data class SettingsGroupUi(
 @Immutable
 internal data class SettingsUiState(
     val theme: SettingsThemeUi = SettingsThemeUi.System,
+    val autoSkipFailedPlayback: Boolean = true,
     val savingTheme: SettingsThemeUi? = null,
+    val savingAutoSkipFailedPlayback: Boolean? = null,
     val problem: SettingsProblemUi? = null,
     val canRetry: Boolean = false,
     val overlay: SettingsOverlay? = null,
-    val groups: List<SettingsGroupUi> = settingsGroups(SettingsThemeUi.System),
+    val groups: List<SettingsGroupUi> = settingsGroups(SettingsThemeUi.System, autoSkipFailedPlayback = true),
 )
 
 internal sealed interface SettingsAction {
@@ -102,6 +104,10 @@ internal sealed interface SettingsAction {
 
     data object OpenAbout : SettingsAction
 
+    data class SetAutoSkipFailedPlayback(
+        val enabled: Boolean,
+    ) : SettingsAction
+
     data object DismissOverlay : SettingsAction
 
     data object Retry : SettingsAction
@@ -111,7 +117,9 @@ internal sealed interface SettingsAction {
 
 internal fun settingsGroups(
     theme: SettingsThemeUi,
+    autoSkipFailedPlayback: Boolean,
     savingTheme: SettingsThemeUi? = null,
+    savingAutoSkipFailedPlayback: Boolean? = null,
 ): List<SettingsGroupUi> =
     listOf(
         SettingsGroupUi(
@@ -129,7 +137,11 @@ internal fun settingsGroups(
             rows =
                 listOf(
                     SettingsRowUi.Unavailable(SettingsRowId.DefaultQuality),
-                    SettingsRowUi.Unavailable(SettingsRowId.SkipFailed),
+                    SettingsRowUi.Toggle(
+                        id = SettingsRowId.SkipFailed,
+                        checked = autoSkipFailedPlayback,
+                        loading = savingAutoSkipFailedPlayback != null,
+                    ),
                     SettingsRowUi.Unavailable(SettingsRowId.Fade),
                 ),
         ),

@@ -21,6 +21,7 @@ fun NavGraphBuilder.settingsDestination(onBack: () -> Unit) {
                     SettingsAction.Back -> onBack()
 
                     is SettingsAction.SelectTheme,
+                    is SettingsAction.SetAutoSkipFailedPlayback,
                     SettingsAction.OpenTheme,
                     SettingsAction.OpenAbout,
                     SettingsAction.DismissOverlay,

@@ -11,6 +11,7 @@ enum class AppThemePreference {
 
 data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
+    val autoSkipFailedPlayback: Boolean = true,
 )
 
 sealed interface AppSettingsProblem {
@@ -36,4 +37,6 @@ interface AppSettingsRepository {
     val settings: Flow<AppSettingsSnapshot>
 
     suspend fun setTheme(theme: AppThemePreference): AppSettingsUpdateResult
+
+    suspend fun setAutoSkipFailedPlayback(enabled: Boolean): AppSettingsUpdateResult
 }
