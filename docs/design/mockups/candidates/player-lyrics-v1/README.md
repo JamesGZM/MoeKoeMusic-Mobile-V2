@@ -15,6 +15,12 @@
 - `23g-lyrics-font-150.png`：`1.5×` 字体密度；
 - `23h-lyrics-font-200.png`：`2.0×` 字体密度。
 
+## Draft candidate: 逐行高亮
+
+`23i-lyrics-line-highlight.png` 是 **Draft / Pending user confirmation** 候选，仅用于确认“歌词显示”的 `Line` 高亮状态：它复用 `07-player-lyrics.png` 的页面画布、既有原文加翻译密度和多行滚动，只将当前原文整行改为 accent；翻译仍沿既有 active / inactive 规则。它不保留逐字前缀分色，不改变字号、行距、自动跟随或歌词页其余像素。
+
+该候选不是已确认设计、Compose 实现源、正式设计契约或 screenshot Golden。用户确认 Player 逐行状态与 Settings Radio Dialog 的 `1.0× / 2.0×` 视觉后，才可进入正式契约和 UI 实现。
+
 已确认的 `07-player-lyrics.png` 继续作为“原文加翻译”内容态，不重复生成。离线但缓存命中也直接复用内容态，只在交互实现中提供弱提示，不改变歌词主体。
 
 本目录的 HTML/CSS/JS 只用于可复现地生成静态设计图，不是交互原型，也不进入 Android 构建或运行时。确认结论锁定布局、密度和各状态的内容层级；图中的蓝紫背景、高亮和播放按钮颜色只是示例。Compose 必须按 [`13-player-artwork-palette.md`](../../../../reference-audits/13-player-artwork-palette.md) 复用当前歌曲封面派生的 `PlayerPalette`，不得把示例色写死，也不得为歌词页建立独立取色器。

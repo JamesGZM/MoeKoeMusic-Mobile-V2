@@ -221,6 +221,10 @@ body {
   color: #9790ff;
 }
 
+.lyric-line.active.line-highlight {
+  color: #9790ff;
+}
+
 .lyrics-list.font-150 .lyric-line {
   margin-bottom: 56px;
   font-size: 42px;

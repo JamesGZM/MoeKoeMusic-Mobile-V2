@@ -86,6 +86,15 @@ const states = {
       <p class="lyric-line active">崖っぷち<span class="accent">進もう</span><span class="secondary">朝悬边前进吧</span></p>
       <p class="lyric-line">崖の向こうには花が咲く<span class="secondary">山崖的对面是鲜花盛开</span></p>
     </div>`,
+  line: `
+    <div class="lyrics-list">
+      <p class="lyric-line">コレカラさ変わる未来<span class="secondary">从此以后，未来将会改变</span></p>
+      <p class="lyric-line">なけなしの希望を手に<span class="secondary">手握缥缈的希望</span></p>
+      <p class="lyric-line active line-highlight">崖っぷち進もう<span class="secondary">悬崖边前进吧</span></p>
+      <p class="lyric-line">崖の向こうには花が咲く<span class="secondary">山崖的对面是鲜花盛开</span></p>
+      <p class="lyric-line">ちっぽけで<span class="secondary">微小却真实的梦</span></p>
+      <p class="lyric-line">大きな夢を並べては<span class="secondary">将宏大的梦想并列</span></p>
+    </div>`,
 };
 
 region.innerHTML = states[state] || states.loading;
