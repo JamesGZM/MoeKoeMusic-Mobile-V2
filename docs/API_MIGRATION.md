@@ -137,7 +137,7 @@ kugou-api/src/main/kotlin/.../
 
 只迁移 App 已进入开发范围的接口，不一次性机械翻译全部模块。
 
-每日领取与可选升级均要求登录。协议/Data 准入采用 `youth_day_vip` 与 `youth_day_vip_upgrade`，并以 `None` retry、UTC 可注入日期、会话 preflight 和类型化结果实现；legacy `youth_vip` 明确拒绝迁移。UI 不应把当前 VIP 徽标当作领取入口；领取状态、当日已领取、接口不可用和账号风控必须映射为明确的领域状态。确认主态的双按钮如何变为状态驱动动作仍待用户确认，见 [`reference-audits/30-daily-vip-claim.md`](reference-audits/30-daily-vip-claim.md)。
+每日领取与可选升级均要求登录。044 已在 `:kugou-api` 实现 `youth_day_vip` 与 `youth_day_vip_upgrade` 的窄协议客户端：Android signature、Cookie 注入、空 body、`None` retry、会话 preflight 和 endpoint-specific 类型化结果均有离线 fake transport 覆盖；legacy `youth_vip` 明确拒绝迁移且无 public request。UTC 可注入日期、领域映射与 UI 仍属于后续切片。UI 不应把当前 VIP 徽标当作领取入口；领取状态、当日已领取、接口不可用和账号风控必须映射为明确的领域状态。确认主态的双按钮如何变为状态驱动动作仍待用户确认，见 [`reference-audits/30-daily-vip-claim.md`](reference-audits/30-daily-vip-claim.md)。
 
 音乐库数据沿用 PC 端语义进行领域映射：`user_playlist` 区分创建歌单、收藏歌单与收藏专辑，`user_follow` 区分关注歌手与关注好友。网络字段判断只能停留在 `:kugou-api` 或 Repository 映射层，Compose UI 只消费稳定的分类模型。
 

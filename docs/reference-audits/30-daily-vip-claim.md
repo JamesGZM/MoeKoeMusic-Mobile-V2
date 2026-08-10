@@ -2,6 +2,8 @@
 
 状态：**Accepted（协议与数据边界）**。UI mutation states 与已确认双按钮改为单一状态驱动动作仍待用户确认。审计日期：2026-08-10。
 
+实施状态：**044 已完成协议层**。`:kugou-api` 现仅公开 `KugouDailyVipClient` 的 day/upgrade 窄接口：在 transport 前校验 token 与正数 userId，以 Android signature、Cookie 注入、空 body 和 `KugouRetryMode.None` 发出两条 POST；day 完成为 `Claimed`，upgrade 完成为 `Upgraded`，`131001` 为 endpoint-specific `AlreadyClaimed`，`20028` 和 `ssa-code` 保持类型化 `Risk`。legacy 广告上报没有 public API 或 request id。领域/data 和 UI 步骤仍未实现。
+
 ## 决策与范围
 
 “我的”页当前的“签到 / 领取 VIP”是确认主态中的静态视觉槽位，不是已经接入的业务能力。此审计只准入登录后的每日概念版 VIP 领取及可选升级所需的 Kotlin 协议、领域和数据边界；不接入 UI、不改变截图/contract、不运行真实服务，也不迁移旧 `youth_vip`。
@@ -77,7 +79,7 @@ PC `Helpers.getVip()` 的自动 day→固定 500ms→upgrade 路径会在失败�
 
 ## 原子实施与测试矩阵
 
-1. **协议**：`KugouYouthVipRequestBuilder/Client/Decoder`，以 fake transport 快照只覆盖已准入的 day/upgrade 两条 request；legacy 通过固定源码/本审计以及“没有 legacy public API 或 request id”的架构回归证明未迁移，不能为它构造第三条 request。验证 Android 签名覆盖精确 UTF-8 body、Cookie/会话注入、`None` retry、`131001`/`20028`/畸形/HTTP/SSA/cancellation。
+1. **协议（044，已完成）**：`KugouDailyVipRequestBuilder/Client/Decoder` 以 fake transport 快照只覆盖已准入的 day/upgrade 两条 request；legacy 通过固定源码/本审计以及“公开 service 表面只有 day/upgrade、两条 request id 均不含 legacy”的 API 表面回归证明未迁移，不能为它构造第三条 request。固定虚构向量覆盖 Android signature、Cookie/会话注入、空 body、`None` retry、`131001`/`20028`/畸形/HTTP/SSA/cancellation；timeout 与 5xx 都只执行一次。
 2. **领域与数据**：新增窄 `DailyVipClaimRepository`，覆盖匿名零 transport、会话初始化失败、UTC date、claimed/already/risk/auth/protocol 映射、day→upgrade 前置、取消、logout/账号切换和迟到结果隔离。
 3. **UI（Blocked）**：用户确认单动作或双动作和所有 mutation 图后，再建立 design contract、ViewModel state machine、Dialog/Snackbar、48dp/无障碍、1×/2× screenshot；覆盖单飞、确认/取消、成功刷新、风险/鉴权、失败 Retry 与不干扰普通资料刷新。
 

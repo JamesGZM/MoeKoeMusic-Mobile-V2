@@ -87,7 +87,7 @@ Repository
 - 酷狗平台配置、设备身份、会话和 Cookie。
 - MD5、SHA1、AES、RSA 和请求签名。
 - Ktor Client 请求编排、OkHttp Engine 与网络 DTO。
-- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient`、`KugouAuthenticationClient` 与 `KugouUserClient` 分别将公开内容、认证/风险、已认证资料和 VIP 协议解码为类型化结果后才交给 `:data`。
+- 原始 JSON 与协议响应只在模块内部流动；`KugouOnlineClient`、`KugouAuthenticationClient`、`KugouUserClient` 与 `KugouDailyVipClient` 分别将公开内容、认证/风险、已认证资料/VIP 摘要及每日 VIP day/upgrade 协议解码为类型化结果后才交给 `:data`。每日客户端只公开两条写操作，legacy 广告上报不进入 API 表面。
 - 不依赖 Compose、Media3、Activity 或 Service。
 
 ### `:data`
