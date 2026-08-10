@@ -9,8 +9,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import cn.james.music.core.model.account.DailyVipClaimRepository
 import cn.james.music.kugou.api.endpoint.KugouAuthClient
 import cn.james.music.kugou.api.endpoint.KugouAuthenticationClient
+import cn.james.music.kugou.api.endpoint.KugouDailyVipClient
+import cn.james.music.kugou.api.endpoint.KugouDailyVipService
 import cn.james.music.kugou.api.endpoint.KugouOnlineClient
 import cn.james.music.kugou.api.endpoint.KugouPlaybackAddressDecoder
 import cn.james.music.kugou.api.endpoint.KugouPrivilegeDecoder
@@ -121,6 +124,23 @@ object KugouSessionModule {
     @Provides
     @Singleton
     fun provideUserClient(executor: KugouCallExecutor): KugouUserService = KugouUserClient(executor)
+
+    @Provides
+    @Singleton
+    fun provideDailyVipService(executor: KugouCallExecutor): KugouDailyVipService = KugouDailyVipClient(executor)
+
+    @Provides
+    @Singleton
+    fun provideDailyVipClaimRepository(
+        sessionProvider: KugouSessionProvider,
+        sessionObserver: KugouSessionObserver,
+        dailyVipService: KugouDailyVipService,
+    ): DailyVipClaimRepository =
+        KugouDailyVipClaimRepository(
+            sessionProvider = sessionProvider,
+            sessionObserver = sessionObserver,
+            dailyVipService = dailyVipService,
+        )
 
     @Provides
     fun provideSongSearchDecoder(): KugouSongSearchDecoder = KugouSongSearchDecoder()

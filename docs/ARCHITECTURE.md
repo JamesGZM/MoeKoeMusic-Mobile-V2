@@ -96,6 +96,7 @@ Repository
 - 决定远端、本地和缓存的组合策略。
 - 对上提供稳定领域接口。
 - 通过平台数据源完成本地音频复制、哈希、元数据读取和 App 专属存储管理。
+- 每日 VIP mutation 由 `KugouDailyVipClaimRepository` 独占：它在 data mutex 内组合 `KugouSessionProvider`、`KugouSessionObserver` 与 `KugouDailyVipService`，以不可持久化的一次性 opaque capability 保证 upgrade 只能紧接同一登录会话下的 claim；Feature 不接触协议、会话、日期或 capability 内部绑定。
 
 ### `:playback`
 

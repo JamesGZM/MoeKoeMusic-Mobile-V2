@@ -2,7 +2,7 @@
 
 状态：**Accepted（协议与数据边界）**。UI mutation states 与已确认双按钮改为单一状态驱动动作仍待用户确认。审计日期：2026-08-10。
 
-实施状态：**044 已完成协议层**。`:kugou-api` 现仅公开 `KugouDailyVipClient` 的 day/upgrade 窄接口：在 transport 前校验 token 与正数 userId，以 Android signature、Cookie 注入、空 body 和 `KugouRetryMode.None` 发出两条 POST；day 完成为 `Claimed`，upgrade 完成为 `Upgraded`，`131001` 为 endpoint-specific `AlreadyClaimed`，`20028` 和 `ssa-code` 保持类型化 `Risk`。legacy 广告上报没有 public API 或 request id。领域/data 和 UI 步骤仍未实现。
+实施状态：**044/045 已完成协议与领域/data 层**。`:kugou-api` 仅公开 `KugouDailyVipClient` 的 day/upgrade 窄接口：在 transport 前校验 token 与正数 userId，以 Android signature、Cookie 注入、空 body和 `KugouRetryMode.None` 发出两条 POST；day 完成为 `Claimed`，upgrade 完成为 `Upgraded`，`131001` 为 endpoint-specific `AlreadyClaimed`，`20028` 和 `ssa-code` 保持类型化 `Risk`。045 的 `DailyVipClaimRepository` 在 data 单飞互斥区内初始化会话、双检 observer generation，并只对同一 repository、同一账号/UTC 日期/代际签发的一次性 opaque capability 放行 upgrade；legacy 广告上报没有 public API 或 request id。UI 步骤仍未实现。
 
 ## 决策与范围
 
@@ -73,14 +73,14 @@ PC `Helpers.getVip()` 的自动 day→固定 500ms→upgrade 路径会在失败�
 ```
 
 - `:kugou-api` 负责 origin/path/query/body、签名、response code 与 transport 错误，不能依赖 Compose。
-- `:data` 以现有 `KugouSessionProvider` 初始化一次会话；token 非空且正 userId 才发写请求。每次 action 使用会话/日期快照，账号切换、logout 或新 generation 使旧结果失效。
-- `:core:model` 不暴露 `error_code`、JSON、Cookie 或 request spec；新 port 不应塞入只读 `UserProfileRepository`。
+- `:data` 以现有 `KugouSessionProvider` 初始化一次会话；token 非空且正 userId 才发写请求。045 已在 repository mutex 内串行 claim/upgrade，每次 action 使用会话/UTC 日期快照并在请求前后双检 observer generation；账号切换、logout 或新 generation 使迟到结果变为 `StaleSession`/`AuthenticationRequired`，不会发布 capability。upgrade capability 是 data 私有实例，只携带脱敏 owner/代际/账号/日期绑定，首个调用即消费；伪造、跨 repository、跨代际、跨账号、跨日或重复使用均不发 upgrade 请求。
+- `:core:model` 现提供窄 `DailyVipClaimRepository`、类型化结果/错误和无字段 `DailyVipUpgradeAuthorization` marker；不暴露 `error_code`、JSON、Cookie、request spec、userId、token 或日期，新 port 不塞入只读 `UserProfileRepository`。
 - `:feature:my` 不读 DataStore/网络/会话；单飞 action job，重复点击无第二次请求。成功后请求既有 profile refresh，但 profile summary 仍是读取结果，不是假定的领取凭据。
 
 ## 原子实施与测试矩阵
 
 1. **协议（044，已完成）**：`KugouDailyVipRequestBuilder/Client/Decoder` 以 fake transport 快照只覆盖已准入的 day/upgrade 两条 request；legacy 通过固定源码/本审计以及“公开 service 表面只有 day/upgrade、两条 request id 均不含 legacy”的 API 表面回归证明未迁移，不能为它构造第三条 request。固定虚构向量覆盖 Android signature、Cookie/会话注入、空 body、`None` retry、`131001`/`20028`/畸形/HTTP/SSA/cancellation；timeout 与 5xx 都只执行一次。
-2. **领域与数据**：新增窄 `DailyVipClaimRepository`，覆盖匿名零 transport、会话初始化失败、UTC date、claimed/already/risk/auth/protocol 映射、day→upgrade 前置、取消、logout/账号切换和迟到结果隔离。
+2. **领域与数据（045，已完成）**：新增窄 `DailyVipClaimRepository`，覆盖匿名/会话初始化失败零 service、UTC date、claimed/already/risk/auth/protocol 映射、day→一次性 upgrade capability 前置、取消、logout/账号切换/日期或 generation 变化的迟到结果隔离，以及互斥串行写操作。Hilt 只绑定 protocol service 和领域 port；没有持久化领取日期、授权或权益。
 3. **UI（Blocked）**：用户确认单动作或双动作和所有 mutation 图后，再建立 design contract、ViewModel state machine、Dialog/Snackbar、48dp/无障碍、1×/2× screenshot；覆盖单飞、确认/取消、成功刷新、风险/鉴权、失败 Retry 与不干扰普通资料刷新。
 
 真实服务与真机仅在上述离线测试通过后、由用户以专用测试账号受控执行：实际登录会话、日界线、daily 已领取、upgrade、风控、服务端 auth/unavailable 分类与权益摘要刷新。不得记录 token、Cookie、签名值、完整响应正文或账号资料。
