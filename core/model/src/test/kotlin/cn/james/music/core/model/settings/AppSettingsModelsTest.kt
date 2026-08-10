@@ -26,6 +26,15 @@ class AppSettingsModelsTest {
     }
 
     @Test
+    fun lyricsHighlightModeDefaultsToCharacterAndUsesStableModeOrder() {
+        assertEquals(LyricsHighlightModePreference.Character, AppSettings().lyricsHighlightMode)
+        assertEquals(
+            listOf(LyricsHighlightModePreference.Character, LyricsHighlightModePreference.Line),
+            LyricsHighlightModePreference.entries.toList(),
+        )
+    }
+
+    @Test
     fun playbackQualityDefaultsToStandardAndUsesStableQualityOrder() {
         assertEquals(PlaybackQualityPreference.Standard, AppSettings().playbackQuality)
         assertEquals(

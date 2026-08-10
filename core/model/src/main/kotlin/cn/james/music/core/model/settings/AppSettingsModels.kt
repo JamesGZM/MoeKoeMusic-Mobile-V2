@@ -34,6 +34,11 @@ enum class LyricsTextSizePreference {
     Largest,
 }
 
+enum class LyricsHighlightModePreference {
+    Character,
+    Line,
+}
+
 data class AppSettings(
     val theme: AppThemePreference = AppThemePreference.System,
     val playbackQuality: PlaybackQualityPreference = PlaybackQualityPreference.Standard,
@@ -41,6 +46,7 @@ data class AppSettings(
     val dynamicCoverColors: Boolean = true,
     val showLyricsSupplementalText: Boolean = true,
     val lyricsTextSize: LyricsTextSizePreference = LyricsTextSizePreference.Standard,
+    val lyricsHighlightMode: LyricsHighlightModePreference = LyricsHighlightModePreference.Character,
     val brandThemeColor: BrandThemeColorPreference = BrandThemeColorPreference.SkyBlue,
 )
 
@@ -79,4 +85,6 @@ interface AppSettingsRepository {
     suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult
 
     suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult
+
+    suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult
 }

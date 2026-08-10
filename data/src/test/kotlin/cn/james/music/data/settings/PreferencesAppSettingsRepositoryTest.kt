@@ -12,6 +12,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.BrandThemeColorPreference
+import cn.james.music.core.model.settings.LyricsHighlightModePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CancellationException
@@ -61,6 +62,12 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.brandThemeColor,
+            )
+            assertEquals(
+                LyricsHighlightModePreference.Character,
+                repository.settings
+                    .first()
+                    .settings.lyricsHighlightMode,
             )
 
             BrandThemeColorPreference.entries
@@ -189,6 +196,30 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsHighlightModeDefaultsToCharacterAndEveryValueUsesStableStorageValue() =
+        withFixture {
+            assertEquals(
+                LyricsHighlightModePreference.Character,
+                repository.settings
+                    .first()
+                    .settings.lyricsHighlightMode,
+            )
+
+            LyricsHighlightModePreference.entries
+                .zip(listOf("character", "line"))
+                .forEach { (mode, storageValue) ->
+                    assertEquals(AppSettingsUpdateResult.Success, repository.setLyricsHighlightMode(mode))
+                    assertEquals(storageValue, dataStore.data.first()[PreferencesAppSettingsRepository.LYRICS_HIGHLIGHT_MODE])
+                    assertEquals(
+                        mode,
+                        repository.settings
+                            .first()
+                            .settings.lyricsHighlightMode,
+                    )
+                }
+        }
+
+    @Test
     fun unknownStoredThemeFallsBackToSystemAndReportsReadProblem() =
         withFixture {
             dataStore.edit { preferences -> preferences[PreferencesAppSettingsRepository.THEME] = "future-theme" }
@@ -225,6 +256,22 @@ class PreferencesAppSettingsRepositoryTest {
                 repository.settings
                     .first()
                     .settings.lyricsTextSize,
+            )
+            assertEquals(AppSettingsProblem.Read, repository.settings.first().problem)
+        }
+
+    @Test
+    fun unknownLyricsHighlightModeFallsBackToCharacterAndReportsReadProblem() =
+        withFixture {
+            dataStore.edit { preferences ->
+                preferences[PreferencesAppSettingsRepository.LYRICS_HIGHLIGHT_MODE] = "future-mode"
+            }
+
+            assertEquals(
+                LyricsHighlightModePreference.Character,
+                repository.settings
+                    .first()
+                    .settings.lyricsHighlightMode,
             )
             assertEquals(AppSettingsProblem.Read, repository.settings.first().problem)
         }
@@ -267,13 +314,19 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
-    fun corruptionReadFailureUsesSkyBlueAndReportsProblem() =
+    fun corruptionReadFailureUsesSafeDefaultsAndReportsProblem() =
         runBlocking {
             val repository = PreferencesAppSettingsRepository(FailingDataStore(readError = CorruptionException("fixture")))
 
             assertEquals(
                 AppSettingsSnapshot(problem = AppSettingsProblem.Read),
                 repository.settings.first(),
+            )
+            assertEquals(
+                LyricsHighlightModePreference.Character,
+                repository.settings
+                    .first()
+                    .settings.lyricsHighlightMode,
             )
         }
 
@@ -393,6 +446,23 @@ class PreferencesAppSettingsRepositoryTest {
         }
 
     @Test
+    fun lyricsHighlightModeWriteFailureDoesNotChangeSafeDefault() =
+        runBlocking {
+            val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = IOException("fixture")))
+
+            assertEquals(
+                AppSettingsUpdateResult.Failure(AppSettingsProblem.Write),
+                repository.setLyricsHighlightMode(LyricsHighlightModePreference.Line),
+            )
+            assertEquals(
+                LyricsHighlightModePreference.Character,
+                repository.settings
+                    .first()
+                    .settings.lyricsHighlightMode,
+            )
+        }
+
+    @Test
     fun cancellationIsNotMappedToWriteFailure() {
         val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
 
@@ -420,6 +490,15 @@ class PreferencesAppSettingsRepositoryTest {
     }
 
     @Test
+    fun lyricsHighlightModeCancellationIsNotMappedToWriteFailure() {
+        val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
+
+        assertThrows(CancellationException::class.java) {
+            runBlocking { repository.setLyricsHighlightMode(LyricsHighlightModePreference.Line) }
+        }
+    }
+
+    @Test
     fun playbackQualityCancellationIsNotMappedToWriteFailure() {
         val repository = PreferencesAppSettingsRepository(FailingDataStore(writeError = CancellationException("fixture")))
 
@@ -438,19 +517,27 @@ class PreferencesAppSettingsRepositoryTest {
     }
 
     @Test
-    fun playbackQualityWriteDoesNotOverwriteExistingPreferences() =
+    fun lyricsHighlightModeWriteDoesNotOverwriteExistingPreferences() =
         withFixture {
             assertEquals(AppSettingsUpdateResult.Success, repository.setTheme(AppThemePreference.Dark))
             assertEquals(AppSettingsUpdateResult.Success, repository.setAutoSkipFailedPlayback(false))
             assertEquals(AppSettingsUpdateResult.Success, repository.setPlaybackQuality(PlaybackQualityPreference.ViperTape))
             assertEquals(AppSettingsUpdateResult.Success, repository.setBrandThemeColor(BrandThemeColorPreference.StarPurple))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setDynamicCoverColors(false))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setShowLyricsSupplementalText(false))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setLyricsTextSize(LyricsTextSizePreference.Largest))
+            assertEquals(AppSettingsUpdateResult.Success, repository.setLyricsHighlightMode(LyricsHighlightModePreference.Line))
 
             assertEquals(
                 AppSettings(
                     theme = AppThemePreference.Dark,
                     playbackQuality = PlaybackQualityPreference.ViperTape,
                     autoSkipFailedPlayback = false,
+                    dynamicCoverColors = false,
+                    showLyricsSupplementalText = false,
+                    lyricsTextSize = LyricsTextSizePreference.Largest,
                     brandThemeColor = BrandThemeColorPreference.StarPurple,
+                    lyricsHighlightMode = LyricsHighlightModePreference.Line,
                 ),
                 repository.settings.first().settings,
             )

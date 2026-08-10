@@ -8,6 +8,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.BrandThemeColorPreference
+import cn.james.music.core.model.settings.LyricsHighlightModePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import cn.james.music.feature.player.PlayerLyricsTextSize
@@ -185,6 +186,9 @@ class AppThemeViewModelTest {
         override suspend fun setShowLyricsSupplementalText(enabled: Boolean): AppSettingsUpdateResult = updateResult
 
         override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult = updateResult
+
+        override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult =
+            error("Unexpected lyrics highlight mode write")
     }
 
     private val AppThemePreference.expectedThemeMode: ThemeMode

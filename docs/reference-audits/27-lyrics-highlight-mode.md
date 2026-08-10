@@ -24,8 +24,8 @@
 
 ## 模块、持久化与失败恢复
 
-- `:core:model` 将新增纯 `LyricsHighlightModePreference.Character/Line`、`AppSettings` 字段和 Repository setter，默认 Character。
-- `:data` 使用私有稳定 key `lyrics_highlight_mode_v1` 与显式 storage value `character/line`；缺失、未知或读取失败回 Character，并沿用 `AppSettingsProblem.Read`；写失败保持最后持久值，`CancellationException` 原样传播。
+- `:core:model` 已于 040 新增纯 `LyricsHighlightModePreference.Character/Line`、`AppSettings` 字段和 Repository setter，默认 Character。
+- `:data` 已于 040 使用私有稳定 key `lyrics_highlight_mode_v1` 与显式 storage value `character/line`；缺失、未知或读取失败回 Character，并沿用 `AppSettingsProblem.Read`；写失败保持最后持久值，`CancellationException` 原样传播。
 - `:app` 显式映射领域 enum 到 `:feature:player` 的纯 `PlayerLyricsHighlightMode`，沿 `AppThemeViewModel → MainActivity → MoeKoeApp → playerDestination` 传递。`:feature:player` 不依赖 core model、data 或 Hilt。
 - `:feature:settings` 以 Value 行和 chevron 打开“选择歌词显示”，选项为“逐字歌词”“逐行歌词”，复用已有 `MoeDialog`/Radio/取消组合。它有独立 job/generation/persisted value；保存中只禁用本行/Dialog；失败回滚且 typed Retry 精确重放最后失败的模式，不取消任何既有偏好写入。
 - `:feature:player` 只根据模式渲染已在内存中的文档与 timing；不得把偏好写入歌词 document、Repository、播放 Service 或缓存。
@@ -42,7 +42,7 @@
 ## 后续原子切片与测试矩阵
 
 1. 设计切片：补齐并确认上述 Player Line 与 Settings Dialog 图；登记正式 layout spec、contract 和 evidence。
-2. domain/data：enum、DataStore、默认/roundtrip/unknown/read/write/cancel 及不覆盖既有偏好测试。
-3. 真实纵向消费：Settings Dialog/retry、app 映射、Player 渲染与截图；默认 Character 既有 Player 基线应零变化。
+2. domain/data：已于 040 完成 enum、DataStore、默认/roundtrip/unknown/read/write/cancel 及不覆盖既有偏好测试。
+3. 真实纵向消费：Settings Dialog/retry、app 映射、Player 渲染与截图；默认 Character 既有 Player 基线应零变化，且仍受 UI 确认阻塞。
 
 最低测试：Character 前缀、Line 整行、无 syllable 回退、切换不改变文档/请求/seek/auto-follow；Settings 快速选择代际、保存中禁用、失败回滚/Retry，以及与主题、自动跳过、动态色、附加文本、字号、音质、主题色和缓存清理并发时最后失败归属正确。确认后再新增 Dialog 1×/2×与 Line screenshot，运行 contract、fidelity、impact、golden change；不放宽阈值或扩大 mask。设备仅补验触控、大字体和手势竞争。

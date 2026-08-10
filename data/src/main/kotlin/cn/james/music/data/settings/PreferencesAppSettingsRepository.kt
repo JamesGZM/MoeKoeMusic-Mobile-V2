@@ -14,6 +14,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.BrandThemeColorPreference
+import cn.james.music.core.model.settings.LyricsHighlightModePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.flow.Flow
@@ -60,6 +61,9 @@ class PreferencesAppSettingsRepository
         override suspend fun setLyricsTextSize(size: LyricsTextSizePreference): AppSettingsUpdateResult =
             update { preferences -> preferences[LYRICS_TEXT_SIZE] = size.storageValue }
 
+        override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult =
+            update { preferences -> preferences[LYRICS_HIGHLIGHT_MODE] = mode.storageValue }
+
         private fun snapshot(preferences: Preferences): AppSettingsSnapshot {
             val storedTheme = preferences[THEME]
             val theme = storedTheme?.let { stored -> AppThemePreference.entries.firstOrNull { it.storageValue == stored } }
@@ -76,6 +80,9 @@ class PreferencesAppSettingsRepository
                 storedLyricsTextSize?.let { stored ->
                     LyricsTextSizePreference.entries.firstOrNull { it.storageValue == stored }
                 }
+            val storedLyricsHighlightMode = preferences[LYRICS_HIGHLIGHT_MODE]
+            val lyricsHighlightMode =
+                storedLyricsHighlightMode?.let(::lyricsHighlightModeFromStorageValue)
             return AppSettingsSnapshot(
                 settings =
                     AppSettings(
@@ -86,13 +93,15 @@ class PreferencesAppSettingsRepository
                         dynamicCoverColors = preferences[DYNAMIC_COVER_COLORS] ?: true,
                         showLyricsSupplementalText = preferences[SHOW_LYRICS_SUPPLEMENTAL_TEXT] ?: true,
                         lyricsTextSize = lyricsTextSize ?: LyricsTextSizePreference.Standard,
+                        lyricsHighlightMode = lyricsHighlightMode ?: LyricsHighlightModePreference.Character,
                     ),
                 problem =
                     if (
                         (storedTheme != null && theme == null) ||
                         (storedBrandThemeColor != null && brandThemeColor == null) ||
                         (storedPlaybackQuality != null && playbackQuality == null) ||
-                        (storedLyricsTextSize != null && lyricsTextSize == null)
+                        (storedLyricsTextSize != null && lyricsTextSize == null) ||
+                        (storedLyricsHighlightMode != null && lyricsHighlightMode == null)
                     ) {
                         AppSettingsProblem.Read
                     } else {
@@ -116,6 +125,13 @@ class PreferencesAppSettingsRepository
 
         private val LyricsTextSizePreference.storageValue: String
             get() = name.lowercase()
+
+        private val LyricsHighlightModePreference.storageValue: String
+            get() =
+                when (this) {
+                    LyricsHighlightModePreference.Character -> "character"
+                    LyricsHighlightModePreference.Line -> "line"
+                }
 
         private val BrandThemeColorPreference.storageValue: String
             get() =
@@ -163,6 +179,13 @@ class PreferencesAppSettingsRepository
                 else -> null
             }
 
+        private fun lyricsHighlightModeFromStorageValue(value: String): LyricsHighlightModePreference? =
+            when (value) {
+                "character" -> LyricsHighlightModePreference.Character
+                "line" -> LyricsHighlightModePreference.Line
+                else -> null
+            }
+
         internal companion object {
             val THEME = stringPreferencesKey("theme_mode_v1")
             val BRAND_THEME_COLOR = stringPreferencesKey("brand_theme_color_v1")
@@ -171,5 +194,6 @@ class PreferencesAppSettingsRepository
             val DYNAMIC_COVER_COLORS = booleanPreferencesKey("dynamic_cover_colors_v1")
             val SHOW_LYRICS_SUPPLEMENTAL_TEXT = booleanPreferencesKey("show_lyrics_supplemental_text_v1")
             val LYRICS_TEXT_SIZE = stringPreferencesKey("lyrics_text_size_v1")
+            val LYRICS_HIGHLIGHT_MODE = stringPreferencesKey("lyrics_highlight_mode_v1")
         }
     }

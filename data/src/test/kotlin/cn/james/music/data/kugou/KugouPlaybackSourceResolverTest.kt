@@ -7,6 +7,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.BrandThemeColorPreference
+import cn.james.music.core.model.settings.LyricsHighlightModePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import cn.james.music.kugou.api.endpoint.KugouOnlineClient
@@ -394,6 +395,9 @@ class KugouPlaybackSourceResolverTest {
             override suspend fun setShowLyricsSupplementalText(enabled: Boolean) = AppSettingsUpdateResult.Success
 
             override suspend fun setLyricsTextSize(size: LyricsTextSizePreference) = AppSettingsUpdateResult.Success
+
+            override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference) =
+                error("Unexpected lyrics highlight mode write")
         }
 
     private fun throwingSettingsRepository() = settingsRepository(flow { throw IllegalStateException("Settings must not be read") })

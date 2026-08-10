@@ -10,6 +10,7 @@ import cn.james.music.core.model.settings.AppSettingsSnapshot
 import cn.james.music.core.model.settings.AppSettingsUpdateResult
 import cn.james.music.core.model.settings.AppThemePreference
 import cn.james.music.core.model.settings.BrandThemeColorPreference
+import cn.james.music.core.model.settings.LyricsHighlightModePreference
 import cn.james.music.core.model.settings.LyricsTextSizePreference
 import cn.james.music.core.model.settings.PlaybackQualityPreference
 import kotlinx.coroutines.CompletableDeferred
@@ -897,6 +898,9 @@ class SettingsViewModelTest {
                 }
             }
         }
+
+        override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult =
+            error("Unexpected lyrics highlight mode write")
     }
 
     private class FakeCacheMaintenanceRepository : CacheMaintenanceRepository {
@@ -952,6 +956,9 @@ class SettingsViewModelTest {
             settingsState.value = settingsState.value.copy(settings = settingsState.value.settings.copy(lyricsTextSize = size))
             return AppSettingsUpdateResult.Success
         }
+
+        override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult =
+            error("Unexpected lyrics highlight mode write")
 
         fun complete(theme: AppThemePreference) {
             completions.getValue(theme).complete(Unit)
@@ -1052,6 +1059,9 @@ class SettingsViewModelTest {
                 AppSettingsUpdateResult.Success
             }
         }
+
+        override suspend fun setLyricsHighlightMode(mode: LyricsHighlightModePreference): AppSettingsUpdateResult =
+            error("Unexpected lyrics highlight mode write")
 
         fun failTheme() {
             themeCompletion.complete(AppSettingsUpdateResult.Failure(AppSettingsProblem.Write))
