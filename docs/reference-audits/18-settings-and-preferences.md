@@ -16,6 +16,7 @@
 - `默认音质` 的协议、回退、显示真值与实施边界已由 [`24-default-playback-quality`](24-default-playback-quality.md) Accepted：默认 `128`，匿名固定 `free_part=1` 且不查询候选；登录态只在下一次在线地址解析中使用已保存偏好并向低档回退。设置行显示简短当前值，Dialog 以“选择默认音质”列出 `标准音质 · 128 Kbps`、`高品音质 · 320 Kbps`、`FLAC 无损`、`Hi-Res 无损`、`蝰蛇全景`、`蝰蛇超清`、`蝰蛇母带`。它只写偏好上限，绝不把偏好伪装为当前实际质量。
 - `主题色` 的产品真值、六档预设、模块边界与失败恢复已由 [`25-brand-theme-color`](25-brand-theme-color.md) Accepted：默认“天空蓝”精确保留当前 `#1677F2 / #8EC4FF / AMOLED` 基线，且只改变 Material `primary` 角色组（含 on/container/inverse）；secondary / tertiary、Surface、error 和 MoeKoe extra semantic colors 保持固定。它独立于 ThemeMode、系统 Monet 和播放器封面动态色；缺失/未知/读取失败回退天空蓝，写失败回滚最后持久值并精确 Retry，快速选择使用独立 generation，不取消其余设置写入。
 - `清理缓存` 的 UI 契约已于 036 建立：它是无容量/历史值的 Action 行，保留 Chevron；点击以同一 Settings 页面为底层、约 32% 黑色遮罩打开 `MoeAlertDialog`。Dialog 明确只清首页/歌词/图片缓存，不删本地音乐、账号或播放记录，并说明后续内容会重新下载；左侧“取消”为 Tonal、右侧“清理”为 Destructive。提交前 Back/遮罩可取消，提交中按钮禁用、主按钮加载且 Dialog 不可关闭；成功只关闭 Dialog 并显示无 action、受控约 4 秒后自动消费的成功 Snackbar，partial/failed 显示带 Retry 的错误 Snackbar，Retry 重跑整次幂等清理，取消不显示失败。任一其他设置写入开始时清除旧缓存反馈，保证可见 Retry 始终对应最后产生该反馈的请求。`CacheLimit` 继续是 Deferred / Unavailable。
+- `淡入淡出` 由 [`28-playback-fade`](28-playback-fade.md) 明确为 Deferred：固定 PC/Mobile 没有音频消费者，且曲目开始/结束淡化、暂停/恢复音量 ramp、相邻曲目 crossfade 是不同产品能力。保留现有不可提交行；在用户确认语义、时长、转换/失败边界、gapless、音频焦点和 offload 策略前，不新增偏好或假开关。
 
 ## 平台与系统约束
 
@@ -110,7 +111,8 @@
 9. “默认音质”：core 仅含七档语义 enum，data 私有映射稳定 storage value；`AppSettings` Repository setter、独立 v1 DataStore key、登录态候选回退、`KugouPlaybackQuality` 映射与真实 resolved-quality 运行时状态已完成。设置行现已接入真实七档选择 Dialog，并拥有独立保存代际、失败回滚最后持久值和精确 Retry；Player 与 MiniPlayer 现仅从 resolved runtime quality 显示实际角标，null（本地、演示、未解析或错误）不显示。它仍只改变下一次在线地址解析的偏好上限；真实服务和真机验证继续独立。
 10. “主题色”：领域/DataStore、六档 Design System primary 角色变体、app 组合根和 Settings 选择 Dialog 的代码/语义已于 030-032 完成；默认天空蓝不得改变既有 Light/Dark/AMOLED 基线，真实消费者是全局 Material primary 角色组，不把色值下沉到页面或播放器。032 已受限更新主题色行及五种非蓝/主题色 Dialog 截图基线，最终视觉与治理验收仍待完成。
 11. “清理缓存”：036 已完成确认/进行中/结果反馈的设计契约；037 已接入已完成的 `CacheMaintenanceRepository`，补齐独立 saving/retry、Dialog、Snackbar、JVM/AndroidTest 编译、两张确认 Dialog reference、截图/contract/fidelity/治理验收。既有 PNG 未改动；指定真机与真实 Coil 生命周期仍未验证。`CacheLimit` 仍 Deferred，不随清理能力改为可点。
-12. 后续其余播放能力分别在真实消费者完成时增加对应设置 Item。
+12. “淡入淡出”：Deferred；保持 `Fade` 不可提交，等待独立 A/B/C 产品选择和对应 Player/Settings 设计状态确认。
+13. 后续其余播放能力分别在真实消费者完成时增加对应设置 Item。
 
 每个切片独立提交、推送并恢复干净工作区。
 
