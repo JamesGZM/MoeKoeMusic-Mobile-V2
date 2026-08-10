@@ -6,6 +6,7 @@
 - [酷狗 HTTP 客户端选型](reference-audits/07-kugou-http-client.md)
 - [登录、会话与安全验证](reference-audits/09-login-session-and-risk.md)
 - [用户资料与“我的”会话态](reference-audits/10-user-profile-and-my-session.md)
+- [每日 VIP 领取协议与数据准入](reference-audits/30-daily-vip-claim.md)
 - [独立用户主页纯 UI 与 Feature 所有权](reference-audits/20-user-profile-ui.md)
 - [搜索结果页视觉与状态边界](reference-audits/21-search-results-ui.md)
 - [酷狗同步歌词协议、解析与缓存](reference-audits/12-kugou-lyrics.md)

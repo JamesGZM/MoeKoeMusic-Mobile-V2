@@ -8,6 +8,7 @@
 
 - 手机验证码、多账号、账号密码、扫码和风控验证的协议、状态机与功能 UI 已形成可运行切片；现有 Compose 仍需按已确认独立单状态图返工，真实扫码 `2→4`、会话恢复和主动风控兼容验收尚未完成，因此登录阶段仍不能标记完成。
 - 登录后资料、VIP 摘要、页面恢复刷新、部分失败降级和确认退出已经贯通 `:kugou-api`、`:data` 与 `:feature:my`，并使用真实会话和服务结果。
+- 每日 VIP 的协议与数据准入已完成：只采用 day 领取与可选 upgrade，拒绝 legacy `youth_vip`，写操作不自动重放，日期按可注入 UTC Clock 构造。领取/升级 mutation states 与“签到 / 领取 VIP”双按钮是否改为单一状态动作仍待用户确认，故尚未接入 UI；见 [`30-daily-vip-claim.md`](../reference-audits/30-daily-vip-claim.md)。
 - “我的”匿名与登录态已按 `04-my-anonymous.png`、`04-my-v4.png` 完成整页视觉结构，并于 2026-08-08 补齐 [`my-content-2026-08-08.md`](../design/evidence/my-content-2026-08-08.md) 的同画布并排、叠加和差异证据：账户卡、品牌头像、签到/VIP、四项快捷入口、收藏与关注统计层级、创建歌单标题/列表/独立空态插画均保留；截图 fixture 提供确认稿示例数据，运行态仍只显示 Repository 的真实资料与明确空态，不把示例计数写入业务状态。
 - 匿名与登录态齿轮均已接入唯一 Settings destination，登录态资料区提供独立账号菜单，退出确认不再借用设置齿轮；My → Settings → 主题切换 → Back 已在指定 ELE-AL00 / API 29 真机通过。
 - 设置与应用偏好已通过 [`../reference-audits/18-settings-and-preferences.md`](../reference-audits/18-settings-and-preferences.md) 门禁；主题持久化、应用级消费、`09-settings.png` 五个完整分组、14 个一致高度 Item、长页面滚动和关于 Dialog 均已交付。未接能力保留确认稿静态视觉但不写入假偏好，后续随真实消费者逐项接入。
@@ -16,7 +17,7 @@
 ## 实现范围
 
 - 手机验证码、账号密码、扫码登录、会话恢复和退出。
-- “我的”顶部用户卡片、签到、VIP 领取和状态刷新。
+- “我的”顶部用户卡片、在确认 mutation states 后的每日 VIP 领取/可选升级和状态刷新。
 - 我喜欢、创建歌单、收藏歌单、收藏专辑、关注歌手、关注好友。
 - 云盘、播放历史、本地音乐和设置入口。
 - 独立用户主页展示资料、等级、VIP、签名、关系统计、听歌概览和公开歌单。
@@ -33,6 +34,7 @@
 - 登录后的用户资料、VIP 摘要、刷新、部分失败和退出按 [`../reference-audits/10-user-profile-and-my-session.md`](../reference-audits/10-user-profile-and-my-session.md) 分三层落地：先 `:kugou-api`，再 `:data`，最后 `:feature:my`；不得在资料或资产接口完成前用设计稿内容和假计数填充页面。
 - 匿名访问采用硬门禁：签到、领取 VIP、我喜欢、最近播放、云盘、收藏歌单、收藏专辑、关注歌手、关注好友、创建歌单和用户主页等账号资产保持正常入口形态；匿名点击时立即进入现有 `loginGraph`，进入登录前不请求对应账号资产。硬门禁不依赖对应接口是否已经迁移，不能用禁用控件、重复登录说明或假数据替代。
 - “我的”已登录主态使用确认设计 [`04-my-v4.png`](../design/mockups/04-my-v4.png)，未登录状态使用 2026-08-07 确认的 [`04-my-anonymous.png`](../design/mockups/04-my-anonymous.png)。未来新增会话失效等未覆盖布局时仍须先补静态设计图并确认，之后才能制作必要原型或编码。
+- 每日领取的提交中、升级确认、成功、今日已领取、风控、重新登录和失败重试尚无已确认设计；不能以当前静态双按钮或 Snackbar 代替，必须先按 [`30-daily-vip-claim.md`](../reference-audits/30-daily-vip-claim.md) 完成用户确认。
 
 ## 测试
 
