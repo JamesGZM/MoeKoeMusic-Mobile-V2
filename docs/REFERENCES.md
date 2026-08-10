@@ -18,6 +18,7 @@
 - [缓存管理与清理范围](reference-audits/26-cache-management.md)
 - [歌词高亮方式与设置准入](reference-audits/27-lyrics-highlight-mode.md)
 - [播放淡入淡出准入](reference-audits/28-playback-fade.md)
+- [应用语言与 Settings 准入](reference-audits/29-app-language.md)
 - [歌单详情纯 UI 与 Feature 所有权](reference-audits/19-playlist-detail-ui.md)
 - [Agent Skills 与可执行开发门禁](reference-audits/22-agent-skills-development-system.md)
 - [数据驱动公共 UI 架构与迁移准入](reference-audits/23-data-driven-ui-architecture.md)
@@ -204,6 +205,8 @@
 歌词显示的逐字/逐行高亮语义、PC/Mobile 差异与 Android 设计阻塞见 [`reference-audits/27-lyrics-highlight-mode.md`](reference-audits/27-lyrics-highlight-mode.md)。本次实际核对 PC `52c9833` 的 `src/components/FullscreenLyricsSettings.vue`、`src/components/PlayerControl.vue`、`src/assets/style/PlayerControl.scss`，以及旧 Mobile `ab71195` 的 `src/components/ui/lyrics-view.tsx`、`src/features/player/lyrics.ts`、`types.ts` 和 Settings store/storage；只采用产品语义和状态边界，不复制 GPL 代码。
 
 播放“淡入淡出”的 A 曲目开始/结束淡化、B 暂停/恢复音量 ramp、C 相邻曲目 crossfade 边界见 [`reference-audits/28-playback-fade.md`](reference-audits/28-playback-fade.md)。本次实际核对 PC `52c9833` 的 `src/assets/style/PlayerControl.scss` / `src/components/PlayerControl.vue` 和旧 Mobile `ab71195` 的 `src/components/ui/mini-player.tsx` / `src/app/settings.tsx`，确认只有视觉动画而无音频消费者；并核对 AndroidX Media3 的 [ExoPlayer thread 约束](https://developer.android.com/reference/androidx/media3/exoplayer/ExoPlayer) 与 [Player transition/event](https://developer.android.com/media/media3/exoplayer/listening-to-player-events) 文档。Kreate `f02577e` 的 `PlayerSettings.kt` / `StatefulPlayerImpl.kt`（GPL-3.0）仅作为单 Player 暂停/恢复 ramp 风险参考，Metrolist `289ed45` 的 `PlayerSettings.kt` / `MusicService.kt`（GPL-3.0）仅作为双 Player crossfade、offload 和 Session 交接风险参考；不复制 GPL 代码。当前结论为 Deferred，不新增依赖或实现。
+
+应用语言的 PC/Mobile 事实、Android 资源缺口与 Settings 准入见 [`reference-audits/29-app-language.md`](reference-audits/29-app-language.md)。本次实际核对 PC `52c9833` 的 `src/config/settings.js` / `src/utils/i18n.js` / `src/views/Settings.vue` / 六份 `src/language/*.json`，以及旧 Mobile `ab71195` 的 `src/features/settings/store.ts` / `storage.ts`；并采用 Android 官方 [per-app language guidance](https://developer.android.com/guide/topics/resources/app-languages) 与 [LocaleConfig](https://developer.android.com/reference/android/app/LocaleConfig) 的系统 locale 单一事实来源约束。AntennaPod `d39bf05` 的 `app/src/main/AndroidManifest.xml` / `app/src/main/res/xml/locale_config.xml`（GPL-3.0）仅作为“真实资源先于系统语言列表”的固定参考；不复制 GPL 代码。当前结论为 Deferred，不新增资源、语言 API 或 DataStore。
 
 歌单详情确认稿的纯 UI 范围、独立 `:feature:playlist` 所有权、类型安全子页面导航、应用壳 MiniPlayer 边界和事件端口见 [`reference-audits/19-playlist-detail-ui.md`](reference-audits/19-playlist-detail-ui.md)。审计复用 Now in Android `7d45eae4` 与 Compose Samples `84788c81` 的 Apache-2.0 模块和 UI 分层原则，不复制页面实现、不新增依赖，也不把设计示例数据写入业务层。
 
