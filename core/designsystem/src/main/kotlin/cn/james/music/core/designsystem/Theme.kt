@@ -1,8 +1,13 @@
 package cn.james.music.core.designsystem
 
 import android.os.Build
+import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,6 +19,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -84,8 +91,18 @@ data class MoeKoeDimensions(
     val inputHeight: Dp = 56.dp,
     val toolbarHeight: Dp = 64.dp,
     val miniPlayerHeight: Dp = 72.dp,
-    val bottomNavigationHeight: Dp = 80.dp,
+    val bottomNavigationHeight: Dp = 64.dp,
 )
+
+private object NoClickIndication : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode = NoClickIndicationNode()
+
+    override fun equals(other: Any?): Boolean = other === this
+
+    override fun hashCode(): Int = -1
+}
+
+private class NoClickIndicationNode : Modifier.Node()
 
 internal val LightColors =
     lightColorScheme(
@@ -412,6 +429,7 @@ object MoeKoeTheme {
         @ReadOnlyComposable
         get() = LocalExtraShapes.current
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     operator fun invoke(
         themeMode: ThemeMode = ThemeMode.System,
@@ -457,6 +475,8 @@ object MoeKoeTheme {
             LocalDimensions provides MoeKoeDimensions(),
             LocalExtraColors provides if (darkTheme) DarkExtraColors else LightExtraColors,
             LocalExtraShapes provides MoeKoeExtraShapes(),
+            LocalIndication provides NoClickIndication,
+            LocalRippleConfiguration provides null,
         ) {
             MaterialTheme(
                 colorScheme = colorScheme,

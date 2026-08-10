@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -66,7 +67,7 @@ internal fun DiscoverScreen(
     selectedCategoryId: String = discoverDefaultContent.categories.first().id,
     onAction: (DiscoverAction) -> Unit = {},
 ) {
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         val contentWidth = if (maxWidth >= 600.dp) 480.dp else maxWidth
         Surface(
             modifier = Modifier.width(contentWidth).height(maxHeight).align(Alignment.TopCenter),
@@ -125,7 +126,7 @@ private fun DiscoverTabs(
                     modifier =
                         Modifier
                             .then(if (largeText) Modifier.width(88.dp) else Modifier.weight(1f))
-                            .heightIn(min = DiscoverDimensions.tabsHeight)
+                            .heightIn(min = DiscoverDimensions.tabTouchTargetHeight)
                             .clickable { onAction(DiscoverAction.SelectTab(tab.id)) },
                     contentAlignment = Alignment.BottomCenter,
                 ) {
@@ -203,7 +204,8 @@ private fun DiscoverContent(
 }
 
 internal object DiscoverDimensions {
-    val tabsHeight = 68.dp
+    val tabsHeight = 56.dp
+    val tabTouchTargetHeight = 48.dp
     val horizontalPadding = 11.dp
 }
 

@@ -1,17 +1,19 @@
 package cn.james.music
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -33,6 +35,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cn.james.music.core.designsystem.component.MoeMiniPlayerEvent
 import cn.james.music.core.designsystem.component.MoeMiniPlayerSemanticsUi
+import cn.james.music.core.designsystem.component.MoeBottomNavigation
+import cn.james.music.core.designsystem.component.MoeBottomNavigationItem
 import cn.james.music.core.designsystem.component.MoeSnackbar
 import cn.james.music.core.designsystem.component.MoeSnackbarActionId
 import cn.james.music.core.designsystem.component.MoeSnackbarActionUiModel
@@ -90,7 +94,6 @@ fun MoeKoeApp(
     var lyricsPageVisible by remember { mutableStateOf(false) }
     val isPlayer = currentDestination?.hasRoute<PlayerDestination>() == true
     val isSettings = currentDestination?.hasRoute<SettingsDestination>() == true
-    val isUserProfile = currentDestination?.hasRoute<UserProfileDestination>() == true
     val showBottomNavigation = !isPlayer && appState.isTopLevel(currentDestination)
     val isImmersiveLogin = currentDestination?.hasRoute<LoginDestination>() == true
     val playerUiState =
@@ -114,12 +117,7 @@ fun MoeKoeApp(
         }
 
     Scaffold(
-        contentWindowInsets =
-            if (isImmersiveLogin || isPlayer || isUserProfile) {
-                WindowInsets(0, 0, 0, 0)
-            } else {
-                ScaffoldDefaults.contentWindowInsets
-            },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (!isImmersiveLogin) {
                 Column(
@@ -163,21 +161,17 @@ fun MoeKoeApp(
                         )
                     }
                     if (showBottomNavigation) {
-                        NavigationBar {
-                            appState.topLevelDestinations.forEach { destination ->
-                                NavigationBarItem(
-                                    selected = appState.isInGraph(currentDestination, destination),
-                                    onClick = { appState.navigateToTopLevel(destination) },
-                                    icon = {
-                                        Icon(
-                                            imageVector = destination.icon,
-                                            contentDescription = null,
-                                        )
-                                    },
-                                    label = { Text(stringResource(destination.label)) },
-                                )
-                            }
-                        }
+                        MoeBottomNavigation(
+                            items =
+                                appState.topLevelDestinations.map { destination ->
+                                    MoeBottomNavigationItem(
+                                        label = stringResource(destination.label),
+                                        icon = destination.icon,
+                                        selected = appState.isInGraph(currentDestination, destination),
+                                        onClick = { appState.navigateToTopLevel(destination) },
+                                    )
+                                },
+                        )
                     }
                 }
             }
@@ -227,6 +221,50 @@ fun MoeKoeApp(
             NavHost(
                 navController = appState.navController,
                 startDestination = HomeGraph,
+                enterTransition = {
+                    if (appState.isTopLevel(initialState.destination) && appState.isTopLevel(targetState.destination)) {
+                        EnterTransition.None
+                    } else {
+                        fadeIn(animationSpec = tween(durationMillis = 140)) +
+                            slideInHorizontally(
+                                animationSpec = tween(durationMillis = 140),
+                                initialOffsetX = { fullWidth -> fullWidth / 12 },
+                            )
+                    }
+                },
+                exitTransition = {
+                    if (appState.isTopLevel(initialState.destination) && appState.isTopLevel(targetState.destination)) {
+                        ExitTransition.None
+                    } else {
+                        fadeOut(animationSpec = tween(durationMillis = 100)) +
+                            slideOutHorizontally(
+                                animationSpec = tween(durationMillis = 100),
+                                targetOffsetX = { fullWidth -> -fullWidth / 24 },
+                            )
+                    }
+                },
+                popEnterTransition = {
+                    if (appState.isTopLevel(initialState.destination) && appState.isTopLevel(targetState.destination)) {
+                        EnterTransition.None
+                    } else {
+                        fadeIn(animationSpec = tween(durationMillis = 140)) +
+                            slideInHorizontally(
+                                animationSpec = tween(durationMillis = 140),
+                                initialOffsetX = { fullWidth -> -fullWidth / 12 },
+                            )
+                    }
+                },
+                popExitTransition = {
+                    if (appState.isTopLevel(initialState.destination) && appState.isTopLevel(targetState.destination)) {
+                        ExitTransition.None
+                    } else {
+                        fadeOut(animationSpec = tween(durationMillis = 100)) +
+                            slideOutHorizontally(
+                                animationSpec = tween(durationMillis = 100),
+                                targetOffsetX = { fullWidth -> fullWidth / 24 },
+                            )
+                    }
+                },
             ) {
                 homeGraph(
                     onSearch = { navController.navigate(SearchDestination) },
